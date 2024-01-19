@@ -40,7 +40,16 @@ public interface ControlValueFormatter {
     }
 
     static ControlValueFormatter biomeBlend() {
-        return (v) -> (v == 0) ? Component.translatable("gui.none") : Component.translatable("sodium.options.biome_blend.value", v);
+        return (v) -> {
+            if (v < 0 || v > 7) {
+                return Component.translatable("parsing.int.invalid", v);
+            } else if (v == 0) {
+                return Component.translatable("gui.none");
+            } else {
+                int sv = 2 * v + 1;
+                return Component.translatable("sodium.options.biome_blend.value", sv, sv);
+            }
+        };
     }
 
     Component format(int value);
