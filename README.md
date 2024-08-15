@@ -68,7 +68,7 @@ repositories.
 - OpenJDK 21
     - We recommend using the [Eclipse Temurin](https://adoptium.net/) distribution, as it's known to be high quality 
       and to work without issues.
-- Gradle 8.6 (optional)
+- Gradle 8.6.x (optional)
     - The [Gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:using_wrapper) is provided
       in this repository can be used instead of installing a suitable version of Gradle yourself. However, if you are
       building many projects, you may prefer to install it yourself through a suitable package manager as to save disk
@@ -78,5 +78,5 @@ repositories.
 
 ## 📜 License
 
-Except where otherwise stated, the content of this repository is provided under the [Polyform Shield 1.0.0](LICENSE.md)
-license by [JellySquid](https://jellysquid.me).
+Except where otherwise stated (see [third-party license notices](thirdparty/NOTICE.txt)), the content of this repository is provided
+under the [Polyform Shield 1.0.0](LICENSE.md) license by [JellySquid](https://jellysquid.me).
