@@ -106,14 +106,15 @@ public class SectionRenderDataStorage {
         SectionRenderDataUnsafe.setLocalBaseElement(pMeshData, allocation.getOffset());
     }
 
-    public void setSharedIndexUsage(int localSectionIndex, int newUsage) {
+    public boolean setSharedIndexUsage(int localSectionIndex, int newUsage) {
         var previousUsage = this.sharedIndexUsage[localSectionIndex];
         if (previousUsage == newUsage) {
-            return;
+            return false;
         }
 
         // mark for update if usage is down from max (may need to shrink buffer)
         // or if usage increased beyond the max (need to grow buffer)
+        boolean newlyUsingSharedIndexBuffer = false;
         if (newUsage < previousUsage && previousUsage == this.sharedIndexCapacity ||
                 newUsage > this.sharedIndexCapacity ||
                 newUsage > 0 && this.sharedIndexAllocation == null) {
@@ -123,9 +124,15 @@ public class SectionRenderDataStorage {
             var sharedBaseElement = this.sharedIndexAllocation.getOffset();
             var pMeshData = this.getDataPointer(localSectionIndex);
             SectionRenderDataUnsafe.setSharedBaseElement(pMeshData, sharedBaseElement);
+
+            if (previousUsage == 0 && newUsage > 0) {
+                newlyUsingSharedIndexBuffer = true;
+            }
         }
 
         this.sharedIndexUsage[localSectionIndex] = newUsage;
+
+        return newlyUsingSharedIndexBuffer;
     }
 
     public boolean needsSharedIndexUpdate() {
