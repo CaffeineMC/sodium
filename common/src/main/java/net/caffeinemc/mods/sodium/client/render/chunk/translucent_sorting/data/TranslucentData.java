@@ -2,8 +2,9 @@ package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
 import java.nio.IntBuffer;
 
-import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.minecraft.core.SectionPos;
 
 /**
@@ -24,10 +25,12 @@ public abstract class TranslucentData {
 
     public abstract SortType getSortType();
 
+    public abstract boolean oldDataMatches(TranslucentGeometryCollector collector, SortType sortType, TQuad[] quads, int[] vertexCounts);
+
     /**
      * Prepares the translucent data for triggering of the given type. This is run
      * on the main thread before a sort task is scheduled.
-     * 
+     *
      * @param isAngleTrigger Whether the trigger is an angle trigger
      */
     public void prepareTrigger(boolean isAngleTrigger) {

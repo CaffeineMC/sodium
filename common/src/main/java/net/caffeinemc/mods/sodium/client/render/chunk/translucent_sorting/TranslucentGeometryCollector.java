@@ -544,7 +544,7 @@ public class TranslucentGeometryCollector {
         throw new IllegalStateException("Unknown sort type: " + this.sortType);
     }
 
-    private int getQuadHash(TQuad[] quads) {
+    public int getQuadHash(TQuad[] quads) {
         if (this.quadHashPresent) {
             return this.quadHash;
         }
@@ -571,23 +571,8 @@ public class TranslucentGeometryCollector {
         // relevant changes to translucent geometry. Rebuilds happen when any part of
         // the section changes, including the here irrelevant cases of changes to opaque
         // geometry or light levels.
-        if (oldData != null) {
-            // for the NONE sort type the ranges need to be the same, the actual geometry
-            // doesn't matter
-            if (this.sortType == SortType.NONE && oldData instanceof AnyOrderData oldAnyData
-                    && oldAnyData.getQuadCount() == this.quads.length
-                    && Arrays.equals(oldAnyData.getVertexCounts(), vertexCounts)) {
-                return oldAnyData;
-            }
-
-            // for the other sort types the geometry needs to be the same (checked with
-            // length and hash)
-            if (oldData instanceof PresentTranslucentData oldPresentData) {
-                if (oldPresentData.getQuadCount() == this.quads.length
-                        && oldPresentData.getQuadHash() == getQuadHash(this.quads)) {
-                    return oldPresentData;
-                }
-            }
+        if (oldData != null && oldData.oldDataMatches(this, this.sortType, this.quads, vertexCounts)) {
+            return oldData;
         }
 
         var newData = makeNewTranslucentData(vertexCounts, cameraPos, oldData);

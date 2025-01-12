@@ -1,6 +1,8 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.minecraft.core.SectionPos;
 
 /**
@@ -21,6 +23,11 @@ public class NoData extends TranslucentData {
     @Override
     public SortType getSortType() {
         return this.reason;
+    }
+
+    @Override
+    public boolean oldDataMatches(TranslucentGeometryCollector collector, SortType sortType, TQuad[] quads, int[] vertexCounts) {
+        return false;
     }
 
     public static NoData forEmptySection(SectionPos sectionPos) {
