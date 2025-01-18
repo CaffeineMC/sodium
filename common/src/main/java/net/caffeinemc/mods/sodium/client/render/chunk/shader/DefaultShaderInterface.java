@@ -5,6 +5,7 @@ import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat2v;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat3v;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformInt;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformMatrix4f;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl.CompactChunkVertex;
 import net.caffeinemc.mods.sodium.client.util.TextureUtil;
 import net.caffeinemc.mods.sodium.mixin.core.render.texture.TextureAtlasAccessor;
 import net.minecraft.client.Minecraft;
@@ -20,22 +21,9 @@ import java.util.Map;
  */
 public class DefaultShaderInterface implements ChunkShaderInterface {
     // Direct3D specifies at least 8 bits of sub-texel precision for texture fetches. OpenGL specifies at least
-    // 4 bits of sub-texel precision. Most OpenGL-capable graphics are Direct3D-capable as well, so we could
+    // 4 bits of sub-texel precision. Most OpenGL-capable graphics are Direct3D-capable as well, so we can
     // *probably* assume 8 bits of precision.
-    //
-    // However, in practice, this seems to be a complete mess. The rounding behavior for point-filtering seems to
-    // be defined inconsistently and depends on the shader compiler and hardware implementation. Apple's GL-on-Metal
-    // implementation is the worst of all of them, with a very large epsilon (1.0 / 32.0) being needed to cure
-    // texture seams between blocks.
-    //
-    // Unless we implemented texture filtering in the shader ourselves (i.e. using texelFetch(..)), it is unlikely
-    // we could avoid these issues. And that would not help much in the case of linear interpolation across
-    // mip layers.
-    //
-    // So in other words, this constant is the lowest common denominator we found through evaluation on the target
-    // hardware. It is rather pessimistic to accommodate for Apple's implementation, but does seem to reliably fix
-    // texture seams.
-    private static final int SUB_TEXEL_PRECISION_BITS = 5;
+    private static final int SUB_TEXEL_PRECISION_BITS = 8;
 
     private final Map<ChunkShaderTextureSlot, GlUniformInt> uniformTextures;
 
@@ -71,10 +59,14 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
                 .getTexture(TextureAtlas.LOCATION_BLOCKS);
 
         // There is a limited amount of sub-texel precision when using hardware texture sampling. The mapped texture
-        // area must be "shrunk" by at least one sub-texel to avoid bleed between textures in the atlas.
+        // area must be "shrunk" by at least one sub-texel to avoid bleed between textures in the atlas. And since we
+        // offset texture coordinates in the vertex format by one texel, we also need to undo that here.
+        double subTexelPrecision = (1 << SUB_TEXEL_PRECISION_BITS);
+        double subTexelOffset = 1.0f / CompactChunkVertex.TEXTURE_MAX_VALUE;
+
         this.uniformTexCoordShrink.set(
-                (1.0f / textureAtlas.getWidth()) / (1 << SUB_TEXEL_PRECISION_BITS),
-                (1.0f / textureAtlas.getHeight()) / (1 << SUB_TEXEL_PRECISION_BITS)
+                (float) (subTexelOffset + ((1.0D / textureAtlas.getWidth()) / subTexelPrecision)),
+                (float) (subTexelOffset + ((1.0D / textureAtlas.getHeight()) / subTexelPrecision))
         );
 
         this.fogShader.setup();
