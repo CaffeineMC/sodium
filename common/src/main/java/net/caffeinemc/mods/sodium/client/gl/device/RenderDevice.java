@@ -22,4 +22,6 @@ public interface RenderDevice {
     GLCapabilities getCapabilities();
 
     DeviceFunctions getDeviceFunctions();
+
+    int getSubTexelPrecisionBits();
 }

@@ -18,8 +18,8 @@ public class CompactChunkVertex implements ChunkVertexType {
             .addElement(DefaultChunkMeshAttributes.LIGHT_MATERIAL_INDEX, ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_MATERIAL_INDEX, 16)
             .build();
 
-    private static final int POSITION_MAX_VALUE = 1 << 20;
-    private static final int TEXTURE_MAX_VALUE = 1 << 15;
+    public static final int POSITION_MAX_VALUE = 1 << 20;
+    public static final int TEXTURE_MAX_VALUE = 1 << 15;
 
     private static final float MODEL_ORIGIN = 8.0f;
     private static final float MODEL_RANGE = 32.0f;
@@ -101,7 +101,7 @@ public class CompactChunkVertex implements ChunkVertexType {
         // This makes it possible to use much smaller epsilons for avoiding texture bleed, since the epsilon is no
         // longer encoded into the vertex data (instead, we only store the sign.)
         int bias = (x < center) ? 1 : -1;
-        int quantized = floorInt(x * TEXTURE_MAX_VALUE) + bias;
+        int quantized = Math.round(x * TEXTURE_MAX_VALUE) + bias;
 
         return (quantized & 0x7FFF) | (sign(bias) << 15);
     }
@@ -125,7 +125,4 @@ public class CompactChunkVertex implements ChunkVertexType {
         return (x >>> 31);
     }
 
-    private static int floorInt(float x) {
-        return (int) Math.floor(x);
-    }
 }
