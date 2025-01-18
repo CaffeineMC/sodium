@@ -4,10 +4,10 @@ import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMaps;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.services.*;
-import net.caffeinemc.mods.sodium.client.world.PalettedContainerROExtension;
+import net.caffeinemc.mods.sodium.client.util.iterator.WrappedIterator;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
+import net.caffeinemc.mods.sodium.client.world.PalettedContainerROExtension;
 import net.caffeinemc.mods.sodium.client.world.SodiumAuxiliaryLightManager;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.Level;
@@ -17,17 +17,11 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.DataLayer;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.LevelChunkSection;
-import net.minecraft.world.level.chunk.PalettedContainer;
-import net.minecraft.world.level.chunk.PalettedContainerRO;
+import net.minecraft.world.level.chunk.*;
 import net.minecraft.world.level.levelgen.DebugLevelSource;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Map;
 
 public class ClonedChunkSection {
     private static final DataLayer DEFAULT_SKY_LIGHT_ARRAY = new DataLayer(15);
@@ -67,7 +61,7 @@ public class ClonedChunkSection {
                 } else {
                     blockData = constructDebugWorldContainer(pos);
                 }
-                blockEntityMap = copyBlockEntities(chunk, pos);
+                blockEntityMap = tryCopyBlockEntities(chunk, pos);
                 if (blockEntityMap != null && PlatformBlockAccess.getInstance().platformHasBlockData()) {
                     blockEntityRenderDataMap = copyBlockEntityRenderData(level, blockEntityMap);
                 }
@@ -151,16 +145,44 @@ public class ClonedChunkSection {
     }
 
     @Nullable
+    private static Int2ReferenceMap<BlockEntity> tryCopyBlockEntities(LevelChunk chunk, SectionPos chunkCoord) {
+        try {
+            // Some mods are violating memory safety, and the block entity iterator occasionally returns garbage results
+            // or otherwise throws exceptions because of this. To better diagnose these crashes, wrap the iterator
+            // so that we can handle any uncaught exceptions with the following special case.
+            return copyBlockEntities(chunk, chunkCoord);
+        } catch (WrappedIterator.Exception t) {
+            // Very infrequent check, only going to be called on game crash. Don't bother caching this.
+            if (PlatformRuntimeInformation.getInstance().isModInLoadingList("entityculling")) {
+                // The Entity Culling mod is known to mangle the block entity set, so try to attribute it directly
+                // if we know it's installed. Yes, this is accusatory, but we are tired of these cryptic crashes,
+                // and users need more information about how to resolve the problem themselves. This was the
+                // second-best option to outright preventing the launch of Sodium when Entity Culling is installed.
+                throw new RuntimeException("Failed to iterate block entities! This is *very likely* the fault of the " +
+                                           "Entity Culling mod, and cannot be fixed by Sodium. See here for more details: " +
+                                           "https://link.caffeinemc.net/help/sodium/mod-issue/entity-culling/gh-2985", t);
+            } else {
+                throw new RuntimeException("Failed to iterate block entities! This is *very likely* the fault of " +
+                                           "another misbehaving mod, not Sodium. Please check your mods list.", t);
+            }
+        }
+    }
+
+    @Nullable
     private static Int2ReferenceMap<BlockEntity> copyBlockEntities(LevelChunk chunk, SectionPos chunkCoord) {
         BoundingBox box = new BoundingBox(chunkCoord.minBlockX(), chunkCoord.minBlockY(), chunkCoord.minBlockZ(),
                 chunkCoord.maxBlockX(), chunkCoord.maxBlockY(), chunkCoord.maxBlockZ());
 
         Int2ReferenceOpenHashMap<BlockEntity> blockEntities = null;
 
+        // Catch exceptions thrown by the iterator and handle them specially via the wrapped exception type
+        var it = WrappedIterator.create(chunk.getBlockEntities().entrySet());
+
         // Copy the block entities from the chunk into our cloned section
-        for (Map.Entry<BlockPos, BlockEntity> entry : chunk.getBlockEntities().entrySet()) {
-            BlockPos pos = entry.getKey();
-            BlockEntity entity = entry.getValue();
+        while (it.hasNext()) {
+            var entry = it.next();
+            var pos = entry.getKey();
+            var entity = entry.getValue();
 
             if (box.isInside(pos)) {
                 if (blockEntities == null) {
