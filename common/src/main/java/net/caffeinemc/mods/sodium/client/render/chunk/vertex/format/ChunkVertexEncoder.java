@@ -22,5 +22,16 @@ public interface ChunkVertexEncoder {
 
             return vertices;
         }
+
+        public static void copyVertexTo(Vertex from, Vertex to) {
+            to.x = from.x;
+            to.y = from.y;
+            to.z = from.z;
+            to.color = from.color;
+            to.ao = from.ao;
+            to.u = from.u;
+            to.v = from.v;
+            to.light = from.light;
+        }
     }
 }

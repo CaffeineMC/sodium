@@ -214,7 +214,9 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
                 if (translucentVertexBuffer == null) {
                     throw new IllegalStateException("Translucent mesh was modified but doesn't exist");
                 }
-                meshes.put(DefaultTerrainRenderPasses.TRANSLUCENT, buffers.createCompactModifiedTranslucentMesh(meshes.get(DefaultTerrainRenderPasses.TRANSLUCENT), translucentVertexBuffer, translucentData.getUpdatedQuadIndexes()));
+                var prevMesh = meshes.get(DefaultTerrainRenderPasses.TRANSLUCENT);
+                meshes.put(DefaultTerrainRenderPasses.TRANSLUCENT, buffers.createCompactModifiedTranslucentMesh(prevMesh, translucentVertexBuffer, translucentData.getUpdatedQuadIndexes()));
+                prevMesh.getVertexData().free();
 
                 // TODO: after placing and removing some blocks it manages to crash with a segfault somewhere
                 // are we allocating too much or not freeing it?

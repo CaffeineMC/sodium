@@ -37,7 +37,7 @@ import org.apache.commons.lang3.mutable.MutableFloat;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 public class DefaultFluidRenderer {
-    // TODO: allow this to be changed by vertex format, WARNING: make sure TranslucentGeometryCollector knows about EPSILON
+    // TODO: allow this to be changed by vertex format, WARNING: make sure TQuad knows about EPSILON
     // TODO: move fluid rendering to a separate render pass and control glPolygonOffset and glDepthFunc to fix this properly
     public static final float EPSILON = 0.001f;
     private static final float ALIGNED_EQUALS_EPSILON = 0.011f;

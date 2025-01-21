@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.compile;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.buffers.BakedChunkModelBuilder;
@@ -14,6 +15,10 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.T
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
+
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A collection of temporary buffers for each worker thread which will be used to build chunk meshes for given render
@@ -150,7 +155,7 @@ public class ChunkBuildBuffers {
         }
         var unassignedVertexCount = vertexSegments[UNASSIGNED_SEGMENT_INDEX];
 
-        int totalVertexCount = unassignedVertexCount + TranslucentData.vertexCountToQuadCount(updatedQuadIndexes.getAddedQuadCount());
+        int totalVertexCount = unassignedVertexCount + TranslucentData.quadCountToVertexCount(updatedQuadIndexes.getAddedQuadCount());
         int vertexStride = this.vertexType.getVertexFormat().getStride();
         var mergedBuffer = new NativeBuffer(totalVertexCount * vertexStride);
         int quadStride = vertexStride * TranslucentData.VERTICES_PER_QUAD;

@@ -1,14 +1,57 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad;
 
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
-import org.joml.Vector3fc;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 
 public class RegularTQuad extends TQuad {
     float[] vertexPositions;
 
-    RegularTQuad(ModelQuadFacing facing, float[] extents, float[] vertexPositions, Vector3fc center, int packedNormal) {
-        super(facing, extents, center, packedNormal);
-        this.vertexPositions = vertexPositions;
+    RegularTQuad(ModelQuadFacing facing, int packedNormal) {
+        super(facing, packedNormal);
+    }
+
+    public static RegularTQuad fromVertices(ChunkVertexEncoder.Vertex[] vertices, ModelQuadFacing facing, int packedNormal) {
+        var quad = new RegularTQuad(facing, packedNormal);
+        quad.initFull(vertices);
+        return quad;
+    }
+
+    @Override
+    void initVertexPositions(ChunkVertexEncoder.Vertex[] vertices, int uniqueVertexes) {
+        if (!TranslucentGeometryCollector.SPLIT_QUADS) {
+            // check if we need to store vertex positions for this quad, only necessary if it's unaligned or rotated (yet aligned)
+            var needsVertexPositions = (uniqueVertexes != 4 || !this.facing.isAligned());
+            if (!needsVertexPositions) {
+                float posXExtent = this.extents[0];
+                float posYExtent = this.extents[1];
+                float posZExtent = this.extents[2];
+                float negXExtent = this.extents[3];
+                float negYExtent = this.extents[4];
+                float negZExtent = this.extents[5];
+
+                for (int i = 0; i < 4; i++) {
+                    var vertex = vertices[i];
+                    if (vertex.x != posYExtent && vertex.x != negYExtent ||
+                            vertex.y != posZExtent && vertex.y != negZExtent ||
+                            vertex.z != posXExtent && vertex.z != negXExtent) {
+                        needsVertexPositions = true;
+                        break;
+                    }
+                }
+            }
+
+            if (needsVertexPositions) {
+                var vertexPositions = new float[12];
+                this.vertexPositions = vertexPositions;
+                for (int i = 0, itemIndex = 0; i < 4; i++) {
+                    var vertex = vertices[i];
+                    vertexPositions[itemIndex++] = vertex.x;
+                    vertexPositions[itemIndex++] = vertex.y;
+                    vertexPositions[itemIndex++] = vertex.z;
+                }
+            }
+        }
     }
 
     public float[] getVertexPositions() {
@@ -34,13 +77,5 @@ public class RegularTQuad extends TQuad {
             }
         }
         return this.vertexPositions;
-    }
-
-    public static TQuad fromAligned(ModelQuadFacing facing, float[] extents, float[] vertexPositions, Vector3fc center) {
-        return new RegularTQuad(facing, extents, vertexPositions, center, ModelQuadFacing.PACKED_ALIGNED_NORMALS[facing.ordinal()]);
-    }
-
-    public static TQuad fromUnaligned(ModelQuadFacing facing, float[] extents, float[] vertexPositions, Vector3fc center, int packedNormal) {
-        return new RegularTQuad(facing, extents, vertexPositions, center, packedNormal);
     }
 }

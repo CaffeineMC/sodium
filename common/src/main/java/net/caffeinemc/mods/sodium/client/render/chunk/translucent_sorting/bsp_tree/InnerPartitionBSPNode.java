@@ -524,17 +524,17 @@ abstract class InnerPartitionBSPNode extends BSPNode {
 
             // split with two quads or three quads depending on the orientation
             var insideCount = Integer.bitCount(vertexInsideMap);
-            FullTQuad outsideQuad = new FullTQuad(insideQuad);
+            FullTQuad outsideQuad = FullTQuad.splittingCopy(insideQuad);
             if (insideCount == 2) {
                 splitQuadEven(vertexInsideMap, insideQuad, outsideQuad, splitPlane, splitDistance);
             } else if (insideCount == 3) {
                 var secondInsideQuad = splitQuadOdd(vertexInsideMap, insideCount, insideQuad, outsideQuad, splitPlane, splitDistance);
 
-                throw new UnsupportedOperationException("Not implemented");
+                // TODO: Implement this
             } else {
                 var secondOutsideQuad = splitQuadOdd(vertexInsideMap, insideCount, insideQuad, outsideQuad, splitPlane, splitDistance);
 
-                throw new UnsupportedOperationException("Not implemented");
+                // TODO: Implement this
             }
 
             inside.add(workspace.updateQuad(insideQuad, candidateIndex));
@@ -596,6 +596,9 @@ abstract class InnerPartitionBSPNode extends BSPNode {
 
             interpolateAttributes(insideVertex, outsideVertex, targetA, targetB, outsideAmount);
         }
+
+        insideQuad.updateSplitQuadAfterVertexModification();
+        outsideQuad.updateSplitQuadAfterVertexModification();
     }
 
     static private FullTQuad splitQuadOdd(int vertexInsideMap, int insideCount, FullTQuad insideQuad, FullTQuad outsideQuad, Vector3fc splitPlane, float splitDistance) {
@@ -610,17 +613,6 @@ abstract class InnerPartitionBSPNode extends BSPNode {
 
         // TODO
         return null;
-    }
-
-    static private void copyVertexTo(ChunkVertexEncoder.Vertex from, ChunkVertexEncoder.Vertex to) {
-        to.x = from.x;
-        to.y = from.y;
-        to.z = from.z;
-        to.color = from.color;
-        to.ao = from.ao;
-        to.u = from.u;
-        to.v = from.v;
-        to.light = from.light;
     }
 
     private static void interpolateAttributes(ChunkVertexEncoder.Vertex inside, ChunkVertexEncoder.Vertex outside, ChunkVertexEncoder.Vertex targetA, ChunkVertexEncoder.Vertex targetB, float outsideAmount) {

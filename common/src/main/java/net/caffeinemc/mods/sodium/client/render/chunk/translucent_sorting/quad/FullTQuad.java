@@ -6,32 +6,54 @@ import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
 public class FullTQuad extends RegularTQuad {
-    private final ChunkVertexEncoder.Vertex[] vertices;
+    private final ChunkVertexEncoder.Vertex[] vertices = ChunkVertexEncoder.Vertex.uninitializedQuad();
     private boolean normalIsVeryAccurate = false;
 
-    // TODO: when vertexes are modified we need to re-calculate at least the extent, centroid, invalidate vertex positions (but not the normal or dot product)
-    FullTQuad(ModelQuadFacing facing, float[] extents, Vector3fc center, ChunkVertexEncoder.Vertex[] vertices, int packedNormal) {
-        super(facing, extents, null, center, packedNormal);
+    FullTQuad(ModelQuadFacing facing, int packedNormal) {
+        super(facing, packedNormal);
+    }
 
+    public static FullTQuad fromVertices(ChunkVertexEncoder.Vertex[] vertices, ModelQuadFacing facing, int packedNormal) {
+        var quad = new FullTQuad(facing, packedNormal);
+        quad.initFull(vertices);
+        quad.initVertices(vertices);
+
+        return quad;
+    }
+
+    private void initVertices(ChunkVertexEncoder.Vertex[] vertices) {
         // deep copy the vertices since the caller may modify them
-        this.vertices = ChunkVertexEncoder.Vertex.uninitializedQuad();
         for (int i = 0; i < 4; i++) {
             var newVertex = this.vertices[i];
             var oldVertex = vertices[i];
-            newVertex.x = oldVertex.x;
-            newVertex.y = oldVertex.y;
-            newVertex.z = oldVertex.z;
-            newVertex.color = oldVertex.color;
-            newVertex.ao = oldVertex.ao;
-            newVertex.u = oldVertex.u;
-            newVertex.v = oldVertex.v;
-            newVertex.light = oldVertex.light;
+            ChunkVertexEncoder.Vertex.copyVertexTo(oldVertex, newVertex);
         }
     }
 
-    public FullTQuad(FullTQuad other) {
-        this(other.facing, other.extents, other.center, other.vertices, other.packedNormal);
-        this.normalIsVeryAccurate = other.normalIsVeryAccurate;
+    public static FullTQuad splittingCopy(FullTQuad quad) {
+        var newQuad = new FullTQuad(quad.facing, quad.packedNormal);
+        newQuad.initVertices(quad.vertices);
+
+        newQuad.extents = quad.extents;
+        newQuad.accurateDotProduct = quad.accurateDotProduct;
+        newQuad.quantizedDotProduct = quad.quantizedDotProduct;
+
+        newQuad.center = quad.center;
+        newQuad.quantizedNormal = quad.quantizedNormal;
+        newQuad.accurateNormal = quad.accurateNormal;
+
+        newQuad.normalIsVeryAccurate = quad.normalIsVeryAccurate;
+
+        return newQuad;
+    }
+
+    public void updateSplitQuadAfterVertexModification() {
+        this.initExtentsAndCenter(this.vertices);
+
+        // invalidate vertex positions after modification of the vertices
+        this.vertexPositions = null;
+
+        // no need to update dot product since splitting a quad doesn't change its normal or dot product
     }
 
     @Override
@@ -100,13 +122,5 @@ public class FullTQuad extends RegularTQuad {
 
     public ChunkVertexEncoder.Vertex[] getVertices() {
         return this.vertices;
-    }
-
-    public static TQuad fromAligned(ModelQuadFacing facing, float[] extents, Vector3fc center, ChunkVertexEncoder.Vertex[] vertices) {
-        return new FullTQuad(facing, extents, center, vertices, ModelQuadFacing.PACKED_ALIGNED_NORMALS[facing.ordinal()]);
-    }
-
-    public static TQuad fromUnaligned(ModelQuadFacing facing, float[] extents, Vector3fc center, ChunkVertexEncoder.Vertex[] vertices, int packedNormal) {
-        return new FullTQuad(facing, extents, center, vertices, packedNormal);
     }
 }

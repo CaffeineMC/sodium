@@ -98,89 +98,7 @@ public class TranslucentGeometryCollector {
         this.sectionPos = sectionPos;
     }
 
-    private static final float INV_QUANTIZE_EPSILON = 256f;
-    private static final float QUANTIZE_EPSILON = 1f / INV_QUANTIZE_EPSILON;
-
-    static {
-        // ensure it fits with the fluid renderer epsilon and that it's a power-of-two
-        // fraction
-        var targetEpsilon = DefaultFluidRenderer.EPSILON * 2.1f;
-        if (QUANTIZE_EPSILON <= targetEpsilon && Integer.bitCount((int) INV_QUANTIZE_EPSILON) == 1) {
-            throw new RuntimeException("epsilon is invalid: " + QUANTIZE_EPSILON);
-        }
-    }
-
     public void appendQuad(ChunkVertexEncoder.Vertex[] vertices, ModelQuadFacing facing, int packedNormal) {
-        float xSum = 0;
-        float ySum = 0;
-        float zSum = 0;
-
-        // keep track of distinct vertices to compute the center accurately for
-        // degenerate quads
-        float lastX = vertices[3].x;
-        float lastY = vertices[3].y;
-        float lastZ = vertices[3].z;
-        int uniqueVertexes = 0;
-
-        float posXExtent = Float.NEGATIVE_INFINITY;
-        float posYExtent = Float.NEGATIVE_INFINITY;
-        float posZExtent = Float.NEGATIVE_INFINITY;
-        float negXExtent = Float.POSITIVE_INFINITY;
-        float negYExtent = Float.POSITIVE_INFINITY;
-        float negZExtent = Float.POSITIVE_INFINITY;
-
-        for (int i = 0; i < 4; i++) {
-            float x = vertices[i].x;
-            float y = vertices[i].y;
-            float z = vertices[i].z;
-
-            posXExtent = Math.max(posXExtent, x);
-            posYExtent = Math.max(posYExtent, y);
-            posZExtent = Math.max(posZExtent, z);
-            negXExtent = Math.min(negXExtent, x);
-            negYExtent = Math.min(negYExtent, y);
-            negZExtent = Math.min(negZExtent, z);
-
-            if (x != lastX || y != lastY || z != lastZ) {
-                xSum += x;
-                ySum += y;
-                zSum += z;
-                uniqueVertexes++;
-            }
-            if (i != 3) {
-                lastX = x;
-                lastY = y;
-                lastZ = z;
-            }
-        }
-
-        // shrink quad in non-normal directions to prevent intersections caused by
-        // epsilon offsets applied by FluidRenderer
-        if (facing != ModelQuadFacing.POS_X && facing != ModelQuadFacing.NEG_X) {
-            posXExtent -= QUANTIZE_EPSILON;
-            negXExtent += QUANTIZE_EPSILON;
-            if (negXExtent > posXExtent) {
-                negXExtent = posXExtent;
-            }
-        }
-        if (facing != ModelQuadFacing.POS_Y && facing != ModelQuadFacing.NEG_Y) {
-            posYExtent -= QUANTIZE_EPSILON;
-            negYExtent += QUANTIZE_EPSILON;
-            if (negYExtent > posYExtent) {
-                negYExtent = posYExtent;
-            }
-        }
-        if (facing != ModelQuadFacing.POS_Z && facing != ModelQuadFacing.NEG_Z) {
-            posZExtent -= QUANTIZE_EPSILON;
-            negZExtent += QUANTIZE_EPSILON;
-            if (negZExtent > posZExtent) {
-                negZExtent = posZExtent;
-            }
-        }
-
-        // POS_X, POS_Y, POS_Z, NEG_X, NEG_Y, NEG_Z
-        float[] extents = new float[] { posXExtent, posYExtent, posZExtent, negXExtent, negYExtent, negZExtent };
-
         int direction = facing.ordinal();
         var quadList = this.quadLists[direction];
         if (quadList == null) {
@@ -188,58 +106,26 @@ public class TranslucentGeometryCollector {
             this.quadLists[direction] = quadList;
         }
 
-        Vector3fc center = null;
-        if (!facing.isAligned() || uniqueVertexes != 4) {
-            var centerX = xSum / uniqueVertexes;
-            var centerY = ySum / uniqueVertexes;
-            var centerZ = zSum / uniqueVertexes;
-            center = new Vector3f(centerX, centerY, centerZ);
-        }
-
-        // check if we need to store vertex positions for this quad, only necessary if it's unaligned or rotated (yet aligned)
-        var needsVertexPositions = uniqueVertexes != 4 || !facing.isAligned();
-        if (!needsVertexPositions) {
-            for (int i = 0; i < 4; i++) {
-                var vertex = vertices[i];
-                if (vertex.x != posYExtent && vertex.x != negYExtent ||
-                        vertex.y != posZExtent && vertex.y != negZExtent ||
-                        vertex.z != posXExtent && vertex.z != negXExtent) {
-                    needsVertexPositions = true;
-                    break;
-                }
-            }
-        }
-
-        float[] vertexPositions = null;
-        if (needsVertexPositions) {
-            vertexPositions = new float[12];
-            for (int i = 0, itemIndex = 0; i < 4; i++) {
-                var vertex = vertices[i];
-                vertexPositions[itemIndex++] = vertex.x;
-                vertexPositions[itemIndex++] = vertex.y;
-                vertexPositions[itemIndex++] = vertex.z;
-            }
-        }
-
         if (facing.isAligned()) {
+            TQuad quad;
+            if (SPLIT_QUADS) {
+                quad = FullTQuad.fromVertices(vertices, facing, packedNormal);
+            } else {
+                quad = RegularTQuad.fromVertices(vertices, facing, packedNormal);
+            }
+            quadList.add(quad);
+
             // only update global extents if there are no unaligned quads since this is only
             // used for the convex box test which doesn't work with unaligned quads anyway
             if (!this.hasUnaligned) {
-                this.extents[0] = Math.max(this.extents[0], posXExtent);
-                this.extents[1] = Math.max(this.extents[1], posYExtent);
-                this.extents[2] = Math.max(this.extents[2], posZExtent);
-                this.extents[3] = Math.min(this.extents[3], negXExtent);
-                this.extents[4] = Math.min(this.extents[4], negYExtent);
-                this.extents[5] = Math.min(this.extents[5], negZExtent);
+                var quadExtents = quad.getExtents();
+                for (int i = 0; i < 3; i++) {
+                    this.extents[i] = Math.max(this.extents[i], quadExtents[i]);
+                }
+                for (int i = 3; i < 6; i++) {
+                    this.extents[i] = Math.min(this.extents[i], quadExtents[i]);
+                }
             }
-
-            TQuad quad;
-            if (SPLIT_QUADS) {
-                quad = FullTQuad.fromAligned(facing, extents, center, vertices);
-            } else {
-                quad = RegularTQuad.fromAligned(facing, extents, vertexPositions, center);
-            }
-            quadList.add(quad);
 
             var extreme = this.alignedExtremes[direction];
             var distance = quad.getAccurateDotProduct();
@@ -261,9 +147,9 @@ public class TranslucentGeometryCollector {
 
             TQuad quad;
             if (SPLIT_QUADS) {
-                quad = FullTQuad.fromUnaligned(facing, extents, center, vertices, packedNormal);
+                quad = FullTQuad.fromVertices(vertices, facing, packedNormal);
             } else {
-                quad = RegularTQuad.fromUnaligned(facing, extents, vertexPositions, center, packedNormal);
+                quad = RegularTQuad.fromVertices(vertices, facing, packedNormal);
             }
             quadList.add(quad);
 

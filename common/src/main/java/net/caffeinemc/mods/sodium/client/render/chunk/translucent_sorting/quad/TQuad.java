@@ -2,6 +2,8 @@ package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad;
 
 import java.util.Arrays;
 
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.DefaultFluidRenderer;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
@@ -23,21 +25,125 @@ public abstract class TQuad {
      */
     static final int QUANTIZATION_FACTOR = 4;
 
+    private static final float INV_QUANTIZE_EPSILON = 256f;
+    public static final float QUANTIZE_EPSILON = 1f / INV_QUANTIZE_EPSILON;
+
+    static {
+        // ensure it fits with the fluid renderer epsilon and that it's a power-of-two
+        // fraction
+        var targetEpsilon = DefaultFluidRenderer.EPSILON * 2.1f;
+        if (QUANTIZE_EPSILON <= targetEpsilon && Integer.bitCount((int) INV_QUANTIZE_EPSILON) == 1) {
+            throw new RuntimeException("epsilon is invalid: " + QUANTIZE_EPSILON);
+        }
+    }
+
     ModelQuadFacing facing;
-    final float[] extents;
     final int packedNormal;
+    float[] extents;
     float accurateDotProduct;
     float quantizedDotProduct;
     Vector3fc center; // null on aligned quads
     Vector3fc quantizedNormal;
     Vector3fc accurateNormal;
 
-    TQuad(ModelQuadFacing facing, float[] extents, Vector3fc center, int packedNormal) {
-        this.facing = facing;
-        this.extents = extents;
-        this.center = center;
-        this.packedNormal = packedNormal;
+    TQuad(ModelQuadFacing facing, int packedNormal) {
+        if (facing.isAligned()) {
+            packedNormal = ModelQuadFacing.PACKED_ALIGNED_NORMALS[facing.ordinal()];
+        }
 
+        this.facing = facing;
+        this.packedNormal = packedNormal;
+    }
+
+    void initFull(ChunkVertexEncoder.Vertex[] vertices) {
+        var uniqueVertexes = this.initExtentsAndCenter(vertices);
+        this.initVertexPositions(vertices, uniqueVertexes);
+        this.initDotProduct();
+    }
+
+    int initExtentsAndCenter(ChunkVertexEncoder.Vertex[] vertices) {
+        float xSum = 0;
+        float ySum = 0;
+        float zSum = 0;
+
+        // keep track of distinct vertices to compute the center accurately for
+        // degenerate quads
+        float lastX = vertices[3].x;
+        float lastY = vertices[3].y;
+        float lastZ = vertices[3].z;
+        int uniqueVertexes = 0;
+
+        float posXExtent = Float.NEGATIVE_INFINITY;
+        float posYExtent = Float.NEGATIVE_INFINITY;
+        float posZExtent = Float.NEGATIVE_INFINITY;
+        float negXExtent = Float.POSITIVE_INFINITY;
+        float negYExtent = Float.POSITIVE_INFINITY;
+        float negZExtent = Float.POSITIVE_INFINITY;
+
+        for (int i = 0; i < 4; i++) {
+            float x = vertices[i].x;
+            float y = vertices[i].y;
+            float z = vertices[i].z;
+
+            posXExtent = Math.max(posXExtent, x);
+            posYExtent = Math.max(posYExtent, y);
+            posZExtent = Math.max(posZExtent, z);
+            negXExtent = Math.min(negXExtent, x);
+            negYExtent = Math.min(negYExtent, y);
+            negZExtent = Math.min(negZExtent, z);
+
+            if (x != lastX || y != lastY || z != lastZ) {
+                xSum += x;
+                ySum += y;
+                zSum += z;
+                uniqueVertexes++;
+            }
+            if (i != 3) {
+                lastX = x;
+                lastY = y;
+                lastZ = z;
+            }
+        }
+
+        // shrink quad in non-normal directions to prevent intersections caused by
+        // epsilon offsets applied by FluidRenderer
+        if (this.facing != ModelQuadFacing.POS_X && this.facing != ModelQuadFacing.NEG_X) {
+            posXExtent -= QUANTIZE_EPSILON;
+            negXExtent += QUANTIZE_EPSILON;
+            if (negXExtent > posXExtent) {
+                negXExtent = posXExtent;
+            }
+        }
+        if (this.facing != ModelQuadFacing.POS_Y && this.facing != ModelQuadFacing.NEG_Y) {
+            posYExtent -= QUANTIZE_EPSILON;
+            negYExtent += QUANTIZE_EPSILON;
+            if (negYExtent > posYExtent) {
+                negYExtent = posYExtent;
+            }
+        }
+        if (this.facing != ModelQuadFacing.POS_Z && this.facing != ModelQuadFacing.NEG_Z) {
+            posZExtent -= QUANTIZE_EPSILON;
+            negZExtent += QUANTIZE_EPSILON;
+            if (negZExtent > posZExtent) {
+                negZExtent = posZExtent;
+            }
+        }
+
+        // POS_X, POS_Y, POS_Z, NEG_X, NEG_Y, NEG_Z
+        this.extents = new float[] { posXExtent, posYExtent, posZExtent, negXExtent, negYExtent, negZExtent };
+
+        if (!this.facing.isAligned() || uniqueVertexes != 4) {
+            var invUniqueVertexes = 1.0f / uniqueVertexes;
+            var centerX = xSum * invUniqueVertexes;
+            var centerY = ySum * invUniqueVertexes;
+            var centerZ = zSum * invUniqueVertexes;
+            this.center = new Vector3f(centerX, centerY, centerZ);
+        }
+
+        return uniqueVertexes;
+    }
+
+    void initDotProduct() {
         if (this.facing.isAligned()) {
             this.accurateDotProduct = getAlignedDotProduct(this.facing, this.extents);
         } else {
@@ -47,6 +153,9 @@ public abstract class TQuad {
             this.accurateDotProduct = this.getCenter().dot(normX, normY, normZ);
         }
         this.quantizedDotProduct = this.accurateDotProduct;
+    }
+
+    void initVertexPositions(ChunkVertexEncoder.Vertex[] vertices, int uniqueVertexes) {
     }
 
     private static float getAlignedDotProduct(ModelQuadFacing facing, float[] extents) {
