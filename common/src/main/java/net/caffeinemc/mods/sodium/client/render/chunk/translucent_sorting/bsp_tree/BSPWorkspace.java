@@ -46,9 +46,11 @@ class BSPWorkspace extends ObjectArrayList<TQuad> {
     int pushQuad(FullTQuad quad) {
         this.translucentVertexBuffer.push(quad.getVertices(), DefaultMaterials.TRANSLUCENT);
 
+        var index = this.size();
         this.add(quad);
+        this.result.ensureUpdatedQuadIndexes().addAppendedQuadIndex(index);
 
-        return this.result.ensureUpdatedQuadIndexes().addAppendedQuadIndex();
+        return index;
     }
 
     int updateQuad(FullTQuad quad, int quadIndex) {

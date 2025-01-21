@@ -118,7 +118,7 @@ class InnerBinaryPartitionBSPNode extends InnerPartitionBSPNode {
         if (axis == UNALIGNED_AXIS) {
             workspace.addUnalignedPartitionPlane(planeNormal, partitionDistance);
         } else {
-            workspace.addAlignedPartitionPlane(axis, partitionDistance);
+            workspace.addAlignedPartitionPlane(axis, Math.abs(partitionDistance));
         }
 
         BSPNode oldInsideNode = null;
@@ -141,16 +141,10 @@ class InnerBinaryPartitionBSPNode extends InnerPartitionBSPNode {
         }
         var onPlaneArr = BSPSortState.compressIndexes(onPlane);
 
-        if (axis == UNALIGNED_AXIS) {
-            return new InnerBinaryPartitionBSPNode(
-                    prepareNodeReuse(workspace, indexes, depth),
-                    partitionDistance, planeNormal,
-                    insideNode, outsideNode, onPlaneArr);
-        } else {
-            return new InnerBinaryPartitionBSPNode(
-                    prepareNodeReuse(workspace, indexes, depth),
-                    partitionDistance, axis,
-                    insideNode, outsideNode, onPlaneArr);
-        }
+        // always use the correct plane normal here because just specifying the axis causes the constructor to use a wrong and unsigned normal
+        return new InnerBinaryPartitionBSPNode(
+                prepareNodeReuse(workspace, indexes, depth),
+                partitionDistance, planeNormal,
+                insideNode, outsideNode, onPlaneArr);
     }
 }

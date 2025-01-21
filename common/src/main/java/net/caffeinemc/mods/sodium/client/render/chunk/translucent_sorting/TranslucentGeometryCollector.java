@@ -330,10 +330,11 @@ public class TranslucentGeometryCollector {
         // use the given set of quad count limits to determine if a static topo sort
         // should be attempted
 
-        var attemptLimitIndex = Mth.clamp(normalCount, 2, STATIC_TOPO_SORT_ATTEMPT_LIMITS.length - 1);
-        if (this.quads.length <= STATIC_TOPO_SORT_ATTEMPT_LIMITS[attemptLimitIndex]) {
-            return SortType.STATIC_TOPO;
-        }
+        // TODO: make topo sort fail on intersecting geometry when SPLIT_QUADS is enabled
+//        var attemptLimitIndex = Mth.clamp(normalCount, 2, STATIC_TOPO_SORT_ATTEMPT_LIMITS.length - 1);
+//        if (this.quads.length <= STATIC_TOPO_SORT_ATTEMPT_LIMITS[attemptLimitIndex]) {
+//            return SortType.STATIC_TOPO;
+//        }
 
         return SortType.DYNAMIC;
     }

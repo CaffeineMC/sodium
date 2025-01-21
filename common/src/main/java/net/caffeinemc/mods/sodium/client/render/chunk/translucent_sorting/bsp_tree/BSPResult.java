@@ -45,10 +45,9 @@ public class BSPResult extends GeometryPlanes {
             this.add(index);
         }
 
-        public int addAppendedQuadIndex() {
-            var index = this.addedQuadCount++;
+        public void addAppendedQuadIndex(int index) {
             this.add(index);
-            return index;
+            this.addedQuadCount++;
         }
 
         public int getAddedQuadCount() {

@@ -437,6 +437,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
 
         if (TranslucentGeometryCollector.SPLIT_QUADS) {
             // try static topo sorting first because splitting quads is even more expensive
+            // TODO: re-enable static topo sorting once it fails on intersecting quads
 //            var multiLeafNode = buildTopoMultiLeafNode(workspace, indexes);
 //            if (multiLeafNode != null) {
 //                return multiLeafNode;
@@ -469,6 +470,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
             representativeIndex = splittingGroup.getInt(0);
         }
         var representative = (FullTQuad) workspace.get(representativeIndex);
+        var representativeFacing = representative.getFacing();
         int initialSplittingGroupSize = splittingGroup.size();
 
         // split all quads by the splitting group's plane
@@ -491,48 +493,82 @@ abstract class InnerPartitionBSPNode extends BSPNode {
             }
 
             var insideQuad = (FullTQuad) workspace.get(candidateIndex);
-            var vertices = insideQuad.getVertices();
+            var quadFacing = insideQuad.getFacing();
 
-            // calculate inside/outside for each vertex
-            int vertexInsideMap = 0;
-            int vertexOnPlaneCount = 0;
-            for (int i = 0; i < 4; i++) {
-                var vertex = vertices[i];
-                var dot = splitPlane.dot(vertex.x, vertex.y, vertex.z);
-                if (dot < splitDistance) {
-                    vertexInsideMap |= 1 << i;
-                } else if (dot == splitDistance) {
-                    vertexOnPlaneCount++;
-                }
-            }
-
-            // add quads that are nearly coplanar to the splitting group to it
-            if (vertexOnPlaneCount >= 3) {
+            // eliminate quads that lie in the split plane
+            if (quadFacing == representativeFacing && insideQuad.getAccurateDotProduct() == splitDistance &&
+                    (representativeFacing != ModelQuadFacing.UNASSIGNED ||
+                            insideQuad.getVeryAccurateNormal().equals(representative.getVeryAccurateNormal()))) {
                 splittingGroup.add(candidateIndex);
                 continue;
             }
 
-            // simply add to inside or outside if not split
-            if (vertexInsideMap == 0) {
+            var vertices = insideQuad.getVertices();
+
+            // calculate inside/outside for each vertex
+            int insideMap = 0;
+            int onPlaneMap = 0;
+            for (int i = 0; i < 4; i++) {
+                var vertex = vertices[i];
+                var dot = splitPlane.dot(vertex.x, vertex.y, vertex.z);
+                if (dot < splitDistance) {
+                    insideMap |= 1 << i;
+                } else if (dot == splitDistance) {
+                    onPlaneMap |= 1 << i;
+                }
+            }
+
+            var onPlaneCount = Integer.bitCount(onPlaneMap);
+            var insideCount = Integer.bitCount(insideMap);
+
+            // treat quads that are actually or nearly (i.e. bent) coplanar as on the plane
+            if (onPlaneCount >= 3) {
+                splittingGroup.add(candidateIndex);
+                continue;
+            }
+
+            // the quad is outside if all vertices are either outside or on the plane
+            if (insideMap == 0) {
                 outside.add(candidateIndex);
                 continue;
             }
-            if (vertexInsideMap == 0b1111) {
+
+            // the quad is inside if all vertices are either inside or on the plane
+            if ((insideMap | onPlaneMap) == 0b1111) {
                 inside.add(candidateIndex);
                 continue;
             }
 
-            // split with two quads or three quads depending on the orientation
-            var insideCount = Integer.bitCount(vertexInsideMap);
+            // after dealing with the other cases, now two vertices being on the plane implies the quad is split exactly along its diagonal
+            // insideCount is 2, onPlaneMap is 0b0101 or 0b1010
+            if (onPlaneCount == 2) {
+                // this case can be treated like even splitting if the two on-plane vertices are declared as each part of one of the sides
+                if (onPlaneMap == 0b0101) {
+                    insideMap |= 0b0001;
+                } else {
+                    insideMap |= 0b0010;
+                }
+                insideCount = 2;
+            }
+
+            // one vertex being on the plane now implies the quad is split on a vertex and through an edge.
+            // if there is one vertex inside (and two outside), move the on-plane vertex inside to produce an even split case.
+            // in the other case nothing needs to be done since for splitting the 0-bits in the insideMap are treated as outside.
+            else if (onPlaneCount == 1 && insideCount == 1) {
+                insideMap |= onPlaneMap;
+                insideCount = 2;
+            }
+
+            // split evenly with two quads or three quads (corner chopped off) depending on the orientation
             FullTQuad outsideQuad = FullTQuad.splittingCopy(insideQuad);
             if (insideCount == 2) {
-                splitQuadEven(vertexInsideMap, insideQuad, outsideQuad, splitPlane, splitDistance);
+                splitQuadEven(insideMap, insideQuad, outsideQuad, splitPlane, splitDistance);
             } else if (insideCount == 3) {
-                var secondInsideQuad = splitQuadOdd(vertexInsideMap, insideCount, insideQuad, outsideQuad, splitPlane, splitDistance);
+                var secondInsideQuad = splitQuadOdd(insideMap, insideCount, insideQuad, outsideQuad, splitPlane, splitDistance);
 
                 // TODO: Implement this
             } else {
-                var secondOutsideQuad = splitQuadOdd(vertexInsideMap, insideCount, insideQuad, outsideQuad, splitPlane, splitDistance);
+                var secondOutsideQuad = splitQuadOdd(insideMap, insideCount, insideQuad, outsideQuad, splitPlane, splitDistance);
 
                 // TODO: Implement this
             }
