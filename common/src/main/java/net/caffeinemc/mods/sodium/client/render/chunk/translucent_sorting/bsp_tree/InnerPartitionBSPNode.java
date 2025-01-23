@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree;
 
+import com.mojang.math.Axis;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntConsumer;
@@ -247,10 +248,10 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         LongArrayList points = new LongArrayList((int) (indexes.size() * 1.5));
 
         // keep track of global best splitting group for splitting quads if enabled
-        IntArrayList biggestSplittingGroup = null;
+        IntArrayList bestSplittingGroup = null;
         IntArrayList splittingGroup = null;
         if (TranslucentGeometryCollector.SPLIT_QUADS) {
-            biggestSplittingGroup = new IntArrayList(5);
+            bestSplittingGroup = new IntArrayList(5);
             splittingGroup = new IntArrayList(5);
         }
 
@@ -381,11 +382,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
                                     if (ownDistance == distance || Float.isNaN(distance)) {
                                         splittingGroup.add(pointQuadIndex);
                                     } else {
-                                        if (splittingGroup.size() > biggestSplittingGroup.size()) {
-                                            biggestSplittingGroup.clear();
-                                            biggestSplittingGroup.addAll(splittingGroup);
-                                        }
-                                        splittingGroup.clear();
+                                        flushBestSplittingGroup(splittingGroup, bestSplittingGroup, axis);
                                     }
                                 }
 
@@ -397,9 +394,8 @@ abstract class InnerPartitionBSPNode extends BSPNode {
             }
 
             // check if the splitting group needs to be flushed
-            if (TranslucentGeometryCollector.SPLIT_QUADS && splittingGroup.size() > biggestSplittingGroup.size()) {
-                biggestSplittingGroup.clear();
-                biggestSplittingGroup.addAll(splittingGroup);
+            if (TranslucentGeometryCollector.SPLIT_QUADS) {
+                flushBestSplittingGroup(splittingGroup, bestSplittingGroup, axis);
             }
 
             // check a different axis if everything is in one quadsBefore,
@@ -444,7 +440,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
 //            }
 
             // perform quad splitting to get a sortable result whether it's intersecting or just unsortable as-is
-            return handleUnsortableBySplitting(workspace, indexes, depth, oldNode, biggestSplittingGroup);
+            return handleUnsortableBySplitting(workspace, indexes, depth, oldNode, bestSplittingGroup);
         } else {
             var intersectingHandling = handleIntersecting(workspace, indexes, depth, oldNode);
             if (intersectingHandling != null) {
@@ -458,6 +454,18 @@ abstract class InnerPartitionBSPNode extends BSPNode {
             }
             return multiLeafNode;
         }
+    }
+
+    static void flushBestSplittingGroup(IntArrayList splittingGroup, IntArrayList bestSplittingGroup, int axis) {
+        var currentSize = splittingGroup.size();
+        var newSize = bestSplittingGroup.size();
+
+        // use new splitting group if it's bigger but prefer y-axis for splitting if they're the same size
+        if (currentSize > newSize || currentSize == newSize && axis == 1) {
+            bestSplittingGroup.clear();
+            bestSplittingGroup.addAll(splittingGroup);
+        }
+        splittingGroup.clear();
     }
 
     static private BSPNode handleUnsortableBySplitting(BSPWorkspace workspace, IntArrayList indexes, int depth, BSPNode oldNode, IntArrayList splittingGroup) {
