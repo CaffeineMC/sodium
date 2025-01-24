@@ -39,7 +39,7 @@ public class VertexSorters {
                 perm[index] = index;
             }
 
-            RadixSort.sortIndirect(perm, keys);
+            RadixSort.sortIndirect(perm, keys, true);
 
             return perm;
         }
@@ -134,7 +134,7 @@ public class VertexSorters {
             pVertex2 += primitiveStride;
         }
 
-        RadixSort.sortIndirect(perm, keys);
+        RadixSort.sortIndirect(perm, keys, true);
 
         return perm;
     }

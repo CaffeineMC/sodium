@@ -232,7 +232,7 @@ public class DynamicTopoData extends DynamicData {
                 perm[idx] = idx;
             }
 
-            RadixSort.sortIndirect(perm, keys);
+            RadixSort.sortIndirect(perm, keys, false);
 
             for (int idx = 0; idx < quads.length; idx++) {
                 TranslucentData.writeQuadVertexIndexes(indexBuffer, perm[idx]);

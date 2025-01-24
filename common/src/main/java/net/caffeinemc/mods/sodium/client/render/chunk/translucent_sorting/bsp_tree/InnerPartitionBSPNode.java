@@ -542,7 +542,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
             perm[i] = i;
         }
 
-        RadixSort.sortIndirect(perm, keys);
+        RadixSort.sortIndirect(perm, keys, false);
 
         for (int i = 0; i < indexCount; i++) {
             perm[i] = indexBuffer[perm[i]];

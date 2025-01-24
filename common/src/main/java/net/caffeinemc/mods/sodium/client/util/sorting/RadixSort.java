@@ -33,26 +33,29 @@ public class RadixSort {
     }
 
     /**
-     * <p>Sorts the specified array according to the natural ascending order using an unstable, out-of-place, indirect,
-     * 256-way LSD radix sort.</p>
-     *
-     * <p>This algorithm is well suited for large arrays of integers, especially when they are uniformly distributed
-     * over the entire range of the data type.</p>
+     * <p>Sorts the specified array according to the natural ascending order using an out-of-place, indirect,
+     * 256-way LSD radix sort. This algorithm is well suited for large arrays of integers, especially when they are
+     * uniformly distributed over the entire range of the data type.</p>
      *
      * <p>This method implements an <em>indirect</em> sort. The elements of {@param perm} (which must be
      * exactly the numbers in the interval {@code [0..perm.length)}) will be permuted so that
      * {@code x[perm[i]] < x[perm[i + 1]]}.</p>
      *
-     * <p>While this radix sort is very fast on larger arrays, there is a certain amount of fixed cost involved in
+     * <p>While this implementation is very fast on larger arrays, there is a certain amount of fixed cost involved in
      * computing the histogram and prefix sums. Because of this, a fallback algorithm (currently quick sort) is used
      * for very small arrays to ensure this method performs well for all inputs of all sizes.</p>
      *
+     * <p>If {@param stable} is true, the sorting algorithm is defined to be <i>stable</i>, and duplicate keys will be
+     * returned in the ordering given by {@param keys}. Using a stable sort is slower than an unstable sort, but the
+     * overall time complexity and memory requirements are the same.</p>
+     *
      * @param perm a permutation array indexing {@param keys}.
      * @param keys the array of elements to be sorted.
+     * @param stable whether the sort is allowed to re-order duplicate keys
      */
-    public static void sortIndirect(final int[] perm, final int[] keys) {
+    public static void sortIndirect(final int[] perm, final int[] keys, boolean stable) {
         if (perm.length <= RADIX_SORT_THRESHOLD) {
-            smallSort(perm, keys);
+            smallSort(perm, keys, stable);
             return;
         }
 
@@ -64,7 +67,7 @@ public class RadixSort {
             next = new int[perm.length];
         } catch (OutOfMemoryError oom) {
             // Not enough memory to perform an out-of-place sort, so use an in-place alternative.
-            fallbackInPlaceSort(perm, keys);
+            fallbackSort(perm, keys, stable);
             return;
         }
 
@@ -102,17 +105,21 @@ public class RadixSort {
         }
     }
 
-    private static void smallSort(int[] perm, int[] keys) {
+    private static void smallSort(int[] perm, int[] keys, boolean stable) {
         if (perm.length <= 1) {
             return;
         }
 
-        fallbackInPlaceSort(perm, keys);
+        fallbackSort(perm, keys, stable);
     }
 
     // Fallback sorting method which is guaranteed to be in-place and not require additional memory.
-    private static void fallbackInPlaceSort(int[] perm, int[] keys) {
+    private static void fallbackSort(int[] perm, int[] keys, boolean stable) {
         IntArrays.quickSortIndirect(perm, keys);
+
+        if (stable) {
+            IntArrays.stabilize(perm, keys);
+        }
     }
 
     private static int extractDigit(int key, int digit) {

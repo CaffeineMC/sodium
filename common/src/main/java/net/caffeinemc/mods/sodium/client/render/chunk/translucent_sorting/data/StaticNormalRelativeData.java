@@ -53,7 +53,7 @@ public class StaticNormalRelativeData extends SplitDirectionData {
                 perm[q] = q;
             }
 
-            RadixSort.sortIndirect(perm, keys);
+            RadixSort.sortIndirect(perm, keys, false);
 
             for (int i = 0; i < quads.length; i++) {
                 TranslucentData.writeQuadVertexIndexes(indexBuffer, perm[i]);
@@ -105,7 +105,7 @@ public class StaticNormalRelativeData extends SplitDirectionData {
                     perm[idx] = idx;
                 }
 
-                RadixSort.sortIndirect(perm, keys);
+                RadixSort.sortIndirect(perm, keys, false);
 
                 for (int idx = 0; idx < count; idx++) {
                     TranslucentData.writeQuadVertexIndexes(indexBuffer, perm[idx]);
