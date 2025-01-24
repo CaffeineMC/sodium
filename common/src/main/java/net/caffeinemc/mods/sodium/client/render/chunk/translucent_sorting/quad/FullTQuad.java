@@ -7,6 +7,7 @@ import org.joml.Vector3fc;
 
 public class FullTQuad extends RegularTQuad {
     private final ChunkVertexEncoder.Vertex[] vertices = ChunkVertexEncoder.Vertex.uninitializedQuad();
+    private int sameVertexMap;
     private boolean normalIsVeryAccurate = false;
 
     FullTQuad(ModelQuadFacing facing, int packedNormal) {
@@ -15,7 +16,7 @@ public class FullTQuad extends RegularTQuad {
 
     public static FullTQuad fromVertices(ChunkVertexEncoder.Vertex[] vertices, ModelQuadFacing facing, int packedNormal) {
         var quad = new FullTQuad(facing, packedNormal);
-        quad.initFull(vertices);
+        quad.sameVertexMap = quad.initFull(vertices);
         quad.initVertices(vertices);
 
         return quad;
@@ -48,12 +49,24 @@ public class FullTQuad extends RegularTQuad {
     }
 
     public void updateSplitQuadAfterVertexModification() {
-        this.initExtentsAndCenter(this.vertices);
+        this.sameVertexMap = this.initExtentsAndCenter(this.vertices);
 
         // invalidate vertex positions after modification of the vertices
         this.vertexPositions = null;
 
         // no need to update dot product since splitting a quad doesn't change its normal or dot product
+    }
+
+    public boolean isInvalid() {
+        return isInvalid(this.sameVertexMap);
+    }
+
+    public int getUniqueVertexMap() {
+        return (~this.sameVertexMap) & 0b1111;
+    }
+
+    public int getSameVertexMap() {
+        return this.sameVertexMap;
     }
 
     @Override

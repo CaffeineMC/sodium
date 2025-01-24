@@ -33,5 +33,16 @@ public interface ChunkVertexEncoder {
             to.v = from.v;
             to.light = from.light;
         }
+
+        public static void writeVertex(ChunkVertexEncoder.Vertex targetA, float newX, float newY, float newZ, int newColor, float newAo, float newU, float newV, int newLight) {
+            targetA.x = newX;
+            targetA.y = newY;
+            targetA.z = newZ;
+            targetA.color = newColor;
+            targetA.ao = newAo;
+            targetA.u = newU;
+            targetA.v = newV;
+            targetA.light = newLight;
+        }
     }
 }

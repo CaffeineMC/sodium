@@ -13,15 +13,18 @@ public class RegularTQuad extends TQuad {
 
     public static RegularTQuad fromVertices(ChunkVertexEncoder.Vertex[] vertices, ModelQuadFacing facing, int packedNormal) {
         var quad = new RegularTQuad(facing, packedNormal);
-        quad.initFull(vertices);
+        var sameVertexMap = quad.initFull(vertices);
+        if (isInvalid(sameVertexMap)) {
+            return null;
+        }
         return quad;
     }
 
     @Override
-    void initVertexPositions(ChunkVertexEncoder.Vertex[] vertices, int uniqueVertexes) {
+    void initVertexPositions(ChunkVertexEncoder.Vertex[] vertices, int sameVertexMap) {
         if (!TranslucentGeometryCollector.SPLIT_QUADS) {
             // check if we need to store vertex positions for this quad, only necessary if it's unaligned or rotated (yet aligned)
-            var needsVertexPositions = (uniqueVertexes != 4 || !this.facing.isAligned());
+            var needsVertexPositions = (sameVertexMap != 0 || !this.facing.isAligned());
             if (!needsVertexPositions) {
                 float posXExtent = this.extents[0];
                 float posYExtent = this.extents[1];

@@ -23,7 +23,7 @@ public abstract class TQuad {
      * at the origin onto which the normals are projected. The normals are snapped
      * to the nearest grid point.
      */
-    static final int QUANTIZATION_FACTOR = 4;
+    static final int NORMAL_QUANTIZATION_STEPS = 4;
 
     private static final float INV_QUANTIZE_EPSILON = 256f;
     public static final float QUANTIZE_EPSILON = 1f / INV_QUANTIZE_EPSILON;
@@ -55,10 +55,15 @@ public abstract class TQuad {
         this.packedNormal = packedNormal;
     }
 
-    void initFull(ChunkVertexEncoder.Vertex[] vertices) {
-        var uniqueVertexes = this.initExtentsAndCenter(vertices);
-        this.initVertexPositions(vertices, uniqueVertexes);
+    protected static boolean isInvalid(int sameVertexMap) {
+        return Integer.bitCount(sameVertexMap) > 1;
+    }
+
+    int initFull(ChunkVertexEncoder.Vertex[] vertices) {
+        var sameVertexMap = this.initExtentsAndCenter(vertices);
+        this.initVertexPositions(vertices, sameVertexMap);
         this.initDotProduct();
+        return sameVertexMap;
     }
 
     int initExtentsAndCenter(ChunkVertexEncoder.Vertex[] vertices) {
@@ -71,7 +76,7 @@ public abstract class TQuad {
         float lastX = vertices[3].x;
         float lastY = vertices[3].y;
         float lastZ = vertices[3].z;
-        int uniqueVertexes = 0;
+        int sameVertexMap = 0;
 
         float posXExtent = Float.NEGATIVE_INFINITY;
         float posYExtent = Float.NEGATIVE_INFINITY;
@@ -96,7 +101,8 @@ public abstract class TQuad {
                 xSum += x;
                 ySum += y;
                 zSum += z;
-                uniqueVertexes++;
+            } else {
+                sameVertexMap |= 1 << i;
             }
             if (i != 3) {
                 lastX = x;
@@ -132,7 +138,8 @@ public abstract class TQuad {
         // POS_X, POS_Y, POS_Z, NEG_X, NEG_Y, NEG_Z
         this.extents = new float[] { posXExtent, posYExtent, posZExtent, negXExtent, negYExtent, negZExtent };
 
-        if (!this.facing.isAligned() || uniqueVertexes != 4) {
+        var uniqueVertexes = 4 - Integer.bitCount(sameVertexMap);
+        if ((!this.facing.isAligned() || uniqueVertexes != 4) && uniqueVertexes >= 3) {
             var invUniqueVertexes = 1.0f / uniqueVertexes;
             var centerX = xSum * invUniqueVertexes;
             var centerY = ySum * invUniqueVertexes;
@@ -140,7 +147,7 @@ public abstract class TQuad {
             this.center = new Vector3f(centerX, centerY, centerZ);
         }
 
-        return uniqueVertexes;
+        return sameVertexMap;
     }
 
     void initDotProduct() {
@@ -155,7 +162,7 @@ public abstract class TQuad {
         this.quantizedDotProduct = this.accurateDotProduct;
     }
 
-    void initVertexPositions(ChunkVertexEncoder.Vertex[] vertices, int uniqueVertexes) {
+    void initVertexPositions(ChunkVertexEncoder.Vertex[] vertices, int sameVertexMap) {
     }
 
     private static float getAlignedDotProduct(ModelQuadFacing facing, float[] extents) {
@@ -258,9 +265,9 @@ public abstract class TQuad {
         // in each axis the number of values is 2 * QUANTIZATION_FACTOR + 1.
         // the total number of normals is the number of points on that cube's surface.
         var normal = new Vector3f(
-                (int) (normX * QUANTIZATION_FACTOR),
-                (int) (normY * QUANTIZATION_FACTOR),
-                (int) (normZ * QUANTIZATION_FACTOR));
+                (int) (normX * NORMAL_QUANTIZATION_STEPS),
+                (int) (normY * NORMAL_QUANTIZATION_STEPS),
+                (int) (normZ * NORMAL_QUANTIZATION_STEPS));
         normal.normalize();
         this.quantizedNormal = normal;
     }

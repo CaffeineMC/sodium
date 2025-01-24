@@ -49,7 +49,7 @@ import org.joml.Vector3fc;
  * task result.
  */
 public class TranslucentGeometryCollector {
-    public static final boolean SPLIT_QUADS = true; // TODO: Move into setting
+    public static final boolean SPLIT_QUADS = true; // TODO: Move into setting, make it default on, add limit to geometry amplification
 
     private final SectionPos sectionPos;
 
@@ -106,15 +106,18 @@ public class TranslucentGeometryCollector {
             this.quadLists[direction] = quadList;
         }
 
-        if (facing.isAligned()) {
-            TQuad quad;
-            if (SPLIT_QUADS) {
-                quad = FullTQuad.fromVertices(vertices, facing, packedNormal);
-            } else {
-                quad = RegularTQuad.fromVertices(vertices, facing, packedNormal);
-            }
-            quadList.add(quad);
+        TQuad quad;
+        if (SPLIT_QUADS) {
+            quad = FullTQuad.fromVertices(vertices, facing, packedNormal);
+        } else {
+            quad = RegularTQuad.fromVertices(vertices, facing, packedNormal);
+        }
+        if (quad == null) {
+            return;
+        }
+        quadList.add(quad);
 
+        if (facing.isAligned()) {
             // only update global extents if there are no unaligned quads since this is only
             // used for the convex box test which doesn't work with unaligned quads anyway
             if (!this.hasUnaligned) {
@@ -144,14 +147,6 @@ public class TranslucentGeometryCollector {
             }
         } else {
             this.hasUnaligned = true;
-
-            TQuad quad;
-            if (SPLIT_QUADS) {
-                quad = FullTQuad.fromVertices(vertices, facing, packedNormal);
-            } else {
-                quad = RegularTQuad.fromVertices(vertices, facing, packedNormal);
-            }
-            quadList.add(quad);
 
             // update the two unaligned normals that are tracked
             var distance = quad.getAccurateDotProduct();

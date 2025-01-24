@@ -1,6 +1,5 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree;
 
-import com.mojang.math.Axis;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntConsumer;
@@ -21,6 +20,9 @@ import org.joml.Vector3fc;
 
 import java.util.Arrays;
 import java.util.Random;
+
+import static net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder.Vertex.copyVertexTo;
+import static net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder.Vertex.writeVertex;
 
 /**
  * Performs aligned BSP partitioning of many nodes and constructs appropriate
@@ -511,42 +513,107 @@ abstract class InnerPartitionBSPNode extends BSPNode {
                 continue;
             }
 
-            var vertices = insideQuad.getVertices();
+            // split the geometry with the plane
+            splitCandidate(workspace, splittingGroup, candidateIndex, insideQuad, splitPlane, splitDistance, outside, inside);
+        }
 
-            // calculate inside/outside for each vertex
-            int insideMap = 0;
-            int onPlaneMap = 0;
-            for (int i = 0; i < 4; i++) {
-                var vertex = vertices[i];
-                var dot = splitPlane.dot(vertex.x, vertex.y, vertex.z);
-                if (dot < splitDistance) {
-                    insideMap |= 1 << i;
-                } else if (dot == splitDistance) {
-                    onPlaneMap |= 1 << i;
+        int axes = UNALIGNED_AXIS;
+        var facing = representative.useQuantizedFacing();
+        if (facing.isAligned()) {
+            axes = facing.getAxis();
+        }
+        return InnerBinaryPartitionBSPNode.buildFromParts(workspace, indexes, depth, oldNode, inside, outside, splittingGroup, axes, splitPlane, splitDistance);
+    }
+
+    private static void splitCandidate(BSPWorkspace workspace, IntArrayList splittingGroup, int candidateIndex, FullTQuad insideQuad, Vector3fc splitPlane, float splitDistance, IntArrayList outside, IntArrayList inside) {
+        var vertices = insideQuad.getVertices();
+
+        // calculate inside/outside for each vertex
+        int insideMapUnmasked = 0;
+        int onPlaneMapUnmasked = 0;
+        for (int i = 0; i < 4; i++) {
+            var vertex = vertices[i];
+            var dot = splitPlane.dot(vertex.x, vertex.y, vertex.z);
+            if (dot < splitDistance) {
+                insideMapUnmasked |= 1 << i;
+            } else if (dot == splitDistance) {
+                onPlaneMapUnmasked |= 1 << i;
+            }
+        }
+
+        // filter out the vertices that are duplicated to handle triangles
+        var uniqueVertexMap = insideQuad.getUniqueVertexMap();
+        var insideMap = insideMapUnmasked & uniqueVertexMap;
+        var onPlaneMap = onPlaneMapUnmasked & uniqueVertexMap;
+
+        var onPlaneCount = Integer.bitCount(onPlaneMap);
+        var insideCount = Integer.bitCount(insideMap);
+
+        // treat quads that are actually or nearly (i.e. bent) coplanar as on the plane
+        if (onPlaneCount >= 3) {
+            splittingGroup.add(candidateIndex);
+            return;
+        }
+
+        // the quad is outside if all vertices are either outside or on the plane
+        if (insideMap == 0) {
+            outside.add(candidateIndex);
+            return;
+        }
+
+        // the quad is inside if all vertices are either inside or on the plane
+        if ((insideMap | onPlaneMap) == uniqueVertexMap) { // 0b1111 for quads
+            inside.add(candidateIndex);
+            return;
+        }
+
+        // specially handle triangles (3 vertices).
+        // Lines or points (2 or 1 vertices) should have been filtered out
+        var uniqueVertices = Integer.bitCount(uniqueVertexMap);
+        if (uniqueVertices < 3) {
+            throw new IllegalStateException("Unexpected quad with less than 3 unique vertices");
+        }
+
+        FullTQuad outsideQuad = FullTQuad.splittingCopy(insideQuad);
+        FullTQuad secondOutsideQuad = null;
+        FullTQuad secondInsideQuad = null;
+
+        if (uniqueVertices == 3) {
+            // TODO: deal with the rare and weird case where opposite vertices are identical (i.e. the quad is folded in half along the crease)
+
+            // a vertex is on the split plane
+            var sameVertexMap = insideQuad.getSameVertexMap();
+            if (onPlaneCount == 1) {
+                // if the duplicate vertex is on the plane, treat as regular even quad splitting
+                if ((onPlaneMapUnmasked & sameVertexMap) != 0) {
+                    insideMapUnmasked |= sameVertexMap;
                 }
+
+                // the duplicate vertex is inside or outside, mark it as whichever side has fewer vertices
+                else if (insideCount == 1) {
+                    insideMapUnmasked |= onPlaneMapUnmasked;
+                }
+
+                var insideIndex = Integer.numberOfTrailingZeros(insideMapUnmasked);
+                var outsideIndex = Integer.numberOfTrailingZeros(~(insideMapUnmasked | onPlaneMapUnmasked));
+                splitTriangleVertex(insideIndex, outsideIndex, insideQuad, outsideQuad, splitPlane, splitDistance);
             }
 
-            var onPlaneCount = Integer.bitCount(onPlaneMap);
-            var insideCount = Integer.bitCount(insideMap);
-
-            // treat quads that are actually or nearly (i.e. bent) coplanar as on the plane
-            if (onPlaneCount >= 3) {
-                splittingGroup.add(candidateIndex);
-                continue;
+            // even splitting if the two equal vertices are the corner that's being split off.
+            // at this point onPlaneCount == 0
+            else if (Integer.bitCount(insideMapUnmasked) == 2) {
+                splitQuadEven(insideMapUnmasked, insideQuad, outsideQuad, splitPlane, splitDistance);
             }
 
-            // the quad is outside if all vertices are either outside or on the plane
-            if (insideMap == 0) {
-                outside.add(candidateIndex);
-                continue;
+            // a single vertex is inside or outside (with the other three, including one duplicate, being on the other side)
+            else if (insideCount == 1) {
+                var cornerIndex = Integer.numberOfTrailingZeros(insideMap);
+                splitTriangleCorner(cornerIndex, insideQuad, outsideQuad, splitPlane, splitDistance);
+            } else {
+                var cornerIndex = Integer.numberOfTrailingZeros(~insideMapUnmasked);
+                splitTriangleCorner(cornerIndex, outsideQuad, insideQuad, splitPlane, splitDistance);
             }
-
-            // the quad is inside if all vertices are either inside or on the plane
-            if ((insideMap | onPlaneMap) == 0b1111) {
-                inside.add(candidateIndex);
-                continue;
-            }
-
+        } else { // uniqueVertices == 4, masked == unmasked
             // after dealing with the other cases, now two vertices being on the plane implies the quad is split exactly along its diagonal
             // insideCount is 2, onPlaneMap is 0b0101 or 0b1010
             if (onPlaneCount == 2) {
@@ -568,32 +635,36 @@ abstract class InnerPartitionBSPNode extends BSPNode {
             }
 
             // split evenly with two quads or three quads (corner chopped off) depending on the orientation
-            FullTQuad outsideQuad = FullTQuad.splittingCopy(insideQuad);
             if (insideCount == 2) {
                 splitQuadEven(insideMap, insideQuad, outsideQuad, splitPlane, splitDistance);
             } else if (insideCount == 3) {
-                var secondInsideQuad = splitQuadOdd(insideMap, insideCount, insideQuad, outsideQuad, splitPlane, splitDistance);
+                var cornerIndex = Integer.numberOfTrailingZeros(~insideMap);
+                secondInsideQuad = FullTQuad.splittingCopy(insideQuad);
 
-                // TODO: Implement this
-            } else {
-                var secondOutsideQuad = splitQuadOdd(insideMap, insideCount, insideQuad, outsideQuad, splitPlane, splitDistance);
+                splitQuadOdd(cornerIndex, outsideQuad, secondInsideQuad, insideQuad, splitPlane, splitDistance);
+            } else { // insideCount == 1
+                var cornerIndex = Integer.numberOfTrailingZeros(insideMap);
+                secondOutsideQuad = FullTQuad.splittingCopy(insideQuad);
 
-                // TODO: Implement this
+                splitQuadOdd(cornerIndex, insideQuad, secondOutsideQuad, outsideQuad, splitPlane, splitDistance);
             }
-
-            inside.add(workspace.updateQuad(insideQuad, candidateIndex));
-            outside.add(workspace.pushQuad(outsideQuad));
         }
 
-        int axes = UNALIGNED_AXIS;
-        var facing = representative.useQuantizedFacing();
-        if (facing.isAligned()) {
-            axes = facing.getAxis();
+        addQuadIndex(inside, workspace.updateQuad(insideQuad, candidateIndex));
+        addQuadIndex(outside, workspace.pushQuad(outsideQuad));
+        addQuadIndex(inside, workspace.pushQuad(secondInsideQuad));
+        addQuadIndex(outside, workspace.pushQuad(secondOutsideQuad));
+    }
+
+    static private void addQuadIndex(IntArrayList list, int index) {
+        if (index >= 0) {
+            list.add(index);
         }
-        return InnerBinaryPartitionBSPNode.buildFromParts(workspace, indexes, depth, oldNode, inside, outside, splittingGroup, axes, representative.getQuantizedNormal(), representative.getQuantizedDotProduct());
     }
 
     static private void splitQuadEven(int vertexInsideMap, FullTQuad insideQuad, FullTQuad outsideQuad, Vector3fc splitPlane, float splitDistance) {
+        // the quad is split through two of its opposing edges, producing two regular quads
+
         // split the quad with the plane by iterating all the edges and checking for intersection
         var insideVertices = insideQuad.getVertices();
         var outsideVertices = outsideQuad.getVertices();
@@ -606,7 +677,6 @@ abstract class InnerPartitionBSPNode extends BSPNode {
             }
 
             // get the inner and outer vertices
-            ChunkVertexEncoder.Vertex insideVertex, outsideVertex;
             int insideIndex, outsideIndex;
             if (insideA) {
                 insideIndex = indexA;
@@ -615,72 +685,136 @@ abstract class InnerPartitionBSPNode extends BSPNode {
                 insideIndex = indexB;
                 outsideIndex = indexA;
             }
-            insideVertex = insideVertices[insideIndex];
-            outsideVertex = outsideVertices[outsideIndex];
 
-            // calculate the intersection point and interpolate attributes
-            var insideToOutsideX = outsideVertex.x - insideVertex.x;
-            var insideToOutsideY = outsideVertex.y - insideVertex.y;
-            var insideToOutsideZ = outsideVertex.z - insideVertex.z;
-            var outsideAmount = (splitDistance - splitPlane.dot(insideVertex.x, insideVertex.y, insideVertex.z)) /
-                    splitPlane.dot(insideToOutsideX, insideToOutsideY, insideToOutsideZ);
-
-            var newX = insideVertex.x + insideToOutsideX * outsideAmount;
-            var newY = insideVertex.y + insideToOutsideY * outsideAmount;
-            var newZ = insideVertex.z + insideToOutsideZ * outsideAmount;
-
-            var targetA = insideVertices[outsideIndex];
-            var targetB = outsideVertices[insideIndex];
-            targetA.x = newX;
-            targetA.y = newY;
-            targetA.z = newZ;
-            targetB.x = newX;
-            targetB.y = newY;
-            targetB.z = newZ;
-
-            interpolateAttributes(insideVertex, outsideVertex, targetA, targetB, outsideAmount);
+            interpolateAttributes(splitDistance, splitPlane,
+                    insideVertices[insideIndex], outsideVertices[outsideIndex],
+                    insideVertices[outsideIndex], outsideVertices[insideIndex]);
         }
 
         insideQuad.updateSplitQuadAfterVertexModification();
         outsideQuad.updateSplitQuadAfterVertexModification();
     }
 
-    static private FullTQuad splitQuadOdd(int vertexInsideMap, int insideCount, FullTQuad insideQuad, FullTQuad outsideQuad, Vector3fc splitPlane, float splitDistance) {
-        // split quad by finding the vertex that is outside, the two intersection points and manually constructing
+    static private void splitQuadOdd(int cornerIndex, FullTQuad cornerQuad, FullTQuad cutQuad, FullTQuad bulkQuad, Vector3fc splitPlane, float splitDistance) {
+        // the quad is split through two of its adjacent edges, producing three quads (two triangles and one quad)
+
+        var cornerVertices = cornerQuad.getVertices(); // corner split off by the plane
+        var cutVertices = cutQuad.getVertices(); // quad between the corner and the bulk
+        var bulkVertices = bulkQuad.getVertices(); // quad that retains the three non-cut vertices
+
+        var prevIndex = (cornerIndex - 1) & 0b11;
+        var nextIndex = (cornerIndex + 1) & 0b11;
+        var oppositeIndex = (cornerIndex + 2) & 0b11;
+
+        // TODO: do we need to invert the split plane (or just invert inside/outside vertexes?) based on whether the corner is inside or outside?
+        // answer: I think it just works out in the interpolation, because the negative values cancel out
+
+        var cornerVertex = cornerVertices[cornerIndex];
+
+        interpolateAttributes(splitDistance, splitPlane,
+                cornerVertex, bulkVertices[nextIndex],
+                cornerVertices[nextIndex], cutVertices[nextIndex], bulkVertices[cornerIndex]);
+        interpolateAttributes(splitDistance, splitPlane,
+                cornerVertex, bulkVertices[prevIndex],
+                cornerVertices[prevIndex], cornerVertices[oppositeIndex], cutVertices[cornerIndex]);
+        copyVertexTo(cutVertices[prevIndex], cutVertices[oppositeIndex]);
+
+        cornerQuad.updateSplitQuadAfterVertexModification();
+        cutQuad.updateSplitQuadAfterVertexModification();
+        bulkQuad.updateSplitQuadAfterVertexModification();
+    }
+
+    static private void splitTriangleCorner(int cornerIndex, FullTQuad cornerQuad, FullTQuad bulkQuad, Vector3fc splitPlane, float splitDistance) {
+        // the triangle (degenerate quad) is split through two edges, producing two quads (one triangle and one quad)
+
+        var cornerVertices = cornerQuad.getVertices(); // corner split off by the plane
+        var bulkVertices = bulkQuad.getVertices(); // quad that retains the other vertices
+
+        var prevIndex = (cornerIndex - 1) & 0b11;
+        var nextIndex = (cornerIndex + 1) & 0b11;
+        var oppositeIndex = (cornerIndex + 2) & 0b11;
+
+        var cornerVertex = cornerVertices[cornerIndex];
+
+        interpolateAttributes(splitDistance, splitPlane,
+                cornerVertex, bulkVertices[nextIndex],
+                cornerVertices[nextIndex], cornerVertices[oppositeIndex], bulkVertices[cornerIndex]);
+        copyVertexTo(bulkVertices[prevIndex], bulkVertices[oppositeIndex]);
+        interpolateAttributes(splitDistance, splitPlane,
+                cornerVertex, bulkVertices[prevIndex],
+                cornerVertices[prevIndex], bulkVertices[prevIndex]);
+    }
+
+    static private void splitTriangleVertex(int insideIndex, int outsideIndex, FullTQuad insideQuad, FullTQuad outsideQuad, Vector3fc splitPlane, float splitDistance) {
+        // the triangle (degenerate quad) is split through one edge, producing two triangles
+
         var insideVertices = insideQuad.getVertices();
         var outsideVertices = outsideQuad.getVertices();
 
-        if (insideCount == 3) {
-            vertexInsideMap = vertexInsideMap ^ 0b1111;
-        }
-        var cornerIndex = Integer.numberOfTrailingZeros(vertexInsideMap);
-
-        // TODO
-        return null;
+        interpolateAttributes(splitDistance, splitPlane,
+                insideVertices[insideIndex], outsideVertices[outsideIndex],
+                insideVertices[outsideIndex], outsideVertices[insideIndex]);
     }
 
-    private static void interpolateAttributes(ChunkVertexEncoder.Vertex inside, ChunkVertexEncoder.Vertex outside, ChunkVertexEncoder.Vertex targetA, ChunkVertexEncoder.Vertex targetB, float outsideAmount) {
+    private static void interpolateAttributes(float splitDistance, Vector3fc splitPlane, ChunkVertexEncoder.Vertex inside, ChunkVertexEncoder.Vertex outside, ChunkVertexEncoder.Vertex targetA, ChunkVertexEncoder.Vertex targetB) {
+        interpolateAttributes(splitDistance, splitPlane, inside, outside, targetA, targetB, null);
+    }
+
+    private static void interpolateAttributes(float splitDistance, Vector3fc splitPlane, ChunkVertexEncoder.Vertex inside, ChunkVertexEncoder.Vertex outside, ChunkVertexEncoder.Vertex targetA, ChunkVertexEncoder.Vertex targetB, ChunkVertexEncoder.Vertex targetC) {
+        // calculate the intersection point and interpolate attributes
+        var insideToOutsideX = outside.x - inside.x;
+        var insideToOutsideY = outside.y - inside.y;
+        var insideToOutsideZ = outside.z - inside.z;
+
+        if (insideToOutsideZ == 0 && insideToOutsideX == 0 && insideToOutsideY == 0) {
+            copyVertexToMultiple(inside, targetA, targetB, targetC);
+            return;
+        }
+
+        var splitPlaneEdgeDot = splitPlane.dot(insideToOutsideX, insideToOutsideY, insideToOutsideZ);
+
+        // the edge lies within the split plane if the dot product is zero
+        if (splitPlaneEdgeDot == 0) {
+            // this should never happen because we handle triangles correctly
+            throw new IllegalStateException("Quad with an edge in the split plane should have been handled earlier");
+        }
+
+        var outsideAmount = (splitDistance - splitPlane.dot(inside.x, inside.y, inside.z)) / splitPlaneEdgeDot;
+
+        if (outsideAmount >= 1) {
+            copyVertexToMultiple(outside, targetA, targetB, targetC);
+            return;
+        } else if (outsideAmount <= 0) {
+            copyVertexToMultiple(inside, targetA, targetB, targetC);
+            return;
+        }
+
+        var newX = inside.x + insideToOutsideX * outsideAmount;
+        var newY = inside.y + insideToOutsideY * outsideAmount;
+        var newZ = inside.z + insideToOutsideZ * outsideAmount;
+
         var newColor = ColorMixer.mix(inside.color, outside.color, outsideAmount);
-        targetA.color = newColor;
-        targetB.color = newColor;
-
         var newAo = Mth.lerp(outsideAmount, inside.ao, outside.ao);
-        targetA.ao = newAo;
-        targetB.ao = newAo;
-
         var newU = Mth.lerp(outsideAmount, inside.u, outside.u);
-        targetA.u = newU;
-        targetB.u = newU;
-
         var newV = Mth.lerp(outsideAmount, inside.v, outside.v);
-        targetA.v = newV;
-        targetB.v = newV;
 
         var newLightBl = Mth.lerp(outsideAmount, inside.light & 0xFF, outside.light & 0xFF);
         var newLightSl = Mth.lerp(outsideAmount, inside.light >> 16, outside.light >> 16);
         var newLight = (((int) newLightSl & 0xFF) << 16) | ((int) newLightBl & 0xFF);
-        targetA.light = newLight;
-        targetB.light = newLight;
+
+        writeVertex(targetA, newX, newY, newZ, newColor, newAo, newU, newV, newLight);
+        writeVertex(targetB, newX, newY, newZ, newColor, newAo, newU, newV, newLight);
+        if (targetC != null) {
+            writeVertex(targetC, newX, newY, newZ, newColor, newAo, newU, newV, newLight);
+        }
+    }
+
+    private static void copyVertexToMultiple(ChunkVertexEncoder.Vertex from, ChunkVertexEncoder.Vertex targetA, ChunkVertexEncoder.Vertex targetB, ChunkVertexEncoder.Vertex targetC) {
+        copyVertexTo(from, targetA);
+        copyVertexTo(from, targetB);
+        if (targetC != null) {
+            copyVertexTo(from, targetC);
+        }
     }
 
     static private BSPNode handleIntersecting(BSPWorkspace workspace, IntArrayList indexes, int depth, BSPNode oldNode) {

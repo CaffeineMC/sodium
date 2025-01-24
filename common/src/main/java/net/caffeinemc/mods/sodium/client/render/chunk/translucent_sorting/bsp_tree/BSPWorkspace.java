@@ -44,6 +44,10 @@ class BSPWorkspace extends ObjectArrayList<TQuad> {
     }
 
     int pushQuad(FullTQuad quad) {
+        if (quad == null || quad.isInvalid()) {
+            return -1;
+        }
+
         this.translucentVertexBuffer.push(quad.getVertices(), DefaultMaterials.TRANSLUCENT);
 
         var index = this.size();
@@ -54,6 +58,10 @@ class BSPWorkspace extends ObjectArrayList<TQuad> {
     }
 
     int updateQuad(FullTQuad quad, int quadIndex) {
+        if (quad == null || quad.isInvalid()) {
+            return -1;
+        }
+
         this.translucentVertexBuffer.push(quad.getVertices(), DefaultMaterials.TRANSLUCENT);
 
         this.result.ensureUpdatedQuadIndexes().addModifiedQuadIndex(quadIndex);
