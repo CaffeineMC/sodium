@@ -28,6 +28,7 @@ public class MixinConfig {
         this.addMixinRule("core", true); // TODO: Don't actually allow the user to disable this
 
         this.addMixinRule("debug.checks", false);
+        this.addMixinRule("debug.checks.threading", false);
 
         this.addMixinRule("features", true);
 

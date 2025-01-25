@@ -36,6 +36,7 @@
     "core.world.map.ClientChunkCacheMixin",
     "core.world.map.ClientPacketListenerMixin",
     "core.world.map.ClientLevelMixin",
+    "debug.checks.threading.MixinRenderSystem",
     "features.gui.hooks.console.GameRendererMixin",
     "features.gui.hooks.debug.DebugScreenOverlayMixin",
     "features.gui.hooks.settings.OptionsScreenMixin",
