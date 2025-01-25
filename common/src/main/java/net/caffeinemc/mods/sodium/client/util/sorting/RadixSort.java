@@ -65,13 +65,20 @@ public class RadixSort {
         try {
             offsets = new int[DIGIT_COUNT][BUCKET_COUNT];
             next = new int[perm.length];
+
+            sortIndirect(perm, keys, offsets, next);
         } catch (OutOfMemoryError oom) {
             // Not enough memory to perform an out-of-place sort, so use an in-place alternative.
-            fallbackSort(perm, keys, stable);
-            return;
-        }
+            // If the array is very large (hence causing the memory allocation failure), the sort might take a while.
+            // We need to make sure the allocations are no longer reachable and can be immediately reclaimed.
 
-        sortIndirect(perm, keys, offsets, next);
+            // noinspection UnusedAssignment
+            offsets = null;
+            // noinspection UnusedAssignment
+            next = null;
+
+            fallbackSort(perm, keys, stable);
+        }
     }
 
     private static void sortIndirect(final int[] perm,
