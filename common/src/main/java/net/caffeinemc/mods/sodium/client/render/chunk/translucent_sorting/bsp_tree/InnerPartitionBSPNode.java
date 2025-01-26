@@ -706,8 +706,8 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         var nextIndex = (cornerIndex + 1) & 0b11;
         var oppositeIndex = (cornerIndex + 2) & 0b11;
 
-        // TODO: do we need to invert the split plane (or just invert inside/outside vertexes?) based on whether the corner is inside or outside?
-        // answer: I think it just works out in the interpolation, because the negative values cancel out
+        // inverting the split plane based on whether the corner is inside or outside doesn't seem to be necessary,
+        // because it just works out in the interpolation, and the negative values cancel out
 
         var cornerVertex = cornerVertices[cornerIndex];
 
@@ -743,6 +743,9 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         interpolateAttributes(splitDistance, splitPlane,
                 cornerVertex, bulkVertices[prevIndex],
                 cornerVertices[prevIndex], bulkVertices[prevIndex]);
+
+        cornerQuad.updateSplitQuadAfterVertexModification();
+        bulkQuad.updateSplitQuadAfterVertexModification();
     }
 
     static private void splitTriangleVertex(int insideIndex, int outsideIndex, FullTQuad insideQuad, FullTQuad outsideQuad, Vector3fc splitPlane, float splitDistance) {
@@ -754,6 +757,9 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         interpolateAttributes(splitDistance, splitPlane,
                 insideVertices[insideIndex], outsideVertices[outsideIndex],
                 insideVertices[outsideIndex], outsideVertices[insideIndex]);
+
+        insideQuad.updateSplitQuadAfterVertexModification();
+        outsideQuad.updateSplitQuadAfterVertexModification();
     }
 
     private static void interpolateAttributes(float splitDistance, Vector3fc splitPlane, ChunkVertexEncoder.Vertex inside, ChunkVertexEncoder.Vertex outside, ChunkVertexEncoder.Vertex targetA, ChunkVertexEncoder.Vertex targetB) {
