@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
@@ -57,7 +58,7 @@ public class DynamicBSPData extends DynamicData {
     }
 
     public static DynamicBSPData fromMesh(CombinedCameraPos cameraPos, TQuad[] quads, SectionPos sectionPos,
-                                          TranslucentData oldData, ChunkMeshBufferBuilder translucentVertexBuffer) {
+                                          TranslucentData oldData, QuadSplittingMode quadSplittingMode, ChunkMeshBufferBuilder translucentVertexBuffer) {
         BSPNode oldRoot = null;
         int generation = 0;
         boolean prepareNodeReuse = false;
@@ -69,7 +70,7 @@ public class DynamicBSPData extends DynamicData {
             // (times the section has been built)
             prepareNodeReuse = generation >= NODE_REUSE_MIN_GENERATION;
         }
-        var result = BSPNode.buildBSP(quads, sectionPos, oldRoot, prepareNodeReuse, translucentVertexBuffer);
+        var result = BSPNode.buildBSP(quads, sectionPos, oldRoot, prepareNodeReuse, quadSplittingMode, translucentVertexBuffer);
 
         var newQuadCount = quads.length + result.getAppendedQuadCount();
         var dynamicData = new DynamicBSPData(sectionPos, newQuadCount, result, cameraPos.getAbsoluteCameraPos(), generation);

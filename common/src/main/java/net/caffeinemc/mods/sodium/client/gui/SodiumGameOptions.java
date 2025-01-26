@@ -5,11 +5,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import net.caffeinemc.mods.sodium.client.gui.options.TextProvider;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.client.util.FileUtil;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
 import net.minecraft.client.GraphicsStatus;
 import net.minecraft.network.chat.Component;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
@@ -48,6 +50,7 @@ public class SodiumGameOptions {
 
         @SerializedName("sorting_enabled_v2") // reset the older option in configs before we started hiding it
         public boolean sortingEnabled = true;
+        public QuadSplittingMode quadSplittingMode = QuadSplittingMode.SAFE;
 
         public SortBehavior getSortBehavior() {
             return this.sortingEnabled ? SortBehavior.DYNAMIC_DEFER_NEARBY_ZERO_FRAMES : SortBehavior.OFF;

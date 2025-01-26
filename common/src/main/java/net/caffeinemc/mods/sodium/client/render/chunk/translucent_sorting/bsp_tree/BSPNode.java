@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree;
 
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import org.joml.Vector3fc;
 
@@ -33,13 +34,13 @@ public abstract class BSPNode {
     }
 
     public static BSPResult buildBSP(TQuad[] quads, SectionPos sectionPos, BSPNode oldRoot,
-                                     boolean prepareNodeReuse, ChunkMeshBufferBuilder translucentVertexBuffer) {
+                                     boolean prepareNodeReuse, QuadSplittingMode quadSplittingMode, ChunkMeshBufferBuilder translucentVertexBuffer) {
         // throw if there's too many quads
         InnerPartitionBSPNode.validateQuadCount(quads.length);
 
         // create a workspace and then the nodes figure out the recursive building.
         // throws if the BSP can't be built, null if none is necessary
-        var workspace = new BSPWorkspace(quads, sectionPos, prepareNodeReuse, translucentVertexBuffer);
+        var workspace = new BSPWorkspace(quads, sectionPos, prepareNodeReuse, quadSplittingMode, translucentVertexBuffer);
 
         // initialize the indexes to all quads
         int[] initialIndexes = new int[quads.length];
@@ -54,7 +55,7 @@ public abstract class BSPNode {
         return result;
     }
 
-    private static boolean doubleLeafPossible(TQuad quadA, TQuad quadB) {
+    private static boolean doubleLeafPossible(TQuad quadA, TQuad quadB, boolean failOnIntersection) {
         // check for coplanar or mutually invisible quads
         var facingA = quadA.getFacing();
         var facingB = quadB.getFacing();
@@ -83,8 +84,8 @@ public abstract class BSPNode {
 
         // aligned otherwise mutually invisible
         else {
-            return !TopoGraphSorting.orthogonalQuadVisibleThrough(quadA, quadB)
-                    && !TopoGraphSorting.orthogonalQuadVisibleThrough(quadB, quadA);
+            return !TopoGraphSorting.orthogonalQuadVisibleThrough(quadA, quadB, failOnIntersection)
+                    && !TopoGraphSorting.orthogonalQuadVisibleThrough(quadB, quadA, failOnIntersection);
         }
 
         return false;
@@ -104,7 +105,7 @@ public abstract class BSPNode {
             var quadA = workspace.get(quadIndexA);
             var quadB = workspace.get(quadIndexB);
 
-            if (doubleLeafPossible(quadA, quadB)) {
+            if (doubleLeafPossible(quadA, quadB, workspace.canSplitQuads())) {
                 return new LeafDoubleBSPNode(quadIndexA, quadIndexB);
             }
         }

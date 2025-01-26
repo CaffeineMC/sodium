@@ -199,7 +199,7 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
             var oldData = this.render.getTranslucentData();
             var translucentMesh = meshes.get(DefaultTerrainRenderPasses.TRANSLUCENT);
             ChunkMeshBufferBuilder translucentVertexBuffer = null;
-            if (translucentMesh != null) {
+            if (translucentMesh != null && collector.isSplittingQuads()) {
                 translucentVertexBuffer = buffers.get(DefaultTerrainRenderPasses.TRANSLUCENT).getVertexBuffer(ModelQuadFacing.UNASSIGNED);
                 translucentVertexBuffer.restart();
             }

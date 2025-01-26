@@ -171,7 +171,7 @@ public class DynamicTopoData extends DynamicData {
             if (this.GFNITrigger && !this.isDirectTrigger) {
                 this.intBuffer = indexBuffer;
                 var sortStart = initial ? 0 : System.nanoTime();
-                var result = TopoGraphSorting.topoGraphSort(this, DynamicTopoData.this.quads, DynamicTopoData.this.distancesByNormal, cameraPos.getRelativeCameraPos());
+                var result = TopoGraphSorting.topoGraphSort(this, DynamicTopoData.this.quads, DynamicTopoData.this.distancesByNormal, cameraPos.getRelativeCameraPos(), false);
                 this.intBuffer = null;
 
                 var sortTime = initial ? 0 : System.nanoTime() - sortStart;

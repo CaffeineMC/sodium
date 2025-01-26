@@ -41,11 +41,11 @@ public class StaticTopoData extends MixedDirectionData {
         }
     }
 
-    public static StaticTopoData fromMesh(TQuad[] quads, SectionPos sectionPos) {
+    public static StaticTopoData fromMesh(TQuad[] quads, SectionPos sectionPos, boolean failOnIntersection) {
         var sorter = new StaticSorter(quads.length);
         var indexWriter = new QuadIndexConsumerIntoBuffer(sorter.getIntBuffer());
 
-        if (!TopoGraphSorting.topoGraphSort(indexWriter, quads, null, null)) {
+        if (!TopoGraphSorting.topoGraphSort(indexWriter, quads, null, null, failOnIntersection)) {
             sorter.getIndexBuffer().free();
             return null;
         }

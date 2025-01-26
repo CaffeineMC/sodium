@@ -5,7 +5,6 @@ import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.DefaultFluidRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.data.BuiltSectionMeshParts;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.BSPBuildFailureException;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.*;
@@ -18,8 +17,6 @@ import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBu
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
-import org.joml.Vector3f;
-import org.joml.Vector3fc;
 
 /**
  * The translucent geometry collector collects the data from the renderers and
@@ -49,9 +46,8 @@ import org.joml.Vector3fc;
  * task result.
  */
 public class TranslucentGeometryCollector {
-    public static final boolean SPLIT_QUADS = true; // TODO: Move into setting, make it default on, add limit to geometry amplification
-
     private final SectionPos sectionPos;
+    private final QuadSplittingMode quadSplittingMode = SodiumClientMod.options().performance.quadSplittingMode;
 
     // true if there are any unaligned quads
     private boolean hasUnaligned = false;
@@ -107,7 +103,7 @@ public class TranslucentGeometryCollector {
         }
 
         TQuad quad;
-        if (SPLIT_QUADS) {
+        if (this.isSplittingQuads()) {
             quad = FullTQuad.fromVertices(vertices, facing, packedNormal);
         } else {
             quad = RegularTQuad.fromVertices(vertices, facing, packedNormal);
@@ -172,6 +168,10 @@ public class TranslucentGeometryCollector {
                 this.untrackedUnalignedNormalCount++;
             }
         }
+    }
+
+    public boolean isSplittingQuads() {
+        return this.quadSplittingMode.allowsSplitting();
     }
 
     /**
@@ -324,12 +324,10 @@ public class TranslucentGeometryCollector {
 
         // use the given set of quad count limits to determine if a static topo sort
         // should be attempted
-
-        // TODO: make topo sort fail on intersecting geometry when SPLIT_QUADS is enabled
-//        var attemptLimitIndex = Mth.clamp(normalCount, 2, STATIC_TOPO_SORT_ATTEMPT_LIMITS.length - 1);
-//        if (this.quads.length <= STATIC_TOPO_SORT_ATTEMPT_LIMITS[attemptLimitIndex]) {
-//            return SortType.STATIC_TOPO;
-//        }
+        var attemptLimitIndex = Mth.clamp(normalCount, 2, STATIC_TOPO_SORT_ATTEMPT_LIMITS.length - 1);
+        if (this.quads.length <= STATIC_TOPO_SORT_ATTEMPT_LIMITS[attemptLimitIndex]) {
+            return SortType.STATIC_TOPO;
+        }
 
         return SortType.DYNAMIC;
     }
@@ -407,7 +405,7 @@ public class TranslucentGeometryCollector {
         // (no backface culling) and all vertices are in the UNASSIGNED direction.
         if (this.sortType == SortType.STATIC_TOPO) {
             ensureUnassignedVertexCount(vertexCounts);
-            var result = StaticTopoData.fromMesh(this.quads, this.sectionPos);
+            var result = StaticTopoData.fromMesh(this.quads, this.sectionPos, this.isSplittingQuads());
             if (result != null) {
                 return result;
             }
@@ -424,7 +422,7 @@ public class TranslucentGeometryCollector {
         if (this.sortType == SortType.DYNAMIC) {
             ensureUnassignedVertexCount(vertexCounts);
             try {
-                return DynamicBSPData.fromMesh(cameraPos, this.quads, this.sectionPos, oldData, translucentVertexBuffer);
+                return DynamicBSPData.fromMesh(cameraPos, this.quads, this.sectionPos, oldData, this.quadSplittingMode, translucentVertexBuffer);
             } catch (BSPBuildFailureException e) {
                 var geometryPlanes = GeometryPlanes.fromQuadLists(this.sectionPos, this.quads);
                 return DynamicTopoData.fromMesh(
