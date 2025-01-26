@@ -29,6 +29,9 @@ public enum QuadSplittingMode implements TextProvider {
     }
 
     public int getMaxExtraQuads(int baseQuadCount) {
+        if (Float.isInfinite(this.quadSplittingFactor)) {
+            return Integer.MAX_VALUE;
+        }
         return Mth.ceil(baseQuadCount * this.quadSplittingFactor);
     }
 }
