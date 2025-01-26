@@ -16,7 +16,9 @@ public class FullTQuad extends RegularTQuad {
 
     public static FullTQuad fromVertices(ChunkVertexEncoder.Vertex[] vertices, ModelQuadFacing facing, int packedNormal) {
         var quad = new FullTQuad(facing, packedNormal);
-        quad.sameVertexMap = quad.initFull(vertices);
+        quad.sameVertexMap = quad.initExtentsAndCenter(vertices);
+
+        quad.initDotProduct();
         quad.initVertices(vertices);
 
         return quad;

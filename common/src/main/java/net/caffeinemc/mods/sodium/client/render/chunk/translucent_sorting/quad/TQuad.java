@@ -59,13 +59,6 @@ public abstract class TQuad {
         return Integer.bitCount(sameVertexMap) > 1;
     }
 
-    int initFull(ChunkVertexEncoder.Vertex[] vertices) {
-        var sameVertexMap = this.initExtentsAndCenter(vertices);
-        this.initVertexPositions(vertices, sameVertexMap);
-        this.initDotProduct();
-        return sameVertexMap;
-    }
-
     int initExtentsAndCenter(ChunkVertexEncoder.Vertex[] vertices) {
         float xSum = 0;
         float ySum = 0;
@@ -160,9 +153,6 @@ public abstract class TQuad {
             this.accurateDotProduct = this.getCenter().dot(normX, normY, normZ);
         }
         this.quantizedDotProduct = this.accurateDotProduct;
-    }
-
-    void initVertexPositions(ChunkVertexEncoder.Vertex[] vertices, int sameVertexMap) {
     }
 
     private static float getAlignedDotProduct(ModelQuadFacing facing, float[] extents) {
