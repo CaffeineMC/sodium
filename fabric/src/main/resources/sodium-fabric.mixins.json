@@ -9,11 +9,12 @@
     "conformVisibility": true
   },
   "client": [
-      "core.model.quad.BakedQuadMixin",
-      "features.model.MultiPartBakedModelMixin",
-      "features.model.WeightedBakedModelMixin",
-      "features.model.WeightedRandomListMixin",
-      "features.render.model.block.ModelBlockRendererMixin",
-      "features.world.biome.BiomeMixin"
+    "core.model.quad.BakedQuadMixin",
+    "features.model.DelegateBakedModelMixin",
+    "features.model.MultiPartBakedModelMixin",
+    "features.model.WeightedBakedModelMixin",
+    "features.model.WeightedRandomListMixin",
+    "features.render.model.block.ModelBlockRendererMixin",
+    "features.world.biome.BiomeMixin"
   ]
 }

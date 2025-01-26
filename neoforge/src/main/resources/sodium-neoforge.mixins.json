@@ -9,20 +9,21 @@
     "conformVisibility" : true
   },
   "client" : [
-      "core.model.quad.BakedQuadMixin",
-      "features.model.MultiPartBakedModelMixin",
-      "features.model.WeightedBakedModelMixin",
-      "features.model.WeightedRandomListMixin",
-      "features.render.model.block.ModelBlockRendererMixin",
-      "features.world.biome.BiomeMixin",
-      "platform.neoforge.AbstractBlockRenderContextMixin",
-      "platform.neoforge.AuxiliaryLightManagerMixin",
-      "platform.neoforge.ChunkRenderTypeSetAccessor",
-      "platform.neoforge.ClientHooksMixin",
-      "platform.neoforge.EntrypointMixin",
-      "platform.neoforge.LevelSliceMixin",
-      "platform.neoforge.ModelDataMixin",
-      "platform.neoforge.ResourcePackLoaderMixin",
-      "platform.neoforge.SimpleBakedModelAccessor"
+    "core.model.quad.BakedQuadMixin",
+    "features.model.DelegateBakedModelMixin",
+    "features.model.MultiPartBakedModelMixin",
+    "features.model.WeightedBakedModelMixin",
+    "features.model.WeightedRandomListMixin",
+    "features.render.model.block.ModelBlockRendererMixin",
+    "features.world.biome.BiomeMixin",
+    "platform.neoforge.AbstractBlockRenderContextMixin",
+    "platform.neoforge.AuxiliaryLightManagerMixin",
+    "platform.neoforge.ChunkRenderTypeSetAccessor",
+    "platform.neoforge.ClientHooksMixin",
+    "platform.neoforge.EntrypointMixin",
+    "platform.neoforge.LevelSliceMixin",
+    "platform.neoforge.ModelDataMixin",
+    "platform.neoforge.ResourcePackLoaderMixin",
+    "platform.neoforge.SimpleBakedModelAccessor"
   ]
 }
