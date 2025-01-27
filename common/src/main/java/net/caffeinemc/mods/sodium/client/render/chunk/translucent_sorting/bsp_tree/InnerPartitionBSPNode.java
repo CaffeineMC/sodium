@@ -56,6 +56,7 @@ import static net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.Chunk
  * reasonable and common use case (I haven't been able to determine that it is).
  */
 abstract class InnerPartitionBSPNode extends BSPNode {
+    private static final float SPLIT_PLANE_EPSILON = 0.00001f;
     private static final int NODE_REUSE_THRESHOLD = 30;
     private static final int MAX_INTERSECTION_ATTEMPTS = 500;
     protected static final int UNALIGNED_AXIS = -1;
@@ -534,10 +535,11 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         for (int i = 0; i < 4; i++) {
             var vertex = vertices[i];
             var dot = splitPlane.dot(vertex.x, vertex.y, vertex.z);
-            if (dot < splitDistance) {
-                insideMapUnmasked |= 1 << i;
-            } else if (dot == splitDistance) {
+            var delta = dot - splitDistance;
+            if (Math.abs(delta) < SPLIT_PLANE_EPSILON) {
                 onPlaneMapUnmasked |= 1 << i;
+            } else if (delta < 0) { // dot < splitDistance
+                insideMapUnmasked |= 1 << i;
             }
         }
 
