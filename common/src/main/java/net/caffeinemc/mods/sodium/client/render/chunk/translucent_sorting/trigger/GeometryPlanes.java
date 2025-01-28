@@ -1,14 +1,15 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger;
 
+import java.util.Collection;
+
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
+
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.minecraft.core.SectionPos;
-import org.joml.Vector3f;
-import org.joml.Vector3fc;
-
-import java.util.Collection;
 
 /**
  * GeometryPlanes stores the NormalPlanes for different normals, both aligned
