@@ -1,15 +1,14 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger;
 
-import org.joml.Vector3fc;
-import java.util.Arrays;
-
+import it.unimi.dsi.fastutil.floats.FloatOpenHashSet;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.util.interval_tree.DoubleInterval;
 import net.caffeinemc.mods.sodium.client.util.interval_tree.Interval.Bounded;
-
-import it.unimi.dsi.fastutil.floats.FloatOpenHashSet;
-import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.AlignableNormal;
 import net.minecraft.core.SectionPos;
+import org.joml.Vector3fc;
+
+import java.util.Arrays;
 
 /**
  * NormalPlanes represents planes by a normal and a list of distances. Initially they're
@@ -17,7 +16,10 @@ import net.minecraft.core.SectionPos;
  */
 public class NormalPlanes {
     final FloatOpenHashSet relativeDistancesSet = new FloatOpenHashSet(16);
-    final AlignableNormal normal;
+
+    final Vector3fc normal;
+    final int alignedDirection;
+
     final SectionPos sectionPos;
 
     float[] relativeDistances; // relative to the base distance
@@ -25,25 +27,23 @@ public class NormalPlanes {
     long relDistanceHash;
     double baseDistance;
 
-    private NormalPlanes(SectionPos sectionPos, AlignableNormal normal) {
+    private NormalPlanes(SectionPos sectionPos, Vector3fc normal, int alignedDirection) {
         this.sectionPos = sectionPos;
+
         this.normal = normal;
+        this.alignedDirection = alignedDirection;
     }
 
     public NormalPlanes(SectionPos sectionPos, Vector3fc normal) {
-        this(sectionPos, AlignableNormal.fromUnaligned(normal));
+        this(sectionPos, normal, ModelQuadFacing.UNASSIGNED_ORDINAL);
     }
 
     public NormalPlanes(SectionPos sectionPos, int alignedDirection) {
-        this(sectionPos, AlignableNormal.fromAligned(alignedDirection));
+        this(sectionPos, ModelQuadFacing.ALIGNED_NORMALS[alignedDirection], alignedDirection);
     }
 
-    boolean addPlaneMember(float vertexX, float vertexY, float vertexZ) {
-        return this.addPlaneMember(this.normal.dot(vertexX, vertexY, vertexZ));
-    }
-
-    public boolean addPlaneMember(float distance) {
-        return this.relativeDistancesSet.add(distance);
+    public void addPlaneMember(float distance) {
+        this.relativeDistancesSet.add(distance);
     }
 
     public void prepareIntegration() {
@@ -64,17 +64,17 @@ public class NormalPlanes {
         }
 
         // sort the array ascending
-        Arrays.sort(relativeDistances);
+        Arrays.sort(this.relativeDistances);
 
         this.baseDistance = this.normal.dot(
-                sectionPos.minBlockX(), sectionPos.minBlockY(), sectionPos.minBlockZ());
+                this.sectionPos.minBlockX(), this.sectionPos.minBlockY(), this.sectionPos.minBlockZ());
         this.distanceRange = new DoubleInterval(
                 this.relativeDistances[0] + this.baseDistance,
                 this.relativeDistances[size - 1] + this.baseDistance,
                 Bounded.CLOSED);
     }
 
-    public void prepareAndInsert(Object2ReferenceOpenHashMap<Vector3fc, float[]> distancesByNormal) {
+    public void prepareAndInsert(Object2ReferenceMap<Vector3fc, float[]> distancesByNormal) {
         this.prepareIntegration();
         if (distancesByNormal != null) {
             distancesByNormal.put(this.normal, this.relativeDistances);

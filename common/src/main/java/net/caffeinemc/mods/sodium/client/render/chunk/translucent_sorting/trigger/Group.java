@@ -1,8 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger;
 
 import net.caffeinemc.mods.sodium.client.util.interval_tree.DoubleInterval;
-
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.AlignableNormal;
+import org.joml.Vector3fc;
 
 /**
  * A group represents a set of face planes of the same normal within a section.
@@ -33,7 +32,7 @@ class Group {
 
     double baseDistance;
 
-    AlignableNormal normal;
+    Vector3fc normal;
 
     Group(NormalPlanes normalPlanes) {
         this.replaceWith(normalPlanes);
@@ -50,7 +49,7 @@ class Group {
 
     private boolean planeTriggered(double start, double end) {
         return start < this.distances.getEnd() && end > this.distances.getStart()
-                && AlignableNormal.queryRange(this.facePlaneDistances,
+                && NormalList.queryRange(this.facePlaneDistances,
                         (float) (start - this.baseDistance), (float) (end - this.baseDistance));
     }
 

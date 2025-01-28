@@ -1,9 +1,9 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
-import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.AlignableNormal;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.NormalList;
 import net.caffeinemc.mods.sodium.client.util.collections.BitArray;
 import org.joml.Vector3fc;
 
@@ -92,17 +92,17 @@ public class TopoGraphSorting {
         return vis;
     }
 
-    private static boolean testSeparatorRange(Object2ReferenceOpenHashMap<Vector3fc, float[]> distancesByNormal,
+    private static boolean testSeparatorRange(Object2ReferenceMap<Vector3fc, float[]> distancesByNormal,
                                               Vector3fc normal, float start, float end) {
         var distances = distancesByNormal.get(normal);
         if (distances == null) {
             return false;
         }
-        return AlignableNormal.queryRange(distances, start, end);
+        return NormalList.queryRange(distances, start, end);
     }
 
     private static boolean visibilityWithSeparator(TQuad quadA, TQuad quadB,
-                                                   Object2ReferenceOpenHashMap<Vector3fc, float[]> distancesByNormal, Vector3fc cameraPos) {
+                                                   Object2ReferenceMap<Vector3fc, float[]> distancesByNormal, Vector3fc cameraPos) {
         // check if there is an aligned separator
         for (int direction = 0; direction < ModelQuadFacing.DIRECTIONS; direction++) {
             var facing = ModelQuadFacing.VALUES[direction];
@@ -163,7 +163,7 @@ public class TopoGraphSorting {
      * @return true if the other quad is visible through the first quad
      */
     private static boolean quadVisibleThrough(TQuad quad, TQuad other,
-                                              Object2ReferenceOpenHashMap<Vector3fc, float[]> distancesByNormal, Vector3fc cameraPos) {
+                                              Object2ReferenceMap<Vector3fc, float[]> distancesByNormal, Vector3fc cameraPos) {
         if (quad == other) {
             return false;
         }
@@ -250,7 +250,7 @@ public class TopoGraphSorting {
      */
     public static boolean topoGraphSort(
             IntConsumer indexConsumer, TQuad[] allQuads,
-            Object2ReferenceOpenHashMap<Vector3fc, float[]> distancesByNormal,
+            Object2ReferenceMap<Vector3fc, float[]> distancesByNormal,
             Vector3fc cameraPos) {
         // if enabled, check for visibility and produce a mapping of indices
         TQuad[] quads;
@@ -284,7 +284,7 @@ public class TopoGraphSorting {
         return topoGraphSort(indexConsumer, quads, quadCount, activeToRealIndex, distancesByNormal, cameraPos);
     }
 
-    public static boolean topoGraphSort(IntConsumer indexConsumer, TQuad[] quads, int quadCount, int[] activeToRealIndex, Object2ReferenceOpenHashMap<Vector3fc, float[]> distancesByNormal, Vector3fc cameraPos) {
+    public static boolean topoGraphSort(IntConsumer indexConsumer, TQuad[] quads, int quadCount, int[] activeToRealIndex, Object2ReferenceMap<Vector3fc, float[]> distancesByNormal, Vector3fc cameraPos) {
         // special case for 0 to 2 quads
         if (quadCount == 0) {
             return true;
