@@ -9,6 +9,7 @@ public class FullTQuad extends RegularTQuad {
     private final ChunkVertexEncoder.Vertex[] vertices = ChunkVertexEncoder.Vertex.uninitializedQuad();
     private int sameVertexMap;
     private boolean normalIsVeryAccurate = false;
+    private int updateBufferIndex = -1;
 
     FullTQuad(ModelQuadFacing facing, int packedNormal) {
         super(facing, packedNormal);
@@ -69,6 +70,18 @@ public class FullTQuad extends RegularTQuad {
 
     public int getSameVertexMap() {
         return this.sameVertexMap;
+    }
+
+    public boolean hasUpdateBufferIndex() {
+        return this.updateBufferIndex != -1;
+    }
+
+    public int getUpdateBufferIndex() {
+        return this.updateBufferIndex;
+    }
+
+    public void setUpdateBufferIndex(int index) {
+        this.updateBufferIndex = index;
     }
 
     @Override

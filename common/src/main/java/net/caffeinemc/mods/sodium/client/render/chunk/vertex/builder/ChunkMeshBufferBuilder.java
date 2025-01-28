@@ -4,6 +4,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import org.lwjgl.system.MemoryUtil;
+
 import java.nio.ByteBuffer;
 
 public class ChunkMeshBufferBuilder {
@@ -28,20 +29,31 @@ public class ChunkMeshBufferBuilder {
         this.initialCapacity = initialCapacity;
     }
 
-    public void push(ChunkVertexEncoder.Vertex[] vertices, Material material) {
-        this.push(vertices, material.bits());
+    public int push(ChunkVertexEncoder.Vertex[] vertices, Material material) {
+        return this.push(vertices, material.bits());
     }
 
-    public void push(ChunkVertexEncoder.Vertex[] vertices, int materialBits) {
+    public int push(ChunkVertexEncoder.Vertex[] vertices, int materialBits) {
+        this.ensureCapacity(4);
+
+        var position = this.vertexCount * this.stride;
+        this.write(position, vertices, materialBits);
+        this.vertexCount += 4;
+
+        return position;
+    }
+
+    public void write(int position, ChunkVertexEncoder.Vertex[] vertices, Material material) {
+        this.write(position, vertices, material.bits());
+    }
+
+    public void write(int position, ChunkVertexEncoder.Vertex[] vertices, int materialBits) {
         if (vertices.length != 4) {
             throw new IllegalArgumentException("Only quad primitives (with 4 vertices) can be pushed");
         }
 
-        this.ensureCapacity(4);
-
-        this.encoder.write(MemoryUtil.memAddress(this.buffer, this.vertexCount * this.stride),
+        this.encoder.write(MemoryUtil.memAddress(this.buffer, position),
                 materialBits, vertices, this.sectionIndex);
-        this.vertexCount += 4;
     }
 
     private void ensureCapacity(int vertexCount) {
