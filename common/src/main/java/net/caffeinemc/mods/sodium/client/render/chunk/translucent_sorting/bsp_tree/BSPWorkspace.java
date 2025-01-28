@@ -76,9 +76,15 @@ class BSPWorkspace extends ObjectArrayList<TQuad> {
             return -1;
         }
 
-        this.translucentVertexBuffer.push(quad.getVertices(), DefaultMaterials.TRANSLUCENT);
+        // only add quads to the update index list once, and don't write it into the update buffer multiple times
+        if (quad.hasUpdateBufferIndex()) {
+            this.translucentVertexBuffer.write(quad.getUpdateBufferIndex(), quad.getVertices(), DefaultMaterials.TRANSLUCENT);
+        } else {
+            var newUpdateBufferIndex = this.translucentVertexBuffer.push(quad.getVertices(), DefaultMaterials.TRANSLUCENT);
+            quad.setUpdateBufferIndex(newUpdateBufferIndex);
 
-        this.result.ensureUpdatedQuadIndexes().addModifiedQuadIndex(quadIndex);
+            this.result.ensureUpdatedQuadIndexes().addModifiedQuadIndex(quadIndex);
+        }
 
         return quadIndex;
     }
