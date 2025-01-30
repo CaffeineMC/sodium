@@ -84,7 +84,9 @@ public class GeometryPlanes {
         var normalPlanes = unalignedDistances.get(cleanedNormal);
         if (normalPlanes == null) {
             normalPlanes = new NormalPlanes(sectionPos, new Vector3f(normal));
-            unalignedDistances.put(cleanedNormal, normalPlanes);
+
+            // NOTE: importantly use the cleaned normal here, not the cleanedNormal, which is mutable
+            unalignedDistances.put(normalPlanes.normal, normalPlanes);
         }
         normalPlanes.addPlaneMember(distance);
     }
