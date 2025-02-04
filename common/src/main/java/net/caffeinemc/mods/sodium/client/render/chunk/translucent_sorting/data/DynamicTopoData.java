@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
-import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.GeometryPlanes;
 import net.caffeinemc.mods.sodium.client.util.sorting.RadixSort;
@@ -42,11 +42,11 @@ public class DynamicTopoData extends DynamicData {
     private boolean pendingTriggerIsDirect;
 
     private final TQuad[] quads;
-    private final Object2ReferenceOpenHashMap<Vector3fc, float[]> distancesByNormal;
+    private final Object2ReferenceMap<Vector3fc, float[]> distancesByNormal;
 
     private DynamicTopoData(SectionPos sectionPos, int vertexCount, TQuad[] quads,
                             GeometryPlanes geometryPlanes, Vector3dc initialCameraPos,
-                            Object2ReferenceOpenHashMap<Vector3fc, float[]> distancesByNormal) {
+                            Object2ReferenceMap<Vector3fc, float[]> distancesByNormal) {
         super(sectionPos, vertexCount, quads.length, geometryPlanes, initialCameraPos);
         this.quads = quads;
         this.distancesByNormal = distancesByNormal;

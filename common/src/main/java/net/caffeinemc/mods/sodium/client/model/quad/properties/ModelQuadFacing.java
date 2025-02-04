@@ -23,6 +23,7 @@ public enum ModelQuadFacing {
 
     public static final int COUNT = VALUES.length;
     public static final int DIRECTIONS = VALUES.length - 1;
+    public static final int UNASSIGNED_ORDINAL = ModelQuadFacing.UNASSIGNED.ordinal();
 
     public static final int NONE = 0;
     public static final int ALL = (1 << COUNT) - 1;
