@@ -1,8 +1,13 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree;
 
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.GeometryPlanes;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.FullTQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.minecraft.core.SectionPos;
+import org.joml.Vector3fc;
 
 /**
  * The BSP workspace holds the state during the BSP building process. (see also
@@ -13,28 +18,74 @@ import net.minecraft.core.SectionPos;
  * global array instead of making a new one at each tree level doesn't appear to
  * have any performance benefit.
  */
-class BSPWorkspace {
-    /**
-     * All the quads in the section.
-     */
-    final TQuad[] quads;
-
-    final SectionPos sectionPos;
-
+class BSPWorkspace extends ObjectArrayList<TQuad> {
     final BSPResult result = new BSPResult();
 
+    final SectionPos sectionPos;
     final boolean prepareNodeReuse;
+    final QuadSplittingMode quadSplittingMode;
+    private int remainingNewQuads = 0;
 
-    BSPWorkspace(TQuad[] quads, SectionPos sectionPos, boolean prepareNodeReuse) {
-        this.quads = quads;
+    private final ChunkMeshBufferBuilder translucentVertexBuffer;
+
+    BSPWorkspace(TQuad[] quads, SectionPos sectionPos, boolean prepareNodeReuse, QuadSplittingMode quadSplittingMode, ChunkMeshBufferBuilder translucentVertexBuffer) {
+        super(quads);
         this.sectionPos = sectionPos;
         this.prepareNodeReuse = prepareNodeReuse;
+        this.quadSplittingMode = quadSplittingMode;
+        this.translucentVertexBuffer = translucentVertexBuffer;
+
+        if (quadSplittingMode.allowsSplitting()) {
+            this.remainingNewQuads = quadSplittingMode.getMaxExtraQuads(quads.length);
+        }
+    }
+
+    boolean canSplitQuads() {
+        return this.remainingNewQuads > 0;
     }
 
     // TODO: better bidirectional triggering: integrate bidirectionality in GFNI if
     // top-level topo sorting isn't used anymore (and only use half as much memory
-    // by not storing it double)
+    // by not storing trigger planes twice)
     void addAlignedPartitionPlane(int axis, float distance) {
-        result.addDoubleSidedPlane(this.sectionPos, axis, distance);
+        this.result.addDoubleSidedAlignedPlane(this.sectionPos, axis, distance);
+    }
+
+    void addUnalignedPartitionPlane(Vector3fc planeNormal, float distance) {
+        this.result.addDoubleSidedUnalignedPlane(this.sectionPos, planeNormal, distance);
+    }
+
+    int pushQuad(FullTQuad quad) {
+        if (quad == null || quad.isInvalid()) {
+            return -1;
+        }
+
+        this.remainingNewQuads--;
+
+        this.translucentVertexBuffer.push(quad.getVertices(), DefaultMaterials.TRANSLUCENT);
+
+        var index = this.size();
+        this.add(quad);
+        this.result.ensureUpdatedQuadIndexes().addAppendedQuadIndex(index);
+
+        return index;
+    }
+
+    int updateQuad(FullTQuad quad, int quadIndex) {
+        if (quad == null || quad.isInvalid()) {
+            return -1;
+        }
+
+        // only add quads to the update index list once, and don't write it into the update buffer multiple times
+        if (quad.hasUpdateBufferIndex()) {
+            this.translucentVertexBuffer.write(quad.getUpdateBufferIndex(), quad.getVertices(), DefaultMaterials.TRANSLUCENT);
+        } else {
+            var newUpdateBufferIndex = this.translucentVertexBuffer.push(quad.getVertices(), DefaultMaterials.TRANSLUCENT);
+            quad.setUpdateBufferIndex(newUpdateBufferIndex);
+
+            this.result.ensureUpdatedQuadIndexes().addModifiedQuadIndex(quadIndex);
+        }
+
+        return quadIndex;
     }
 }

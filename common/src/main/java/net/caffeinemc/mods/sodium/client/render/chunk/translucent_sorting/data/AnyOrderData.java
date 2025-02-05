@@ -1,8 +1,11 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.minecraft.core.SectionPos;
+
+import java.util.Arrays;
 
 /**
  * With this sort type the section's translucent quads can be rendered in any
@@ -38,6 +41,12 @@ public class AnyOrderData extends SplitDirectionData {
         }
         this.sorterOnce = null;
         return sorter;
+    }
+
+    @Override
+    public boolean oldDataMatches(TranslucentGeometryCollector collector, SortType sortType, TQuad[] quads, int[] vertexCounts) {
+        // for the NONE sort type the ranges need to be the same, the actual geometry doesn't matter
+        return sortType == SortType.NONE && this.getQuadCount() == quads.length && Arrays.equals(this.getVertexCounts(), vertexCounts);
     }
 
     /**

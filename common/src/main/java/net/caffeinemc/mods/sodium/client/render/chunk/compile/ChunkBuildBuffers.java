@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.compile;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.buffers.BakedChunkModelBuilder;
@@ -9,6 +10,8 @@ import net.caffeinemc.mods.sodium.client.render.chunk.data.BuiltSectionMeshParts
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.DefaultTerrainRenderPasses;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.BSPResult;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
@@ -100,6 +103,37 @@ public class ChunkBuildBuffers {
             mergedBufferBuilder.put(buffer);
         }
 
+        return new BuiltSectionMeshParts(mergedBuffer, vertexCounts);
+    }
+
+    public BuiltSectionMeshParts createCompactModifiedTranslucentMesh(BuiltSectionMeshParts prevMesh, ChunkMeshBufferBuilder updateBufferBuilder, BSPResult.UpdatedQuadIndexes updatedQuadIndexes) {
+        if (updateBufferBuilder.isEmpty()) {
+            return null;
+        }
+
+//        var oldQuadCount = TranslucentData.vertexCountToQuadCount(prevMesh.getVertexCounts()[ModelQuadFacing.UNASSIGNED.ordinal()]);
+//        var addedQuadCount = updatedQuadIndexes.getAddedQuadCount();
+//        var totalNewQuadCount = oldQuadCount + addedQuadCount;
+//        System.out.println("old quads: " + oldQuadCount + ", added quads: " + addedQuadCount + ", total quads: " + totalNewQuadCount + ", new/old factor: " + (float) totalNewQuadCount / oldQuadCount);
+
+        var totalVertexCount = prevMesh.getVertexCounts()[ModelQuadFacing.UNASSIGNED.ordinal()] +
+                TranslucentData.quadCountToVertexCount(updatedQuadIndexes.getAddedQuadCount());
+        var vertexStride = this.vertexType.getVertexFormat().getStride();
+        var mergedBuffer = new NativeBuffer(totalVertexCount * vertexStride);
+        var quadStride = vertexStride * TranslucentData.VERTICES_PER_QUAD;
+        var mergedBufferBuilder = mergedBuffer.getDirectBuffer();
+        var updateBuffer = updateBufferBuilder.slice();
+
+        // write the entire old mesh first, then apply modifications
+        mergedBufferBuilder.put(prevMesh.getVertexData().getDirectBuffer());
+
+        for (int sourceQuadIndex = 0; sourceQuadIndex < updatedQuadIndexes.size(); sourceQuadIndex++) {
+            var targetQuadIndex = updatedQuadIndexes.getInt(sourceQuadIndex);
+            mergedBufferBuilder.put(targetQuadIndex * quadStride, updateBuffer, sourceQuadIndex * quadStride, quadStride);
+        }
+
+        int[] vertexCounts = new int[ModelQuadFacing.COUNT];
+        vertexCounts[ModelQuadFacing.UNASSIGNED.ordinal()] = totalVertexCount;
         return new BuiltSectionMeshParts(mergedBuffer, vertexCounts);
     }
 

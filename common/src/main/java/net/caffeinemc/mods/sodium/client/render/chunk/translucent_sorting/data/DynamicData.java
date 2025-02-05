@@ -9,8 +9,8 @@ public abstract class DynamicData extends MixedDirectionData {
     private GeometryPlanes geometryPlanes;
     private final Vector3dc initialCameraPos;
 
-    DynamicData(SectionPos sectionPos, int vertexCount, int quadCount, GeometryPlanes geometryPlanes, Vector3dc initialCameraPos) {
-        super(sectionPos, vertexCount, quadCount);
+    DynamicData(SectionPos sectionPos, int quadCount, GeometryPlanes geometryPlanes, Vector3dc initialCameraPos) {
+        super(sectionPos, quadCount);
         this.geometryPlanes = geometryPlanes;
         this.initialCameraPos = initialCameraPos;
     }

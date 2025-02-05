@@ -1,7 +1,9 @@
-package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting;
+package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad;
 
 import java.util.Arrays;
 
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.DefaultFluidRenderer;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
@@ -12,7 +14,7 @@ import net.caffeinemc.mods.sodium.api.util.NormI8;
  * Represents a quad for the purposes of translucency sorting. Called TQuad to
  * avoid confusion with other quad classes.
  */
-public class TQuad {
+public abstract class TQuad {
     /**
      * The quantization factor with which the normals are quantized such that there
      * are fewer possible unique normals. The factor describes the number of steps
@@ -21,25 +23,127 @@ public class TQuad {
      * at the origin onto which the normals are projected. The normals are snapped
      * to the nearest grid point.
      */
-    private static final int QUANTIZATION_FACTOR = 4;
+    static final int NORMAL_QUANTIZATION_STEPS = 4;
 
-    private ModelQuadFacing facing;
-    private final float[] extents;
-    private float[] vertexPositions;
-    private final int packedNormal;
-    private final float accurateDotProduct;
-    private float quantizedDotProduct;
-    private Vector3fc center; // null on aligned quads
-    private Vector3fc quantizedNormal;
-    private Vector3fc accurateNormal;
+    private static final float INV_QUANTIZE_EPSILON = 256f;
+    public static final float QUANTIZE_EPSILON = 1f / INV_QUANTIZE_EPSILON;
 
-    private TQuad(ModelQuadFacing facing, float[] extents, float[] vertexPositions, Vector3fc center, int packedNormal) {
+    static {
+        // ensure it fits with the fluid renderer epsilon and that it's a power-of-two
+        // fraction
+        var targetEpsilon = DefaultFluidRenderer.EPSILON * 2.1f;
+        if (QUANTIZE_EPSILON <= targetEpsilon && Integer.bitCount((int) INV_QUANTIZE_EPSILON) == 1) {
+            throw new RuntimeException("epsilon is invalid: " + QUANTIZE_EPSILON);
+        }
+    }
+
+    ModelQuadFacing facing;
+    final int packedNormal;
+    float[] extents;
+    float accurateDotProduct;
+    float quantizedDotProduct;
+    Vector3fc center; // null on aligned quads
+    Vector3fc quantizedNormal;
+    Vector3fc accurateNormal;
+
+    TQuad(ModelQuadFacing facing, int packedNormal) {
+        if (facing.isAligned()) {
+            packedNormal = ModelQuadFacing.PACKED_ALIGNED_NORMALS[facing.ordinal()];
+        }
+
         this.facing = facing;
-        this.extents = extents;
-        this.vertexPositions = vertexPositions;
-        this.center = center;
         this.packedNormal = packedNormal;
+    }
 
+    protected static boolean isInvalid(int sameVertexMap) {
+        return Integer.bitCount(sameVertexMap) > 1;
+    }
+
+    int initExtentsAndCenter(ChunkVertexEncoder.Vertex[] vertices) {
+        float xSum = 0;
+        float ySum = 0;
+        float zSum = 0;
+
+        // keep track of distinct vertices to compute the center accurately for
+        // degenerate quads
+        float lastX = vertices[3].x;
+        float lastY = vertices[3].y;
+        float lastZ = vertices[3].z;
+        int sameVertexMap = 0;
+
+        float posXExtent = Float.NEGATIVE_INFINITY;
+        float posYExtent = Float.NEGATIVE_INFINITY;
+        float posZExtent = Float.NEGATIVE_INFINITY;
+        float negXExtent = Float.POSITIVE_INFINITY;
+        float negYExtent = Float.POSITIVE_INFINITY;
+        float negZExtent = Float.POSITIVE_INFINITY;
+
+        for (int i = 0; i < 4; i++) {
+            float x = vertices[i].x;
+            float y = vertices[i].y;
+            float z = vertices[i].z;
+
+            posXExtent = Math.max(posXExtent, x);
+            posYExtent = Math.max(posYExtent, y);
+            posZExtent = Math.max(posZExtent, z);
+            negXExtent = Math.min(negXExtent, x);
+            negYExtent = Math.min(negYExtent, y);
+            negZExtent = Math.min(negZExtent, z);
+
+            if (x != lastX || y != lastY || z != lastZ) {
+                xSum += x;
+                ySum += y;
+                zSum += z;
+            } else {
+                sameVertexMap |= 1 << i;
+            }
+            if (i != 3) {
+                lastX = x;
+                lastY = y;
+                lastZ = z;
+            }
+        }
+
+        // shrink quad in non-normal directions to prevent intersections caused by
+        // epsilon offsets applied by FluidRenderer
+        if (this.facing != ModelQuadFacing.POS_X && this.facing != ModelQuadFacing.NEG_X) {
+            posXExtent -= QUANTIZE_EPSILON;
+            negXExtent += QUANTIZE_EPSILON;
+            if (negXExtent > posXExtent) {
+                negXExtent = posXExtent;
+            }
+        }
+        if (this.facing != ModelQuadFacing.POS_Y && this.facing != ModelQuadFacing.NEG_Y) {
+            posYExtent -= QUANTIZE_EPSILON;
+            negYExtent += QUANTIZE_EPSILON;
+            if (negYExtent > posYExtent) {
+                negYExtent = posYExtent;
+            }
+        }
+        if (this.facing != ModelQuadFacing.POS_Z && this.facing != ModelQuadFacing.NEG_Z) {
+            posZExtent -= QUANTIZE_EPSILON;
+            negZExtent += QUANTIZE_EPSILON;
+            if (negZExtent > posZExtent) {
+                negZExtent = posZExtent;
+            }
+        }
+
+        // POS_X, POS_Y, POS_Z, NEG_X, NEG_Y, NEG_Z
+        this.extents = new float[] { posXExtent, posYExtent, posZExtent, negXExtent, negYExtent, negZExtent };
+
+        var uniqueVertexes = 4 - Integer.bitCount(sameVertexMap);
+        if ((!this.facing.isAligned() || uniqueVertexes != 4) && uniqueVertexes >= 3) {
+            var invUniqueVertexes = 1.0f / uniqueVertexes;
+            var centerX = xSum * invUniqueVertexes;
+            var centerY = ySum * invUniqueVertexes;
+            var centerZ = zSum * invUniqueVertexes;
+            this.center = new Vector3f(centerX, centerY, centerZ);
+        }
+
+        return sameVertexMap;
+    }
+
+    void initDotProduct() {
         if (this.facing.isAligned()) {
             this.accurateDotProduct = getAlignedDotProduct(this.facing, this.extents);
         } else {
@@ -55,13 +159,7 @@ public class TQuad {
         return extents[facing.ordinal()] * facing.getSign();
     }
 
-    static TQuad fromAligned(ModelQuadFacing facing, float[] extents, float[] vertexPositions, Vector3fc center) {
-        return new TQuad(facing, extents, vertexPositions, center, ModelQuadFacing.PACKED_ALIGNED_NORMALS[facing.ordinal()]);
-    }
-
-    static TQuad fromUnaligned(ModelQuadFacing facing, float[] extents, float[] vertexPositions, Vector3fc center, int packedNormal) {
-        return new TQuad(facing, extents, vertexPositions, center, packedNormal);
-    }
+    public abstract float[] getVertexPositions();
 
     public ModelQuadFacing getFacing() {
         return this.facing;
@@ -89,31 +187,6 @@ public class TQuad {
 
     public float[] getExtents() {
         return this.extents;
-    }
-
-    public float[] getVertexPositions() {
-        // calculate vertex positions from extents if there's no cached value
-        // (we don't want to be preemptively collecting vertex positions for all aligned quads)
-        if (this.vertexPositions == null) {
-            this.vertexPositions = new float[12];
-
-            var facingAxis = this.facing.getAxis();
-            var xRange = facingAxis == 0 ? 0 : 3;
-            var yRange = facingAxis == 1 ? 0 : 3;
-            var zRange = facingAxis == 2 ? 0 : 3;
-
-            var itemIndex = 0;
-            for (int x = 0; x <= xRange; x += 3) {
-                for (int y = 0; y <= yRange; y += 3) {
-                    for (int z = 0; z <= zRange; z += 3) {
-                        this.vertexPositions[itemIndex++] = this.extents[x];
-                        this.vertexPositions[itemIndex++] = this.extents[y + 1];
-                        this.vertexPositions[itemIndex++] = this.extents[z + 2];
-                    }
-                }
-            }
-        }
-        return this.vertexPositions;
     }
 
     public Vector3fc getCenter() {
@@ -182,14 +255,14 @@ public class TQuad {
         // in each axis the number of values is 2 * QUANTIZATION_FACTOR + 1.
         // the total number of normals is the number of points on that cube's surface.
         var normal = new Vector3f(
-                (int) (normX * QUANTIZATION_FACTOR),
-                (int) (normY * QUANTIZATION_FACTOR),
-                (int) (normZ * QUANTIZATION_FACTOR));
+                (int) (normX * NORMAL_QUANTIZATION_STEPS),
+                (int) (normY * NORMAL_QUANTIZATION_STEPS),
+                (int) (normZ * NORMAL_QUANTIZATION_STEPS));
         normal.normalize();
         this.quantizedNormal = normal;
     }
 
-    int getQuadHash() {
+    public int getQuadHash() {
         // the hash code needs to be particularly collision resistant
         int result = 1;
         result = 31 * result + Arrays.hashCode(this.extents);
