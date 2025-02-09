@@ -43,6 +43,8 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
+import java.util.Iterator;
+
 public class BlockRenderer extends AbstractBlockRenderContext {
     private final ColorProviderRegistry colorProviderRegistry;
     private final int[] vertexColors = new int[4];
@@ -55,6 +57,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
     @Nullable
     private ColorProvider<BlockState> colorProvider;
     private TranslucentGeometryCollector collector;
+    private boolean allowDowngrade;
 
     public BlockRenderer(ColorProviderRegistry colorRegistry, LightPipelineProvider lighters) {
         this.colorProviderRegistry = colorRegistry;
@@ -99,9 +102,20 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         modelData = PlatformModelAccess.getInstance().getModelData(slice, model, state, pos, slice.getPlatformModelData(pos));
 
         Iterable<RenderType> renderTypes = PlatformModelAccess.getInstance().getModelRenderTypes(level, model, state, pos, random, modelData);
+        this.allowDowngrade = true;
 
-        for (RenderType type : renderTypes) {
-            this.type = type;
+        Iterator<RenderType> it = renderTypes.iterator();
+        var defaultType = ItemBlockRenderTypes.getChunkRenderType(state);
+
+        while (it.hasNext()) {
+            this.type = it.next();
+
+            // TODO: This can be removed once we have a better solution for https://github.com/CaffeineMC/sodium/issues/2868
+            // If the model contains any materials that are not the default, we can't allow the block to be downgraded. This avoids a potentially incorrect render order if there are overlapping quads.
+            if (it.hasNext() || this.type != defaultType) {
+                this.allowDowngrade = false;
+            }
+
             ((FabricBakedModel) model).emitBlockQuads(this.level, state, pos, this.randomSupplier, this);
         }
 
@@ -228,7 +242,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
     }
 
     private @Nullable TerrainRenderPass attemptPassDowngrade(TextureAtlasSprite sprite, TerrainRenderPass pass) {
-        if (Workarounds.isWorkaroundEnabled(Workarounds.Reference.INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE)) {
+        if (!allowDowngrade || Workarounds.isWorkaroundEnabled(Workarounds.Reference.INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE)) {
             return null;
         }
 
