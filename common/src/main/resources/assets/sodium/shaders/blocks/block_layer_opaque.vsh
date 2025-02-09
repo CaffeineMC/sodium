@@ -19,6 +19,7 @@ out float v_FragDistance;
 
 uniform int u_FogShape;
 uniform vec3 u_RegionOffset;
+uniform vec2 u_TexCoordShrink;
 
 uniform sampler2D u_LightTex; // The light map texture sampler
 
@@ -47,7 +48,7 @@ void main() {
 
     // Add the light color to the vertex color, and pass the texture coordinates to the fragment shader
     v_Color = _vert_color * texture(u_LightTex, _vert_tex_light_coord);
-    v_TexCoord = _vert_tex_diffuse_coord;
+    v_TexCoord = _vert_tex_diffuse_coord - (_vert_tex_diffuse_coord_bias * u_TexCoordShrink);
 
     v_MaterialMipBias = _material_mip_bias(_material_params);
 #ifdef USE_FRAGMENT_DISCARD
