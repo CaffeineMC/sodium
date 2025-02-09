@@ -39,8 +39,8 @@ public class SectionRenderDataUnsafe {
     private static final long OFFSET_SLICE_MASK = 16;
     private static final long OFFSET_ELEMENT_COUNTS = 20;
 
-    private static final long ALIGNMENT = 8;
-    private static final long STRIDE = 48; // cache-line friendly! :)
+    private static final long ALIGNMENT = 8; // 8 byte (64 bit) alignment for reading longs
+    private static final long STRIDE = 48;
 
     public static long allocateHeap(int count) {
         final var bytes = STRIDE * count;
