@@ -11,10 +11,13 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
+
 public class ChunkRenderList {
     private final RenderRegion region;
 
     private final byte[] sectionsWithGeometry = new byte[RenderRegion.REGION_SIZE];
+    private final byte[] prevSectionsWithGeometry = new byte[RenderRegion.REGION_SIZE];
     private int sectionsWithGeometryCount = 0;
     private int prevSectionsWithGeometryCount = 0;
 
@@ -45,6 +48,20 @@ public class ChunkRenderList {
 
     // clamping the relative camera position to the region bounds means there can only be very few different distances
     private static final int SORTING_HISTOGRAM_SIZE = RenderRegion.REGION_WIDTH + RenderRegion.REGION_HEIGHT + RenderRegion.REGION_LENGTH - 2;
+
+    public void prepareForRender(SectionPos cameraPos, int[] sortItems) {
+        this.sortSections(cameraPos, sortItems);
+
+        // invalidate batch cache if the render list changed
+        if (this.prevSectionsWithGeometryCount != this.sectionsWithGeometryCount ||
+                !Arrays.equals(this.sectionsWithGeometry, this.prevSectionsWithGeometry)) {
+            this.region.clearAllCachedBatches();
+
+            // reset cache invalidation, the newly built batch will remain valid until the next change
+            this.prevSectionsWithGeometryCount = this.sectionsWithGeometryCount;
+            System.arraycopy(this.sectionsWithGeometry, 0, this.prevSectionsWithGeometry, 0, RenderRegion.REGION_SIZE);
+        }
+    }
 
     public void sortSections(SectionPos cameraPos, int[] sortItems) {
         var cameraX = Mth.clamp(cameraPos.getX() - this.region.getChunkX(), 0, RenderRegion.REGION_WIDTH - 1);
@@ -86,26 +103,14 @@ public class ChunkRenderList {
         int index = render.getSectionIndex();
         int flags = render.getFlags();
 
-        if (((flags >>> RenderSectionFlags.HAS_BLOCK_GEOMETRY) & 1) != 0) {
-            var byteIndex = (byte) index;
-            if (this.sectionsWithGeometry[this.sectionsWithGeometryCount] != byteIndex) {
-                this.sectionsWithGeometry[this.sectionsWithGeometryCount] = byteIndex;
-                this.prevSectionsWithGeometryCount = -1;
-            }
-            this.sectionsWithGeometryCount++;
-        }
+        this.sectionsWithGeometry[this.sectionsWithGeometryCount] = (byte) index;
+        this.sectionsWithGeometryCount += (flags >>> RenderSectionFlags.HAS_BLOCK_GEOMETRY) & 1;
 
         this.sectionsWithSprites[this.sectionsWithSpritesCount] = (byte) index;
         this.sectionsWithSpritesCount += (flags >>> RenderSectionFlags.HAS_ANIMATED_SPRITES) & 1;
 
         this.sectionsWithEntities[this.sectionsWithEntitiesCount] = (byte) index;
         this.sectionsWithEntitiesCount += (flags >>> RenderSectionFlags.HAS_BLOCK_ENTITIES) & 1;
-    }
-
-    public boolean getAndResetCacheInvalidation() {
-        var cacheIsInvalidated = this.prevSectionsWithGeometryCount != this.sectionsWithGeometryCount;
-        this.prevSectionsWithGeometryCount = this.sectionsWithGeometryCount;
-        return cacheIsInvalidated;
     }
 
     public @Nullable ByteIterator sectionsWithGeometryIterator(boolean reverse) {

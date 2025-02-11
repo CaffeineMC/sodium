@@ -97,8 +97,9 @@ public class VisibleChunkCollector implements OcclusionCuller.Visitor {
             sorted.add(renderList);
         }
 
+        // sort sections and invalidate batch caches if the render lists changed
         for (var list : sorted) {
-            list.sortSections(sectionPos, sortItems);
+            list.prepareForRender(sectionPos, sortItems);
         }
 
         return new SortedRenderLists(sorted);
