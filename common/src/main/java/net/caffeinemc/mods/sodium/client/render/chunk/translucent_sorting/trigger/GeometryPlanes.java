@@ -1,13 +1,14 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger;
 
-import java.util.Collection;
-
-import org.joml.Vector3fc;
-
+import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
 import net.minecraft.core.SectionPos;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
+
+import java.util.Collection;
 
 /**
  * GeometryPlanes stores the NormalPlanes for different normals, both aligned
@@ -15,7 +16,8 @@ import net.minecraft.core.SectionPos;
  */
 public class GeometryPlanes {
     private NormalPlanes[] alignedPlanes;
-    private Object2ReferenceOpenHashMap<Vector3fc, NormalPlanes> unalignedPlanes;
+    private Object2ReferenceMap<Vector3fc, NormalPlanes> unalignedPlanes;
+    private final Vector3f unalignedNormalScratch = new Vector3f();
 
     public NormalPlanes[] getAligned() {
         return this.alignedPlanes;
@@ -35,27 +37,20 @@ public class GeometryPlanes {
         return this.unalignedPlanes.values();
     }
 
-    public Object2ReferenceOpenHashMap<Vector3fc, NormalPlanes> getUnalignedOrCreate() {
+    public Object2ReferenceMap<Vector3fc, NormalPlanes> getUnalignedOrCreate() {
         if (this.unalignedPlanes == null) {
             this.unalignedPlanes = new Object2ReferenceOpenHashMap<>();
         }
         return this.unalignedPlanes;
     }
 
-    public Collection<Vector3fc> getUnalignedNormals() {
-        if (this.unalignedPlanes == null) {
-            return null;
-        }
-        return this.unalignedPlanes.keySet();
-    }
-
     NormalPlanes getPlanesForNormal(NormalList normalList) {
         var normal = normalList.getNormal();
-        if (normal.isAligned()) {
+        if (normalList.isAligned()) {
             if (this.alignedPlanes == null) {
                 return null;
             }
-            return this.alignedPlanes[normal.getAlignedDirection()];
+            return this.alignedPlanes[normalList.getAlignedDirection()];
         } else {
             if (this.unalignedPlanes == null) {
                 return null;
@@ -81,12 +76,35 @@ public class GeometryPlanes {
 
     public void addUnalignedPlane(SectionPos sectionPos, Vector3fc normal, float distance) {
         var unalignedDistances = this.getUnalignedOrCreate();
-        var normalPlanes = unalignedDistances.get(normal);
+
+        // create a copy of the vector where -0 is turned into +0,
+        // this avoids non-equality when comparing normals where just the sign on 0 is different
+        var cleanedNormal = this.cleanNormal(normal);
+
+        var normalPlanes = unalignedDistances.get(cleanedNormal);
         if (normalPlanes == null) {
-            normalPlanes = new NormalPlanes(sectionPos, normal);
-            unalignedDistances.put(normal, normalPlanes);
+            normalPlanes = new NormalPlanes(sectionPos, new Vector3f(normal));
+
+            // NOTE: importantly use the cleaned normal here, not the cleanedNormal, which is mutable
+            unalignedDistances.put(normalPlanes.normal, normalPlanes);
         }
         normalPlanes.addPlaneMember(distance);
+    }
+
+    private Vector3f cleanNormal(Vector3fc normal) {
+        var cleanedNormal = this.unalignedNormalScratch.set(normal);
+
+        // convert any occurrences of 0 into +0, note that -0.0f == 0.0f
+        if (cleanedNormal.x == 0.0f) {
+            cleanedNormal.x = 0.0f;
+        }
+        if (cleanedNormal.y == 0.0f) {
+            cleanedNormal.y = 0.0f;
+        }
+        if (cleanedNormal.z == 0.0f) {
+            cleanedNormal.z = 0.0f;
+        }
+        return cleanedNormal;
     }
 
     public void addQuadPlane(SectionPos sectionPos, TQuad quad) {
@@ -98,7 +116,7 @@ public class GeometryPlanes {
         }
     }
 
-    private void prepareAndInsert(Object2ReferenceOpenHashMap<Vector3fc, float[]> distancesByNormal) {
+    private void prepareAndInsert(Object2ReferenceMap<Vector3fc, float[]> distancesByNormal) {
         if (this.alignedPlanes != null) {
             for (var normalPlanes : this.alignedPlanes) {
                 if (normalPlanes != null) {
@@ -117,7 +135,7 @@ public class GeometryPlanes {
         this.prepareAndInsert(null);
     }
 
-    public Object2ReferenceOpenHashMap<Vector3fc, float[]> prepareAndGetDistances() {
+    public Object2ReferenceMap<Vector3fc, float[]> prepareAndGetDistances() {
         var distancesByNormal = new Object2ReferenceOpenHashMap<Vector3fc, float[]>(10);
         this.prepareAndInsert(distancesByNormal);
         return distancesByNormal;

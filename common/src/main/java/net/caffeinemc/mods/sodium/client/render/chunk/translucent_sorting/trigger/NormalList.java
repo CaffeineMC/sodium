@@ -1,20 +1,19 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger;
 
-import java.util.Collection;
-
-import org.joml.Math;
-import org.joml.Vector3dc;
-
-import net.caffeinemc.mods.sodium.client.util.interval_tree.DoubleInterval;
-import net.caffeinemc.mods.sodium.client.util.interval_tree.Interval;
-import net.caffeinemc.mods.sodium.client.util.interval_tree.Interval.Bounded;
-import net.caffeinemc.mods.sodium.client.util.interval_tree.IntervalTree;
-
+import it.unimi.dsi.fastutil.floats.FloatArrays;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
 import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.AlignableNormal;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
+import net.caffeinemc.mods.sodium.client.util.interval_tree.DoubleInterval;
+import net.caffeinemc.mods.sodium.client.util.interval_tree.Interval;
+import net.caffeinemc.mods.sodium.client.util.interval_tree.Interval.Bounded;
+import net.caffeinemc.mods.sodium.client.util.interval_tree.IntervalTree;
+import org.joml.Vector3dc;
+import org.joml.Vector3fc;
+
+import java.util.Collection;
 
 /**
  * A normal list contains all the face planes that have the same normal.
@@ -35,7 +34,8 @@ public class NormalList {
     /**
      * The normal of this normal list.
      */
-    private final AlignableNormal normal;
+    private final Vector3fc normal;
+    private final int alignedDirection;
 
     /**
      * An interval tree of group intervals. Since this only stores intervals, the
@@ -61,18 +61,27 @@ public class NormalList {
      * 
      * @param normal       The unit normal vector
      */
-    NormalList(AlignableNormal normal) {
+    NormalList(Vector3fc normal, int alignedDirection) {
         this.normal = normal;
+        this.alignedDirection = alignedDirection;
     }
 
-    public AlignableNormal getNormal() {
+    public Vector3fc getNormal() {
         return this.normal;
     }
 
+    public boolean isAligned() {
+        return this.alignedDirection != ModelQuadFacing.UNASSIGNED_ORDINAL;
+    }
+
+    public int getAlignedDirection() {
+        return this.alignedDirection;
+    }
+
     private double normalDotDouble(Vector3dc v) {
-        return org.joml.Math.fma(this.normal.x, v.x(),
-                org.joml.Math.fma(this.normal.y, v.y(),
-                        this.normal.z * v.z()));
+        return org.joml.Math.fma(this.normal.x(), v.x(),
+                org.joml.Math.fma(this.normal.y(), v.y(),
+                        this.normal.z() * v.z()));
     }
 
     void processMovement(SortTriggering ts, CameraMovement movement) {
@@ -89,8 +98,8 @@ public class NormalList {
         // perform the interval query on the group intervals and resolve each interval
         // to the collection of groups it maps to
         var interval = new DoubleInterval(start, end, Bounded.CLOSED);
-        for (Interval<Double> groupInterval : intervalTree.query(interval)) {
-            for (Group group : groupsByInterval.get(groupInterval)) {
+        for (Interval<Double> groupInterval : this.intervalTree.query(interval)) {
+            for (Group group : this.groupsByInterval.get(groupInterval)) {
                 group.triggerRange(ts, start, end);
             }
         }
@@ -173,5 +182,29 @@ public class NormalList {
         this.removeGroupInterval(group);
         group.replaceWith(normalPlanes);
         this.addGroupInterval(group);
+    }
+
+    public static boolean queryRange(float[] sortedDistances, float start, float end) {
+        // test that there is actually an entry in the query range
+        int result = FloatArrays.binarySearch(sortedDistances, start);
+        if (result < 0) {
+            // recover the insertion point
+            int insertionPoint = -result - 1;
+            if (insertionPoint >= sortedDistances.length) {
+                // no entry in the query range
+                return false;
+            }
+
+            // check if the entry at the insertion point, which is the next one greater than
+            // the start value, is less than or equal to the end value
+            if (sortedDistances[insertionPoint] <= end) {
+                // there is an entry in the query range
+                return true;
+            }
+        } else {
+            // exact match, trigger
+            return true;
+        }
+        return false;
     }
 }
