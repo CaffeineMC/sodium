@@ -131,18 +131,15 @@ public class RenderRegion {
     }
 
     public void clearCachedBatchFor(TerrainRenderPass pass) {
-        var batch = this.cachedBatches.remove(pass);
+        var batch = this.cachedBatches.get(pass);
         if (batch != null) {
-            batch.delete();
+            batch.clear();
         }
     }
 
     public MultiDrawBatch getCachedBatch(TerrainRenderPass pass) {
         MultiDrawBatch batch = this.cachedBatches.get(pass);
         if (batch != null) {
-            if (this.renderList.getAndResetCacheInvalidation()) {
-                batch.clear();
-            }
             return batch;
         }
 
