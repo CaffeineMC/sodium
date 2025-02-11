@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gl.device;
 
+import com.mojang.blaze3d.vertex.BufferUploader;
 import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.caffeinemc.mods.sodium.client.gl.array.GlVertexArray;
 import net.caffeinemc.mods.sodium.client.gl.buffer.*;
@@ -9,7 +10,7 @@ import net.caffeinemc.mods.sodium.client.gl.sync.GlFence;
 import net.caffeinemc.mods.sodium.client.gl.tessellation.*;
 import net.caffeinemc.mods.sodium.client.gl.util.EnumBitField;
 import org.lwjgl.opengl.*;
-import com.mojang.blaze3d.vertex.BufferUploader;
+
 import java.nio.ByteBuffer;
 
 public class GLRenderDevice implements RenderDevice {
@@ -288,7 +289,7 @@ public class GLRenderDevice implements RenderDevice {
                     batch.pElementCount,
                     indexType.getFormatId(),
                     batch.pElementPointer,
-                    batch.size(),
+                    batch.size,
                     batch.pBaseVertex);
         }
 
