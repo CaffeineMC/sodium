@@ -48,6 +48,7 @@ import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.FogParameters;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -128,18 +129,18 @@ public class RenderSectionManager {
         this.cameraPosition = cameraPosition;
     }
 
-    public void update(Camera camera, Viewport viewport, boolean spectator) {
+    public void update(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
         this.lastUpdatedFrame += 1;
 
-        this.createTerrainRenderList(camera, viewport, this.lastUpdatedFrame, spectator);
+        this.createTerrainRenderList(camera, viewport, fogParameters, this.lastUpdatedFrame, spectator);
 
         this.needsGraphUpdate = false;
     }
 
-    private void createTerrainRenderList(Camera camera, Viewport viewport, int frame, boolean spectator) {
+    private void createTerrainRenderList(Camera camera, Viewport viewport, FogParameters fogParameters, int frame, boolean spectator) {
         this.resetRenderLists();
 
-        final var searchDistance = this.getSearchDistance();
+        final var searchDistance = this.getSearchDistance(fogParameters);
         final var useOcclusionCulling = this.shouldUseOcclusionCulling(camera, spectator);
 
         var visitor = new VisibleChunkCollector(frame);
@@ -150,11 +151,11 @@ public class RenderSectionManager {
         this.taskLists = visitor.getRebuildLists();
     }
 
-    private float getSearchDistance() {
+    private float getSearchDistance(FogParameters fogParameters) {
         float distance;
 
         if (SodiumClientMod.options().performance.useFogOcclusion) {
-            distance = this.getEffectiveRenderDistance();
+            distance = this.getEffectiveRenderDistance(fogParameters);
         } else {
             distance = this.getRenderDistance();
         }
@@ -627,9 +628,9 @@ public class RenderSectionManager {
         return !SodiumClientMod.options().performance.alwaysDeferChunkUpdates;
     }
 
-    private float getEffectiveRenderDistance() {
-        var alpha = RenderSystem.getShaderFog().alpha();
-        var distance = RenderSystem.getShaderFog().end();
+    private float getEffectiveRenderDistance(FogParameters fogParameters) {
+        var alpha = fogParameters.alpha();
+        var distance = fogParameters.end();
 
         var renderDistance = this.getRenderDistance();
 

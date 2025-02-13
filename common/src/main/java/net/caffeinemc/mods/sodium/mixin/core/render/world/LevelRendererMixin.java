@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.mixin.core.render.world;
 
-import com.llamalad7.mixinextras.sugar.Local;
-import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
@@ -12,7 +12,6 @@ import net.caffeinemc.mods.sodium.client.services.PlatformLevelRenderHooks;
 import net.caffeinemc.mods.sodium.client.util.FlawlessFrames;
 import net.caffeinemc.mods.sodium.client.world.LevelRendererExtension;
 import net.minecraft.client.Camera;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -25,6 +24,7 @@ import net.minecraft.server.level.BlockDestructionProgress;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -60,6 +60,9 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
 
     @Unique
     private SodiumWorldRenderer renderer;
+
+    @Unique
+    private FogParameters sodium$terrainFogParmaeters = FogParameters.NO_FOG;
 
     @Override
     public SodiumWorldRenderer sodium$getWorldRenderer() {
@@ -128,20 +131,31 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         PlatformLevelRenderHooks.getInstance().runChunkLayerEvents(renderLayer, ((LevelRenderer) (Object) this), modelMatrix, projectionMatrix, this.ticks, this.minecraft.gameRenderer.getMainCamera(), this.cullingFrustum);
     }
 
+    @WrapOperation(
+            method = "renderLevel",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/renderer/FogRenderer;setupFog(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/FogRenderer$FogMode;Lorg/joml/Vector4f;FZF)Lnet/minecraft/client/renderer/FogParameters;",
+                    ordinal = 0
+            )
+    )
+    private FogParameters captureTerrainFogParameters(Camera camera, FogRenderer.FogMode fogMode, Vector4f fogColor, float renderDistance, boolean isFoggy, float partialTick, Operation<FogParameters> original) {
+        return (this.sodium$terrainFogParmaeters = original.call(camera, fogMode, fogColor, renderDistance, isFoggy, partialTick));
+    }
+
     /**
      * @reason Redirect the terrain setup phase to our renderer
      * @author JellySquid
      */
     @Overwrite
     private void setupRender(Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean spectator) {
-
         var viewport = ((ViewportProvider) frustum).sodium$createViewport();
         var updateChunksImmediately = FlawlessFrames.isActive();
 
         RenderDevice.enterManagedCode();
 
         try {
-            this.renderer.setupTerrain(camera, viewport, spectator, updateChunksImmediately);
+            this.renderer.setupTerrain(camera, viewport, this.sodium$terrainFogParmaeters, spectator, updateChunksImmediately);
         } finally {
             RenderDevice.exitManagedCode();
         }
