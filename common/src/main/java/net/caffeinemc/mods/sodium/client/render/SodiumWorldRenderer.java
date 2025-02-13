@@ -27,10 +27,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderBuffers;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
@@ -164,6 +161,7 @@ public class SodiumWorldRenderer {
      */
     public void setupTerrain(Camera camera,
                              Viewport viewport,
+                             FogParameters fogParameters,
                              boolean spectator,
                              boolean updateChunksImmediately) {
         NativeBuffer.reclaim(false);
@@ -228,7 +226,7 @@ public class SodiumWorldRenderer {
             if (this.renderSectionManager.needsUpdate()) {
                 profiler.popPush("chunk_render_lists");
 
-                this.renderSectionManager.update(camera, viewport, spectator);
+                this.renderSectionManager.update(camera, viewport, fogParameters, spectator);
             }
 
             profiler.popPush("chunk_update");
