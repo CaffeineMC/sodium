@@ -1,8 +1,12 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree;
 
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.GeometryPlanes;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.FullTQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.minecraft.core.SectionPos;
+import org.joml.Vector3fc;
 
 /**
  * The BSP workspace holds the state during the BSP building process. (see also
@@ -13,28 +17,45 @@ import net.minecraft.core.SectionPos;
  * global array instead of making a new one at each tree level doesn't appear to
  * have any performance benefit.
  */
-class BSPWorkspace {
-    /**
-     * All the quads in the section.
-     */
-    final TQuad[] quads;
-
-    final SectionPos sectionPos;
-
+class BSPWorkspace extends ObjectArrayList<TQuad> {
     final BSPResult result = new BSPResult();
 
+    final SectionPos sectionPos;
     final boolean prepareNodeReuse;
 
-    BSPWorkspace(TQuad[] quads, SectionPos sectionPos, boolean prepareNodeReuse) {
-        this.quads = quads;
+    private final ChunkMeshBufferBuilder translucentVertexBuffer;
+
+    BSPWorkspace(TQuad[] quads, SectionPos sectionPos, boolean prepareNodeReuse, ChunkMeshBufferBuilder translucentVertexBuffer) {
+        super(quads);
         this.sectionPos = sectionPos;
         this.prepareNodeReuse = prepareNodeReuse;
+        this.translucentVertexBuffer = translucentVertexBuffer;
     }
 
     // TODO: better bidirectional triggering: integrate bidirectionality in GFNI if
     // top-level topo sorting isn't used anymore (and only use half as much memory
     // by not storing it double)
     void addAlignedPartitionPlane(int axis, float distance) {
-        result.addDoubleSidedPlane(this.sectionPos, axis, distance);
+        this.result.addDoubleSidedAlignedPlane(this.sectionPos, axis, distance);
+    }
+
+    void addUnalignedPartitionPlane(Vector3fc planeNormal, float distance) {
+        this.result.addDoubleSidedUnalignedPlane(this.sectionPos, planeNormal, distance);
+    }
+
+    int pushQuad(FullTQuad quad) {
+        this.translucentVertexBuffer.push(quad.getVertices(), DefaultMaterials.TRANSLUCENT);
+
+        this.add(quad);
+
+        return this.result.ensureUpdatedQuadIndexes().addAppendedQuadIndex();
+    }
+
+    int updateQuad(FullTQuad quad, int quadIndex) {
+        this.translucentVertexBuffer.push(quad.getVertices(), DefaultMaterials.TRANSLUCENT);
+
+        this.result.ensureUpdatedQuadIndexes().addModifiedQuadIndex(quadIndex);
+
+        return quadIndex;
     }
 }

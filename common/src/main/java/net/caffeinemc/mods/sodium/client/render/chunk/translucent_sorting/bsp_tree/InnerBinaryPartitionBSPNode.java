@@ -17,8 +17,17 @@ class InnerBinaryPartitionBSPNode extends InnerPartitionBSPNode {
     private final int[] onPlaneQuads;
 
     InnerBinaryPartitionBSPNode(NodeReuseData reuseData, float planeDistance, int axis,
-            BSPNode inside, BSPNode outside, int[] onPlaneQuads) {
+                                BSPNode inside, BSPNode outside, int[] onPlaneQuads) {
         super(reuseData, axis);
+        this.planeDistance = planeDistance;
+        this.inside = inside;
+        this.outside = outside;
+        this.onPlaneQuads = onPlaneQuads;
+    }
+
+    InnerBinaryPartitionBSPNode(NodeReuseData reuseData, float planeDistance, Vector3fc planeNormal,
+                                BSPNode inside, BSPNode outside, int[] onPlaneQuads) {
+        super(reuseData, planeNormal);
         this.planeDistance = planeDistance;
         this.inside = inside;
         this.outside = outside;
@@ -27,7 +36,11 @@ class InnerBinaryPartitionBSPNode extends InnerPartitionBSPNode {
 
     @Override
     void addPartitionPlanes(BSPWorkspace workspace) {
-        workspace.addAlignedPartitionPlane(this.axis, this.planeDistance);
+        if (this.axis == UNALIGNED_AXIS) {
+            workspace.addUnalignedPartitionPlane(this.planeNormal, this.planeDistance);
+        } else {
+            workspace.addAlignedPartitionPlane(this.axis, this.planeDistance);
+        }
 
         // also add the planes of the children
         if (this.inside instanceof InnerPartitionBSPNode insideChild) {
@@ -71,7 +84,7 @@ class InnerBinaryPartitionBSPNode extends InnerPartitionBSPNode {
     }
 
     static BSPNode buildFromPartitions(BSPWorkspace workspace, IntArrayList indexes, int depth, BSPNode oldNode,
-            Partition inside, Partition outside, int axis) {
+                                       Partition inside, Partition outside, int axis) {
         var partitionDistance = inside.distance();
         workspace.addAlignedPartitionPlane(axis, partitionDistance);
 
@@ -98,5 +111,46 @@ class InnerBinaryPartitionBSPNode extends InnerPartitionBSPNode {
                 prepareNodeReuse(workspace, indexes, depth),
                 partitionDistance, axis,
                 insideNode, outsideNode, onPlane);
+    }
+
+    static BSPNode buildFromParts(BSPWorkspace workspace, IntArrayList indexes, int depth, BSPNode oldNode,
+                                  IntArrayList inside, IntArrayList outside, IntArrayList onPlane, int axis, Vector3fc planeNormal, float partitionDistance) {
+        if (axis == UNALIGNED_AXIS) {
+            workspace.addUnalignedPartitionPlane(planeNormal, partitionDistance);
+        } else {
+            workspace.addAlignedPartitionPlane(axis, partitionDistance);
+        }
+
+        BSPNode oldInsideNode = null;
+        BSPNode oldOutsideNode = null;
+        if (oldNode instanceof InnerBinaryPartitionBSPNode binaryNode &&
+                binaryNode.axis == axis &&
+                (axis == UNALIGNED_AXIS || binaryNode.planeNormal.equals(planeNormal)) &&
+                binaryNode.planeDistance == partitionDistance) {
+            oldInsideNode = binaryNode.inside;
+            oldOutsideNode = binaryNode.outside;
+        }
+
+        BSPNode insideNode = null;
+        BSPNode outsideNode = null;
+        if (inside != null) {
+            insideNode = BSPNode.build(workspace, inside, depth, oldInsideNode);
+        }
+        if (outside != null) {
+            outsideNode = BSPNode.build(workspace, outside, depth, oldOutsideNode);
+        }
+        var onPlaneArr = BSPSortState.compressIndexes(onPlane);
+
+        if (axis == UNALIGNED_AXIS) {
+            return new InnerBinaryPartitionBSPNode(
+                    prepareNodeReuse(workspace, indexes, depth),
+                    partitionDistance, planeNormal,
+                    insideNode, outsideNode, onPlaneArr);
+        } else {
+            return new InnerBinaryPartitionBSPNode(
+                    prepareNodeReuse(workspace, indexes, depth),
+                    partitionDistance, axis,
+                    insideNode, outsideNode, onPlaneArr);
+        }
     }
 }

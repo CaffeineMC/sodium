@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks;
 
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.ExtendedBlockEntityType;
 import net.caffeinemc.mods.sodium.client.render.chunk.DefaultChunkRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
@@ -21,6 +22,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortTy
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.PresentTranslucentData;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.caffeinemc.mods.sodium.client.services.PlatformLevelRenderHooks;
 import net.caffeinemc.mods.sodium.client.util.task.CancellationToken;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
@@ -46,7 +48,7 @@ import java.util.Map;
 /**
  * Rebuilds all the meshes of a chunk for each given render pass with non-occluded blocks. The result is then uploaded
  * to graphics memory on the main thread.
- *
+ * <p>
  * This task takes a slice of the level from the thread it is created on. Since these slices require rather large
  * array allocations, they are pooled to ensure that the garbage collector doesn't become overloaded.
  */
@@ -195,9 +197,28 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
         TranslucentData translucentData = null;
         if (collector != null) {
             var oldData = this.render.getTranslucentData();
+            var translucentMesh = meshes.get(DefaultTerrainRenderPasses.TRANSLUCENT);
+            ChunkMeshBufferBuilder translucentVertexBuffer = null;
+            if (translucentMesh != null) {
+                translucentVertexBuffer = buffers.get(DefaultTerrainRenderPasses.TRANSLUCENT).getVertexBuffer(ModelQuadFacing.UNASSIGNED);
+                translucentVertexBuffer.restart();
+            }
+
             translucentData = collector.getTranslucentData(
-                    oldData, meshes.get(DefaultTerrainRenderPasses.TRANSLUCENT), this);
+                    oldData, meshes.get(DefaultTerrainRenderPasses.TRANSLUCENT), this, translucentVertexBuffer);
+
             reuseUploadedData = translucentData == oldData;
+
+            if (translucentData.meshesWereModified()) {
+                // assumption: used direction mixing and still does, mesh was non-empty and still is
+                if (translucentVertexBuffer == null) {
+                    throw new IllegalStateException("Translucent mesh was modified but doesn't exist");
+                }
+                meshes.put(DefaultTerrainRenderPasses.TRANSLUCENT, buffers.createCompactModifiedTranslucentMesh(meshes.get(DefaultTerrainRenderPasses.TRANSLUCENT), translucentVertexBuffer, translucentData.getUpdatedQuadIndexes()));
+
+                // TODO: after placing and removing some blocks it manages to crash with a segfault somewhere
+                // are we allocating too much or not freeing it?
+            }
         }
 
         var output = new ChunkBuildOutput(this.render, this.submitTime, translucentData, renderData.build(), meshes);
@@ -223,7 +244,8 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
         BlockState state = null;
         try {
             state = slice.getBlockState(pos);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         CrashReportCategory.populateBlockDetails(crashReportSection, slice, pos, state);
 
         crashReportSection.setDetail("Chunk section", this.render);

@@ -6,9 +6,9 @@ import net.minecraft.core.SectionPos;
 public abstract class MixedDirectionData extends PresentTranslucentData {
     private final int[] vertexCounts = new int[ModelQuadFacing.COUNT];
 
-    MixedDirectionData(SectionPos sectionPos, int vertexCount, int quadCount) {
+    MixedDirectionData(SectionPos sectionPos, int quadCount) {
         super(sectionPos, quadCount);
-        this.vertexCounts[ModelQuadFacing.UNASSIGNED.ordinal()] = vertexCount;
+        this.vertexCounts[ModelQuadFacing.UNASSIGNED.ordinal()] = quadCountToVertexCount(quadCount);
     }
 
     @Override

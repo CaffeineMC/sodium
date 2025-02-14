@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.GeometryPlanes;
 import net.caffeinemc.mods.sodium.client.util.sorting.RadixSort;
 import net.minecraft.core.SectionPos;
@@ -44,10 +44,10 @@ public class DynamicTopoData extends DynamicData {
     private final TQuad[] quads;
     private final Object2ReferenceMap<Vector3fc, float[]> distancesByNormal;
 
-    private DynamicTopoData(SectionPos sectionPos, int vertexCount, TQuad[] quads,
+    private DynamicTopoData(SectionPos sectionPos, TQuad[] quads,
                             GeometryPlanes geometryPlanes, Vector3dc initialCameraPos,
                             Object2ReferenceMap<Vector3fc, float[]> distancesByNormal) {
-        super(sectionPos, vertexCount, quads.length, geometryPlanes, initialCameraPos);
+        super(sectionPos, quads.length, geometryPlanes, initialCameraPos);
         this.quads = quads;
         this.distancesByNormal = distancesByNormal;
 
@@ -240,12 +240,11 @@ public class DynamicTopoData extends DynamicData {
         }
     }
 
-    public static DynamicTopoData fromMesh(int vertexCount,
-                                           CombinedCameraPos cameraPos, TQuad[] quads, SectionPos sectionPos,
+    public static DynamicTopoData fromMesh(CombinedCameraPos cameraPos, TQuad[] quads, SectionPos sectionPos,
                                            GeometryPlanes geometryPlanes) {
         var distancesByNormal = geometryPlanes.prepareAndGetDistances();
 
-        return new DynamicTopoData(sectionPos, vertexCount, quads, geometryPlanes,
+        return new DynamicTopoData(sectionPos, quads, geometryPlanes,
                 cameraPos.getAbsoluteCameraPos(), distancesByNormal);
     }
 }

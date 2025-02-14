@@ -424,7 +424,7 @@ public class DefaultFluidRenderer {
                 normal = NormI8.flipPacked(normal);
             }
 
-            collector.appendQuad(normal, vertices, facing);
+            collector.appendQuad(vertices, facing, normal);
         }
 
         var vertexBuffer = builder.getVertexBuffer(facing);

@@ -1,4 +1,4 @@
-package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting;
+package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad;
 
 import java.util.Arrays;
 
@@ -12,7 +12,7 @@ import net.caffeinemc.mods.sodium.api.util.NormI8;
  * Represents a quad for the purposes of translucency sorting. Called TQuad to
  * avoid confusion with other quad classes.
  */
-public class TQuad {
+public abstract class TQuad {
     /**
      * The quantization factor with which the normals are quantized such that there
      * are fewer possible unique normals. The factor describes the number of steps
@@ -21,22 +21,20 @@ public class TQuad {
      * at the origin onto which the normals are projected. The normals are snapped
      * to the nearest grid point.
      */
-    private static final int QUANTIZATION_FACTOR = 4;
+    static final int QUANTIZATION_FACTOR = 4;
 
-    private ModelQuadFacing facing;
-    private final float[] extents;
-    private float[] vertexPositions;
-    private final int packedNormal;
-    private final float accurateDotProduct;
-    private float quantizedDotProduct;
-    private Vector3fc center; // null on aligned quads
-    private Vector3fc quantizedNormal;
-    private Vector3fc accurateNormal;
+    ModelQuadFacing facing;
+    final float[] extents;
+    final int packedNormal;
+    float accurateDotProduct;
+    float quantizedDotProduct;
+    Vector3fc center; // null on aligned quads
+    Vector3fc quantizedNormal;
+    Vector3fc accurateNormal;
 
-    private TQuad(ModelQuadFacing facing, float[] extents, float[] vertexPositions, Vector3fc center, int packedNormal) {
+    TQuad(ModelQuadFacing facing, float[] extents, Vector3fc center, int packedNormal) {
         this.facing = facing;
         this.extents = extents;
-        this.vertexPositions = vertexPositions;
         this.center = center;
         this.packedNormal = packedNormal;
 
@@ -55,13 +53,7 @@ public class TQuad {
         return extents[facing.ordinal()] * facing.getSign();
     }
 
-    static TQuad fromAligned(ModelQuadFacing facing, float[] extents, float[] vertexPositions, Vector3fc center) {
-        return new TQuad(facing, extents, vertexPositions, center, ModelQuadFacing.PACKED_ALIGNED_NORMALS[facing.ordinal()]);
-    }
-
-    static TQuad fromUnaligned(ModelQuadFacing facing, float[] extents, float[] vertexPositions, Vector3fc center, int packedNormal) {
-        return new TQuad(facing, extents, vertexPositions, center, packedNormal);
-    }
+    public abstract float[] getVertexPositions();
 
     public ModelQuadFacing getFacing() {
         return this.facing;
@@ -89,31 +81,6 @@ public class TQuad {
 
     public float[] getExtents() {
         return this.extents;
-    }
-
-    public float[] getVertexPositions() {
-        // calculate vertex positions from extents if there's no cached value
-        // (we don't want to be preemptively collecting vertex positions for all aligned quads)
-        if (this.vertexPositions == null) {
-            this.vertexPositions = new float[12];
-
-            var facingAxis = this.facing.getAxis();
-            var xRange = facingAxis == 0 ? 0 : 3;
-            var yRange = facingAxis == 1 ? 0 : 3;
-            var zRange = facingAxis == 2 ? 0 : 3;
-
-            var itemIndex = 0;
-            for (int x = 0; x <= xRange; x += 3) {
-                for (int y = 0; y <= yRange; y += 3) {
-                    for (int z = 0; z <= zRange; z += 3) {
-                        this.vertexPositions[itemIndex++] = this.extents[x];
-                        this.vertexPositions[itemIndex++] = this.extents[y + 1];
-                        this.vertexPositions[itemIndex++] = this.extents[z + 2];
-                    }
-                }
-            }
-        }
-        return this.vertexPositions;
     }
 
     public Vector3fc getCenter() {
@@ -189,7 +156,7 @@ public class TQuad {
         this.quantizedNormal = normal;
     }
 
-    int getQuadHash() {
+    public int getQuadHash() {
         // the hash code needs to be particularly collision resistant
         int result = 1;
         result = 31 * result + Arrays.hashCode(this.extents);
