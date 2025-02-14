@@ -144,13 +144,7 @@ public class ChunkBuildBuffers {
         }
 
         // the unassigned vertex count is going to be in the last segment because slice reordering is disabled for forceUnassigned-mode translucent data
-        int[] vertexSegments = prevMesh.getVertexSegments();
-        if (vertexSegments[UNASSIGNED_SEGMENT_INDEX + 1] != ModelQuadFacing.UNASSIGNED.ordinal()) {
-            throw new IllegalArgumentException("Unassigned vertex count is not at position 0");
-        }
-        var unassignedVertexCount = vertexSegments[UNASSIGNED_SEGMENT_INDEX];
-
-        int totalVertexCount = unassignedVertexCount + TranslucentData.quadCountToVertexCount(updatedQuadIndexes.getAddedQuadCount());
+        int totalVertexCount = getUpdatedVertexCount(prevMesh, updatedQuadIndexes);
         int vertexStride = this.vertexType.getVertexFormat().getStride();
         var mergedBuffer = new NativeBuffer(totalVertexCount * vertexStride);
         int quadStride = vertexStride * TranslucentData.VERTICES_PER_QUAD;
@@ -170,6 +164,21 @@ public class ChunkBuildBuffers {
         newVertexSegments[UNASSIGNED_SEGMENT_INDEX] = totalVertexCount;
         newVertexSegments[UNASSIGNED_SEGMENT_INDEX + 1] = ModelQuadFacing.UNASSIGNED.ordinal();
         return new BuiltSectionMeshParts(mergedBuffer, newVertexSegments);
+    }
+
+    private static int getUpdatedVertexCount(BuiltSectionMeshParts prevMesh, BSPResult.UpdatedQuadIndexes updatedQuadIndexes) {
+        int[] vertexSegments = prevMesh.getVertexSegments();
+        if (vertexSegments[UNASSIGNED_SEGMENT_INDEX + 1] != ModelQuadFacing.UNASSIGNED.ordinal()) {
+            throw new IllegalArgumentException("Unassigned vertex count is missing!");
+        }
+        var unassignedVertexCount = vertexSegments[UNASSIGNED_SEGMENT_INDEX];
+
+        var addedVertexCount = TranslucentData.quadCountToVertexCount(updatedQuadIndexes.getAddedQuadCount());
+        int totalVertexCount = unassignedVertexCount + addedVertexCount;
+
+        // print old, new, total, and old/new total ratio
+        System.out.println("Old quad count: " + unassignedVertexCount / 4 + ", added quad count: " + addedVertexCount / 4 + ", new total quad count: " + totalVertexCount / 4 + ", amplification ratio: " + (double) totalVertexCount / unassignedVertexCount);
+        return totalVertexCount;
     }
 
     public void destroy() {
