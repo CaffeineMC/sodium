@@ -84,7 +84,8 @@ public class GeometryPlanes {
 
         var normalPlanes = unalignedDistances.get(cleanedNormal);
         if (normalPlanes == null) {
-            normalPlanes = new NormalPlanes(sectionPos, new Vector3f(normal));
+            // construct new normal plane using the cleaned normal to make sure its .normal is zero-cleaned
+            normalPlanes = new NormalPlanes(sectionPos, new Vector3f(cleanedNormal));
 
             // NOTE: importantly use the cleaned normal here, not the cleanedNormal, which is mutable
             unalignedDistances.put(normalPlanes.normal, normalPlanes);
