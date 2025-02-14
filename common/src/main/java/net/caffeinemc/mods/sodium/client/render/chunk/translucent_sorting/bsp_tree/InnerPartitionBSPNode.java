@@ -296,7 +296,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
                         // this means the already generated points array can be used
                         return buildSNRLeafNodeFromPoints(workspace, points);
                     } else {
-                        return buildSNRLeafNodeFromQuads(workspace, indexes, points);
+                        return buildSNRLeafNodeFromQuads(workspace, indexes);
                     }
                 }
             }
@@ -971,7 +971,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         return new LeafMultiBSPNode(BSPSortState.compressIndexesInPlace(indexWriter.indexes, false));
     }
 
-    static private BSPNode buildSNRLeafNodeFromQuads(BSPWorkspace workspace, IntArrayList indexes, LongArrayList points) {
+    static private BSPNode buildSNRLeafNodeFromQuads(BSPWorkspace workspace, IntArrayList indexes) {
         final var indexBuffer = indexes.elements();
         final var indexCount = indexes.size();
 
