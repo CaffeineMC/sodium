@@ -18,10 +18,10 @@ public enum GraphicsAdapterVendor {
     // Intel Gen 8          - ig8icd
     // Intel Gen 9, 9.5     - ig9icd
     // Intel Gen 11         - ig11icd
-    // Intel Xe             - ig12icd (Xe-LP; early drivers) or igxelpicd (Xe-LP; later drivers), and igxehpicd (Xe-HP)
-    // Intel Xe2            - igxe2lpicd (Xe2-LP) and igxe2lpicd (Xe2-HP)
+    // Intel Xe             - ig12icd (Xe-LP; early drivers) or igxelpgicd (Xe-LP; later drivers), and igxehpgicd (Xe-HP)
+    // Intel Xe2            - igxe2lpgicd (Xe2-LP) and igxe2hpgicd (Xe2-HP)
     private static final Pattern INTEL_ICD_PATTERN =
-            Pattern.compile("ig(4|7|75|8|9|11|12|(xe(2)?(hp|lp)))icd(32|64)\\.dll", Pattern.CASE_INSENSITIVE);
+            Pattern.compile("ig(4|7|75|8|9|11|12|(xe(2)?(hpg|lpg)))icd(32|64)\\.dll", Pattern.CASE_INSENSITIVE);
 
     private static final Pattern NVIDIA_ICD_PATTERN =
             Pattern.compile("nvoglv(32|64)\\.dll", Pattern.CASE_INSENSITIVE);
