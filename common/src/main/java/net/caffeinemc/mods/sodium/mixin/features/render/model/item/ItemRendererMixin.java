@@ -4,11 +4,11 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.client.model.quad.BakedQuadView;
 import net.caffeinemc.mods.sodium.client.render.immediate.model.BakedModelEncoder;
-import net.caffeinemc.mods.sodium.client.render.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
 import net.caffeinemc.mods.sodium.client.util.DirectionUtil;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -90,7 +90,9 @@ public abstract class ItemRendererMixin {
 
             BakedModelEncoder.writeQuadVertices(writer, matrices, quad, color, light, overlay, BakedModelEncoder.shouldMultiplyAlpha());
 
-            SpriteUtil.markSpriteActive(quad.getSprite());
+            if (quad.getSprite() != null) {
+                SpriteUtil.INSTANCE.markSpriteActive(quad.getSprite());
+            }
         }
     }
 }

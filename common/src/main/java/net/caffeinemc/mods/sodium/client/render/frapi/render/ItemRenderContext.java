@@ -19,12 +19,12 @@ package net.caffeinemc.mods.sodium.client.render.frapi.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.MatrixUtil;
+import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.api.util.ColorMixer;
 import net.caffeinemc.mods.sodium.client.render.frapi.helper.ColorHelper;
 import net.caffeinemc.mods.sodium.client.render.frapi.mesh.EncodingFormat;
 import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
-import net.caffeinemc.mods.sodium.client.render.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.mixin.features.render.frapi.ItemRendererAccessor;
 import net.fabricmc.fabric.api.renderer.v1.material.BlendMode;
 import net.fabricmc.fabric.api.renderer.v1.material.GlintMode;
@@ -32,7 +32,10 @@ import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
 import net.fabricmc.fabric.impl.renderer.VanillaModelEncoder;
-import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.resources.model.BakedModel;
@@ -174,7 +177,10 @@ public class ItemRenderContext extends AbstractRenderContext {
 
     private void bufferQuad(MutableQuadViewImpl quad, VertexConsumer vertexConsumer) {
         QuadEncoder.writeQuadVertices(quad, vertexConsumer, overlay, matPosition, trustedNormals, matNormal);
-        SpriteUtil.markSpriteActive(quad.sprite(SpriteFinderCache.forBlockAtlas()));
+        var sprite = quad.sprite(SpriteFinderCache.forBlockAtlas());
+        if (sprite != null) {
+            SpriteUtil.INSTANCE.markSpriteActive(sprite);
+        }
     }
 
     /**

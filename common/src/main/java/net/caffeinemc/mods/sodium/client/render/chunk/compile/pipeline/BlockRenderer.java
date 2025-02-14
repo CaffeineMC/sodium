@@ -221,7 +221,9 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         ChunkMeshBufferBuilder vertexBuffer = builder.getVertexBuffer(normalFace);
         vertexBuffer.push(vertices, materialBits);
 
-        builder.addSprite(atlasSprite);
+        if (atlasSprite != null) {
+            builder.addSprite(atlasSprite);
+        }
     }
 
     private boolean validateQuadUVs(TextureAtlasSprite atlasSprite) {
