@@ -605,8 +605,8 @@ abstract class InnerPartitionBSPNode extends BSPNode {
                     insideMapUnmasked |= sameVertexMap;
                 }
 
-                // the duplicate vertex is inside or outside, mark it as whichever side has fewer vertices
-                else if (insideCount == 1) {
+                // the duplicate vertex is inside or outside, mark it as whichever side has fewer (even identical) vertices
+                else if (Integer.bitCount(insideMapUnmasked) == 1) {
                     insideMapUnmasked |= onPlaneMapUnmasked;
                 }
 
