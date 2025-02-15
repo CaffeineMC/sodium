@@ -36,9 +36,9 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
@@ -64,7 +64,7 @@ public class ItemRenderContext extends AbstractRenderContext {
             clear();
         }
 
-        public void bufferDefaultModel(BakedModel model) {
+        public void bufferDefaultModel(BlockStateModel model) {
             ItemRenderContext.this.bufferDefaultModel(this, model, null);
         }
 
@@ -115,7 +115,7 @@ public class ItemRenderContext extends AbstractRenderContext {
         return editorQuad;
     }
 
-    public void renderModel(ItemDisplayContext transformMode, PoseStack poseStack, MultiBufferSource bufferSource, int lightmap, int overlay, BakedModel model, int[] colors, RenderType layer, ItemStackRenderState.FoilType glint) {
+    public void renderModel(ItemDisplayContext transformMode, PoseStack poseStack, MultiBufferSource bufferSource, int lightmap, int overlay, BlockStateModel model, int[] colors, RenderType layer, ItemStackRenderState.FoilType glint) {
         this.transformMode = transformMode;
         this.poseStack = poseStack;
         matPosition = poseStack.last().pose();
@@ -243,7 +243,7 @@ public class ItemRenderContext extends AbstractRenderContext {
         return ItemRenderer.getFoilBuffer(bufferSource, type, true, glint != ItemStackRenderState.FoilType.NONE);
     }
 
-    public void bufferDefaultModel(QuadEmitter quadEmitter, BakedModel model, @Nullable BlockState state) {
+    public void bufferDefaultModel(QuadEmitter quadEmitter, BlockStateModel model, @Nullable BlockState state) {
         if (vanillaBufferer == null) {
             VanillaModelEncoder.emitItemQuads(quadEmitter, model, null, randomSupplier);
         } else {
@@ -268,6 +268,6 @@ public class ItemRenderContext extends AbstractRenderContext {
     /** used to accept a method reference from the ItemRenderer. */
     @FunctionalInterface
     public interface VanillaModelBufferer {
-        void accept(BakedModel model, int[] colirs, int color, int overlay, PoseStack matrixStack, VertexConsumer buffer);
+        void accept(BlockStateModel model, int[] colirs, int color, int overlay, PoseStack matrixStack, VertexConsumer buffer);
     }
 }

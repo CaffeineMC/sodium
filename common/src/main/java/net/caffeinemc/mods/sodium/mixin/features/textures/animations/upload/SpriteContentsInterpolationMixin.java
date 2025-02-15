@@ -1,15 +1,17 @@
 package net.caffeinemc.mods.sodium.mixin.features.textures.animations.upload;
 
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.textures.GpuTexture;
+import net.caffeinemc.mods.sodium.api.util.ColorMixer;
 import net.caffeinemc.mods.sodium.client.util.NativeImageHelper;
 import net.caffeinemc.mods.sodium.mixin.features.textures.SpriteContentsInvoker;
-import net.caffeinemc.mods.sodium.api.util.ColorMixer;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import org.lwjgl.system.MemoryUtil;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.mojang.blaze3d.platform.NativeImage;
+
 import java.util.List;
 
 @Mixin(SpriteContents.InterpolationData.class)
@@ -38,7 +40,7 @@ public class SpriteContentsInterpolationMixin {
      * @reason Drastic optimizations
      */
     @Overwrite
-    void uploadInterpolatedFrame(int x, int y, SpriteContents.Ticker arg) {
+    void uploadInterpolatedFrame(int x, int y, SpriteContents.Ticker arg, GpuTexture texture) {
         SpriteContents.AnimatedTexture animation = ((SpriteContentsTickerAccessor) arg).getAnimationInfo();
         SpriteContentsAnimatedTextureAccessor animation2 = (SpriteContentsAnimatedTextureAccessor) ((SpriteContentsTickerAccessor) arg).getAnimationInfo();
         List<SpriteContents.FrameInfo> frames = ((SpriteContentsAnimatedTextureAccessor) animation).getFrames();
@@ -97,6 +99,6 @@ public class SpriteContentsInterpolationMixin {
             }
         }
 
-        ((SpriteContentsInvoker) this.parent).invokeUpload(x, y, 0, 0, this.activeFrame);
+        ((SpriteContentsInvoker) this.parent).invokeUpload(x, y, 0, 0, this.activeFrame, texture);
     }
 }

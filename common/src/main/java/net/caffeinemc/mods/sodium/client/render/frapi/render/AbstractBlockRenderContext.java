@@ -23,11 +23,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
@@ -66,7 +65,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
             clear();
         }
 
-        public void bufferDefaultModel(BakedModel model, BlockState state, Predicate<Direction> cullTest) {
+        public void bufferDefaultModel(BlockStateModel model, BlockState state, Predicate<Direction> cullTest) {
             AbstractBlockRenderContext.this.bufferDefaultModel(model, state, cullTest);
         }
 
@@ -207,7 +206,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     }
 
     /* Handling of vanilla models - this is the hot path for non-modded models */
-    public void bufferDefaultModel(BakedModel model, @Nullable BlockState state, Predicate<Direction> cullTest) {
+    public void bufferDefaultModel(BlockStateModel model, @Nullable BlockState state, Predicate<Direction> cullTest) {
         MutableQuadViewImpl editorQuad = this.editorQuad;
 
 

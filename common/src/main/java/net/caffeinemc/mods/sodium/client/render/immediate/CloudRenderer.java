@@ -1,9 +1,11 @@
 package net.caffeinemc.mods.sodium.client.render.immediate;
 
 import com.mojang.blaze3d.buffers.BufferUsage;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
@@ -15,7 +17,9 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.CloudStatus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.DepthTestFunction;
+import net.minecraft.client.renderer.FogParameters;
+import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import net.minecraft.util.ARGB;
@@ -26,7 +30,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
-import org.lwjgl.opengl.GL32C;
 import org.lwjgl.system.MemoryStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,12 +39,20 @@ import java.util.Objects;
 public class CloudRenderer {
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium-CloudRenderer");
 
-    private static final ShaderProgram CLOUDS_SHADER = new ShaderProgram(
-            ResourceLocation.fromNamespaceAndPath("sodium", "clouds"),
-            DefaultVertexFormat.POSITION_COLOR,
-            ShaderDefines.builder()
-                    .build()
-    );
+    private static final RenderPipeline.Snippet CLOUD_SNIPPET = RenderPipeline.builder().withBlend(BlendFunction.TRANSLUCENT).withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
+            .withUniform("ColorModulator", Uniform.Type.VEC4)
+            .withUniform("FogStart", Uniform.Type.FLOAT)
+            .withUniform("FogEnd", Uniform.Type.FLOAT)
+            .withUniform("FogShape", Uniform.Type.INT)
+            .withUniform("FogColor", Uniform.Type.VEC4)
+            .withUniform("ModelViewMat", Uniform.Type.MATRIX4X4)
+            .withUniform("ProjMat", Uniform.Type.MATRIX4X4)
+            .withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST) // TODO this should be GL_LESS apparently?
+            .withVertexShader(ResourceLocation.fromNamespaceAndPath("sodium", "clouds"))
+            .withFragmentShader(ResourceLocation.fromNamespaceAndPath("sodium", "clouds")).buildSnippet();
+
+    private static final RenderPipeline CLOUDS_FULL = RenderPipeline.builder(CLOUD_SNIPPET).withCull(true).withLocation(ResourceLocation.fromNamespaceAndPath("sodium", "clouds_full")).build();
+    private static final RenderPipeline CLOUDS_FLAT = RenderPipeline.builder(CLOUD_SNIPPET).withCull(false).withLocation(ResourceLocation.fromNamespaceAndPath("sodium", "clouds_flat")).build();
 
     private static final ResourceLocation CLOUDS_TEXTURE_ID =
             ResourceLocation.withDefaultNamespace("textures/environment/clouds.png");
@@ -166,39 +177,25 @@ public class CloudRenderer {
                     .bindWrite(false);
         }
 
-        RenderSystem.enableBlend();
-        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-
-        RenderSystem.setShader(CLOUDS_SHADER);
-
         if (flat) {
             RenderSystem.disableCull();
         }
 
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthFunc(GL32C.GL_LESS);
+        RenderSystem.getModelViewStack().pushMatrix();
+        RenderSystem.getModelViewStack().set(modelViewMatrix);
 
         // Draw
         vertexBuffer.bind();
-        vertexBuffer.drawWithShader(modelViewMatrix, projectionMatrix, RenderSystem.getShader());
+        vertexBuffer.drawWithRenderPipeline(flat ? CLOUDS_FLAT : CLOUDS_FULL, s -> {});
         VertexBuffer.unbind();
-
-        // State teardown
-        RenderSystem.depthFunc(GL32C.GL_LEQUAL);
-        RenderSystem.disableDepthTest();
-
-        if (flat) {
-            RenderSystem.enableCull();
-        }
-
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableBlend();
 
         if (renderTarget != null) {
             Minecraft.getInstance()
                     .getMainRenderTarget()
                     .bindWrite(false);
         }
+
+        RenderSystem.getModelViewStack().popMatrix();
 
         RenderSystem.setShaderFog(prevFogParameters);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);

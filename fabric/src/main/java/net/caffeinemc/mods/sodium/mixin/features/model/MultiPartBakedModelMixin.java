@@ -2,12 +2,11 @@ package net.caffeinemc.mods.sodium.mixin.features.model;
 
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.resources.model.MultiPartBakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
-import org.apache.commons.lang3.tuple.Pair;
 import org.spongepowered.asm.mixin.*;
 
 import java.util.ArrayList;
@@ -15,12 +14,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.StampedLock;
-import java.util.function.Predicate;
 
 @Mixin(MultiPartBakedModel.class)
 public class MultiPartBakedModelMixin {
     @Unique
-    private final Map<BlockState, BakedModel[]> stateCacheFast = new Reference2ReferenceOpenHashMap<>();
+    private final Map<BlockState, BlockStateModel[]> stateCacheFast = new Reference2ReferenceOpenHashMap<>();
     @Unique
     private final StampedLock lock = new StampedLock();
 
@@ -38,7 +36,7 @@ public class MultiPartBakedModelMixin {
             return Collections.emptyList();
         }
 
-        BakedModel[] models;
+        BlockStateModel[] models;
 
         long readStamp = this.lock.readLock();
         try {
@@ -50,7 +48,7 @@ public class MultiPartBakedModelMixin {
         if (models == null) {
             long writeStamp = this.lock.writeLock();
             try {
-                List<BakedModel> modelList = new ArrayList<>(this.selectors.size());
+                List<BlockStateModel> modelList = new ArrayList<>(this.selectors.size());
 
                 for (MultiPartBakedModel.Selector selector : this.selectors) {
                     if (selector.condition().test(state)) {
@@ -58,7 +56,7 @@ public class MultiPartBakedModelMixin {
                     }
                 }
 
-                models = modelList.toArray(BakedModel[]::new);
+                models = modelList.toArray(BlockStateModel[]::new);
                 this.stateCacheFast.put(state, models);
             } finally {
                 this.lock.unlockWrite(writeStamp);
@@ -68,7 +66,7 @@ public class MultiPartBakedModelMixin {
         List<BakedQuad> quads = new ArrayList<>();
         long seed = random.nextLong();
 
-        for (BakedModel model : models) {
+        for (BlockStateModel model : models) {
             random.setSeed(seed);
             quads.addAll(model.getQuads(state, face, random));
         }

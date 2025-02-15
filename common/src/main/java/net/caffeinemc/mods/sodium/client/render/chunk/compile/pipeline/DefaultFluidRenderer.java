@@ -84,7 +84,7 @@ public class DefaultFluidRenderer {
 
             VoxelShape threshold = Shapes.box(0.0D, 0.0D, 0.0D, 1.0D, height, 1.0D);
 
-            return !Shapes.blockOccudes(threshold, shape, dir);
+            return !Shapes.blockOccludes(threshold, shape, dir);
         }
 
         return true;

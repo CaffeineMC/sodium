@@ -8,7 +8,7 @@ import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
@@ -24,12 +24,12 @@ public class FabricModelAccess implements PlatformModelAccess {
     private static final SodiumModelDataContainer EMPTY_CONTAINER = new SodiumModelDataContainer(Long2ObjectMaps.emptyMap());
 
     @Override
-    public Iterable<RenderType> getModelRenderTypes(BlockAndTintGetter level, BakedModel model, BlockState state, BlockPos pos, RandomSource random, SodiumModelData modelData) {
+    public Iterable<RenderType> getModelRenderTypes(BlockAndTintGetter level, BlockStateModel model, BlockState state, BlockPos pos, RandomSource random, SodiumModelData modelData) {
         return Collections.singleton(ItemBlockRenderTypes.getChunkRenderType(state));
     }
 
     @Override
-    public List<BakedQuad> getQuads(BlockAndTintGetter level, BlockPos pos, BakedModel model, BlockState state, Direction face, RandomSource random, RenderType renderType, SodiumModelData modelData) {
+    public List<BakedQuad> getQuads(BlockAndTintGetter level, BlockPos pos, BlockStateModel model, BlockState state, Direction face, RandomSource random, RenderType renderType, SodiumModelData modelData) {
         return model.getQuads(state, face, random);
     }
 
@@ -39,7 +39,7 @@ public class FabricModelAccess implements PlatformModelAccess {
     }
 
     @Override
-    public SodiumModelData getModelData(LevelSlice slice, BakedModel model, BlockState state, BlockPos pos, SodiumModelData originalData) {
+    public SodiumModelData getModelData(LevelSlice slice, BlockStateModel model, BlockState state, BlockPos pos, SodiumModelData originalData) {
         return null;
     }
 

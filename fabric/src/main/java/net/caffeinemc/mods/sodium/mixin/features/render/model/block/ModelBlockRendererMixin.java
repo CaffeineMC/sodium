@@ -11,7 +11,7 @@ import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
 import net.caffeinemc.mods.sodium.client.util.DirectionUtil;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -36,11 +36,11 @@ public class ModelBlockRendererMixin {
         for (int i = 0; i < quads.size(); i++) {
             BakedQuad bakedQuad = quads.get(i);
 
-            if (bakedQuad.getVertices().length < 32) {
+            if (bakedQuad.vertices().length < 32) {
                 continue; // ignore bad quads
             }
 
-            BakedQuadView quad = (BakedQuadView) bakedQuad;
+            BakedQuadView quad = (BakedQuadView) (Object) bakedQuad;
 
             int color = quad.hasColor() ? defaultColor : 0xFFFFFFFF;
 
@@ -57,7 +57,7 @@ public class ModelBlockRendererMixin {
      * @author JellySquid
      */
     @Inject(method = "renderModel", at = @At("HEAD"), cancellable = true)
-    private void renderFast(PoseStack.Pose entry, VertexConsumer vertexConsumer, BlockState blockState, BakedModel bakedModel, float red, float green, float blue, int light, int overlay, CallbackInfo ci) {
+    private void renderFast(PoseStack.Pose entry, VertexConsumer vertexConsumer, BlockState blockState, BlockStateModel bakedModel, float red, float green, float blue, int light, int overlay, CallbackInfo ci) {
         var writer = VertexConsumerUtils.convertOrLog(vertexConsumer);
         if (writer == null) {
             return;

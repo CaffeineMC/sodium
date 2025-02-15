@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.shader;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.textures.GpuTexture;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat2v;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat3v;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformInt;
@@ -51,8 +52,8 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
     @Override // the shader interface should not modify pipeline state
     public void setupState() {
         // TODO: Bind to these textures directly rather than using fragile RenderSystem state
-        this.bindTexture(ChunkShaderTextureSlot.BLOCK, TextureUtil.getBlockTextureId());
-        this.bindTexture(ChunkShaderTextureSlot.LIGHT, TextureUtil.getLightTextureId());
+        this.bindTexture(ChunkShaderTextureSlot.BLOCK, TextureUtil.getBlockTexture());
+        this.bindTexture(ChunkShaderTextureSlot.LIGHT, TextureUtil.getLightTexture());
 
         var textureAtlas = (TextureAtlasAccessor) Minecraft.getInstance()
                 .getTextureManager()
@@ -78,9 +79,9 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
     }
 
     @Deprecated(forRemoval = true) // should be handled properly in GFX instead.
-    private void bindTexture(ChunkShaderTextureSlot slot, int textureId) {
+    private void bindTexture(ChunkShaderTextureSlot slot, GpuTexture textureId) {
         GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + slot.ordinal());
-        GlStateManager._bindTexture(textureId);
+        textureId.bind();
 
         var uniform = this.uniformTextures.get(slot);
         uniform.setInt(slot.ordinal());

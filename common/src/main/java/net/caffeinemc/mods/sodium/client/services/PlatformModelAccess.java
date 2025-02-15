@@ -3,13 +3,12 @@ package net.caffeinemc.mods.sodium.client.services;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.ApiStatus;
@@ -33,7 +32,7 @@ public interface PlatformModelAccess {
      * @param modelData The platform specific model data.
      * @return A list of render types used by this model.
      */
-    Iterable<RenderType> getModelRenderTypes(BlockAndTintGetter level, BakedModel model, BlockState state, BlockPos pos, RandomSource random, SodiumModelData modelData);
+    Iterable<RenderType> getModelRenderTypes(BlockAndTintGetter level, BlockStateModel model, BlockState state, BlockPos pos, RandomSource random, SodiumModelData modelData);
 
     /**
      * Returns a list of quads used by this model.
@@ -47,7 +46,7 @@ public interface PlatformModelAccess {
      * @param modelData The platform specific model data.
      * @return The list of quads used by the model.
      */
-    List<BakedQuad> getQuads(BlockAndTintGetter level, BlockPos pos, BakedModel model, BlockState state, Direction face, RandomSource random, RenderType renderType, SodiumModelData modelData);
+    List<BakedQuad> getQuads(BlockAndTintGetter level, BlockPos pos, BlockStateModel model, BlockState state, Direction face, RandomSource random, RenderType renderType, SodiumModelData modelData);
 
     /**
      * Gets the container holding model data for this chunk. <b>This operation is not thread safe.</b>
@@ -66,7 +65,7 @@ public interface PlatformModelAccess {
      * @param originalData The model data, as retrieved by {@code getModelDataContainer()}.
      * @return The true model data, to render with.
      */
-    SodiumModelData getModelData(LevelSlice slice, BakedModel model, BlockState state, BlockPos pos, SodiumModelData originalData);
+    SodiumModelData getModelData(LevelSlice slice, BlockStateModel model, BlockState state, BlockPos pos, SodiumModelData originalData);
 
     /**
      * Should not use. <b>Use {@code SodiumModelData.EMPTY} instead.</b>

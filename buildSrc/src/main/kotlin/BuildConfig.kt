@@ -1,13 +1,13 @@
  import org.gradle.api.Project
 
 object BuildConfig {
-    val MINECRAFT_VERSION: String = "1.21.4"
+    val MINECRAFT_VERSION: String = "25w07a"
     val NEOFORGE_VERSION: String = "21.4.88-beta"
-    val FABRIC_LOADER_VERSION: String = "0.16.9"
+    val FABRIC_LOADER_VERSION: String = "0.16.10"
     val FABRIC_API_VERSION: String = "0.112.1+1.21.4"
 
     // This value can be set to null to disable Parchment.
-    val PARCHMENT_VERSION: String? = "2025.01.19"
+    val PARCHMENT_VERSION: String? = null
 
     // https://semver.org/
     var MOD_VERSION: String = "0.7.0"

@@ -45,7 +45,13 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${BuildConfig.FABRIC_LOADER_VERSION}")
 
     fun addEmbeddedFabricModule(name: String) {
-        val module = fabricApi.module(name, BuildConfig.FABRIC_API_VERSION)
+        val module = fabricApi.module(name, "0.116.1+1.21.5")
+        modImplementation(module)
+        include(module)
+    }
+
+    fun addEmbeddedFabricModuleC(name: String) {
+        val module = fabricApi.module(name, "0.116.0+1.21.5")
         modImplementation(module)
         include(module)
     }
@@ -53,7 +59,7 @@ dependencies {
     // Fabric API modules
     addEmbeddedFabricModule("fabric-api-base")
     addEmbeddedFabricModule("fabric-block-view-api-v2")
-    addEmbeddedFabricModule("fabric-renderer-api-v1")
+    modImplementation(files("fabric-renderer-api-v1-5.0.6+c327076a88.jar"))
     addEmbeddedFabricModule("fabric-rendering-data-attachment-v1")
     addEmbeddedFabricModule("fabric-rendering-fluids-v1")
     addEmbeddedFabricModule("fabric-resource-loader-v0")
@@ -72,6 +78,7 @@ loom {
             configName = "Fabric/Client"
             appendProjectPathToConfigName = false
             ideConfigGenerated(true)
+            environmentVariable("LD_PRELOAD", "/usr/lib/librenderdoc.so")
             runDir("run")
         }
     }
