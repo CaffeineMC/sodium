@@ -20,6 +20,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.BlockDestructionProgress;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
@@ -57,6 +58,19 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
 
     @Shadow
     private Frustum cullingFrustum;
+
+    @Shadow
+    private int lastCameraSectionX;
+
+    @Shadow
+    private int lastCameraSectionY;
+
+    @Shadow
+    private int lastCameraSectionZ;
+
+    @Shadow
+    @Final
+    private WorldBorderRenderer worldBorderRenderer;
 
     @Unique
     private SodiumWorldRenderer renderer;
@@ -151,6 +165,17 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     private void setupRender(Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean spectator) {
         var viewport = ((ViewportProvider) frustum).sodium$createViewport();
         var updateChunksImmediately = FlawlessFrames.isActive();
+
+        int sectionX = SectionPos.posToSectionCoord(camera.getPosition().x());
+        int sectionY = SectionPos.posToSectionCoord(camera.getPosition().y());
+        int sectionZ = SectionPos.posToSectionCoord(camera.getPosition().z());
+
+        if (this.lastCameraSectionX != sectionX || this.lastCameraSectionY != sectionY || this.lastCameraSectionZ != sectionZ) {
+            this.lastCameraSectionX = sectionX;
+            this.lastCameraSectionY = sectionY;
+            this.lastCameraSectionZ = sectionZ;
+            this.worldBorderRenderer.invalidate();
+        }
 
         RenderDevice.enterManagedCode();
 

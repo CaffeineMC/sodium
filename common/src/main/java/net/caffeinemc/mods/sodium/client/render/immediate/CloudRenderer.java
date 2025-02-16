@@ -30,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.system.MemoryStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +52,8 @@ public class CloudRenderer {
             .withVertexShader(ResourceLocation.fromNamespaceAndPath("sodium", "clouds"))
             .withFragmentShader(ResourceLocation.fromNamespaceAndPath("sodium", "clouds")).buildSnippet();
 
-    private static final RenderPipeline CLOUDS_FULL = RenderPipeline.builder(CLOUD_SNIPPET).withCull(true).withLocation(ResourceLocation.fromNamespaceAndPath("sodium", "clouds_full")).build();
-    private static final RenderPipeline CLOUDS_FLAT = RenderPipeline.builder(CLOUD_SNIPPET).withCull(false).withLocation(ResourceLocation.fromNamespaceAndPath("sodium", "clouds_flat")).build();
+    public static final RenderPipeline CLOUDS_FULL = RenderPipeline.builder(CLOUD_SNIPPET).withCull(true).withLocation(ResourceLocation.fromNamespaceAndPath("sodium", "clouds_full")).build();
+    public static final RenderPipeline CLOUDS_FLAT = RenderPipeline.builder(CLOUD_SNIPPET).withCull(false).withLocation(ResourceLocation.fromNamespaceAndPath("sodium", "clouds_flat")).build();
 
     private static final ResourceLocation CLOUDS_TEXTURE_ID =
             ResourceLocation.withDefaultNamespace("textures/environment/clouds.png");
@@ -186,7 +187,9 @@ public class CloudRenderer {
 
         // Draw
         vertexBuffer.bind();
-        vertexBuffer.drawWithRenderPipeline(flat ? CLOUDS_FLAT : CLOUDS_FULL, s -> {});
+        vertexBuffer.drawWithRenderPipeline(flat ? CLOUDS_FLAT : CLOUDS_FULL, s -> {
+            RenderSystem.depthFunc(GL46C.GL_LESS);
+        });
         VertexBuffer.unbind();
 
         if (renderTarget != null) {
