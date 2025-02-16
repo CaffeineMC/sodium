@@ -600,19 +600,19 @@ abstract class InnerPartitionBSPNode extends BSPNode {
             // a vertex is on the split plane
             var sameVertexMap = insideQuad.getSameVertexMap();
             if (onPlaneCount == 1) {
-                // if the duplicate vertex is on the plane, treat as regular even quad splitting
-                if ((onPlaneMapUnmasked & sameVertexMap) != 0) {
-                    insideMapUnmasked |= sameVertexMap;
+                int duplicateIndex = -1;
+                boolean duplicateIsInside = false;
+
+                // the duplicate vertex is inside or outside, find its index and side.
+                // if the duplicate vertex is on the plane, don't move it.
+                if ((onPlaneMapUnmasked & sameVertexMap) == 0) {
+                    duplicateIsInside = (sameVertexMap & insideMapUnmasked) != 0;
+                    duplicateIndex = Integer.numberOfTrailingZeros(sameVertexMap);
                 }
 
-                // the duplicate vertex is inside or outside, mark it as whichever side has fewer (even identical) vertices
-                else if (Integer.bitCount(insideMapUnmasked) == 1) {
-                    insideMapUnmasked |= onPlaneMapUnmasked;
-                }
-
-                var insideIndex = Integer.numberOfTrailingZeros(insideMapUnmasked);
-                var outsideIndex = Integer.numberOfTrailingZeros(~(insideMapUnmasked | onPlaneMapUnmasked));
-                splitTriangleVertex(insideIndex, outsideIndex, insideQuad, outsideQuad, splitPlane, splitDistance);
+                var insideIndex = Integer.numberOfTrailingZeros(insideMap);
+                var outsideIndex = Integer.numberOfTrailingZeros(~(insideMap | onPlaneMap) & uniqueVertexMap);
+                splitTriangleVertex(insideIndex, outsideIndex, duplicateIndex, duplicateIsInside, insideQuad, outsideQuad, splitPlane, splitDistance);
             }
 
             // even splitting if the two equal vertices are the corner that's being split off.
@@ -764,15 +764,25 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         bulkQuad.updateSplitQuadAfterVertexModification();
     }
 
-    static private void splitTriangleVertex(int insideIndex, int outsideIndex, FullTQuad insideQuad, FullTQuad outsideQuad, Vector3fc splitPlane, float splitDistance) {
+    static private void splitTriangleVertex(int insideIndex, int outsideIndex, int duplicateIndex, boolean duplicateIsInside, FullTQuad insideQuad, FullTQuad outsideQuad, Vector3fc splitPlane, float splitDistance) {
         // the triangle (degenerate quad) is split through one edge, producing two triangles
 
         var insideVertices = insideQuad.getVertices();
         var outsideVertices = outsideQuad.getVertices();
 
+        // the duplicate vertex of the opposite quad is moved to the center too
+        ChunkVertexEncoder.Vertex duplicateTarget = null;
+        if (duplicateIndex != -1) {
+            if (duplicateIsInside) {
+                duplicateTarget = outsideVertices[duplicateIndex];
+            } else {
+                duplicateTarget = insideVertices[duplicateIndex];
+            }
+        }
+
         interpolateAttributes(splitDistance, splitPlane,
                 insideVertices[insideIndex], outsideVertices[outsideIndex],
-                insideVertices[outsideIndex], outsideVertices[insideIndex]);
+                insideVertices[outsideIndex], outsideVertices[insideIndex], duplicateTarget);
 
         insideQuad.updateSplitQuadAfterVertexModification();
         outsideQuad.updateSplitQuadAfterVertexModification();
