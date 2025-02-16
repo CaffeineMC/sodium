@@ -523,7 +523,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         if (facing.isAligned()) {
             axes = facing.getAxis();
         }
-        return InnerBinaryPartitionBSPNode.buildFromParts(workspace, indexes, depth, oldNode, inside, outside, splittingGroup, axes, splitPlane, splitDistance);
+        return InnerBinaryPartitionBSPNode.buildFromParts(workspace, indexes, depth, oldNode, inside, outside, splittingGroup, axes, representative.getQuantizedNormal(), representative.getQuantizedDotProduct());
     }
 
     private static void splitCandidate(BSPWorkspace workspace, IntArrayList splittingGroup, int candidateIndex, FullTQuad insideQuad, Vector3fc splitPlane, float splitDistance, IntArrayList outside, IntArrayList inside) {
