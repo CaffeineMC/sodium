@@ -6,8 +6,6 @@ import net.caffeinemc.mods.sodium.client.util.MathUtil;
 import net.caffeinemc.mods.sodium.client.util.sorting.RadixSort;
 import net.minecraft.core.SectionPos;
 
-import java.util.Arrays;
-
 /**
  * Static normal relative sorting orders quads by the dot product of their
  * normal and position. (referred to as "distance" throughout the code)
@@ -84,6 +82,10 @@ public class StaticNormalRelativeData extends SplitDirectionData {
             }
         }
 
+        // The quad index is used to keep track of the position in the quad array.
+        // This is necessary because the emitted quad indexes in each facing start at zero,
+        // but the quads are stored in a single continuously indexed array.
+        int quadIndex = 0;
         for (var vertexCount : vertexCounts) {
             if (vertexCount == -1 || vertexCount == 0) {
                 continue;
@@ -93,12 +95,13 @@ public class StaticNormalRelativeData extends SplitDirectionData {
 
             if (count == 1) {
                 TranslucentData.writeQuadVertexIndexes(indexBuffer, 0);
+                quadIndex++;
             } else {
                 final var keys = new int[count];
                 final var perm = new int[count];
 
                 for (int idx = 0; idx < count; idx++) {
-                    keys[idx] = MathUtil.floatToComparableInt(quads[idx].getAccurateDotProduct());
+                    keys[idx] = MathUtil.floatToComparableInt(quads[quadIndex++].getAccurateDotProduct());
                     perm[idx] = idx;
                 }
 
