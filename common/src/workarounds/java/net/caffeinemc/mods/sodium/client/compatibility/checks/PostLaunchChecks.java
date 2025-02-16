@@ -21,10 +21,8 @@ public class PostLaunchChecks {
 
         // FIXME: This can be determined earlier, but we can't access the GUI classes in pre-launch
         if (isUsingPojavLauncher()) {
-            Console.instance().logMessage(MessageLevel.SEVERE, "sodium.console.pojav_launcher", true, 30.0);
-            LOGGER.error("It appears that PojavLauncher is being used with an OpenGL compatibility layer. This will " +
-                    "likely cause severe performance issues, graphical issues, and crashes when used with Sodium. This " +
-                    "configuration is not supported -- you are on your own!");
+            throw new RuntimeException("It appears that you are using PojavLauncher, which is not supported when " +
+                    "using Sodium. Please check your mods list.");
         }
     }
 
