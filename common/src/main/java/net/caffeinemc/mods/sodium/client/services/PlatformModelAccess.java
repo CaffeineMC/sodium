@@ -33,10 +33,9 @@ public interface PlatformModelAccess {
      * @param face The current face of the block being rendered, or null if rendering unassigned quads.
      * @param random The random source used by the current block renderer.
      * @param renderType The current render type being drawn.
-     * @param modelData The platform specific model data.
      * @return The list of quads used by the model.
      */
-    List<BakedQuad> getQuads(BlockAndTintGetter level, BlockPos pos, BlockModelPart model, BlockState state, Direction face, RandomSource random, RenderType renderType, SodiumModelData modelData);
+    List<BakedQuad> getQuads(BlockAndTintGetter level, BlockPos pos, BlockModelPart model, BlockState state, Direction face, RandomSource random, RenderType renderType);
 
     /**
      * Gets the container holding model data for this chunk. <b>This operation is not thread safe.</b>

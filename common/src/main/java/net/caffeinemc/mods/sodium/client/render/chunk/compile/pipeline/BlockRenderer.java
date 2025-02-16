@@ -83,8 +83,6 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         this.state = state;
         this.pos = pos;
 
-        this.randomSeed = state.getSeed(pos);
-
         this.posOffset.set(origin.getX(), origin.getY(), origin.getZ());
         if (state.hasOffsetFunction()) {
             Vec3 modelOffset = state.getOffset(pos);
@@ -93,18 +91,18 @@ public class BlockRenderer extends AbstractBlockRenderContext {
 
         this.colorProvider = this.colorProviderRegistry.getColorProvider(state.getBlock());
 
-        type = ItemBlockRenderTypes.getChunkRenderType(state);
-
         this.prepareCulling(true);
 
-        modelData = PlatformModelAccess.getInstance().getModelData(slice, model, state, pos, slice.getPlatformModelData(pos));
-
+        this.defaultRenderType = ItemBlockRenderTypes.getChunkRenderType(state);
         this.allowDowngrade = true;
 
-        ((FabricBlockStateModel) model).emitQuads(getEmitter(), this.level, pos, state, this.random, this::isFaceCulled);
+        if (((FabricBlockStateModel) model).isVanillaAdapter()) {
+            bufferDefaultModel(model, state, this::isFaceCulled);
+        } else {
+            ((FabricBlockStateModel) model).emitQuads(getEmitter(), this.level, pos, state, this.random, this::isFaceCulled);
+        }
 
-        type = null;
-        modelData = SodiumModelData.EMPTY;
+        this.defaultRenderType = null;
     }
 
     /**
@@ -123,14 +121,8 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         }
         final boolean emissive = mat.emissive();
 
-        Material material;
-
         final BlendMode blendMode = mat.blendMode();
-        if (blendMode == BlendMode.DEFAULT) {
-            material = DefaultMaterials.forRenderLayer(type);
-        } else {
-            material = DefaultMaterials.forRenderLayer(blendMode.blockRenderLayer == null ? type : blendMode.blockRenderLayer);
-        }
+        final Material material = DefaultMaterials.forRenderLayer(blendMode.blockRenderLayer == null ? defaultRenderType : blendMode.blockRenderLayer);
 
         this.tintQuad(quad);
         this.shadeQuad(quad, lightMode, emissive, shadeMode);

@@ -71,13 +71,12 @@ public interface PlatformBlockAccess {
      * If the block contains forced ambient occlusion.
      * @param model The model being rendered
      * @param state The current block
-     * @param data Any model data
      * @param renderType The current render type being drawn
      * @param level The level slice
      * @param pos The current position
      * @return If ambient occlusion is forced, or {@code DEFAULT}
      */
-    AmbientOcclusionMode usesAmbientOcclusion(BlockModelPart model, BlockState state, SodiumModelData data, RenderType renderType, BlockAndTintGetter level, BlockPos pos);
+    AmbientOcclusionMode usesAmbientOcclusion(BlockModelPart model, BlockState state, RenderType renderType, BlockAndTintGetter level, BlockPos pos);
 
     /**
      * @param blockEntity The block entity to check.

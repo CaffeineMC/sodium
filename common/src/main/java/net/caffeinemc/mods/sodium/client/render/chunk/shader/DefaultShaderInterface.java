@@ -79,8 +79,8 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
     private void bindTexture(ChunkShaderTextureSlot slot, GpuTexture textureId) {
         GlTexture tex = (GlTexture) textureId;
         GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + slot.ordinal());
-        tex.flushModeChanges();
         GlStateManager._bindTexture(tex.glId());
+        tex.flushModeChanges();
 
         var uniform = this.uniformTextures.get(slot);
         uniform.setInt(slot.ordinal());

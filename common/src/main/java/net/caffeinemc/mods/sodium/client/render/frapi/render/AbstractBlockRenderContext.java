@@ -21,6 +21,7 @@ import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.api.renderer.v1.model.ModelHelper;
 import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -74,9 +75,6 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
 
         @Override
         public void emitDirectly() {
-            if (type == null) {
-                throw new IllegalStateException("No render type is set but an FRAPI object was asked to render!");
-            }
             renderQuad(this);
         }
     }
@@ -102,15 +100,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
      */
     protected BlockPos pos;
 
-    /**
-     * The current render type being rendered.
-     */
-    protected RenderType type;
-
-    /**
-     * The current model's model data.
-     */
-    protected SodiumModelData modelData;
+    protected RenderType defaultRenderType;
 
     protected boolean allowDowngrade;
 
@@ -121,7 +111,6 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     private int cullResultFlags;
 
     protected RandomSource random;
-    protected long randomSeed;
 
     /**
      * Must be set by the subclass constructor.
@@ -217,10 +206,10 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
         // and we don't need to check for transforms per-quad.
 
         parts.clear();
-        random.setSeed(randomSeed);
+        random.setSeed(state.getSeed(pos));
         model.collectParts(random, parts);
 
-        RenderType renderType = type;
+        RenderType renderType = ItemBlockRenderTypes.getChunkRenderType(state);
 
         for (int partIndex = 0; partIndex < parts.size(); partIndex++) {
             BlockModelPart part = parts.get(partIndex);
@@ -234,6 +223,8 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
             BlockModelPart part = parts.get(partIndex);
             this.prepareAoInfo(part.useAmbientOcclusion());
 
+            renderType = PlatformModelAccess.getInstance().getPartRenderType(part, renderType);
+
             for (int i = 0; i <= ModelHelper.NULL_FACE_ID; i++) {
                 final Direction cullFace = ModelHelper.faceFromIndex(i);
 
@@ -241,14 +232,14 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
                     continue;
                 }
 
-                AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, state, modelData, type, slice, pos);
+                AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, state, renderType, slice, pos);
 
-                final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, part, state, cullFace, random, type, modelData);
+                final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, part, state, cullFace, random, renderType);
                 final int count = quads.size();
 
                 for (int j = 0; j < count; j++) {
                     final BakedQuad q = quads.get(j);
-                    editorQuad.fromVanilla(q, (type == RenderType.tripwire() || type == RenderType.translucent()) ? TRANSLUCENT_MATERIAL : STANDARD_MATERIALS[ao.ordinal()], cullFace);
+                    editorQuad.fromVanilla(q, (renderType == RenderType.tripwire() || renderType == RenderType.translucent()) ? TRANSLUCENT_MATERIAL : STANDARD_MATERIALS[ao.ordinal()], cullFace);
                     // Call processQuad instead of emit for efficiency
                     // (avoid unnecessarily clearing data, trying to apply transforms, and performing cull check again)
 
@@ -258,13 +249,5 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
         }
 
         editorQuad.clear();
-    }
-
-    public SodiumModelData getModelData() {
-        return modelData;
-    }
-
-    public RenderType getRenderType() {
-        return type;
     }
 }

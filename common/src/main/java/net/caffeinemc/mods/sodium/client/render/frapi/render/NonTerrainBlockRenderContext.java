@@ -68,24 +68,26 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
         this.pos = pos;
         this.colorMap = blockColors;
 
-        this.randomSeed = seed;
 
         this.vertexConsumer = buffer;
         this.matPosition = poseStack.last().pose();
         this.trustedNormals = poseStack.last().trustedNormals;
         this.matNormal = poseStack.last().normal();
         this.overlay = overlay;
-        this.type = ItemBlockRenderTypes.getChunkRenderType(state);
-        this.modelData = SodiumModelData.EMPTY;
+        this.defaultRenderType = ItemBlockRenderTypes.getChunkRenderType(state);
 
         this.lightDataCache.reset(pos, blockView);
         this.prepareCulling(cull);
 
-        ((FabricBlockStateModel) model).emitQuads(getEmitter(), blockView, pos, state, this.random, this::isFaceCulled);
+        if (((FabricBlockStateModel) model).isVanillaAdapter()) {
+            bufferDefaultModel(model, state, this::isFaceCulled);
+        } else {
+            this.random.setSeed(state.getSeed(pos));
+            ((FabricBlockStateModel) model).emitQuads(getEmitter(), blockView, pos, state, this.random, this::isFaceCulled);
+        }
 
+        this.defaultRenderType = null;
         this.level = null;
-        this.type = null;
-        this.modelData = null;
         this.lightDataCache.release();
         this.random = null;
         this.vertexConsumer = null;
@@ -112,7 +114,7 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
     }
 
     private VertexConsumer getVertexConsumer(BlendMode blendMode) {
-        return vertexConsumer.getBuffer(blendMode == BlendMode.DEFAULT ? type : blendMode.blockRenderLayer);
+        return vertexConsumer.getBuffer(blendMode == BlendMode.DEFAULT ? defaultRenderType : blendMode.blockRenderLayer);
     }
 
     private void tintQuad(MutableQuadViewImpl quad) {
