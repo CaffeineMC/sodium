@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
-abstract class DynamicSorter extends PresentSorter {
+public abstract class DynamicSorter extends PresentSorter {
     private final int quadCount;
 
     DynamicSorter(int quadCount) {
@@ -13,5 +13,9 @@ abstract class DynamicSorter extends PresentSorter {
     public void writeIndexBuffer(CombinedCameraPos cameraPos, boolean initial) {
         this.initBufferWithQuadLength(this.quadCount);
         this.writeSort(cameraPos, initial);
+    }
+
+    public int getQuadCount() {
+        return this.quadCount;
     }
 }
