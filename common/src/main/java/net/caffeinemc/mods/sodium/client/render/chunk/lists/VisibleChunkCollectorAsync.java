@@ -39,7 +39,7 @@ public class VisibleChunkCollectorAsync implements SectionTree.VisibleSectionVis
         ChunkRenderList renderList = region.getRenderList();
 
         if (renderList.getLastVisibleFrame() != this.frame) {
-            renderList.reset(this.frame);
+            renderList.reset(this.frame, this.orderIsSorted());
 
             this.sortedRenderLists.add(renderList);
         }
@@ -66,7 +66,7 @@ public class VisibleChunkCollectorAsync implements SectionTree.VisibleSectionVis
     }
 
     @Override
-    public boolean orderIsUnsorted() {
-        return false;
+    public boolean orderIsSorted() {
+        return true;
     }
 }

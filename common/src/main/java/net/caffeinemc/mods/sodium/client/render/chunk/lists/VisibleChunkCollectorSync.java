@@ -29,7 +29,7 @@ public class VisibleChunkCollectorSync extends SectionTree implements RenderList
         // Even if a section does not have render objects, we must ensure the render list is initialized and put
         // into the sorted queue of lists, so that we maintain the correct order of draw calls.
         if (renderList.getLastVisibleFrame() != this.frame) {
-            renderList.reset(this.frame);
+            renderList.reset(this.frame, this.orderIsSorted());
 
             this.sortedRenderLists.add(renderList);
         }
@@ -58,7 +58,7 @@ public class VisibleChunkCollectorSync extends SectionTree implements RenderList
     }
 
     @Override
-    public boolean orderIsUnsorted() {
-        return true;
+    public boolean orderIsSorted() {
+        return false;
     }
 }

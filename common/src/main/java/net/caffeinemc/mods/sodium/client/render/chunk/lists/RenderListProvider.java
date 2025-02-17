@@ -8,16 +8,14 @@ import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 public interface RenderListProvider extends SortItemsProvider {
     ObjectArrayList<ChunkRenderList> getUnsortedRenderLists();
 
-    boolean orderIsUnsorted();
+    boolean orderIsSorted();
 
     default SortedRenderLists createRenderLists(Viewport viewport) {
-        var doSorting = this.orderIsUnsorted();
-
         var sectionPos = viewport.getChunkCoord();
         var renderLists = this.getUnsortedRenderLists();
 
         // sort the regions by distance to fix rare region ordering bugs if necessary
-        if (doSorting) {
+        if (!this.orderIsSorted()) {
             var cameraX = sectionPos.getX() >> RenderRegion.REGION_WIDTH_SH;
             var cameraY = sectionPos.getY() >> RenderRegion.REGION_HEIGHT_SH;
             var cameraZ = sectionPos.getZ() >> RenderRegion.REGION_LENGTH_SH;
@@ -45,7 +43,7 @@ public interface RenderListProvider extends SortItemsProvider {
         }
 
         for (var list : renderLists) {
-            list.prepareForRender(sectionPos, this, doSorting);
+            list.prepareForRender(sectionPos, this);
         }
 
         return new SortedRenderLists(renderLists);

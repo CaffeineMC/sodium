@@ -23,6 +23,7 @@ public class ChunkRenderList {
     private int lastRelativeCameraSectionX;
     private int lastRelativeCameraSectionY;
     private int lastRelativeCameraSectionZ;
+    private boolean addedSectionsAreSorted = false;
 
     private final byte[] sectionsWithSprites = new byte[RenderRegion.REGION_SIZE];
     private int sectionsWithSpritesCount = 0;
@@ -38,7 +39,7 @@ public class ChunkRenderList {
         this.region = region;
     }
 
-    public void reset(int frame) {
+    public void reset(int frame, boolean addedSectionsAreSorted) {
         this.prevSectionsWithGeometryCount = this.sectionsWithGeometryCount;
         Arrays.fill(this.sectionsWithGeometryMap, 0L);
 
@@ -48,12 +49,13 @@ public class ChunkRenderList {
 
         this.size = 0;
         this.lastVisibleFrame = frame;
+        this.addedSectionsAreSorted = addedSectionsAreSorted;
     }
 
     // clamping the relative camera position to the region bounds means there can only be very few different distances
     private static final int SORTING_HISTOGRAM_SIZE = RenderRegion.REGION_WIDTH + RenderRegion.REGION_HEIGHT + RenderRegion.REGION_LENGTH - 2;
 
-    public void prepareForRender(SectionPos cameraPos, SortItemsProvider sortItemsProvider, boolean sortSections) {
+    public void prepareForRender(SectionPos cameraPos, SortItemsProvider sortItemsProvider) {
         // The relative coordinates are clamped to one section larger than the region bounds to also capture cache invalidation that happens
         // when the camera moves from outside the region to inside the region (when seen on all axes independently).
         // This type of cache invalidation stems from different facings of sections being rendered if the camera is aligned with them on an axis.
@@ -78,10 +80,8 @@ public class ChunkRenderList {
             this.lastRelativeCameraSectionZ = relativeCameraSectionZ;
 
             // only sort sections if necessary, read directly from bitmap instead of no sorting is required
-            if (sortSections) {
+            if (!this.addedSectionsAreSorted) {
                 this.sortSections(relativeCameraSectionX, relativeCameraSectionY, relativeCameraSectionZ, sortItemsProvider);
-            } else {
-                this.readSections();
             }
         }
     }
@@ -125,21 +125,6 @@ public class ChunkRenderList {
         }
     }
 
-    private void readSections() {
-        this.sectionsWithGeometryCount = 0;
-        for (int mapIndex = 0; mapIndex < this.sectionsWithGeometryMap.length; mapIndex++) {
-            var map = this.sectionsWithGeometryMap[mapIndex];
-            var mapOffset = mapIndex << 6;
-
-            while (map != 0) {
-                var index = Long.numberOfTrailingZeros(map) + mapOffset;
-                map &= map - 1;
-
-                this.sectionsWithGeometry[this.sectionsWithGeometryCount++] = (byte) index;
-            }
-        }
-    }
-
     public void add(int localSectionIndex) {
         if (this.size >= RenderRegion.REGION_SIZE) {
             throw new ArrayIndexOutOfBoundsException("Render list is full");
@@ -151,6 +136,9 @@ public class ChunkRenderList {
 
         if (((flags >>> RenderSectionFlags.HAS_BLOCK_GEOMETRY) & 1) == 1) {
             this.sectionsWithGeometryMap[localSectionIndex >> 6] |= 1L << (localSectionIndex & 0b111111);
+            if (this.addedSectionsAreSorted) {
+                this.sectionsWithGeometry[this.sectionsWithGeometryCount] = (byte) localSectionIndex;
+            }
             this.sectionsWithGeometryCount++;
         }
 
