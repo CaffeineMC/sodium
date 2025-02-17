@@ -86,7 +86,10 @@ public class SectionRenderDataUnsafe {
     }
 
     public static void setFacingList(long ptr, long facingList) {
+        // rescue and re-write the local indexing flag to prevent it from being lost when a whole long is written for the facing list
+        byte isLocalIndexByte = MemoryUtil.memGetByte(ptr + OFFSET_IS_LOCAL_INDEX);
         MemoryUtil.memPutLong(ptr + OFFSET_FACING_LIST, facingList);
+        MemoryUtil.memPutByte(ptr + OFFSET_IS_LOCAL_INDEX, isLocalIndexByte);
     }
 
     public static long getFacingList(long ptr) {
