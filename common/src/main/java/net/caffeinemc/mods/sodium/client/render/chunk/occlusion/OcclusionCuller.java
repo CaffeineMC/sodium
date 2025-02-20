@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.occlusion;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
+import net.caffeinemc.mods.sodium.client.render.chunk.lists.RenderSectionVisitor;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.util.collections.DoubleBufferedQueue;
@@ -23,7 +24,7 @@ public class OcclusionCuller {
         this.level = level;
     }
 
-    public void findVisible(Visitor visitor,
+    public void findVisible(RenderSectionVisitor visitor,
                             Viewport viewport,
                             float searchDistance,
                             boolean useOcclusionCulling,
@@ -41,7 +42,7 @@ public class OcclusionCuller {
         this.addNearbySections(visitor, viewport, searchDistance, frame);
     }
 
-    private static void processQueue(Visitor visitor,
+    private static void processQueue(RenderSectionVisitor visitor,
                                      Viewport viewport,
                                      float searchDistance,
                                      boolean useOcclusionCulling,
@@ -211,8 +212,9 @@ public class OcclusionCuller {
     // The bounding box of a chunk section must be large enough to contain all possible geometry within it. Block models
     // can extend outside a block volume by +/- 1.0 blocks on all axis. Additionally, we make use of a small epsilon
     // to deal with floating point imprecision during a frustum check (see GH#2132).
-    private static final float CHUNK_SECTION_RADIUS = 8.0f /* chunk bounds */;
-    private static final float CHUNK_SECTION_SIZE = CHUNK_SECTION_RADIUS + 1.0f /* maximum model extent */ + 0.125f /* epsilon */;
+    public static final float CHUNK_SECTION_RADIUS = 8.0f /* chunk bounds */;
+    public static final float CHUNK_SECTION_MARGIN = 1.0f /* maximum model extent */ + 0.125f /* epsilon */;
+    public static final float CHUNK_SECTION_SIZE = CHUNK_SECTION_RADIUS + CHUNK_SECTION_MARGIN;
 
     public static boolean isWithinFrustum(Viewport viewport, RenderSection section) {
         return viewport.isBoxVisible(section.getCenterX(), section.getCenterY(), section.getCenterZ(),
@@ -232,7 +234,7 @@ public class OcclusionCuller {
     // for all neighboring, even diagonally neighboring, sections around the origin to render them
     // if their extended bounding box is visible, and they may render large models that extend
     // outside the 16x16x16 base volume of the section.
-    private void addNearbySections(Visitor visitor, Viewport viewport, float searchDistance, int frame) {
+    private void addNearbySections(RenderSectionVisitor visitor, Viewport viewport, float searchDistance, int frame) {
         var origin = viewport.getChunkCoord();
         var originX = origin.getX();
         var originY = origin.getY();
@@ -259,7 +261,7 @@ public class OcclusionCuller {
         }
     }
 
-    private void init(Visitor visitor,
+    private void init(RenderSectionVisitor visitor,
                       WriteQueue<RenderSection> queue,
                       Viewport viewport,
                       float searchDistance,
@@ -281,7 +283,7 @@ public class OcclusionCuller {
         }
     }
 
-    private void initWithinWorld(Visitor visitor, WriteQueue<RenderSection> queue, Viewport viewport, boolean useOcclusionCulling, int frame) {
+    private void initWithinWorld(RenderSectionVisitor visitor, WriteQueue<RenderSection> queue, Viewport viewport, boolean useOcclusionCulling, int frame) {
         var origin = viewport.getChunkCoord();
         var section = this.getRenderSection(origin.getX(), origin.getY(), origin.getZ());
 
@@ -377,7 +379,4 @@ public class OcclusionCuller {
         return this.sections.get(SectionPos.asLong(x, y, z));
     }
 
-    public interface Visitor {
-        void visit(RenderSection section);
-    }
 }

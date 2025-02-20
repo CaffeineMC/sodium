@@ -22,9 +22,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilder
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilderSortingTask;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilderTask;
 import net.caffeinemc.mods.sodium.client.render.chunk.data.BuiltSectionInfo;
-import net.caffeinemc.mods.sodium.client.render.chunk.lists.ChunkRenderList;
-import net.caffeinemc.mods.sodium.client.render.chunk.lists.SortedRenderLists;
-import net.caffeinemc.mods.sodium.client.render.chunk.lists.VisibleChunkCollector;
+import net.caffeinemc.mods.sodium.client.render.chunk.lists.*;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.GraphDirection;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
@@ -36,6 +34,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.N
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.CameraMovement;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.SortTriggering;
+import net.caffeinemc.mods.sodium.client.render.chunk.tree.RemovableMultiForest;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
 import net.caffeinemc.mods.sodium.client.render.util.RenderAsserts;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
@@ -110,6 +109,8 @@ public class RenderSectionManager {
 
     private @Nullable Vector3dc cameraPosition;
 
+    private final RemovableMultiForest renderableSectionTree;
+
     public RenderSectionManager(ClientLevel level, int renderDistance, CommandList commandList) {
         this.chunkRenderer = new DefaultChunkRenderer(RenderDevice.INSTANCE, ChunkMeshFormats.COMPACT);
 
@@ -126,6 +127,8 @@ public class RenderSectionManager {
 
         this.renderLists = SortedRenderLists.empty();
         this.occlusionCuller = new OcclusionCuller(Long2ReferenceMaps.unmodifiable(this.sectionByPosition), this.level);
+
+        this.renderableSectionTree = new RemovableMultiForest(renderDistance);
 
         this.taskLists = new EnumMap<>(TaskQueueType.class);
 
@@ -164,12 +167,30 @@ public class RenderSectionManager {
         final var searchDistance = this.getSearchDistance();
         final var useOcclusionCulling = this.shouldUseOcclusionCulling(camera, spectator);
 
-        var visitor = new VisibleChunkCollector(frame, SodiumClientMod.options().performance.chunkBuildDeferMode.getImportantRebuildQueueType());
+        RenderListProvider renderListProvider;
+        var importantRebuildQueueType = SodiumClientMod.options().performance.chunkBuildDeferMode.getImportantRebuildQueueType();
+        if (this.isOutOfGraph(viewport.getChunkCoord())) {
+            var visitor = new TreeSectionCollector(frame, importantRebuildQueueType, this.sectionByPosition);
+            this.renderableSectionTree.prepareForTraversal();
+            this.renderableSectionTree.traverse(visitor, viewport, searchDistance);
 
-        this.occlusionCuller.findVisible(visitor, viewport, searchDistance, useOcclusionCulling, frame);
+            renderListProvider = visitor;
+        } else {
+            var visitor = new OcclusionSectionCollector(frame, importantRebuildQueueType);
+            this.occlusionCuller.findVisible(visitor, viewport, searchDistance, useOcclusionCulling, frame);
 
-        this.renderLists = visitor.createRenderLists(viewport);
-        this.taskLists = visitor.getRebuildLists();
+            renderListProvider = visitor;
+        }
+
+        this.renderLists = renderListProvider.createRenderLists(viewport);
+        this.taskLists = renderListProvider.getTaskLists();
+    }
+
+    private boolean isOutOfGraph(SectionPos pos) {
+        var sectionY = pos.getY();
+        // 1.21.1 has no getMinSectionY/getMaxSectionY.
+        // in 1.21.1 we have: getMinSection/getMaxSection, which are half-open [min, max).
+        return this.level.getMinSection() <= sectionY && sectionY < this.level.getMaxSection() && !this.sectionByPosition.containsKey(pos.asLong());
     }
 
     private float getSearchDistance() {
@@ -195,6 +216,10 @@ public class RenderSectionManager {
             useOcclusionCulling = Minecraft.getInstance().smartCull;
         }
         return useOcclusionCulling;
+    }
+
+    public void beforeSectionUpdates() {
+        this.renderableSectionTree.ensureCapacity(this.getRenderDistance());
     }
 
     private void resetRenderLists() {
@@ -225,13 +250,14 @@ public class RenderSectionManager {
         if (section.hasOnlyAir()) {
             this.updateSectionInfo(renderSection, BuiltSectionInfo.EMPTY);
         } else {
+            this.renderableSectionTree.add(renderSection);
             renderSection.setPendingUpdate(ChunkUpdateTypes.INITIAL_BUILD, this.lastFrameAtTime);
         }
 
         this.connectNeighborNodes(renderSection);
 
         // force update to schedule build task
-        this.needsGraphUpdate = true;
+        this.markGraphDirty();
     }
 
     public void onSectionRemoved(int x, int y, int z) {
@@ -241,6 +267,8 @@ public class RenderSectionManager {
         if (section == null) {
             return;
         }
+
+        this.renderableSectionTree.remove(x, y, z);
 
         if (section.getTranslucentData() != null) {
             this.sortTriggering.removeSection(section.getTranslucentData(), sectionPos);
@@ -258,7 +286,7 @@ public class RenderSectionManager {
         section.delete();
 
         // force update to remove section from render lists
-        this.needsGraphUpdate = true;
+        this.markGraphDirty();
     }
 
     public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z) {
@@ -375,6 +403,12 @@ public class RenderSectionManager {
     }
 
     private boolean updateSectionInfo(RenderSection render, BuiltSectionInfo info) {
+        if (info == null || !RenderSectionFlags.needsRender(info.flags)) {
+            this.renderableSectionTree.remove(render);
+        } else {
+            this.renderableSectionTree.add(render);
+        }
+
         var infoChanged = render.setInfo(info);
 
         if (info == null || ArrayUtils.isEmpty(info.globalBlockEntities)) {
