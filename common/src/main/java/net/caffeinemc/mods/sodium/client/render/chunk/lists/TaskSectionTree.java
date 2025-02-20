@@ -1,6 +1,5 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.lists;
 
-import net.caffeinemc.mods.sodium.client.render.chunk.ChunkUpdateType;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.CullType;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.RayOcclusionSectionTree;
@@ -29,7 +28,7 @@ public class TaskSectionTree extends RayOcclusionSectionTree {
     }
 
     @Override
-    protected void addPendingSection(RenderSection section, ChunkUpdateType type) {
+    protected void addPendingSection(RenderSection section, int type) {
         super.addPendingSection(section, type);
 
         this.markSectionTask(section);

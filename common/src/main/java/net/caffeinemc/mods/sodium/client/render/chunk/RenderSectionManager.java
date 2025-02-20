@@ -567,7 +567,7 @@ public class RenderSectionManager {
             this.updateSectionInfo(renderSection, BuiltSectionInfo.EMPTY);
         } else {
             this.renderableSectionTree.add(renderSection);
-            renderSection.setPendingUpdate(ChunkUpdateType.INITIAL_BUILD, this.lastFrameAtTime);
+            renderSection.setPendingUpdate(ChunkUpdateTypes.INITIAL_BUILD, this.lastFrameAtTime);
         }
 
         this.connectNeighborNodes(renderSection);
@@ -933,7 +933,7 @@ public class RenderSectionManager {
         while (it.hasNext() && collector.hasBudgetRemaining() && (deferMode.allowsUnlimitedUploadSize() || remainingUploadSize > 0)) {
             var section = it.next();
             var pendingUpdate = section.getPendingUpdate();
-            if (pendingUpdate != null && pendingUpdate.getDeferMode(importantRebuildDeferMode) == deferMode && this.shouldPrioritizeTask(section, NEARBY_SORT_DISTANCE)) {
+            if (pendingUpdate != 0 && ChunkUpdateTypes.getDeferMode(pendingUpdate, importantRebuildDeferMode) == deferMode && this.shouldPrioritizeTask(section, NEARBY_SORT_DISTANCE)) {
                 // isSectionVisible includes a special case for not testing empty sections against the tree as they won't be in it
                 if (this.renderTree == null || this.renderTree.isSectionVisible(viewport, section)) {
                     remainingUploadSize -= submitSectionTask(collector, section, pendingUpdate);
@@ -953,28 +953,20 @@ public class RenderSectionManager {
         // since the pending update it cleared when a task is started, this includes
         // sections for which there's a currently running task.
         var type = section.getPendingUpdate();
-        if (type == null) {
+        if (type == 0) {
             return 0;
         }
 
         return submitSectionTask(collector, section, type);
     }
 
-    private long submitSectionTask(ChunkJobCollector collector, @NotNull RenderSection section, ChunkUpdateType type) {
+    private long submitSectionTask(ChunkJobCollector collector, @NotNull RenderSection section, int type) {
         if (section.isDisposed()) {
             return 0;
         }
 
         ChunkBuilderTask<? extends BuilderTaskOutput> task;
-        if (type == ChunkUpdateType.SORT || type == ChunkUpdateType.IMPORTANT_SORT) {
-            task = this.createSortTask(section, this.frame);
-
-            if (task == null) {
-                // when a sort task is null it means the render section has no dynamic data and
-                // doesn't need to be sorted. Nothing needs to be done.
-                return 0;
-            }
-        } else {
+        if (ChunkUpdateTypes.isInitialBuild(type) || ChunkUpdateTypes.isRebuild(type)) {
             task = this.createRebuildTask(section, this.frame);
 
             if (task == null) {
@@ -994,11 +986,19 @@ public class RenderSectionManager {
 
                 section.setTaskCancellationToken(null);
             }
+        } else { // implies it's a type of sort task
+            task = this.createSortTask(section, this.frame);
+
+            if (task == null) {
+                // when a sort task is null it means the render section has no dynamic data and
+                // doesn't need to be sorted. Nothing needs to be done.
+                return 0;
+            }
         }
 
         var estimatedTaskSize = 0L;
         if (task != null) {
-            var job = this.builder.scheduleTask(task, type.isImportant(), collector::onJobFinished);
+            var job = this.builder.scheduleTask(task, ChunkUpdateTypes.isImportant(type), collector::onJobFinished);
             collector.addSubmittedJob(job);
             estimatedTaskSize = job.getEstimatedSize();
 
@@ -1017,7 +1017,7 @@ public class RenderSectionManager {
             return null;
         }
 
-        var task = new ChunkBuilderMeshingTask(render, frame, this.cameraPosition, context);
+        var task = new ChunkBuilderMeshingTask(render, frame, this.cameraPosition, context, ChunkUpdateTypes.isRebuildWithSort(render.getPendingUpdate()));
         task.calculateEstimations(this.jobDurationEstimator, this.meshTaskSizeEstimator);
         return task;
     }
@@ -1077,23 +1077,26 @@ public class RenderSectionManager {
         return sections;
     }
 
-    private ChunkUpdateType upgradePendingUpdate(RenderSection section, ChunkUpdateType type) {
-        var current = section.getPendingUpdate();
-        type = ChunkUpdateType.getPromotedTypeChange(current, type);
-
-        // if there was no change the upgraded type is null
-        if (type == null) {
-            return null;
+    private boolean upgradePendingUpdate(RenderSection section, int updateType) {
+        if (updateType == 0) {
+            return false;
         }
 
-        section.setPendingUpdate(type, this.lastFrameAtTime);
+        var current = section.getPendingUpdate();
+        var joined = ChunkUpdateTypes.join(current, updateType);
+
+        if (joined == current) {
+            return false;
+        }
+
+        section.setPendingUpdate(joined, this.lastFrameAtTime);
 
         // when the pending task type changes, and it's important, add it to the list of important tasks
-        if (type.isImportant()) {
-            this.importantTasks.get(type.getDeferMode(SodiumClientMod.options().performance.chunkBuildDeferMode)).add(section);
+        if (ChunkUpdateTypes.isImportant(joined)) {
+            this.importantTasks.get(ChunkUpdateTypes.getDeferMode(joined, SodiumClientMod.options().performance.chunkBuildDeferMode)).add(section);
         } else {
             // if the section received a new task, mark in the task tree so an update can happen before a global cull task runs
-            if (this.globalTaskTree != null && current == null) {
+            if (this.globalTaskTree != null && current == 0) {
                 this.globalTaskTree.markSectionTask(section);
                 this.needsFrustumTaskListUpdate = true;
 
@@ -1108,20 +1111,20 @@ public class RenderSectionManager {
             }
         }
 
-        return type;
+        return true;
     }
 
     public void scheduleSort(long sectionPos, boolean isDirectTrigger) {
         RenderSection section = this.sectionByPosition.get(sectionPos);
 
         if (section != null) {
-            var pendingUpdate = ChunkUpdateType.SORT;
+            int pendingUpdate = ChunkUpdateTypes.SORT;
             var priorityMode = SodiumClientMod.options().performance.getSortBehavior().getPriorityMode();
             if (priorityMode == PriorityMode.NEARBY && this.shouldPrioritizeTask(section, NEARBY_SORT_DISTANCE) || priorityMode == PriorityMode.ALL) {
-                pendingUpdate = ChunkUpdateType.IMPORTANT_SORT;
+                pendingUpdate = ChunkUpdateTypes.join(pendingUpdate, ChunkUpdateTypes.IMPORTANT);
             }
 
-            if (this.upgradePendingUpdate(section, pendingUpdate) != null) {
+            if (this.upgradePendingUpdate(section, pendingUpdate)) {
                 section.prepareTrigger(isDirectTrigger);
             }
         }
@@ -1135,12 +1138,12 @@ public class RenderSectionManager {
         RenderSection section = this.sectionByPosition.get(SectionPos.asLong(x, y, z));
 
         if (section != null && section.isBuilt()) {
-            ChunkUpdateType pendingUpdate;
+            int pendingUpdate;
 
             if (playerChanged && this.shouldPrioritizeTask(section, NEARBY_REBUILD_DISTANCE)) {
-                pendingUpdate = ChunkUpdateType.IMPORTANT_REBUILD;
+                pendingUpdate = ChunkUpdateTypes.join(ChunkUpdateTypes.REBUILD, ChunkUpdateTypes.IMPORTANT);
             } else {
-                pendingUpdate = ChunkUpdateType.REBUILD;
+                pendingUpdate = ChunkUpdateTypes.REBUILD;
             }
 
             this.upgradePendingUpdate(section, pendingUpdate);

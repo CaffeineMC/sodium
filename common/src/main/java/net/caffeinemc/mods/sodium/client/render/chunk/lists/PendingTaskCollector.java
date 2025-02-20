@@ -1,9 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.lists;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongHeapPriorityQueue;
-import net.caffeinemc.mods.sodium.client.render.chunk.ChunkUpdateType;
-import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
+import net.caffeinemc.mods.sodium.client.render.chunk.ChunkUpdateTypes;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
@@ -65,15 +63,15 @@ public class PendingTaskCollector implements OcclusionCuller.GraphOcclusionVisit
     }
 
     protected void checkForTask(RenderSection section) {
-        ChunkUpdateType type = section.getPendingUpdate();
+        int type = section.getPendingUpdate();
 
         // collect tasks even if they're important, whether they're actually important is decided later
-        if (type != null && section.getTaskCancellationToken() == null) {
+        if (type != 0 && section.getTaskCancellationToken() == null) {
             this.addPendingSection(section, type);
         }
     }
 
-    protected void addPendingSection(RenderSection section, ChunkUpdateType type) {
+    protected void addPendingSection(RenderSection section, int type) {
         // start with a base priority value, lowest priority of task gets processed first
         float priority = getSectionPriority(section, type);
 
@@ -87,8 +85,8 @@ public class PendingTaskCollector implements OcclusionCuller.GraphOcclusionVisit
         this.pendingTasks.add((long) MathUtil.floatToComparableInt(priority) << 32 | taskCoordinate);
     }
 
-    private float getSectionPriority(RenderSection section, ChunkUpdateType type) {
-        float priority = type.getPriorityValue();
+    private float getSectionPriority(RenderSection section, int type) {
+        float priority = ChunkUpdateTypes.getPriorityValue(type);
 
         // calculate the relative distance to the camera
         // alternatively: var distance = deltaX + deltaY + deltaZ;

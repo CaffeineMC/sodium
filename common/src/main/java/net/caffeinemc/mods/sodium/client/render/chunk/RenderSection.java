@@ -8,7 +8,6 @@ import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.VisibilityEncodi
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
 import net.caffeinemc.mods.sodium.client.util.task.CancellationToken;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,8 +48,7 @@ public class RenderSection {
     private CancellationToken taskCancellationToken = null;
     private long lastMeshResultSize = MeshResultSize.NO_DATA;
 
-    @Nullable
-    private ChunkUpdateType pendingUpdateType;
+    private int pendingUpdateType;
     private long pendingUpdateSince;
 
     private int lastUploadFrame = -1;
@@ -306,7 +304,7 @@ public class RenderSection {
         this.taskCancellationToken = token;
     }
 
-    public @Nullable ChunkUpdateType getPendingUpdate() {
+    public int getPendingUpdate() {
         return this.pendingUpdateType;
     }
 
@@ -314,13 +312,13 @@ public class RenderSection {
         return this.pendingUpdateSince;
     }
 
-    public void setPendingUpdate(ChunkUpdateType type, long now) {
+    public void setPendingUpdate(int type, long now) {
         this.pendingUpdateType = type;
         this.pendingUpdateSince = now;
     }
 
     public void clearPendingUpdate() {
-        this.pendingUpdateType = null;
+        this.pendingUpdateType = 0;
     }
 
     public void prepareTrigger(boolean isDirectTrigger) {
