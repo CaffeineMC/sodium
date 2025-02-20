@@ -494,7 +494,7 @@ public class RenderSectionManager {
 
     private boolean isOutOfGraph(SectionPos pos) {
         var sectionY = pos.getY();
-        return this.level.getMaxSectionY() <= sectionY && sectionY <= this.level.getMaxSectionY() && !this.sectionByPosition.containsKey(pos.asLong());
+        return this.level.getMinSectionY() <= sectionY && sectionY <= this.level.getMaxSectionY() && !this.sectionByPosition.containsKey(pos.asLong());
     }
 
     public void markGraphDirty() {
