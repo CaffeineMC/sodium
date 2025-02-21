@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import java.util.Locale;
 
-public abstract class Linear2DEstimator<C> extends Estimator<C, Linear2DEstimator.DataPair<C>, Linear2DEstimator.LinearRegressionBatch<C>, Long, Long, Linear2DEstimator.LinearFunction<C>> {
+public abstract class Linear2DEstimator<Category> extends Estimator<Category, Linear2DEstimator.DataPair<Category>, Linear2DEstimator.LinearRegressionBatch<Category>, Long, Long, Linear2DEstimator.LinearFunction<Category>> {
     private final float newDataRatio;
     private final int initialSampleTarget;
     private final long initialOutput;
@@ -34,7 +34,7 @@ public abstract class Linear2DEstimator<C> extends Estimator<C, Linear2DEstimato
     }
 
     @Override
-    protected LinearRegressionBatch<C> createNewDataBatch() {
+    protected LinearRegressionBatch<Category> createNewDataBatch() {
         return new LinearRegressionBatch<>();
     }
 
@@ -137,7 +137,7 @@ public abstract class Linear2DEstimator<C> extends Estimator<C, Linear2DEstimato
     }
 
     @Override
-    protected LinearFunction<C> createNewModel() {
+    protected LinearFunction<Category> createNewModel() {
         return new LinearFunction<>(this.newDataRatio, this.initialSampleTarget, this.initialOutput);
     }
 }

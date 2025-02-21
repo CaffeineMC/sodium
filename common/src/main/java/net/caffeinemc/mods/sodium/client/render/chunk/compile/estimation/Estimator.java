@@ -5,46 +5,46 @@ import java.util.Map;
 /**
  * This generic model learning class that can be used to estimate values based on a set of data points. It performs batch-wise model updates. The actual data aggregation and model updates are delegated to the implementing classes. The estimator stores multiple models in a map, one for each category.
  *
- * @param <C> The type of the category key
- * @param <D> A data point contains a category and one piece of data
- * @param <B> A data batch contains multiple data points
- * @param <I> The input to the model
- * @param <O> The output of the model
- * @param <M> The model that is used to predict values
+ * @param <Category> The type of the category key
+ * @param <Point> A data point contains a category and one piece of data
+ * @param <Batch> A data batch contains multiple data points
+ * @param <Input> The input to the model
+ * @param <Output> The output of the model
+ * @param <Model> The model that is used to predict values
  */
 public abstract class Estimator<
-        C,
-        D extends Estimator.DataPoint<C>,
-        B extends Estimator.DataBatch<D>,
-        I,
-        O,
-        M extends Estimator.Model<I, O, B, M>> {
-    protected final Map<C, M> models = createMap();
-    protected final Map<C, B> batches = createMap();
+        Category,
+        Point extends Estimator.DataPoint<Category>,
+        Batch extends Estimator.DataBatch<Point>,
+        Input,
+        Output,
+        Model extends Estimator.Model<Input, Output, Batch, Model>> {
+    protected final Map<Category, Model> models = createMap();
+    protected final Map<Category, Batch> batches = createMap();
 
-    protected interface DataBatch<D> {
-        void addDataPoint(D input);
+    protected interface DataBatch<BatchPoint> {
+        void addDataPoint(BatchPoint input);
 
         void reset();
     }
 
-    protected interface DataPoint<C> {
-        C category();
+    protected interface DataPoint<PointCategory> {
+        PointCategory category();
     }
 
-    protected interface Model<I, O, B, M extends Model<I, O, B, M>> {
-        M update(B batch);
+    protected interface Model<ModelInput, ModelOutput, ModelBatch, ModelSelf extends Model<ModelInput, ModelOutput, ModelBatch, ModelSelf>> {
+        ModelSelf update(ModelBatch batch);
 
-        O predict(I input);
+        ModelOutput predict(ModelInput input);
     }
 
-    protected abstract B createNewDataBatch();
+    protected abstract Batch createNewDataBatch();
 
-    protected abstract M createNewModel();
+    protected abstract Model createNewModel();
 
-    protected abstract <T> Map<C, T> createMap();
+    protected abstract <T> Map<Category, T> createMap();
 
-    public void addData(D data) {
+    public void addData(Point data) {
         var category = data.category();
         var batch = this.batches.get(category);
         if (batch == null) {
@@ -54,7 +54,7 @@ public abstract class Estimator<
         batch.addDataPoint(data);
     }
 
-    private M ensureModel(C category) {
+    private Model ensureModel(Category category) {
         var model = this.models.get(category);
         if (model == null) {
             model = this.createNewModel();
@@ -77,11 +77,11 @@ public abstract class Estimator<
         });
     }
 
-    public O predict(C category, I input) {
-        return this.ensureModel(category).predict(input);
+    public Output predict(Category category, Input input) {
+        return (Output) this.ensureModel(category).predict(input);
     }
 
-    public String toString(C category) {
+    public String toString(Category category) {
         var model = this.models.get(category);
         if (model == null) {
             return "-";
