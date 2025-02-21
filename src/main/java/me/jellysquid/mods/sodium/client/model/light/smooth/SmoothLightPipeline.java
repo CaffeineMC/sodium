@@ -77,15 +77,17 @@ public class SmoothLightPipeline implements LightPipeline {
         // To match vanilla behavior, also treat the face as aligned if it is parallel and the block state is a full cube
         if ((flags & ModelQuadFlags.IS_ALIGNED) != 0 || ((flags & ModelQuadFlags.IS_PARALLEL) != 0 && LightDataAccess.unpackFC(this.lightCache.get(pos)))) {
             if ((flags & ModelQuadFlags.IS_PARTIAL) == 0) {
-                this.applyAlignedFullFace(neighborInfo, pos, lightFace, out, shade);
+                this.applyAlignedFullFace(neighborInfo, pos, lightFace, out);
             } else {
-                this.applyAlignedPartialFace(neighborInfo, quad, pos, lightFace, out, shade);
+                this.applyAlignedPartialFace(neighborInfo, quad, pos, lightFace, out);
             }
         } else if ((flags & ModelQuadFlags.IS_PARALLEL) != 0) {
-            this.applyParallelFace(neighborInfo, quad, pos, lightFace, out, shade);
+            this.applyParallelFace(neighborInfo, quad, pos, lightFace, out);
         } else {
-            this.applyNonParallelFace(neighborInfo, quad, pos, lightFace, out, shade);
+            this.applyNonParallelFace(neighborInfo, quad, pos, lightFace, out);
         }
+
+        this.applySidedBrightness(out, lightFace, shade);
     }
 
     /**
@@ -94,18 +96,16 @@ public class SmoothLightPipeline implements LightPipeline {
      * have two contributing sides.
      * Flags: IS_ALIGNED, !IS_PARTIAL
      */
-    private void applyAlignedFullFace(AoNeighborInfo neighborInfo, BlockPos pos, Direction dir, QuadLightData out, boolean shade) {
+    private void applyAlignedFullFace(AoNeighborInfo neighborInfo, BlockPos pos, Direction dir, QuadLightData out) {
         AoFaceData faceData = this.getCachedFaceData(pos, dir, true);
         neighborInfo.mapCorners(faceData.lm, faceData.ao, out.lm, out.br);
-
-        this.applyAmbientLighting(out.br, dir, shade);
     }
 
     /**
      * Calculates the light data for a grid-aligned quad that does not cover the entire block volume's face.
      * Flags: IS_ALIGNED, IS_PARTIAL
      */
-    private void applyAlignedPartialFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out, boolean shade) {
+    private void applyAlignedPartialFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out) {
         for (int i = 0; i < 4; i++) {
             // Clamp the vertex positions to the block's boundaries to prevent weird errors in lighting
             float cx = clamp(quad.getX(i));
@@ -116,8 +116,6 @@ public class SmoothLightPipeline implements LightPipeline {
             neighborInfo.calculateCornerWeights(cx, cy, cz, weights);
             this.applyAlignedPartialFaceVertex(pos, dir, weights, i, out, true);
         }
-
-        this.applyAmbientLighting(out.br, dir, shade);
     }
 
     /**
@@ -126,7 +124,7 @@ public class SmoothLightPipeline implements LightPipeline {
      * meaning the check for 0 will always return false.
      * Flags: !IS_ALIGNED, IS_PARALLEL
      */
-    private void applyParallelFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out, boolean shade) {
+    private void applyParallelFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out) {
         for (int i = 0; i < 4; i++) {
             // Clamp the vertex positions to the block's boundaries to prevent weird errors in lighting
             float cx = clamp(quad.getX(i));
@@ -148,14 +146,12 @@ public class SmoothLightPipeline implements LightPipeline {
                 this.applyInsetPartialFaceVertex(pos, dir, depth, 1.0f - depth, weights, i, out);
             }
         }
-
-        this.applyAmbientLighting(out.br, dir, shade);
     }
 
     /**
      * Flags: !IS_ALIGNED, !IS_PARALLEL
      */
-    private void applyNonParallelFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out, boolean shade) {
+    private void applyNonParallelFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out) {
         for (int i = 0; i < 4; i++) {
             // Clamp the vertex positions to the block's boundaries to prevent weird errors in lighting
             float cx = clamp(quad.getX(i));
@@ -178,8 +174,6 @@ public class SmoothLightPipeline implements LightPipeline {
                 this.applyInsetPartialFaceVertex(pos, dir, depth, 1.0f - depth, weights, i, out);
             }
         }
-
-        this.applyAmbientLighting(out.br, dir, shade);
     }
 
     private void applyAlignedPartialFaceVertex(BlockPos pos, Direction dir, float[] w, int i, QuadLightData out, boolean offset) {
@@ -221,15 +215,15 @@ public class SmoothLightPipeline implements LightPipeline {
 
     /**
      * Applies the "ambient" lighting from the dimension to a quad that is parallel with the block grid.
-     * @param brightness The array of brightnesses for each quad vertex
+     * @param out The output lighting data for each quad
      * @param face The facing of the quad
      * @param shade Whether the quad should receive directional lighting
      */
-    private void applyAmbientLighting(final float[] brightness, Direction face, boolean shade) {
+    private void applySidedBrightness(QuadLightData out, Direction face, boolean shade) {
         final float multiplier = this.getAmbientBrightness(face, shade);
 
-        for (int i = 0; i < brightness.length; i++) {
-            brightness[i] *= multiplier;
+        for (int i = 0; i < out.br.length; i++) {
+            out.br[i] *= multiplier;
         }
     }
 
