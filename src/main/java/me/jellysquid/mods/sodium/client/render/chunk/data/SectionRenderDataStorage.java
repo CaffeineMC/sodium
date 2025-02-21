@@ -4,6 +4,7 @@ import me.jellysquid.mods.sodium.client.gl.arena.GlBufferSegment;
 import me.jellysquid.mods.sodium.client.gl.util.VertexRange;
 import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegion;
+import me.jellysquid.mods.sodium.client.util.UInt32;
 
 import java.util.Arrays;
 
@@ -28,11 +29,11 @@ public class SectionRenderDataStorage {
         var pMeshData = this.getDataPointer(localSectionIndex);
 
         int sliceMask = 0;
-        int vertexOffset = allocation.getOffset();
+        long vertexOffset = allocation.getOffset();
 
         for (int facingIndex = 0; facingIndex < ModelQuadFacing.COUNT; facingIndex++) {
             VertexRange vertexRange = ranges[facingIndex];
-            int vertexCount;
+            long vertexCount;
 
             if (vertexRange != null) {
                 vertexCount = vertexRange.vertexCount();
@@ -40,8 +41,8 @@ public class SectionRenderDataStorage {
                 vertexCount = 0;
             }
 
-            SectionRenderDataUnsafe.setVertexOffset(pMeshData, facingIndex, vertexOffset);
-            SectionRenderDataUnsafe.setElementCount(pMeshData, facingIndex, (vertexCount >> 2) * 6);
+            SectionRenderDataUnsafe.setVertexOffset(pMeshData, facingIndex, UInt32.downcast(vertexOffset));
+            SectionRenderDataUnsafe.setElementCount(pMeshData, facingIndex, UInt32.downcast((vertexCount >> 2) * 6));
 
             if (vertexCount > 0) {
                 sliceMask |= 1 << facingIndex;
@@ -77,7 +78,7 @@ public class SectionRenderDataStorage {
             return;
         }
 
-        var offset = allocation.getOffset();
+        long offset = allocation.getOffset();
         var data = this.getDataPointer(sectionIndex);
 
         for (int facing = 0; facing < ModelQuadFacing.COUNT; facing++) {

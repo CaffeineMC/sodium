@@ -134,8 +134,9 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         int size = batch.size;
 
         for (int facing = 0; facing < ModelQuadFacing.COUNT; facing++) {
-            MemoryUtil.memPutInt(pBaseVertex + (size << 2), SectionRenderDataUnsafe.getVertexOffset(pMeshData, facing));
-            MemoryUtil.memPutInt(pElementCount + (size << 2), SectionRenderDataUnsafe.getElementCount(pMeshData, facing));
+            // Uint32 -> Int32 cast is always safe and should be optimized away
+            MemoryUtil.memPutInt(pBaseVertex + (size << 2), (int) SectionRenderDataUnsafe.getVertexOffset(pMeshData, facing));
+            MemoryUtil.memPutInt(pElementCount + (size << 2), (int) SectionRenderDataUnsafe.getElementCount(pMeshData, facing));
 
             size += (mask >> facing) & 1;
         }

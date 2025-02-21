@@ -1,5 +1,6 @@
 package me.jellysquid.mods.sodium.client.render.chunk.data;
 
+import me.jellysquid.mods.sodium.client.util.UInt32;
 import org.lwjgl.system.MemoryUtil;
 
 // This code is a terrible hack to get around the fact that we are so incredibly memory bound, and that we
@@ -44,19 +45,19 @@ public class SectionRenderDataUnsafe {
         return MemoryUtil.memGetInt(ptr + OFFSET_SLICE_MASK);
     }
 
-    public static void setVertexOffset(long ptr, int facing, int value) {
-        MemoryUtil.memPutInt(ptr + OFFSET_SLICE_RANGES + (facing * 8L) + 0L, value);
+    public static void setVertexOffset(long ptr, int facing, long value /* Uint32 */) {
+        MemoryUtil.memPutInt(ptr + OFFSET_SLICE_RANGES + (facing * 8L) + 0L, UInt32.downcast(value));
     }
 
-    public static int getVertexOffset(long ptr, int facing) {
-        return MemoryUtil.memGetInt(ptr + OFFSET_SLICE_RANGES + (facing * 8L) + 0L);
+    public static long /* Uint32 */ getVertexOffset(long ptr, int facing) {
+        return UInt32.upcast(MemoryUtil.memGetInt(ptr + OFFSET_SLICE_RANGES + (facing * 8L) + 0L));
     }
 
-    public static void setElementCount(long ptr, int facing, int value) {
-        MemoryUtil.memPutInt(ptr + OFFSET_SLICE_RANGES + (facing * 8L) + 4L, value);
+    public static void setElementCount(long ptr, int facing, long value /* Uint32 */) {
+        MemoryUtil.memPutInt(ptr + OFFSET_SLICE_RANGES + (facing * 8L) + 4L, UInt32.downcast(value));
     }
 
-    public static int getElementCount(long ptr, int facing) {
-        return MemoryUtil.memGetInt(ptr + OFFSET_SLICE_RANGES + (facing * 8L) + 4L);
+    public static long /* Uint32 */ getElementCount(long ptr, int facing) {
+        return UInt32.upcast(MemoryUtil.memGetInt(ptr + OFFSET_SLICE_RANGES + (facing * 8L) + 4L));
     }
 }
