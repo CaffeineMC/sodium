@@ -7,6 +7,7 @@ import me.jellysquid.mods.sodium.client.gl.state.GlStateTracker;
 import me.jellysquid.mods.sodium.client.gl.sync.GlFence;
 import me.jellysquid.mods.sodium.client.gl.tessellation.*;
 import me.jellysquid.mods.sodium.client.gl.util.EnumBitField;
+import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.minecraft.client.render.BufferRenderer;
 import org.lwjgl.opengl.*;
 
@@ -54,6 +55,19 @@ public class GLRenderDevice implements RenderDevice {
     @Override
     public GLCapabilities getCapabilities() {
         return GL.getCapabilities();
+    }
+
+    @Override
+    public int getSubTexelPrecisionBits() {
+        // OpenGL only specifies "at least" 4 bits of sub-texel precision for texture fetches. Thankfully, nearly every
+        // graphics card is Direct3D-compatible and capable of providing 8 bits of precision. The only exception to this
+        // rule seems to be when using OpenGL on macOS, where it appears to arbitrarily limit the precision to 4 bits
+        // *even if* the hardware is capable of better.
+        if (OsUtils.getOs() == OsUtils.OperatingSystem.MAC) {
+            return 4;
+        }
+
+        return 8;
     }
 
     @Override
