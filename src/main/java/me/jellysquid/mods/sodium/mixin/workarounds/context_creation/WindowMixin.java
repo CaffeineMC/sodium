@@ -1,9 +1,10 @@
 package me.jellysquid.mods.sodium.mixin.workarounds.context_creation;
 
-import me.jellysquid.mods.sodium.client.compatibility.checks.ModuleScanner;
-import me.jellysquid.mods.sodium.client.compatibility.checks.PostLaunchChecks;
-import me.jellysquid.mods.sodium.client.compatibility.workarounds.Workarounds;
-import me.jellysquid.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds;
+import net.caffeinemc.mods.sodium.client.compatibility.checks.ModuleScanner;
+import net.caffeinemc.mods.sodium.client.compatibility.checks.PostLaunchChecks;
+import net.caffeinemc.mods.sodium.client.compatibility.environment.GlContextInfo;
+import net.caffeinemc.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds;
+import net.caffeinemc.mods.sodium.client.platform.NativeWindowHandle;
 import net.minecraft.client.WindowEventHandler;
 import net.minecraft.client.WindowSettings;
 import net.minecraft.client.util.MonitorTracker;
@@ -24,33 +25,30 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 
 @Mixin(Window.class)
-public class WindowMixin {
-    @Shadow
-    @Final
-    private static Logger LOGGER;
-
+public class WindowMixin {    @Shadow
+@Final
+private static Logger LOGGER;
     @Unique
     private long wglPrevContext = MemoryUtil.NULL;
 
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwCreateWindow(IILjava/lang/CharSequence;JJ)J"))
+    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwCreateWindow(IILjava/lang/CharSequence;JJ)J"), expect = 0, require = 0)
     private long wrapGlfwCreateWindow(int width, int height, CharSequence title, long monitor, long share) {
-        final boolean applyNvidiaWorkarounds = Workarounds.isWorkaroundEnabled(Workarounds.Reference.NVIDIA_THREADED_OPTIMIZATIONS);
-
-        if (applyNvidiaWorkarounds) {
-            NvidiaWorkarounds.install();
-        }
+        NvidiaWorkarounds.applyEnvironmentChanges();
 
         try {
             return GLFW.glfwCreateWindow(width, height, title, monitor, share);
         } finally {
-            if (applyNvidiaWorkarounds) {
-                NvidiaWorkarounds.uninstall();
-            }
+            NvidiaWorkarounds.undoEnvironmentChanges();
         }
     }
 
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL;createCapabilities()Lorg/lwjgl/opengl/GLCapabilities;", shift = At.Shift.AFTER))
     private void postWindowCreated(WindowEventHandler eventHandler, MonitorTracker monitorTracker, WindowSettings settings, String videoMode, String title, CallbackInfo ci) {
+        GlContextInfo context = GlContextInfo.create();
+        LOGGER.info("OpenGL Vendor: {}", context.vendor());
+        LOGGER.info("OpenGL Renderer: {}", context.renderer());
+        LOGGER.info("OpenGL Version: {}", context.version());
+
         // Capture the current WGL context so that we can detect it being replaced later.
         if (Util.getOperatingSystem() == Util.OperatingSystem.WINDOWS) {
             this.wglPrevContext = WGL.wglGetCurrentContext();
@@ -58,8 +56,8 @@ public class WindowMixin {
             this.wglPrevContext = MemoryUtil.NULL;
         }
 
-        PostLaunchChecks.onContextInitialized();
-        ModuleScanner.checkModules();
+        PostLaunchChecks.onContextInitialized((NativeWindowHandle) this, context);
+        ModuleScanner.checkModules((NativeWindowHandle) this);
     }
 
     @Inject(method = "swapBuffers", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;flipFrame(J)V", shift = At.Shift.AFTER))
@@ -81,7 +79,7 @@ public class WindowMixin {
 
         // Likely, this indicates a module was injected into the current process. We should check that
         // nothing problematic was just installed.
-        ModuleScanner.checkModules();
+        ModuleScanner.checkModules((NativeWindowHandle) this);
 
         // If we didn't find anything problematic (which would have thrown an exception), then let's just record
         // the new context pointer and carry on.

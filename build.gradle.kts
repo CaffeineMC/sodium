@@ -42,8 +42,15 @@ sourceSets {
     val main = getByName("main")
     val api = create("api")
     val desktop = create("desktop")
+    val workarounds = create("workarounds")
 
     api.apply {
+        java {
+            compileClasspath += main.compileClasspath
+        }
+    }
+
+    workarounds.apply {
         java {
             compileClasspath += main.compileClasspath
         }
@@ -58,7 +65,9 @@ sourceSets {
     main.apply {
         java {
             compileClasspath += api.output
+            compileClasspath += workarounds.output
             runtimeClasspath += api.output
+            runtimeClasspath += workarounds.output
         }
     }
 }
@@ -89,8 +98,7 @@ tasks {
     }
 
     jar {
-        from("${rootProject.projectDir}/COPYING")
-        from("${rootProject.projectDir}/COPYING.LESSER")
+        from("${rootProject.projectDir}/LICENSE.md")
 
         val api = sourceSets.getByName("api")
         from(api.output.classesDirs)
@@ -99,6 +107,10 @@ tasks {
         val desktop = sourceSets.getByName("desktop")
         from(desktop.output.classesDirs)
         from(desktop.output.resourcesDir)
+
+        val workarounds = sourceSets.getByName("workarounds")
+        from(workarounds.output.classesDirs)
+        from(workarounds.output.resourcesDir)
 
         manifest.attributes["Main-Class"] = "net.caffeinemc.mods.sodium.desktop.LaunchWarn"
     }
