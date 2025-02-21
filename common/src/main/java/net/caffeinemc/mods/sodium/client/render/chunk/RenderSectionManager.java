@@ -324,7 +324,7 @@ public class RenderSectionManager {
 
     private void scheduleAsyncWork(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
         // if the origin section doesn't exist, cull tasks won't produce any useful results
-        if (!this.occlusionCuller.graphOriginPresent(viewport)) {
+        if (this.isOutOfGraph(viewport.getChunkCoord())) {
             return;
         }
 
