@@ -13,14 +13,14 @@ class XDGImpl implements BrowseUrlHandler {
 
     @Override
     public void browseTo(String url) throws IOException {
-        var process = Runtime.getRuntime()
+        Process process = Runtime.getRuntime()
                 .exec(new String[] { "xdg-open", url });
 
         try {
             int result = process.waitFor();
 
             if (result != 0 /* success */) {
-                throw new IOException("xdg-open exited with code: %d".formatted(result));
+                throw new IOException(String.format("xdg-open exited with code: %d", result));
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
