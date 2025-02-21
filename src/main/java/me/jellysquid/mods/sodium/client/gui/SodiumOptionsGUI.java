@@ -445,7 +445,7 @@ public class SodiumOptionsGUI extends Screen implements ScreenPromptable {
     static {
         DONATION_PROMPT_MESSAGE = List.of(
                 StringVisitable.concat(Text.literal("Hello!")),
-                StringVisitable.concat(Text.literal("It seems that you've been enjoying "), Text.literal("Sodium").setStyle(Style.EMPTY.withColor(0x27eb92)), Text.literal(", the free and open-source optimization mod for Minecraft.")),
+                StringVisitable.concat(Text.literal("It seems that you've been enjoying "), Text.literal("Sodium").setStyle(Style.EMPTY.withColor(0x27eb92)), Text.literal(", the powerful and open rendering optimization mod for Minecraft.")),
                 StringVisitable.concat(Text.literal("Mods like these are complex. They require "), Text.literal("thousands of hours").setStyle(Style.EMPTY.withColor(0xff6e00)), Text.literal(" of development, debugging, and tuning to create the experience that players have come to expect.")),
                 StringVisitable.concat(Text.literal("If you'd like to show your token of appreciation, and support the development of our mod in the process, then consider "), Text.literal("buying us a coffee").setStyle(Style.EMPTY.withColor(0xed49ce)), Text.literal(".")),
                 StringVisitable.concat(Text.literal("And thanks again for using our mod! We hope it helps you (and your computer.)"))
