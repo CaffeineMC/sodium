@@ -26,9 +26,11 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.*;
 import net.minecraft.util.profiler.Profiler;
+import org.joml.Matrix4f;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.SortedSet;
 
 /**
@@ -43,6 +45,7 @@ public class SodiumWorldRenderer {
     private double lastCameraX, lastCameraY, lastCameraZ;
     private double lastCameraPitch, lastCameraYaw;
     private float lastFogDistance;
+    private Matrix4f lastProjectionMatrix;
 
     private boolean useEntityCulling;
 
@@ -167,9 +170,11 @@ public class SodiumWorldRenderer {
         float pitch = camera.getPitch();
         float yaw = camera.getYaw();
         float fogDistance = RenderSystem.getShaderFogEnd();
+        Matrix4f projectionMatrix = new Matrix4f(RenderSystem.getProjectionMatrix());
 
         boolean dirty = pos.x != this.lastCameraX || pos.y != this.lastCameraY || pos.z != this.lastCameraZ ||
-                pitch != this.lastCameraPitch || yaw != this.lastCameraYaw || fogDistance != this.lastFogDistance;
+                pitch != this.lastCameraPitch || yaw != this.lastCameraYaw || fogDistance != this.lastFogDistance ||
+                !Objects.equals(projectionMatrix, this.lastProjectionMatrix);
 
         if (dirty) {
             this.renderSectionManager.markGraphDirty();
@@ -181,6 +186,7 @@ public class SodiumWorldRenderer {
         this.lastCameraPitch = pitch;
         this.lastCameraYaw = yaw;
         this.lastFogDistance = fogDistance;
+        this.lastProjectionMatrix = projectionMatrix;
 
         profiler.swap("chunk_update");
 
