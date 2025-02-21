@@ -44,6 +44,7 @@
     "features.options.render_layers.LeavesBlockMixin",
     "features.options.render_layers.RenderLayersMixin",
     "features.options.weather.WorldRendererMixin",
+    "features.render.compositing.FramebufferMixin",
     "features.render.entity.CuboidMixin",
     "features.render.entity.ModelPartMixin",
     "features.render.entity.cull.EntityRendererMixin",
