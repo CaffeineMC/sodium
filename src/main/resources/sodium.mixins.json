@@ -83,7 +83,6 @@
     "features.textures.mipmaps.MipmapHelperMixin",
     "features.textures.mipmaps.SpriteContentsMixin",
     "features.world.biome.BiomeMixin",
-    "features.world.storage.ClientChunkMapMixin",
     "workarounds.context_creation.WindowMixin",
     "workarounds.event_loop.RenderSystemMixin"
   ]
