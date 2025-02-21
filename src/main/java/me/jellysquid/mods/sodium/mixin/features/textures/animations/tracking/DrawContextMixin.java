@@ -1,6 +1,6 @@
 package me.jellysquid.mods.sodium.mixin.features.textures.animations.tracking;
 
-import me.jellysquid.mods.sodium.client.render.texture.SpriteUtil;
+import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.texture.Sprite;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,7 +16,7 @@ public class DrawContextMixin {
                                Sprite sprite,
                                CallbackInfo ci)
     {
-        SpriteUtil.markSpriteActive(sprite);
+        SpriteUtil.INSTANCE.markSpriteActive(sprite);
     }
 
     @Inject(method = "drawSprite(IIIIILnet/minecraft/client/texture/Sprite;FFFF)V", at = @At("HEAD"))
@@ -26,6 +26,6 @@ public class DrawContextMixin {
                                float red, float green, float blue, float alpha,
                                CallbackInfo ci)
     {
-        SpriteUtil.markSpriteActive(sprite);
+        SpriteUtil.INSTANCE.markSpriteActive(sprite);
     }
 }

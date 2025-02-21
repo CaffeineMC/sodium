@@ -2,9 +2,9 @@ package me.jellysquid.mods.sodium.mixin.features.render.model.block;
 
 import me.jellysquid.mods.sodium.client.model.quad.BakedQuadView;
 import me.jellysquid.mods.sodium.client.render.immediate.model.BakedModelEncoder;
-import me.jellysquid.mods.sodium.client.render.texture.SpriteUtil;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexConsumerUtils;
 import me.jellysquid.mods.sodium.client.util.DirectionUtil;
+import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.minecraft.block.BlockState;
@@ -85,7 +85,9 @@ public class BlockModelRendererMixin {
 
             BakedModelEncoder.writeQuadVertices(writer, matrices, quad, color, light, overlay);
 
-            SpriteUtil.markSpriteActive(quad.getSprite());
+            if (bakedQuad.getSprite() != null) {
+                SpriteUtil.INSTANCE.markSpriteActive(quad.getSprite());
+            }
         }
     }
 }

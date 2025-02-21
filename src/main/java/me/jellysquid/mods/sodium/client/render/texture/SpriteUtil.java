@@ -3,18 +3,22 @@ package me.jellysquid.mods.sodium.client.render.texture;
 import net.minecraft.client.texture.Sprite;
 import org.jetbrains.annotations.Nullable;
 
+// Kept for mod compatibility, to be removed in next major release.
+@Deprecated(forRemoval = true)
 public class SpriteUtil {
+    @Deprecated(forRemoval = true)
     public static void markSpriteActive(@Nullable Sprite sprite) {
-        if (sprite == null) {
-            // Can happen in some cases, for example if a mod passes a BakedQuad with a null sprite
-            // to a VertexConsumer that does not have a texture element.
-            return;
+        if (sprite != null) {
+            net.caffeinemc.mods.sodium.api.texture.SpriteUtil.INSTANCE.markSpriteActive(sprite);
         }
-
-        ((SpriteContentsExtended) sprite.getContents()).sodium$setActive(true);
     }
 
-    public static boolean hasAnimation(Sprite sprite) {
-        return ((SpriteContentsExtended) sprite.getContents()).sodium$hasAnimation();
+    @Deprecated(forRemoval = true)
+    public static boolean hasAnimation(@Nullable Sprite sprite) {
+        if (sprite != null) {
+            return net.caffeinemc.mods.sodium.api.texture.SpriteUtil.INSTANCE.hasAnimation(sprite);
+        }
+
+        return false;
     }
 }

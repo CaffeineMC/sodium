@@ -1,6 +1,6 @@
 package me.jellysquid.mods.sodium.mixin.features.textures.animations.tracking;
 
-import me.jellysquid.mods.sodium.client.render.texture.SpriteUtil;
+import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.texture.SpriteAtlasTexture;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,7 +15,7 @@ public class SpriteAtlasTextureMixin {
         Sprite sprite = cir.getReturnValue();
 
         if (sprite != null) {
-            SpriteUtil.markSpriteActive(sprite);
+            SpriteUtil.INSTANCE.markSpriteActive(sprite);
         }
     }
 }

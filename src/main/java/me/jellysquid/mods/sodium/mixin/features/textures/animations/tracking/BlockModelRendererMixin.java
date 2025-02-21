@@ -1,6 +1,6 @@
 package me.jellysquid.mods.sodium.mixin.features.textures.animations.tracking;
 
-import me.jellysquid.mods.sodium.client.render.texture.SpriteUtil;
+import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.block.BlockModelRenderer;
@@ -22,6 +22,8 @@ public class BlockModelRendererMixin {
      */
     @Inject(method = "renderQuad", at = @At("HEAD"))
     private void preRenderQuad(BlockRenderView world, BlockState state, BlockPos pos, VertexConsumer vertexConsumer, MatrixStack.Entry matrixEntry, BakedQuad quad, float brightness0, float brightness1, float brightness2, float brightness3, int light0, int light1, int light2, int light3, int overlay, CallbackInfo ci) {
-        SpriteUtil.markSpriteActive(quad.getSprite());
+        if (quad.getSprite() != null) {
+            SpriteUtil.INSTANCE.markSpriteActive(quad.getSprite());
+        }
     }
 }

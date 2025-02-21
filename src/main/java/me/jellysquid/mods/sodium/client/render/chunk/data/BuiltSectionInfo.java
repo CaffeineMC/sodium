@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionFlags;
 import me.jellysquid.mods.sodium.client.render.chunk.occlusion.VisibilityEncoding;
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
-import me.jellysquid.mods.sodium.client.render.texture.SpriteUtil;
+import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.render.chunk.ChunkOcclusionData;
 import net.minecraft.client.texture.Sprite;
@@ -79,7 +79,7 @@ public class BuiltSectionInfo {
          * @param sprite The sprite
          */
         public void addSprite(Sprite sprite) {
-            if (SpriteUtil.hasAnimation(sprite)) {
+            if (SpriteUtil.INSTANCE.hasAnimation(sprite)) {
                 this.animatedSprites.add(sprite);
             }
         }
