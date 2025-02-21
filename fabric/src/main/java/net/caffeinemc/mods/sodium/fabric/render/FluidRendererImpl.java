@@ -61,7 +61,7 @@ public class FluidRendererImpl extends FluidRenderer {
         //
         // The default implementation of FluidRenderHandler#renderFluid invokes vanilla FluidRenderer#render, but
         // Fabric API does not support invoking vanilla FluidRenderer#render from FluidRenderHandler#renderFluid
-        // directly and it does not support calling the default implementation of FluidRenderHandler#renderFluid (super)
+        // directly, and it does not support calling the default implementation of FluidRenderHandler#renderFluid (super)
         // more than once. Because of this, the parameters to vanilla FluidRenderer#render will be the same as those
         // initially passed to FluidRenderHandler#renderFluid, so they can be ignored.
         //

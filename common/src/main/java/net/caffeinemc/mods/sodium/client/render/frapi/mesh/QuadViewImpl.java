@@ -49,7 +49,7 @@ public class QuadViewImpl implements QuadView, ModelQuadView {
     /** Size and where it comes from will vary in subtypes. But in all cases quad is fully encoded to array. */
     protected int[] data;
 
-    /** Beginning of the quad. Also the header index. */
+    /** Beginning of the quad. Also, the header index. */
     protected int baseIndex = 0;
 
     /**

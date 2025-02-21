@@ -5,7 +5,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.caffeinemc.mods.sodium.client.render.vertex.VertexFormatAttribute;
 
-import java.util.EnumMap;
 import java.util.Map;
 
 /**
@@ -75,7 +74,7 @@ public class GlVertexFormat {
         }
 
         /**
-         * Adds an vertex attribute which will be bound to the given generic attribute type.
+         * Adds a vertex attribute which will be bound to the given generic attribute type.
          *
          * @param type The generic attribute type
          * @param attribute The attribute to bind

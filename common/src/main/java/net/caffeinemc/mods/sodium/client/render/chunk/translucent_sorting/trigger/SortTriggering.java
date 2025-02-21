@@ -29,7 +29,7 @@ public class SortTriggering {
      * To avoid generating a collection of the triggered sections, this callback is
      * used to process the triggered sections directly as they are queried from the
      * normal lists' interval trees. The callback is given the section coordinates,
-     * and a boolean indicating if the trigger was an direct trigger.
+     * and a boolean indicating if the trigger was a direct trigger.
      */
     private BiConsumer<Long, Boolean> triggerSectionCallback;
 
@@ -38,7 +38,7 @@ public class SortTriggering {
      * later) it might not have the required trigger data registered yet so that it
      * might miss being triggered between being scheduled for rebuild and being
      * integrated. This is solved by catching up the section being integrated with
-     * the movement that has happened in the mean time.
+     * the movement that has happened in the meantime.
      */
     private DynamicData catchupData = null;
 
@@ -123,7 +123,7 @@ public class SortTriggering {
         // catchup triggering might be disabled
         if (this.triggerSectionCallback != null) {
             // do prepareTrigger here since it can't be done through the render section as
-            // it hasn't been put there yet or it contains an old data object
+            // it hasn't been put there yet, or it contains an old data object
             this.catchupData.prepareTrigger(isDirectTrigger);
 
             // schedule the section to be re-sorted

@@ -22,7 +22,7 @@ import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtension
 import net.neoforged.neoforge.client.textures.FluidSpriteCache;
 
 public class FluidRendererImpl extends FluidRenderer {
-    // The current default context is set up before invoking FluidRenderHandler#renderFluid and cleared afterwards.
+    // The current default context is set up before invoking FluidRenderHandler#renderFluid and cleared afterward.
     private static final ThreadLocal<DefaultRenderContext> CURRENT_DEFAULT_CONTEXT = ThreadLocal.withInitial(DefaultRenderContext::new);
 
     private final ColorProviderRegistry colorProviderRegistry;
@@ -50,7 +50,7 @@ public class FluidRendererImpl extends FluidRenderer {
         //
         // The default implementation of FluidRenderHandler#renderFluid invokes vanilla FluidRenderer#render, but
         // Fabric API does not support invoking vanilla FluidRenderer#render from FluidRenderHandler#renderFluid
-        // directly and it does not support calling the default implementation of FluidRenderHandler#renderFluid (super)
+        // directly, and it does not support calling the default implementation of FluidRenderHandler#renderFluid (super)
         // more than once. Because of this, the parameters to vanilla FluidRenderer#render will be the same as those
         // initially passed to FluidRenderHandler#renderFluid, so they can be ignored.
         //

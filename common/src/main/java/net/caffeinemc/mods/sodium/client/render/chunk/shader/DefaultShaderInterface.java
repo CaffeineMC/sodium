@@ -28,7 +28,7 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
     private final GlUniformFloat3v uniformRegionOffset;
     private final GlUniformFloat2v uniformTexCoordShrink;
 
-    // The fog shader component used by this program in order to setup the appropriate GL state
+    // The fog shader component used by this program in order to set up the appropriate GL state
     private final ChunkShaderFogComponent fogShader;
 
     public DefaultShaderInterface(ShaderBindingContext context, ChunkShaderOptions options) {

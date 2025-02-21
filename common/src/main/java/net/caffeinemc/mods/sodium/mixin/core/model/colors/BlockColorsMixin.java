@@ -26,7 +26,7 @@ public class BlockColorsMixin implements BlockColorsExtension {
     private void preRegisterColorProvider(BlockColor provider, Block[] blocks, CallbackInfo ci) {
         for (Block block : blocks) {
             // There will be one provider already registered for vanilla blocks, if we are replacing it,
-            // it means a mod is using custom logic and we need to disable per-vertex coloring
+            // it means a mod is using custom logic, and we need to disable per-vertex coloring
             if (this.blocksToColor.put(block, provider) != null) {
                 this.overridenBlocks.add(block);
                 SodiumClientMod.logger().info("Block {} had its color provider replaced with {} and will not use per-vertex coloring", BuiltInRegistries.BLOCK.getKey(block), provider.toString());

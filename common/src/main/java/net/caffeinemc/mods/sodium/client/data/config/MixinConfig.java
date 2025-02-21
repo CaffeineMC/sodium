@@ -1,7 +1,6 @@
 package net.caffeinemc.mods.sodium.client.data.config;
 
 import net.caffeinemc.mods.sodium.client.services.PlatformMixinOverrides;
-import net.caffeinemc.mods.sodium.client.services.Services;
 import net.caffeinemc.mods.sodium.mixin.MixinOption;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -154,7 +153,7 @@ public class MixinConfig {
      * Returns the effective option for the specified class name. This traverses the package path of the given mixin
      * and checks each root for configuration rules. If a configuration rule disables a package, all mixins located in
      * that package and its children will be disabled. The effective option is that of the highest-priority rule, either
-     * a enable rule at the end of the chain or a disable rule at the earliest point in the chain.
+     * an enable rule at the end of the chain or a disable rule at the earliest point in the chain.
      *
      * @return Null if no options matched the given mixin name, otherwise the effective option for this Mixin
      */

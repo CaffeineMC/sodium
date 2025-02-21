@@ -24,7 +24,7 @@ import java.util.stream.Stream;
  * {@link SectionRenderDataUnsafe}.
  * <p>
  * When the backing buffer (from the gl buffer arena) is resized, the storage
- * object is notified and then it updates the changed offsets of the buffer
+ * object is notified, and then it updates the changed offsets of the buffer
  * segments. Since the index data's size and alignment directly corresponds to
  * that of the vertex data except for the vertex/index scaling of two thirds,
  * only an offset to the index data within the index data buffer arena is
