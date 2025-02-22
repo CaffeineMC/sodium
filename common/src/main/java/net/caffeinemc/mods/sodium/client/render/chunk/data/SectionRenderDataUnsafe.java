@@ -19,8 +19,7 @@ import org.lwjgl.system.MemoryUtil;
 // struct SectionRenderData { // 48 bytes
 //   base_element: u32,
 //   base_vertex: u32,
-//   is_local_index: u8,
-//   facing_list: u56,
+//   (is_local_index | facing_list): (u8 | u56),
 //   slice_mask: u32,
 //   vertex_count: [u32; 7]
 // }
@@ -55,8 +54,25 @@ public class SectionRenderDataUnsafe {
         MemoryUtil.nmemAlignedFree(pointer);
     }
 
-    public static void clear(long pointer) {
+    public static void clearFull(long pointer) {
         MemoryUtil.memSet(pointer, 0x0, STRIDE);
+    }
+
+    public static void clearVertexData(long ptr) {
+        // save the base element and the local indexing flag
+        int baseElement = MemoryUtil.memGetInt(ptr + OFFSET_BASE_ELEMENT);
+        byte isLocalIndexByte = MemoryUtil.memGetByte(ptr + OFFSET_IS_LOCAL_INDEX);
+
+        clearFull(ptr);
+
+        // restore the base element and the local indexing flag
+        MemoryUtil.memPutInt(ptr + OFFSET_BASE_ELEMENT, baseElement);
+        MemoryUtil.memPutByte(ptr + OFFSET_IS_LOCAL_INDEX, isLocalIndexByte);
+    }
+
+    public static void clearIndexData(long ptr) {
+        MemoryUtil.memPutInt(ptr + OFFSET_BASE_ELEMENT, 0);
+        MemoryUtil.memPutByte(ptr + OFFSET_IS_LOCAL_INDEX, (byte)0);
     }
 
     public static long heapPointer(long ptr, int index) {
