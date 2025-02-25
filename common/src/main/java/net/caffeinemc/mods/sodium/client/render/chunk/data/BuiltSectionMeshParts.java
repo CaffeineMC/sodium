@@ -7,8 +7,8 @@ public class BuiltSectionMeshParts {
     private final int[] vertexSegments;
     private final NativeBuffer buffer;
 
-    public BuiltSectionMeshParts(NativeBuffer buffer, int[] vertexCounts) {
-        this.vertexSegments = vertexCounts;
+    public BuiltSectionMeshParts(NativeBuffer buffer, int[] vertexSegments) {
+        this.vertexSegments = vertexSegments;
         this.buffer = buffer;
     }
 

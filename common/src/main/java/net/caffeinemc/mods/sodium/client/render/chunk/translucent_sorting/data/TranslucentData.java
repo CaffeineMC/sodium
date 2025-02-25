@@ -2,8 +2,11 @@ package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
 import java.nio.IntBuffer;
 
-import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.BSPResult;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.minecraft.core.SectionPos;
 
 /**
@@ -24,10 +27,20 @@ public abstract class TranslucentData {
 
     public abstract SortType getSortType();
 
+    public abstract boolean oldDataMatches(TranslucentGeometryCollector collector, SortType sortType, TQuad[] quads, int[] vertexCounts);
+
+    public BSPResult.UpdatedQuadIndexes getUpdatedQuadIndexes() {
+        return null;
+    }
+
+    public boolean meshesWereModified() {
+        return this.getUpdatedQuadIndexes() != null;
+    }
+
     /**
      * Prepares the translucent data for triggering of the given type. This is run
      * on the main thread before a sort task is scheduled.
-     * 
+     *
      * @param isAngleTrigger Whether the trigger is an angle trigger
      */
     public void prepareTrigger(boolean isAngleTrigger) {
@@ -42,8 +55,8 @@ public abstract class TranslucentData {
         return quadCount * BYTES_PER_QUAD;
     }
 
-    public static int indexBytesToQuadCount(int indexBytes) {
-        return indexBytes / BYTES_PER_QUAD;
+    public static int quadCountToVertexCount(int quadCount) {
+        return quadCount * VERTICES_PER_QUAD;
     }
 
     public static void writeQuadVertexIndexes(IntBuffer intBuffer, int quadIndex) {

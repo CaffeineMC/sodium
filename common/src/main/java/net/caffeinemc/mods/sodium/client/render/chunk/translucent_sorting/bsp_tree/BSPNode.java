@@ -1,9 +1,12 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree;
 
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.FullTQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import org.joml.Vector3fc;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TopoGraphSorting;
 import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
@@ -13,7 +16,7 @@ import net.minecraft.core.SectionPos;
  * A node in the BSP tree. The BSP tree is made up of nodes that split quads
  * into groups on either side of a plane and those that lie on the plane.
  * There's also leaf nodes that contain one or more quads.
- * 
+ * <p>
  * Implementation note:
  * - Doing a convex box test doesn't seem to bring a performance boost, even if
  * it does trigger sometimes with man-made structures. The multi partition node
@@ -32,20 +35,22 @@ public abstract class BSPNode {
     }
 
     public static BSPResult buildBSP(TQuad[] quads, SectionPos sectionPos, BSPNode oldRoot,
-            boolean prepareNodeReuse) {
+                                     boolean prepareNodeReuse, QuadSplittingMode quadSplittingMode, ChunkMeshBufferBuilder translucentVertexBuffer) {
         // throw if there's too many quads
         InnerPartitionBSPNode.validateQuadCount(quads.length);
 
         // create a workspace and then the nodes figure out the recursive building.
         // throws if the BSP can't be built, null if none is necessary
-        var workspace = new BSPWorkspace(quads, sectionPos, prepareNodeReuse);
+        var workspace = new BSPWorkspace(quads, sectionPos, prepareNodeReuse, quadSplittingMode, translucentVertexBuffer);
 
         // initialize the indexes to all quads
-        int[] initialIndexes = new int[quads.length];
+        var splittingAllowed = quadSplittingMode.allowsSplitting();
+        var allIndexes = new IntArrayList(quads.length);
         for (int i = 0; i < quads.length; i++) {
-            initialIndexes[i] = i;
+            if (!(splittingAllowed && ((FullTQuad) quads[i]).isInvalid())) {
+                allIndexes.add(i);
+            }
         }
-        var allIndexes = new IntArrayList(initialIndexes);
 
         var rootNode = BSPNode.build(workspace, allIndexes, -1, oldRoot);
         var result = workspace.result;
@@ -53,7 +58,7 @@ public abstract class BSPNode {
         return result;
     }
 
-    private static boolean doubleLeafPossible(TQuad quadA, TQuad quadB) {
+    private static boolean doubleLeafPossible(TQuad quadA, TQuad quadB, boolean failOnIntersection) {
         // check for coplanar or mutually invisible quads
         var facingA = quadA.getFacing();
         var facingB = quadB.getFacing();
@@ -82,8 +87,8 @@ public abstract class BSPNode {
 
         // aligned otherwise mutually invisible
         else {
-            return !TopoGraphSorting.orthogonalQuadVisibleThrough(quadA, quadB)
-                    && !TopoGraphSorting.orthogonalQuadVisibleThrough(quadB, quadA);
+            return !TopoGraphSorting.orthogonalQuadVisibleThrough(quadA, quadB, failOnIntersection)
+                    && !TopoGraphSorting.orthogonalQuadVisibleThrough(quadB, quadA, failOnIntersection);
         }
 
         return false;
@@ -100,10 +105,10 @@ public abstract class BSPNode {
         } else if (indexes.size() == 2) {
             var quadIndexA = indexes.getInt(0);
             var quadIndexB = indexes.getInt(1);
-            var quadA = workspace.quads[quadIndexA];
-            var quadB = workspace.quads[quadIndexB];
+            var quadA = workspace.get(quadIndexA);
+            var quadB = workspace.get(quadIndexB);
 
-            if (doubleLeafPossible(quadA, quadB)) {
+            if (doubleLeafPossible(quadA, quadB, workspace.canSplitQuads())) {
                 return new LeafDoubleBSPNode(quadIndexA, quadIndexB);
             }
         }
