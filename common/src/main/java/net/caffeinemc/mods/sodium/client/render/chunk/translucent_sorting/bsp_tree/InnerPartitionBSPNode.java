@@ -548,11 +548,11 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         var insideMap = insideMapUnmasked & uniqueVertexMap;
         var onPlaneMap = onPlaneMapUnmasked & uniqueVertexMap;
 
-        var onPlaneCount = Integer.bitCount(onPlaneMap);
-        var insideCount = Integer.bitCount(insideMap);
-
-        // treat quads that are actually or nearly (i.e. bent) coplanar as on the plane
-        if (onPlaneCount >= 3) {
+        // Quads or triangles that are fully on the plane are added to the splitting group.
+        // Bent quads are not dealt with by this and will simply produce unexpected behavior.
+        // Adding quads with three unique vertices on the plane to the splitting group doesn't work when floating point errors
+        // cause quads to have effectively three unique vertices without signaling so in their uniqueVertexMap.
+        if (onPlaneMap == uniqueVertexMap) {
             splittingGroup.add(candidateIndex);
             return;
         }
@@ -575,6 +575,9 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         if (uniqueVertices < 3) {
             throw new IllegalStateException("Unexpected quad with less than 3 unique vertices");
         }
+
+        var onPlaneCount = Integer.bitCount(onPlaneMap);
+        var insideCount = Integer.bitCount(insideMap);
 
         // cancel splitting after handling special cases if the new geometry limit has been reached
         if (!workspace.canSplitQuads()) {
