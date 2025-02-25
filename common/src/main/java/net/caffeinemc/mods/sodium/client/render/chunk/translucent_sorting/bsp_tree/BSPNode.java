@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.FullTQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import org.joml.Vector3fc;
 
@@ -15,7 +16,7 @@ import net.minecraft.core.SectionPos;
  * A node in the BSP tree. The BSP tree is made up of nodes that split quads
  * into groups on either side of a plane and those that lie on the plane.
  * There's also leaf nodes that contain one or more quads.
- * 
+ * <p>
  * Implementation note:
  * - Doing a convex box test doesn't seem to bring a performance boost, even if
  * it does trigger sometimes with man-made structures. The multi partition node
@@ -43,11 +44,13 @@ public abstract class BSPNode {
         var workspace = new BSPWorkspace(quads, sectionPos, prepareNodeReuse, quadSplittingMode, translucentVertexBuffer);
 
         // initialize the indexes to all quads
-        int[] initialIndexes = new int[quads.length];
+        var splittingAllowed = quadSplittingMode.allowsSplitting();
+        var allIndexes = new IntArrayList(quads.length);
         for (int i = 0; i < quads.length; i++) {
-            initialIndexes[i] = i;
+            if (!(splittingAllowed && ((FullTQuad) quads[i]).isInvalid())) {
+                allIndexes.add(i);
+            }
         }
-        var allIndexes = new IntArrayList(initialIndexes);
 
         var rootNode = BSPNode.build(workspace, allIndexes, -1, oldRoot);
         var result = workspace.result;

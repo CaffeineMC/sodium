@@ -527,6 +527,13 @@ abstract class InnerPartitionBSPNode extends BSPNode {
     }
 
     private static void splitCandidate(BSPWorkspace workspace, IntArrayList splittingGroup, int candidateIndex, FullTQuad insideQuad, Vector3fc splitPlane, float splitDistance, IntArrayList outside, IntArrayList inside) {
+        // Lines or points (2 or 1 vertices) should have been filtered out
+        var uniqueVertexMap = insideQuad.getUniqueVertexMap();
+        var uniqueVertices = Integer.bitCount(uniqueVertexMap);
+        if (uniqueVertices < 3) {
+            throw new IllegalStateException("Unexpected quad with less than 3 unique vertices");
+        }
+
         var vertices = insideQuad.getVertices();
 
         // calculate inside/outside for each vertex
@@ -544,7 +551,6 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         }
 
         // filter out the vertices that are duplicated to handle triangles
-        var uniqueVertexMap = insideQuad.getUniqueVertexMap();
         var insideMap = insideMapUnmasked & uniqueVertexMap;
         var onPlaneMap = onPlaneMapUnmasked & uniqueVertexMap;
 
@@ -567,13 +573,6 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         if ((insideMap | onPlaneMap) == uniqueVertexMap) { // 0b1111 for quads
             inside.add(candidateIndex);
             return;
-        }
-
-        // specially handle triangles (3 vertices).
-        // Lines or points (2 or 1 vertices) should have been filtered out
-        var uniqueVertices = Integer.bitCount(uniqueVertexMap);
-        if (uniqueVertices < 3) {
-            throw new IllegalStateException("Unexpected quad with less than 3 unique vertices");
         }
 
         var onPlaneCount = Integer.bitCount(onPlaneMap);
