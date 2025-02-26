@@ -19,8 +19,8 @@ import java.util.function.Function;
 
 public class NeoForgeLevelRenderHooks implements PlatformLevelRenderHooks {
     @Override
-    public void runChunkLayerEvents(RenderType renderType, LevelRenderer levelRenderer, Matrix4f modelMatrix, Matrix4f projectionMatrix, int renderTick, Camera camera, Frustum frustum) {
-        ClientHooks.dispatchRenderStage(renderType, levelRenderer, modelMatrix, projectionMatrix, renderTick, camera, frustum);
+    public void runChunkLayerEvents(RenderType renderType, Level level, LevelRenderer levelRenderer, Matrix4f modelMatrix, Matrix4f projectionMatrix, int renderTick, Camera camera, Frustum frustum) {
+        ClientHooks.dispatchRenderStage(renderType, level, levelRenderer, modelMatrix, projectionMatrix, renderTick, camera, frustum);
     }
 
     @Override

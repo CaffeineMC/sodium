@@ -22,15 +22,17 @@ public interface PlatformLevelRenderHooks {
 
     /**
      * Runs any events after drawing a chunk layer.
-     * @param renderLayer The current chunk layer that was drawn
-     * @param levelRenderer The level renderer
-     * @param modelMatrix The current modelview matrix
+     *
+     * @param renderLayer      The current chunk layer that was drawn
+     * @param level
+     * @param levelRenderer    The level renderer
+     * @param modelMatrix      The current modelview matrix
      * @param projectionMatrix The current projection matrix
-     * @param ticks The current tick count
-     * @param mainCamera The current camera
-     * @param cullingFrustum The current frustum
+     * @param ticks            The current tick count
+     * @param mainCamera       The current camera
+     * @param cullingFrustum   The current frustum
      */
-    void runChunkLayerEvents(RenderType renderLayer, LevelRenderer levelRenderer, Matrix4f modelMatrix, Matrix4f projectionMatrix, int ticks, Camera mainCamera, Frustum cullingFrustum);
+    void runChunkLayerEvents(RenderType renderLayer, Level level, LevelRenderer levelRenderer, Matrix4f modelMatrix, Matrix4f projectionMatrix, int ticks, Camera mainCamera, Frustum cullingFrustum);
 
     /**
      * Returns any NeoForge chunk renderers to run. <b>This is not thread safe.</b>

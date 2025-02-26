@@ -128,7 +128,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
             RenderDevice.exitManagedCode();
         }
 
-        PlatformLevelRenderHooks.getInstance().runChunkLayerEvents(renderLayer, ((LevelRenderer) (Object) this), modelMatrix, projectionMatrix, this.ticks, this.minecraft.gameRenderer.getMainCamera(), this.cullingFrustum);
+        PlatformLevelRenderHooks.getInstance().runChunkLayerEvents(renderLayer, this.level, ((LevelRenderer) (Object) this), modelMatrix, projectionMatrix, this.ticks, this.minecraft.gameRenderer.getMainCamera(), this.cullingFrustum);
     }
 
     @WrapOperation(

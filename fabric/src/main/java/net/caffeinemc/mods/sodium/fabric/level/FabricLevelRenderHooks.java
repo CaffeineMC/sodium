@@ -16,7 +16,7 @@ import java.util.function.Function;
 
 public class FabricLevelRenderHooks implements PlatformLevelRenderHooks {
     @Override
-    public void runChunkLayerEvents(RenderType renderLayer, LevelRenderer levelRenderer, Matrix4f modelMatrix, Matrix4f projectionMatrix, int ticks, Camera mainCamera, Frustum cullingFrustum) {
+    public void runChunkLayerEvents(RenderType renderLayer, Level level, LevelRenderer levelRenderer, Matrix4f modelMatrix, Matrix4f projectionMatrix, int ticks, Camera mainCamera, Frustum cullingFrustum) {
 
     }
 
