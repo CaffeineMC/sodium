@@ -386,14 +386,6 @@ public class TranslucentGeometryCollector {
         return this.sortType;
     }
 
-    private void ensureDirectionsAreMixed() {
-        int unassignedQuadCount = this.meshFacingCounts[ModelQuadFacing.UNASSIGNED.ordinal()];
-
-        if (unassignedQuadCount == 0) {
-            throw new IllegalStateException("No unassigned data in mesh");
-        }
-    }
-
     private TranslucentData makeNewTranslucentData(CombinedCameraPos cameraPos,
                                                    TranslucentData oldData) {
         if (this.sortType == SortType.NONE) {
@@ -408,7 +400,6 @@ public class TranslucentGeometryCollector {
         // from this point on we know the estimated sort type requires direction mixing
         // (no backface culling) and all vertices are in the UNASSIGNED direction.
         if (this.sortType == SortType.STATIC_TOPO) {
-            ensureDirectionsAreMixed();
             var result = StaticTopoData.fromMesh(this.quads, this.sectionPos, this.isSplittingQuads());
             if (result != null) {
                 return result;
@@ -424,7 +415,6 @@ public class TranslucentGeometryCollector {
         }
 
         if (this.sortType == SortType.DYNAMIC) {
-            ensureDirectionsAreMixed();
             try {
                 return DynamicBSPData.fromMesh(cameraPos, this.quads, this.sectionPos, oldData, this.quadSplittingMode);
             } catch (BSPBuildFailureException e) {
