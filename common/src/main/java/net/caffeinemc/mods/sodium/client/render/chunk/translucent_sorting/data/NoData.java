@@ -26,7 +26,7 @@ public class NoData extends TranslucentData {
     }
 
     @Override
-    public boolean oldDataMatches(TranslucentGeometryCollector collector, SortType sortType, TQuad[] quads, int[] vertexCounts) {
+    public boolean oldDataMatches(TranslucentGeometryCollector collector, SortType sortType, TQuad[] quads) {
         return false;
     }
 

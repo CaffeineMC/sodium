@@ -162,13 +162,38 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
             sortType = collector.finishRendering();
         }
 
+        // cancellation opportunity right before translucent sorting
+        if (cancellationToken.isCancelled()) {
+            profiler.pop();
+            return null;
+        }
+        profiler.popPush("translucency sorting");
+
+        boolean reuseUploadedData = false;
+        TranslucentData translucentData = null;
+        if (collector != null) {
+            var oldData = this.render.getTranslucentData();
+            translucentData = collector.getTranslucentData(oldData, this);
+            reuseUploadedData = translucentData == oldData;
+        }
+
+        profiler.popPush("meshing");
+
         Map<TerrainRenderPass, BuiltSectionMeshParts> meshes = new Reference2ReferenceOpenHashMap<>();
         var visibleSlices = DefaultChunkRenderer.getVisibleFaces(
                 (int) this.absoluteCameraPos.x(), (int) this.absoluteCameraPos.y(), (int) this.absoluteCameraPos.z(),
                 this.render.getChunkX(), this.render.getChunkY(), this.render.getChunkZ());
-        profiler.popPush("meshing");
+
+        if (translucentData != null && translucentData.meshesWereModified()) {
+            meshes.put(DefaultTerrainRenderPasses.TRANSLUCENT, buffers.createModifiedTranslucentMesh(translucentData.getUpdatedQuads()));
+            renderData.addRenderPass(DefaultTerrainRenderPasses.TRANSLUCENT);
+        }
 
         for (TerrainRenderPass pass : DefaultTerrainRenderPasses.ALL) {
+            if (meshes.containsKey(pass)) {
+                continue;
+            }
+
             // if the translucent geometry needs to share an index buffer between the directions,
             // consolidate all translucent geometry into UNASSIGNED
             boolean translucentBehavior = collector != null && pass.isTranslucent();
@@ -182,44 +207,7 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
             }
         }
 
-        // cancellation opportunity right before translucent sorting
-        if (cancellationToken.isCancelled()) {
-            meshes.forEach((pass, mesh) -> mesh.getVertexData().free());
-            profiler.pop();
-            return null;
-        }
-
         renderData.setOcclusionData(occluder.resolve());
-
-        profiler.popPush("translucency sorting");
-
-        boolean reuseUploadedData = false;
-        TranslucentData translucentData = null;
-        if (collector != null) {
-            var oldData = this.render.getTranslucentData();
-            var translucentMesh = meshes.get(DefaultTerrainRenderPasses.TRANSLUCENT);
-            ChunkMeshBufferBuilder translucentVertexBuffer = null;
-            if (translucentMesh != null && collector.isSplittingQuads()) {
-                translucentVertexBuffer = buffers.get(DefaultTerrainRenderPasses.TRANSLUCENT).getVertexBuffer(ModelQuadFacing.UNASSIGNED);
-                translucentVertexBuffer.restart();
-            }
-
-            translucentData = collector.getTranslucentData(
-                    oldData, meshes.get(DefaultTerrainRenderPasses.TRANSLUCENT), this, translucentVertexBuffer);
-
-            reuseUploadedData = translucentData == oldData;
-
-            if (translucentData.meshesWereModified()) {
-                // assumption: used direction mixing and still does, mesh was non-empty and still is
-                if (translucentVertexBuffer == null) {
-                    throw new IllegalStateException("Translucent mesh was modified but doesn't exist");
-                }
-                var prevMesh = meshes.get(DefaultTerrainRenderPasses.TRANSLUCENT);
-                meshes.put(DefaultTerrainRenderPasses.TRANSLUCENT, buffers.createCompactModifiedTranslucentMesh(prevMesh, translucentVertexBuffer, translucentData.getUpdatedQuadIndexes()));
-                prevMesh.getVertexData().free();
-            }
-        }
-
         var output = new ChunkBuildOutput(this.render, this.submitTime, translucentData, renderData.build(), meshes);
 
         if (collector != null) {

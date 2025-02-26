@@ -51,7 +51,7 @@ public class DynamicTopoData extends DynamicData {
         this.quads = quads;
         this.distancesByNormal = distancesByNormal;
 
-        if (this.getQuadCount() > MAX_TOPO_SORT_QUADS) {
+        if (this.getInputQuadCount() > MAX_TOPO_SORT_QUADS) {
             this.directTrigger = true;
             this.GFNITrigger = false;
         }
@@ -59,7 +59,7 @@ public class DynamicTopoData extends DynamicData {
 
     @Override
     public Sorter getSorter() {
-        return new DynamicTopoSorter(this.getQuadCount(), this, this.pendingTriggerIsDirect, this.consecutiveTopoSortFailures, this.GFNITrigger, this.directTrigger);
+        return new DynamicTopoSorter(this.getInputQuadCount(), this, this.pendingTriggerIsDirect, this.consecutiveTopoSortFailures, this.GFNITrigger, this.directTrigger);
     }
 
     public boolean GFNITriggerEnabled() {

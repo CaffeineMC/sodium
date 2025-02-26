@@ -1,11 +1,10 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.FullTQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
-import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.minecraft.core.SectionPos;
 import org.joml.Vector3fc;
 
@@ -21,27 +20,29 @@ import org.joml.Vector3fc;
 class BSPWorkspace extends ObjectArrayList<TQuad> {
     final BSPResult result = new BSPResult();
 
-    final SectionPos sectionPos;
+    private final SectionPos sectionPos;
     final boolean prepareNodeReuse;
-    final QuadSplittingMode quadSplittingMode;
-    private int remainingNewQuads = 0;
 
-    private final ChunkMeshBufferBuilder translucentVertexBuffer;
+    private int quadCount;
+    private final int maxQuadCount;
+    private IntArrayList availableQuadIndexes;
+    private UpdatedQuadsList updatedQuads;
 
-    BSPWorkspace(TQuad[] quads, SectionPos sectionPos, boolean prepareNodeReuse, QuadSplittingMode quadSplittingMode, ChunkMeshBufferBuilder translucentVertexBuffer) {
+    BSPWorkspace(TQuad[] quads, SectionPos sectionPos, boolean prepareNodeReuse, QuadSplittingMode quadSplittingMode) {
         super(quads);
         this.sectionPos = sectionPos;
         this.prepareNodeReuse = prepareNodeReuse;
-        this.quadSplittingMode = quadSplittingMode;
-        this.translucentVertexBuffer = translucentVertexBuffer;
 
+        this.quadCount = quads.length;
         if (quadSplittingMode.allowsSplitting()) {
-            this.remainingNewQuads = quadSplittingMode.getMaxExtraQuads(quads.length);
+            this.maxQuadCount = quadSplittingMode.getMaxTotalQuads(this.quadCount);
+        } else {
+            this.maxQuadCount = this.quadCount;
         }
     }
 
     boolean canSplitQuads() {
-        return this.remainingNewQuads > 0;
+        return this.quadCount < this.maxQuadCount;
     }
 
     // TODO: better bidirectional triggering: integrate bidirectionality in GFNI if
@@ -55,36 +56,74 @@ class BSPWorkspace extends ObjectArrayList<TQuad> {
         this.result.addDoubleSidedUnalignedPlane(this.sectionPos, planeNormal, distance);
     }
 
+    private void registerQuadUpdate(FullTQuad quad) {
+        if (quad.triggerAndSetUpdatedVertices()) {
+            if (this.updatedQuads == null) {
+                this.updatedQuads = new UpdatedQuadsList();
+            }
+            this.updatedQuads.add(quad);
+        }
+    }
+
+    public UpdatedQuadsList getFinalizedUpdatedQuads() {
+        if (this.updatedQuads != null) {
+            this.updatedQuads.setQuadCounts(this.size(), this.quadCount);
+        }
+        return this.updatedQuads;
+    }
+
     int pushQuad(FullTQuad quad) {
+        // null or invalid quads simply don't get added
         if (quad == null || quad.isInvalid()) {
             return -1;
         }
 
-        this.remainingNewQuads--;
+        // take an index from the list of holes if there are any
+        int index;
+        if (this.availableQuadIndexes == null || this.availableQuadIndexes.isEmpty()) {
+            index = this.size();
+            this.add(quad);
+        } else {
+            index = this.availableQuadIndexes.removeInt(this.availableQuadIndexes.size() - 1);
+            this.set(index, quad);
+        }
 
-        this.translucentVertexBuffer.push(quad.getVertices(), DefaultMaterials.TRANSLUCENT);
+        quad.setWriteToIndex(index);
+        this.quadCount++;
 
-        var index = this.size();
-        this.add(quad);
-        this.result.ensureUpdatedQuadIndexes().addAppendedQuadIndex(index);
+        this.registerQuadUpdate(quad);
 
         return index;
     }
 
     int updateQuad(FullTQuad quad, int quadIndex) {
-        if (quad == null || quad.isInvalid()) {
+        if (quad == null) {
             return -1;
         }
 
-        // only add quads to the update index list once, and don't write it into the update buffer multiple times
-        if (quad.hasUpdateBufferIndex()) {
-            this.translucentVertexBuffer.write(quad.getUpdateBufferIndex(), quad.getVertices(), DefaultMaterials.TRANSLUCENT);
-        } else {
-            var newUpdateBufferIndex = this.translucentVertexBuffer.push(quad.getVertices(), DefaultMaterials.TRANSLUCENT);
-            quad.setUpdateBufferIndex(newUpdateBufferIndex);
+        // invalid quads that have already been added to this list have to be removed
+        if (quad.isInvalid()) {
+            var lastIndex = this.size() - 1;
+            if (quadIndex == lastIndex) {
+                this.remove(lastIndex);
+            } else {
+                this.set(quadIndex, null);
+                if (this.availableQuadIndexes == null) {
+                    this.availableQuadIndexes = new IntArrayList();
+                }
+                this.availableQuadIndexes.add(quadIndex);
+            }
 
-            this.result.ensureUpdatedQuadIndexes().addModifiedQuadIndex(quadIndex);
+            quad.setNoWrite();
+            this.registerQuadUpdate(quad);
+
+            this.quadCount--;
+
+            return -1;
         }
+
+        quad.setWriteToIndex(quadIndex);
+        this.registerQuadUpdate(quad);
 
         return quadIndex;
     }

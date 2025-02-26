@@ -29,31 +29,25 @@ public class ChunkMeshBufferBuilder {
         this.initialCapacity = initialCapacity;
     }
 
-    public int push(ChunkVertexEncoder.Vertex[] vertices, Material material) {
-        return this.push(vertices, material.bits());
+    public void push(ChunkVertexEncoder.Vertex[] vertices, Material material) {
+        this.push(vertices, material.bits());
     }
 
-    public int push(ChunkVertexEncoder.Vertex[] vertices, int materialBits) {
-        this.ensureCapacity(4);
-
-        var position = this.vertexCount * this.stride;
-        this.write(position, vertices, materialBits);
-        this.vertexCount += 4;
-
-        return position;
-    }
-
-    public void write(int position, ChunkVertexEncoder.Vertex[] vertices, Material material) {
-        this.write(position, vertices, material.bits());
-    }
-
-    public void write(int position, ChunkVertexEncoder.Vertex[] vertices, int materialBits) {
+    public void push(ChunkVertexEncoder.Vertex[] vertices, int materialBits) {
         if (vertices.length != 4) {
             throw new IllegalArgumentException("Only quad primitives (with 4 vertices) can be pushed");
         }
 
-        this.encoder.write(MemoryUtil.memAddress(this.buffer, position),
+        this.ensureCapacity(4);
+
+        this.encoder.write(MemoryUtil.memAddress(this.buffer, this.vertexCount * this.stride),
                 materialBits, vertices, this.sectionIndex);
+        this.vertexCount += 4;
+    }
+
+    public void writeExternal(ByteBuffer buffer, int position, ChunkVertexEncoder.Vertex[] vertices, Material material) {
+        this.encoder.write(MemoryUtil.memAddress(buffer, position * this.stride),
+                material.bits(), vertices, this.sectionIndex);
     }
 
     private void ensureCapacity(int vertexCount) {
@@ -77,12 +71,6 @@ public class ChunkMeshBufferBuilder {
     public void start(int sectionIndex) {
         this.vertexCount = 0;
         this.sectionIndex = sectionIndex;
-
-        this.reallocate(this.initialCapacity);
-    }
-
-    public void restart() {
-        this.vertexCount = 0;
 
         this.reallocate(this.initialCapacity);
     }

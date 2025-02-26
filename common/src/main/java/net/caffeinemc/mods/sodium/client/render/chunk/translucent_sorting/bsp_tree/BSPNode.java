@@ -1,8 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.FullTQuad;
-import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import org.joml.Vector3fc;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -16,7 +14,7 @@ import net.minecraft.core.SectionPos;
  * A node in the BSP tree. The BSP tree is made up of nodes that split quads
  * into groups on either side of a plane and those that lie on the plane.
  * There's also leaf nodes that contain one or more quads.
- * <p>
+ * 
  * Implementation note:
  * - Doing a convex box test doesn't seem to bring a performance boost, even if
  * it does trigger sometimes with man-made structures. The multi partition node
@@ -35,26 +33,25 @@ public abstract class BSPNode {
     }
 
     public static BSPResult buildBSP(TQuad[] quads, SectionPos sectionPos, BSPNode oldRoot,
-                                     boolean prepareNodeReuse, QuadSplittingMode quadSplittingMode, ChunkMeshBufferBuilder translucentVertexBuffer) {
+                                     boolean prepareNodeReuse, QuadSplittingMode quadSplittingMode) {
         // throw if there's too many quads
         InnerPartitionBSPNode.validateQuadCount(quads.length);
 
         // create a workspace and then the nodes figure out the recursive building.
         // throws if the BSP can't be built, null if none is necessary
-        var workspace = new BSPWorkspace(quads, sectionPos, prepareNodeReuse, quadSplittingMode, translucentVertexBuffer);
+        var workspace = new BSPWorkspace(quads, sectionPos, prepareNodeReuse, quadSplittingMode);
 
         // initialize the indexes to all quads
-        var splittingAllowed = quadSplittingMode.allowsSplitting();
-        var allIndexes = new IntArrayList(quads.length);
+        int[] initialIndexes = new int[quads.length];
         for (int i = 0; i < quads.length; i++) {
-            if (!(splittingAllowed && ((FullTQuad) quads[i]).isInvalid())) {
-                allIndexes.add(i);
-            }
+            initialIndexes[i] = i;
         }
+        var allIndexes = new IntArrayList(initialIndexes);
 
         var rootNode = BSPNode.build(workspace, allIndexes, -1, oldRoot);
         var result = workspace.result;
         result.setRootNode(rootNode);
+        result.setUpdatedQuadIndexes(workspace.getFinalizedUpdatedQuads());
         return result;
     }
 

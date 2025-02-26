@@ -2,9 +2,8 @@ package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
 import java.nio.IntBuffer;
 
-import it.unimi.dsi.fastutil.ints.IntList;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.BSPResult;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.UpdatedQuadsList;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.minecraft.core.SectionPos;
@@ -27,14 +26,14 @@ public abstract class TranslucentData {
 
     public abstract SortType getSortType();
 
-    public abstract boolean oldDataMatches(TranslucentGeometryCollector collector, SortType sortType, TQuad[] quads, int[] vertexCounts);
+    public abstract boolean oldDataMatches(TranslucentGeometryCollector collector, SortType sortType, TQuad[] quads);
 
-    public BSPResult.UpdatedQuadIndexes getUpdatedQuadIndexes() {
+    public UpdatedQuadsList getUpdatedQuads() {
         return null;
     }
 
     public boolean meshesWereModified() {
-        return this.getUpdatedQuadIndexes() != null;
+        return this.getUpdatedQuads() != null;
     }
 
     /**

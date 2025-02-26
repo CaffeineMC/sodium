@@ -12,11 +12,11 @@ import java.util.function.IntConsumer;
  * possible to sort without dynamic triggering, meaning the sort order never
  * needs to change.
  */
-public class StaticTopoData extends MixedDirectionData {
+public class StaticTopoData extends PresentTranslucentData {
     private Sorter sorterOnce;
 
-    StaticTopoData(SectionPos sectionPos, int quadCount) {
-        super(sectionPos, quadCount);
+    StaticTopoData(SectionPos sectionPos, int inputQuadCount) {
+        super(sectionPos, inputQuadCount);
     }
 
     @Override

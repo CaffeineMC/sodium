@@ -5,20 +5,19 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
 public enum QuadSplittingMode implements TextProvider {
-    OFF("/", 0.0f, "options.off"),
-    SAFE("S", 1.0f, "sodium.options.quad_splitting.safe"),
+    OFF("/", 1.0f, "options.off"),
+    SAFE("S", 2.0f, "sodium.options.quad_splitting.safe"),
     UNLIMITED("U", Float.POSITIVE_INFINITY, "sodium.options.quad_splitting.unlimited");
 
     private final String shortName;
 
     // how much bigger the final geometry is allowed to be compared to the input geometry when performing quad splitting.
-    // 0.5f means that the final geometry can be 50% bigger than the input geometry.
-    private final float quadSplittingFactor;
+    private final float maxAmplificationFactor;
     private final Component name;
 
-    QuadSplittingMode(String shortName, float quadSplittingFactor, String name) {
+    QuadSplittingMode(String shortName, float maxAmplificationFactor, String name) {
         this.shortName = shortName;
-        this.quadSplittingFactor = quadSplittingFactor;
+        this.maxAmplificationFactor = maxAmplificationFactor;
         this.name = Component.translatable(name);
     }
 
@@ -35,10 +34,10 @@ public enum QuadSplittingMode implements TextProvider {
         return this != OFF;
     }
 
-    public int getMaxExtraQuads(int baseQuadCount) {
-        if (Float.isInfinite(this.quadSplittingFactor)) {
+    public int getMaxTotalQuads(int baseQuadCount) {
+        if (Float.isInfinite(this.maxAmplificationFactor)) {
             return Integer.MAX_VALUE;
         }
-        return Mth.ceil(baseQuadCount * this.quadSplittingFactor);
+        return Mth.ceil(baseQuadCount * this.maxAmplificationFactor);
     }
 }

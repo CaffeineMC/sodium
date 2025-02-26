@@ -13,11 +13,11 @@ import net.minecraft.core.SectionPos;
  * Unlike sorting by distance, which is descending for translucent rendering to
  * be correct, sorting by dot product is ascending instead.
  */
-public class StaticNormalRelativeData extends SplitDirectionData {
+public class StaticNormalRelativeData extends PresentTranslucentData {
     private Sorter sorterOnce;
 
-    public StaticNormalRelativeData(SectionPos sectionPos, int[] vertexCounts, int quadCount) {
-        super(sectionPos, vertexCounts, quadCount);
+    public StaticNormalRelativeData(SectionPos sectionPos, int inputQuadCount) {
+        super(sectionPos, inputQuadCount);
     }
 
     @Override
@@ -35,8 +35,8 @@ public class StaticNormalRelativeData extends SplitDirectionData {
         return sorter;
     }
 
-    private static StaticNormalRelativeData fromDoubleUnaligned(int[] vertexCounts, TQuad[] quads, SectionPos sectionPos) {
-        var snrData = new StaticNormalRelativeData(sectionPos, vertexCounts, quads.length);
+    private static StaticNormalRelativeData fromDoubleUnaligned(TQuad[] quads, SectionPos sectionPos) {
+        var snrData = new StaticNormalRelativeData(sectionPos, quads.length);
         var sorter = new StaticSorter(quads.length);
         snrData.sorterOnce = sorter;
         var indexBuffer = sorter.getIntBuffer();
@@ -66,18 +66,17 @@ public class StaticNormalRelativeData extends SplitDirectionData {
     /**
      * Important: The vertex indexes must start at zero for each facing.
      */
-    private static StaticNormalRelativeData fromMixed(int[] vertexCounts,
+    private static StaticNormalRelativeData fromMixed(int[] meshFacingCounts,
                                                       TQuad[] quads, SectionPos sectionPos) {
-        var snrData = new StaticNormalRelativeData(sectionPos, vertexCounts, quads.length);
+        var snrData = new StaticNormalRelativeData(sectionPos, quads.length);
         var sorter = new StaticSorter(quads.length);
         snrData.sorterOnce = sorter;
         var indexBuffer = sorter.getIntBuffer();
 
         var maxQuadCount = 0;
 
-        for (var vertexCount : vertexCounts) {
-            if (vertexCount != -1) {
-                var quadCount = TranslucentData.vertexCountToQuadCount(vertexCount);
+        for (var quadCount : meshFacingCounts) {
+            if (quadCount != -1) {
                 maxQuadCount = Math.max(maxQuadCount, quadCount);
             }
         }
@@ -86,28 +85,26 @@ public class StaticNormalRelativeData extends SplitDirectionData {
         // This is necessary because the emitted quad indexes in each facing start at zero,
         // but the quads are stored in a single continuously indexed array.
         int quadIndex = 0;
-        for (var vertexCount : vertexCounts) {
-            if (vertexCount == -1 || vertexCount == 0) {
+        for (var quadCount : meshFacingCounts) {
+            if (quadCount == -1 || quadCount == 0) {
                 continue;
             }
 
-            int count = TranslucentData.vertexCountToQuadCount(vertexCount);
-
-            if (count == 1) {
+            if (quadCount == 1) {
                 TranslucentData.writeQuadVertexIndexes(indexBuffer, 0);
                 quadIndex++;
             } else {
-                final var keys = new int[count];
-                final var perm = new int[count];
+                final var keys = new int[quadCount];
+                final var perm = new int[quadCount];
 
-                for (int idx = 0; idx < count; idx++) {
+                for (int idx = 0; idx < quadCount; idx++) {
                     keys[idx] = MathUtil.floatToComparableInt(quads[quadIndex++].getAccurateDotProduct());
                     perm[idx] = idx;
                 }
 
                 RadixSort.sortIndirect(perm, keys, false);
 
-                for (int idx = 0; idx < count; idx++) {
+                for (int idx = 0; idx < quadCount; idx++) {
                     TranslucentData.writeQuadVertexIndexes(indexBuffer, perm[idx]);
                 }
             }
@@ -116,12 +113,12 @@ public class StaticNormalRelativeData extends SplitDirectionData {
         return snrData;
     }
 
-    public static StaticNormalRelativeData fromMesh(int[] vertexCounts,
+    public static StaticNormalRelativeData fromMesh(int[] meshFacingCounts,
             TQuad[] quads, SectionPos sectionPos, boolean isDoubleUnaligned) {
         if (isDoubleUnaligned) {
-            return fromDoubleUnaligned(vertexCounts, quads, sectionPos);
+            return fromDoubleUnaligned(quads, sectionPos);
         } else {
-            return fromMixed(vertexCounts, quads, sectionPos);
+            return fromMixed(meshFacingCounts, quads, sectionPos);
         }
     }
 }

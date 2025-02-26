@@ -5,12 +5,12 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigge
 import net.minecraft.core.SectionPos;
 import org.joml.Vector3dc;
 
-public abstract class DynamicData extends MixedDirectionData {
+public abstract class DynamicData extends PresentTranslucentData {
     private GeometryPlanes geometryPlanes;
     private final Vector3dc initialCameraPos;
 
-    DynamicData(SectionPos sectionPos, int quadCount, GeometryPlanes geometryPlanes, Vector3dc initialCameraPos) {
-        super(sectionPos, quadCount);
+    DynamicData(SectionPos sectionPos, int inputQuadCount, GeometryPlanes geometryPlanes, Vector3dc initialCameraPos) {
+        super(sectionPos, inputQuadCount);
         this.geometryPlanes = geometryPlanes;
         this.initialCameraPos = initialCameraPos;
     }

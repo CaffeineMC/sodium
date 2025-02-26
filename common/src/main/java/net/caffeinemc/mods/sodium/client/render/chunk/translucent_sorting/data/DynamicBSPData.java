@@ -2,11 +2,11 @@ package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.UpdatedQuadsList;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.BSPNode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.BSPResult;
-import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.minecraft.core.SectionPos;
 import org.joml.Vector3dc;
 
@@ -19,15 +19,22 @@ import org.joml.Vector3dc;
 public class DynamicBSPData extends DynamicData {
     private static final int NODE_REUSE_MIN_GENERATION = 1;
 
+    private final int indexQuadCount;
     private final BSPNode rootNode;
     private final int generation;
-    private final BSPResult.UpdatedQuadIndexes updatedQuadIndexes;
+    private final UpdatedQuadsList updatedQuadsList; // TODO: delete reference after mesh task is done since this won't be needed anymore after that
 
-    private DynamicBSPData(SectionPos sectionPos, int quadCount, BSPResult result, Vector3dc initialCameraPos, int generation) {
-        super(sectionPos, quadCount, result, initialCameraPos);
+    private DynamicBSPData(SectionPos sectionPos, int inputQuadCount, BSPResult result, Vector3dc initialCameraPos, int generation) {
+        super(sectionPos, inputQuadCount, result, initialCameraPos);
         this.rootNode = result.getRootNode();
         this.generation = generation;
-        this.updatedQuadIndexes = result.getUpdatedQuadIndexes();
+        this.updatedQuadsList = result.getUpdatedQuadsList();
+
+        if (this.updatedQuadsList != null) {
+            this.indexQuadCount = this.updatedQuadsList.getIndexQuadCount();
+        } else {
+            this.indexQuadCount = inputQuadCount;
+        }
     }
 
     private class DynamicBSPSorter extends DynamicSorter {
@@ -42,23 +49,28 @@ public class DynamicBSPData extends DynamicData {
     }
 
     @Override
-    public boolean oldDataMatches(TranslucentGeometryCollector collector, SortType sortType, TQuad[] quads, int[] vertexCounts) {
+    public boolean oldDataMatches(TranslucentGeometryCollector collector, SortType sortType, TQuad[] quads) {
         // don't reuse data if we need to rewrite the mesh because of quad splitting
-        return !this.meshesWereModified() && super.oldDataMatches(collector, sortType, quads, vertexCounts);
+        return !this.meshesWereModified() && super.oldDataMatches(collector, sortType, quads);
+    }
+
+    @Override
+    public int getIndexQuadCount() {
+        return this.indexQuadCount;
     }
 
     @Override
     public Sorter getSorter() {
-        return new DynamicBSPSorter(this.getQuadCount());
+        return new DynamicBSPSorter(this.getIndexQuadCount()); // index quad count
     }
 
     @Override
-    public BSPResult.UpdatedQuadIndexes getUpdatedQuadIndexes() {
-        return this.updatedQuadIndexes;
+    public UpdatedQuadsList getUpdatedQuads() {
+        return this.updatedQuadsList;
     }
 
     public static DynamicBSPData fromMesh(CombinedCameraPos cameraPos, TQuad[] quads, SectionPos sectionPos,
-                                          TranslucentData oldData, QuadSplittingMode quadSplittingMode, ChunkMeshBufferBuilder translucentVertexBuffer) {
+                                          TranslucentData oldData, QuadSplittingMode quadSplittingMode) {
         BSPNode oldRoot = null;
         int generation = 0;
         boolean prepareNodeReuse = false;
@@ -70,10 +82,9 @@ public class DynamicBSPData extends DynamicData {
             // (times the section has been built)
             prepareNodeReuse = generation >= NODE_REUSE_MIN_GENERATION;
         }
-        var result = BSPNode.buildBSP(quads, sectionPos, oldRoot, prepareNodeReuse, quadSplittingMode, translucentVertexBuffer);
+        var result = BSPNode.buildBSP(quads, sectionPos, oldRoot, prepareNodeReuse, quadSplittingMode);
 
-        var newQuadCount = quads.length + result.getAppendedQuadCount();
-        var dynamicData = new DynamicBSPData(sectionPos, newQuadCount, result, cameraPos.getAbsoluteCameraPos(), generation);
+        var dynamicData = new DynamicBSPData(sectionPos, quads.length, result, cameraPos.getAbsoluteCameraPos(), generation);
 
         // prepare geometry planes for integration into GFNI triggering
         result.prepareIntegration();

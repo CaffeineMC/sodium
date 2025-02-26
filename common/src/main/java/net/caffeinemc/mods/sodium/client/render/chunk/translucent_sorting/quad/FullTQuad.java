@@ -1,15 +1,25 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad;
 
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
+
+import java.nio.ByteBuffer;
 
 public class FullTQuad extends RegularTQuad {
     private final ChunkVertexEncoder.Vertex[] vertices = ChunkVertexEncoder.Vertex.uninitializedQuad();
     private int sameVertexMap;
     private boolean normalIsVeryAccurate = false;
-    private int updateBufferIndex = -1;
+
+    private boolean hasUpdatedVertices = false;
+
+    // NO_WRITE means it should not be written (either there is no update or it's getting overwritten)
+    private static final int NO_WRITE = -1;
+    private int writeToIndex = NO_WRITE;
 
     FullTQuad(ModelQuadFacing facing, int packedNormal) {
         super(facing, packedNormal);
@@ -18,6 +28,9 @@ public class FullTQuad extends RegularTQuad {
     public static FullTQuad fromVertices(ChunkVertexEncoder.Vertex[] vertices, ModelQuadFacing facing, int packedNormal) {
         var quad = new FullTQuad(facing, packedNormal);
         quad.sameVertexMap = quad.initExtentsAndCenter(vertices);
+        if (quad.isInvalid()) {
+            return null;
+        }
 
         quad.initDotProduct();
         quad.initVertices(vertices);
@@ -72,16 +85,27 @@ public class FullTQuad extends RegularTQuad {
         return this.sameVertexMap;
     }
 
-    public boolean hasUpdateBufferIndex() {
-        return this.updateBufferIndex != -1;
+    public boolean triggerAndSetUpdatedVertices() {
+        if (this.hasUpdatedVertices) {
+            return false;
+        }
+
+        this.hasUpdatedVertices = true;
+        return true;
     }
 
-    public int getUpdateBufferIndex() {
-        return this.updateBufferIndex;
+    public void setWriteToIndex(int writeToIndex) {
+        this.writeToIndex = writeToIndex;
     }
 
-    public void setUpdateBufferIndex(int index) {
-        this.updateBufferIndex = index;
+    public void setNoWrite() {
+        this.writeToIndex = NO_WRITE;
+    }
+
+    public void writeToBuffer(ChunkMeshBufferBuilder bufferBuilder, ByteBuffer buffer) {
+        if (this.writeToIndex != NO_WRITE) {
+            bufferBuilder.writeExternal(buffer, TranslucentData.quadCountToVertexCount(this.writeToIndex), this.vertices, DefaultMaterials.TRANSLUCENT);
+        }
     }
 
     @Override

@@ -9,7 +9,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.data.BuiltSectionMeshParts
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.DefaultTerrainRenderPasses;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.BSPResult;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.UpdatedQuadsList;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
@@ -138,47 +138,44 @@ public class ChunkBuildBuffers {
         return new BuiltSectionMeshParts(mergedBuffer, vertexSegments);
     }
 
-    public BuiltSectionMeshParts createCompactModifiedTranslucentMesh(BuiltSectionMeshParts prevMesh, ChunkMeshBufferBuilder updateBufferBuilder, BSPResult.UpdatedQuadIndexes updatedQuadIndexes) {
-        if (updateBufferBuilder.isEmpty()) {
-            return null;
-        }
+    public BuiltSectionMeshParts createModifiedTranslucentMesh(UpdatedQuadsList updatedQuads) {
+        // mesh modification assumes non-empty mesh with predetermined size
 
-        // the unassigned vertex count is going to be in the last segment because slice reordering is disabled for forceUnassigned-mode translucent data
-        int totalVertexCount = getUpdatedVertexCount(prevMesh, updatedQuadIndexes);
-        int vertexStride = this.vertexType.getVertexFormat().getStride();
-        var mergedBuffer = new NativeBuffer(totalVertexCount * vertexStride);
-        int quadStride = vertexStride * TranslucentData.VERTICES_PER_QUAD;
+        var builder = this.builders.get(DefaultTerrainRenderPasses.TRANSLUCENT);
+
+        var stride = this.vertexType.getVertexFormat().getStride();
+        var vertexTotal = TranslucentData.quadCountToVertexCount(updatedQuads.getMeshQuadCount());
+        var mergedBuffer = new NativeBuffer(vertexTotal * stride);
         var mergedBufferBuilder = mergedBuffer.getDirectBuffer();
-        var updateBuffer = updateBufferBuilder.slice();
 
-        // write the entire old mesh first, then apply modifications
-        mergedBufferBuilder.put(prevMesh.getVertexData().getDirectBuffer());
-
-        for (int sourceQuadIndex = 0; sourceQuadIndex < updatedQuadIndexes.size(); sourceQuadIndex++) {
-            var targetQuadIndex = updatedQuadIndexes.getInt(sourceQuadIndex);
-            mergedBufferBuilder.put(targetQuadIndex * quadStride, updateBuffer, sourceQuadIndex * quadStride, quadStride);
+        for (ModelQuadFacing facing : ModelQuadFacing.VALUES) {
+            var buffer = builder.getVertexBuffer(facing);
+            if (!buffer.isEmpty()) {
+                mergedBufferBuilder.put(buffer.slice());
+            }
         }
 
-        // construct new segments array with just one unassigned entry
-        int[] newVertexSegments = makeVertexSegments();
-        newVertexSegments[UNASSIGNED_SEGMENT_INDEX] = totalVertexCount;
-        newVertexSegments[UNASSIGNED_SEGMENT_INDEX + 1] = ModelQuadFacing.UNASSIGNED.ordinal();
-        return new BuiltSectionMeshParts(mergedBuffer, newVertexSegments);
+        updatedQuads.applyBufferUpdates(builder.getVertexBuffer(ModelQuadFacing.UNASSIGNED), mergedBufferBuilder);
+
+        int[] vertexSegments = makeVertexSegments();
+        vertexSegments[UNASSIGNED_SEGMENT_INDEX] = vertexTotal;
+        vertexSegments[UNASSIGNED_SEGMENT_INDEX + 1] = ModelQuadFacing.UNASSIGNED.ordinal();
+
+        printDebugInfo(builder, updatedQuads);
+
+        return new BuiltSectionMeshParts(mergedBuffer, vertexSegments);
     }
 
-    private static int getUpdatedVertexCount(BuiltSectionMeshParts prevMesh, BSPResult.UpdatedQuadIndexes updatedQuadIndexes) {
-        int[] vertexSegments = prevMesh.getVertexSegments();
-        if (vertexSegments[UNASSIGNED_SEGMENT_INDEX + 1] != ModelQuadFacing.UNASSIGNED.ordinal()) {
-            throw new IllegalArgumentException("Unassigned vertex count is missing!");
+    private void printDebugInfo(ChunkModelBuilder builder, UpdatedQuadsList updatedQuads) {
+        int oldVertexCount = 0;
+        for (ModelQuadFacing facing : ModelQuadFacing.VALUES) {
+            oldVertexCount += builder.getVertexBuffer(facing).count();
         }
-        var unassignedVertexCount = vertexSegments[UNASSIGNED_SEGMENT_INDEX];
 
-        var addedVertexCount = TranslucentData.quadCountToVertexCount(updatedQuadIndexes.getAddedQuadCount());
-        int totalVertexCount = unassignedVertexCount + addedVertexCount;
+        var totalVertexCount = TranslucentData.quadCountToVertexCount(updatedQuads.getMeshQuadCount());
+        var addedVertexCount = totalVertexCount - oldVertexCount;
 
-        // print old, new, total, and old/new total ratio
-        System.out.println("Old quad count: " + unassignedVertexCount / 4 + ", added quad count: " + addedVertexCount / 4 + ", new total quad count: " + totalVertexCount / 4 + ", amplification ratio: " + (double) totalVertexCount / unassignedVertexCount);
-        return totalVertexCount;
+        System.out.println("Old quad count: " + oldVertexCount / 4 + ", added quad count: " + addedVertexCount / 4 + ", new total quad count: " + totalVertexCount / 4 + ", amplification ratio: " + (double) totalVertexCount / oldVertexCount);
     }
 
     public void destroy() {

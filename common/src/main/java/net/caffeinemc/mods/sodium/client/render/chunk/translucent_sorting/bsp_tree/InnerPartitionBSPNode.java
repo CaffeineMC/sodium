@@ -597,7 +597,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         FullTQuad secondInsideQuad = null;
 
         if (uniqueVertices == 3) {
-            // TODO: deal with the rare and weird case where opposite vertices are identical (i.e. the quad is folded in half along the crease)
+            // TODO: deal with the rare and weird case where opposite vertices are identical (i.e. the quad is folded in half)
 
             // a vertex is on the split plane
             var sameVertexMap = insideQuad.getSameVertexMap();

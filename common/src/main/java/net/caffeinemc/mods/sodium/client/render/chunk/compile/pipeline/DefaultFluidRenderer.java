@@ -424,7 +424,10 @@ public class DefaultFluidRenderer {
                 normal = NormI8.flipPacked(normal);
             }
 
-            collector.appendQuad(vertices, facing, normal);
+            // discard the quad if it's invalid (i.e. not visible)
+            if (collector.appendQuad(vertices, facing, normal)) {
+                return;
+            }
         }
 
         var vertexBuffer = builder.getVertexBuffer(facing);

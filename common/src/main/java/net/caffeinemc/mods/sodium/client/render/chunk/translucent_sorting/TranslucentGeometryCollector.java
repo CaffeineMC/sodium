@@ -13,7 +13,6 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.R
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.GeometryPlanes;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.SortTriggering;
-import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
@@ -83,6 +82,7 @@ public class TranslucentGeometryCollector {
 
     @SuppressWarnings("unchecked")
     private ReferenceArrayList<TQuad>[] quadLists = new ReferenceArrayList[ModelQuadFacing.COUNT];
+    private final int[] meshFacingCounts = new int[ModelQuadFacing.COUNT];
     private TQuad[] quads;
 
     private SortType sortType;
@@ -94,14 +94,7 @@ public class TranslucentGeometryCollector {
         this.sectionPos = sectionPos;
     }
 
-    public void appendQuad(ChunkVertexEncoder.Vertex[] vertices, ModelQuadFacing facing, int packedNormal) {
-        int direction = facing.ordinal();
-        var quadList = this.quadLists[direction];
-        if (quadList == null) {
-            quadList = new ReferenceArrayList<>();
-            this.quadLists[direction] = quadList;
-        }
-
+    public boolean appendQuad(ChunkVertexEncoder.Vertex[] vertices, ModelQuadFacing facing, int packedNormal) {
         TQuad quad;
         if (this.isSplittingQuads()) {
             quad = FullTQuad.fromVertices(vertices, facing, packedNormal);
@@ -109,7 +102,14 @@ public class TranslucentGeometryCollector {
             quad = RegularTQuad.fromVertices(vertices, facing, packedNormal);
         }
         if (quad == null) {
-            return;
+            return true;
+        }
+
+        int direction = facing.ordinal();
+        var quadList = this.quadLists[direction];
+        if (quadList == null) {
+            quadList = new ReferenceArrayList<>();
+            this.quadLists[direction] = quadList;
         }
         quadList.add(quad);
 
@@ -168,6 +168,8 @@ public class TranslucentGeometryCollector {
                 this.untrackedUnalignedNormalCount++;
             }
         }
+
+        return false;
     }
 
     public boolean isSplittingQuads() {
@@ -368,6 +370,8 @@ public class TranslucentGeometryCollector {
         for (int direction = 0; direction < ModelQuadFacing.COUNT; direction++) {
             var quadList = this.quadLists[direction];
             if (quadList != null) {
+                this.meshFacingCounts[direction] = quadList.size();
+
                 for (var quad : quadList) {
                     this.quads[quadIndex++] = quad;
                 }
@@ -382,29 +386,29 @@ public class TranslucentGeometryCollector {
         return this.sortType;
     }
 
-    private static void ensureUnassignedVertexCount(int[] vertexCounts) {
-        int vertexCount = vertexCounts[ModelQuadFacing.UNASSIGNED.ordinal()];
+    private void ensureDirectionsAreMixed() {
+        int unassignedQuadCount = this.meshFacingCounts[ModelQuadFacing.UNASSIGNED.ordinal()];
 
-        if (vertexCount == 0) {
+        if (unassignedQuadCount == 0) {
             throw new IllegalStateException("No unassigned data in mesh");
         }
     }
 
-    private TranslucentData makeNewTranslucentData(int[] vertexCounts, CombinedCameraPos cameraPos,
-                                                   TranslucentData oldData, ChunkMeshBufferBuilder translucentVertexBuffer) {
+    private TranslucentData makeNewTranslucentData(CombinedCameraPos cameraPos,
+                                                   TranslucentData oldData) {
         if (this.sortType == SortType.NONE) {
-            return AnyOrderData.fromMesh(vertexCounts, this.quads, this.sectionPos);
+            return AnyOrderData.fromMesh(this.quads, this.sectionPos);
         }
 
         if (this.sortType == SortType.STATIC_NORMAL_RELATIVE) {
             var isDoubleUnaligned = this.alignedFacingBitmap == 0;
-            return StaticNormalRelativeData.fromMesh(vertexCounts, this.quads, this.sectionPos, isDoubleUnaligned);
+            return StaticNormalRelativeData.fromMesh(this.meshFacingCounts, this.quads, this.sectionPos, isDoubleUnaligned);
         }
 
         // from this point on we know the estimated sort type requires direction mixing
         // (no backface culling) and all vertices are in the UNASSIGNED direction.
         if (this.sortType == SortType.STATIC_TOPO) {
-            ensureUnassignedVertexCount(vertexCounts);
+            ensureDirectionsAreMixed();
             var result = StaticTopoData.fromMesh(this.quads, this.sectionPos, this.isSplittingQuads());
             if (result != null) {
                 return result;
@@ -416,13 +420,13 @@ public class TranslucentGeometryCollector {
         this.sortType = filterSortType(this.sortType);
 
         if (this.sortType == SortType.NONE) {
-            return AnyOrderData.fromMesh(vertexCounts, this.quads, this.sectionPos);
+            return AnyOrderData.fromMesh(this.quads, this.sectionPos);
         }
 
         if (this.sortType == SortType.DYNAMIC) {
-            ensureUnassignedVertexCount(vertexCounts);
+            ensureDirectionsAreMixed();
             try {
-                return DynamicBSPData.fromMesh(cameraPos, this.quads, this.sectionPos, oldData, this.quadSplittingMode, translucentVertexBuffer);
+                return DynamicBSPData.fromMesh(cameraPos, this.quads, this.sectionPos, oldData, this.quadSplittingMode);
             } catch (BSPBuildFailureException e) {
                 var geometryPlanes = GeometryPlanes.fromQuadLists(this.sectionPos, this.quads);
                 return DynamicTopoData.fromMesh(
@@ -449,24 +453,22 @@ public class TranslucentGeometryCollector {
     }
 
     public TranslucentData getTranslucentData(
-            TranslucentData oldData, BuiltSectionMeshParts translucentMesh, CombinedCameraPos cameraPos, ChunkMeshBufferBuilder translucentVertexBuffer) {
-        // means there is no translucent geometry
-        if (translucentMesh == null) {
+            TranslucentData oldData, CombinedCameraPos cameraPos) {
+        if (this.quads.length == 0) {
             return NoData.forNoTranslucent(this.sectionPos);
         }
-
-        var vertexCounts = translucentMesh.computeVertexCounts();
 
         // re-use the original translucent data if it's the same. This reduces the
         // amount of generated and uploaded index data when sections are rebuilt without
         // relevant changes to translucent geometry. Rebuilds happen when any part of
         // the section changes, including the here irrelevant cases of changes to opaque
-        // geometry or light levels.
-        if (oldData != null && oldData.oldDataMatches(this, this.sortType, this.quads, vertexCounts)) {
+        // geometry or non-geometric changes to translucent geometry.
+        // (except when quad splitting, where data is never reused)
+        if (oldData != null && oldData.oldDataMatches(this, this.sortType, this.quads)) {
             return oldData;
         }
 
-        var newData = this.makeNewTranslucentData(vertexCounts, cameraPos, oldData, translucentVertexBuffer);
+        var newData = this.makeNewTranslucentData(cameraPos, oldData);
         if (newData instanceof PresentTranslucentData presentData) {
             presentData.setQuadHash(this.getQuadHash());
         }
