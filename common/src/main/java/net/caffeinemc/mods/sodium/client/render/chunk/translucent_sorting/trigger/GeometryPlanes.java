@@ -1,14 +1,15 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger;
 
+import java.util.Collection;
+
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
-import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
-import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
-import net.minecraft.core.SectionPos;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
-import java.util.Collection;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
+import net.minecraft.core.SectionPos;
 
 /**
  * GeometryPlanes stores the NormalPlanes for different normals, both aligned
@@ -69,7 +70,7 @@ public class GeometryPlanes {
         normalPlanes.addPlaneMember(distance);
     }
 
-    public void addDoubleSidedPlane(SectionPos sectionPos, int axis, float distance) {
+    public void addDoubleSidedAlignedPlane(SectionPos sectionPos, int axis, float distance) {
         this.addAlignedPlane(sectionPos, axis, distance);
         this.addAlignedPlane(sectionPos, axis + 3, -distance);
     }
@@ -83,7 +84,8 @@ public class GeometryPlanes {
 
         var normalPlanes = unalignedDistances.get(cleanedNormal);
         if (normalPlanes == null) {
-            normalPlanes = new NormalPlanes(sectionPos, new Vector3f(normal));
+            // construct new normal plane using the cleaned normal to make sure its .normal is zero-cleaned
+            normalPlanes = new NormalPlanes(sectionPos, new Vector3f(cleanedNormal));
 
             // NOTE: importantly use the cleaned normal here, not the cleanedNormal, which is mutable
             unalignedDistances.put(normalPlanes.normal, normalPlanes);
@@ -105,6 +107,11 @@ public class GeometryPlanes {
             cleanedNormal.z = 0.0f;
         }
         return cleanedNormal;
+    }
+
+    public void addDoubleSidedUnalignedPlane(SectionPos sectionPos, Vector3fc normal, float distance) {
+        this.addUnalignedPlane(sectionPos, normal, distance);
+        this.addUnalignedPlane(sectionPos, normal.negate(new Vector3f()), -distance);
     }
 
     public void addQuadPlane(SectionPos sectionPos, TQuad quad) {

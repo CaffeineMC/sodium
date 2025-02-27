@@ -5,6 +5,7 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.Monitor;
 import com.mojang.blaze3d.platform.VideoMode;
 import com.mojang.blaze3d.platform.Window;
+import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
@@ -14,6 +15,7 @@ import net.caffeinemc.mods.sodium.client.gui.options.control.*;
 import net.caffeinemc.mods.sodium.client.gui.options.storage.MinecraftOptionsStorage;
 import net.caffeinemc.mods.sodium.client.gui.options.storage.SodiumOptionsStorage;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.minecraft.client.AttackIndicatorStatus;
 import net.minecraft.client.InactivityFpsLimit;
@@ -343,18 +345,29 @@ public class SodiumGameOptionPages {
                         .build())
                 .build());
 
+        var tsGroupBuilder = OptionGroup.createBuilder();
         if (PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
-            groups.add(OptionGroup.createBuilder()
-                    .add(OptionImpl.createBuilder(boolean.class, sodiumOpts)
-                            .setName(Component.translatable("sodium.options.sort_behavior.name"))
-                            .setTooltip(Component.translatable("sodium.options.sort_behavior.tooltip"))
-                            .setControl(TickBoxControl::new)
-                            .setBinding((opts, value) -> opts.performance.sortingEnabled = value, opts -> opts.performance.sortingEnabled)
-                            .setImpact(OptionImpact.LOW)
-                            .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
-                            .build())
-                    .build());
+                tsGroupBuilder.add(OptionImpl.createBuilder(boolean.class, sodiumOpts)
+                        .setName(Component.translatable("sodium.options.sort_behavior.name"))
+                        .setTooltip(Component.translatable("sodium.options.sort_behavior.tooltip"))
+                        .setControl(TickBoxControl::new)
+                        .setBinding((opts, value) -> opts.performance.sortingEnabled = value, opts -> opts.performance.sortingEnabled)
+                        .setImpact(OptionImpact.LOW)
+                        .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
+                        .build());
         }
+
+        tsGroupBuilder.add(OptionImpl.createBuilder(QuadSplittingMode.class, sodiumOpts)
+                .setName(Component.translatable("sodium.options.quad_splitting.name"))
+                .setTooltip(Component.translatable("sodium.options.quad_splitting.tooltip"))
+                .setControl(option -> new CyclingControl<>(option, QuadSplittingMode.class))
+                .setBinding((opts, value) -> opts.performance.quadSplittingMode = value, opts -> opts.performance.quadSplittingMode)
+                .setImpact(OptionImpact.MEDIUM)
+                .setEnabled(() -> SodiumClientMod.options().performance.sortingEnabled)
+                .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
+                .build());
+
+        groups.add(tsGroupBuilder.build());
 
         return new OptionPage(Component.translatable("sodium.options.pages.performance"), ImmutableList.copyOf(groups));
     }

@@ -1,7 +1,8 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.minecraft.core.SectionPos;
 
 /**
@@ -18,11 +19,11 @@ import net.minecraft.core.SectionPos;
  * buffer segments and would need to be resized when a larger section wants to
  * use it.
  */
-public class AnyOrderData extends SplitDirectionData {
+public class AnyOrderData extends PresentTranslucentData {
     private Sorter sorterOnce;
 
-    AnyOrderData(SectionPos sectionPos, int[] vertexCounts, int quadCount) {
-        super(sectionPos, vertexCounts, quadCount);
+    AnyOrderData(SectionPos sectionPos, int inputQuadCount) {
+        super(sectionPos, inputQuadCount);
     }
 
     @Override
@@ -40,12 +41,17 @@ public class AnyOrderData extends SplitDirectionData {
         return sorter;
     }
 
+    @Override
+    public boolean oldDataMatches(TranslucentGeometryCollector collector, SortType sortType, TQuad[] quads) {
+        // for the NONE sort type the ranges need to be the same, the actual geometry doesn't matter
+        return sortType == SortType.NONE && this.getInputQuadCount() == quads.length;
+    }
+
     /**
      * Important: The vertex indexes must start at zero for each facing.
      */
-    public static AnyOrderData fromMesh(int[] vertexCounts,
-                                        TQuad[] quads, SectionPos sectionPos) {
-        var anyOrderData = new AnyOrderData(sectionPos, vertexCounts, quads.length);
+    public static AnyOrderData fromMesh(TQuad[] quads, SectionPos sectionPos) {
+        var anyOrderData = new AnyOrderData(sectionPos, quads.length);
         anyOrderData.sorterOnce = new SharedIndexSorter(quads.length);
         return anyOrderData;
     }

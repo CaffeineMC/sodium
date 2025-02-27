@@ -90,7 +90,7 @@ public class SectionRenderDataStorage {
 
     public void setIndexData(int localSectionIndex, GlBufferSegment allocation) {
         if (this.elementAllocations == null) {
-            throw new IllegalStateException("Cannot set index data when storesIndices is false");
+            throw new IllegalStateException("Cannot set index data on a render data storage that does not store indices");
         }
 
         GlBufferSegment prev = this.elementAllocations[localSectionIndex];
@@ -194,55 +194,53 @@ public class SectionRenderDataStorage {
         return bufferChanged;
     }
 
-    public void removeData(int localSectionIndex) {
-        this.removeVertexData(localSectionIndex, false);
-
-        if (this.elementAllocations != null) {
-            this.removeIndexData(localSectionIndex);
-        }
-
-        this.setSharedIndexUsage(localSectionIndex, 0);
-    }
-
-    public void removeVertexData(int localSectionIndex) {
-        this.removeVertexData(localSectionIndex, true);
-    }
-
-    private void removeVertexData(int localSectionIndex, boolean retainIndexData) {
-        GlBufferSegment prev = this.vertexAllocations[localSectionIndex];
-
-        if (prev == null) {
-            return;
-        }
-
-        prev.delete();
-
-        this.vertexAllocations[localSectionIndex] = null;
-
-        var pMeshData = this.getDataPointer(localSectionIndex);
-
-        var baseElement = SectionRenderDataUnsafe.getBaseElement(pMeshData);
-        SectionRenderDataUnsafe.clear(pMeshData);
-
-        if (retainIndexData) {
-            SectionRenderDataUnsafe.setLocalBaseElement(pMeshData, baseElement);
-        }
+    private boolean storesIndexData() {
+        return this.elementAllocations != null;
     }
 
     public void removeIndexData(int localSectionIndex) {
-        final GlBufferSegment[] allocations = this.elementAllocations;
+        if (!this.storesIndexData()) {
+            throw new IllegalStateException("Cannot remove index data on a render data storage that does not store indices");
+        }
+        this.removeData(localSectionIndex, false, true);
+    }
 
-        if (allocations == null) {
-            throw new IllegalStateException("Cannot remove index data when storesIndices is false");
+    public void removeVertexData(int localSectionIndex) {
+        this.removeData(localSectionIndex, true, false);
+    }
+
+    public void removeData(int localSectionIndex) {
+        this.removeData(localSectionIndex, true, true);
+    }
+
+    private void removeData(int localSectionIndex, boolean removeVertexData, boolean removeIndexData) {
+        if (removeVertexData) {
+            GlBufferSegment prev = this.vertexAllocations[localSectionIndex];
+            if (prev != null) {
+                prev.delete();
+                this.vertexAllocations[localSectionIndex] = null;
+            }
+        }
+        if (removeIndexData && this.storesIndexData()) {
+            GlBufferSegment prev = this.elementAllocations[localSectionIndex];
+
+            if (prev != null) {
+                prev.delete();
+                this.elementAllocations[localSectionIndex] = null;
+            }
+
+            this.setSharedIndexUsage(localSectionIndex, 0);
         }
 
-        GlBufferSegment prev = allocations[localSectionIndex];
+        var pMeshData = this.getDataPointer(localSectionIndex);
 
-        if (prev != null) {
-            prev.delete();
+        if ((removeIndexData || !this.storesIndexData()) && removeVertexData) {
+            SectionRenderDataUnsafe.clearFull(pMeshData);
+        } else if (removeVertexData) {
+            SectionRenderDataUnsafe.clearVertexData(pMeshData);
+        } else if (removeIndexData) {
+            SectionRenderDataUnsafe.clearIndexData(pMeshData);
         }
-
-        allocations[localSectionIndex] = null;
     }
 
     public void onBufferResized() {

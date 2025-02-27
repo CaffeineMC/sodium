@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks;
 
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.ExtendedBlockEntityType;
 import net.caffeinemc.mods.sodium.client.render.chunk.DefaultChunkRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
@@ -21,6 +22,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortTy
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.PresentTranslucentData;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.caffeinemc.mods.sodium.client.services.PlatformLevelRenderHooks;
 import net.caffeinemc.mods.sodium.client.util.task.CancellationToken;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
@@ -46,7 +48,7 @@ import java.util.Map;
 /**
  * Rebuilds all the meshes of a chunk for each given render pass with non-occluded blocks. The result is then uploaded
  * to graphics memory on the main thread.
- *
+ * <p>
  * This task takes a slice of the level from the thread it is created on. Since these slices require rather large
  * array allocations, they are pooled to ensure that the garbage collector doesn't become overloaded.
  */
@@ -160,13 +162,38 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
             sortType = collector.finishRendering();
         }
 
+        // cancellation opportunity right before translucent sorting
+        if (cancellationToken.isCancelled()) {
+            profiler.pop();
+            return null;
+        }
+        profiler.popPush("translucency sorting");
+
+        boolean reuseUploadedData = false;
+        TranslucentData translucentData = null;
+        if (collector != null) {
+            var oldData = this.render.getTranslucentData();
+            translucentData = collector.getTranslucentData(oldData, this);
+            reuseUploadedData = translucentData == oldData;
+        }
+
+        profiler.popPush("meshing");
+
         Map<TerrainRenderPass, BuiltSectionMeshParts> meshes = new Reference2ReferenceOpenHashMap<>();
         var visibleSlices = DefaultChunkRenderer.getVisibleFaces(
                 (int) this.absoluteCameraPos.x(), (int) this.absoluteCameraPos.y(), (int) this.absoluteCameraPos.z(),
                 this.render.getChunkX(), this.render.getChunkY(), this.render.getChunkZ());
-        profiler.popPush("meshing");
+
+        if (translucentData != null && translucentData.meshesWereModified()) {
+            meshes.put(DefaultTerrainRenderPasses.TRANSLUCENT, buffers.createModifiedTranslucentMesh(translucentData.getUpdatedQuads()));
+            renderData.addRenderPass(DefaultTerrainRenderPasses.TRANSLUCENT);
+        }
 
         for (TerrainRenderPass pass : DefaultTerrainRenderPasses.ALL) {
+            if (meshes.containsKey(pass)) {
+                continue;
+            }
+
             // if the translucent geometry needs to share an index buffer between the directions,
             // consolidate all translucent geometry into UNASSIGNED
             boolean translucentBehavior = collector != null && pass.isTranslucent();
@@ -180,26 +207,7 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
             }
         }
 
-        // cancellation opportunity right before translucent sorting
-        if (cancellationToken.isCancelled()) {
-            meshes.forEach((pass, mesh) -> mesh.getVertexData().free());
-            profiler.pop();
-            return null;
-        }
-
         renderData.setOcclusionData(occluder.resolve());
-
-        profiler.popPush("translucency sorting");
-
-        boolean reuseUploadedData = false;
-        TranslucentData translucentData = null;
-        if (collector != null) {
-            var oldData = this.render.getTranslucentData();
-            translucentData = collector.getTranslucentData(
-                    oldData, meshes.get(DefaultTerrainRenderPasses.TRANSLUCENT), this);
-            reuseUploadedData = translucentData == oldData;
-        }
-
         var output = new ChunkBuildOutput(this.render, this.submitTime, translucentData, renderData.build(), meshes);
 
         if (collector != null) {
@@ -223,7 +231,8 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
         BlockState state = null;
         try {
             state = slice.getBlockState(pos);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         CrashReportCategory.populateBlockDetails(crashReportSection, slice, pos, state);
 
         crashReportSection.setDetail("Chunk section", this.render);

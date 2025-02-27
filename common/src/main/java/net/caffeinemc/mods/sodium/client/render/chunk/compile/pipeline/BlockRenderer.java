@@ -206,9 +206,11 @@ public class BlockRenderer extends AbstractBlockRenderContext {
             pass = downgradedPass;
         }
 
-        // collect all translucent quads into the translucency sorting system if enabled
-        if (pass.isTranslucent() && this.collector != null) {
-            this.collector.appendQuad(quad.getFaceNormal(), vertices, normalFace);
+        // collect all translucent quads into the translucency sorting system if enabled,
+        // and discard the quad if it's invalid (i.e. not visible)
+        if (pass.isTranslucent() && this.collector != null &&
+                this.collector.appendQuad(vertices, normalFace, quad.getFaceNormal())) {
+            return;
         }
 
         // if there was a downgrade from translucent to cutout, the material bits' alpha cutoff needs to be updated
