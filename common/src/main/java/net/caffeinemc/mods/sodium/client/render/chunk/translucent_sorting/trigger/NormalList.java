@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
 import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
+import net.caffeinemc.mods.sodium.client.util.MathUtil;
 import net.caffeinemc.mods.sodium.client.util.interval_tree.DoubleInterval;
 import net.caffeinemc.mods.sodium.client.util.interval_tree.Interval;
 import net.caffeinemc.mods.sodium.client.util.interval_tree.Interval.Bounded;
@@ -58,8 +59,8 @@ public class NormalList {
     /**
      * Constructs a new normal list with the given unit normal vector and aligned
      * normal index.
-     * 
-     * @param normal       The unit normal vector
+     *
+     * @param normal The unit normal vector
      */
     NormalList(Vector3fc normal, int alignedDirection) {
         this.normal = normal;
@@ -78,18 +79,12 @@ public class NormalList {
         return this.alignedDirection;
     }
 
-    private double normalDotDouble(Vector3dc v) {
-        return org.joml.Math.fma(this.normal.x(), v.x(),
-                org.joml.Math.fma(this.normal.y(), v.y(),
-                        this.normal.z() * v.z()));
-    }
-
     void processMovement(SortTriggering ts, CameraMovement movement) {
         // calculate the distance range of the movement with respect to the normal
-        double start = this.normalDotDouble(movement.start());
-        double end = this.normalDotDouble(movement.end());
+        double start = MathUtil.floatDoubleDot(this.normal, movement.start());
+        double end = MathUtil.floatDoubleDot(this.normal, movement.end());
 
-        // stop if the movement is reverse with regards to the normal
+        // stop if the movement is reverse in regard to the normal
         // since this means it's moving against the normal
         if (start >= end) {
             return;
@@ -106,11 +101,13 @@ public class NormalList {
     }
 
     void processCatchup(SortTriggering ts, CameraMovement movement, long sectionPos) {
-        double start = this.normalDotDouble(movement.start());
-        double end = this.normalDotDouble(movement.end());
+        double start = MathUtil.floatDoubleDot(this.normal, movement.start());
+        double end = MathUtil.floatDoubleDot(this.normal, movement.end());
+
         if (start >= end) {
             return;
         }
+
         var group = this.groupsBySection.get(sectionPos);
         if (group != null) {
             group.triggerRange(ts, start, end);

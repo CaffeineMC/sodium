@@ -1,5 +1,10 @@
 package net.caffeinemc.mods.sodium.client.util;
 
+import org.joml.Vector3dc;
+import org.joml.Vector3fc;
+
+import static org.joml.Math.fma;
+
 public class MathUtil {
     /**
      * @return True if the specified number is greater than zero and is a power of two, otherwise false
@@ -42,5 +47,13 @@ public class MathUtil {
 
     public static float comparableIntToFloat(int i) {
         return Float.intBitsToFloat(i ^ ((i >> 31) & 0x7FFFFFFF));
+    }
+
+    public static double floatDoubleDot(Vector3fc a, Vector3dc b) {
+        return fma(a.x(), b.x(), fma(a.y(), b.y(), a.z() * b.z()));
+    }
+
+    public static double floatDoubleDot(Vector3fc a, double bx, double by, double bz) {
+        return fma(a.x(), bx, fma(a.y(), by, a.z() * bz));
     }
 }
