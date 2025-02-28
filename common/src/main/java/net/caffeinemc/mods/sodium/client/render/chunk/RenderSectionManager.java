@@ -435,12 +435,14 @@ public class RenderSectionManager {
         ChunkJobCollector semiImportantCollector,
         ChunkJobCollector deferredCollector) {
             this.submitSectionTasks(importantCollector, ChunkUpdateType.IMPORTANT_SORT, true);
+            this.submitSectionTasks(semiImportantCollector, ChunkUpdateType.IMPORTANT_REBUILD_WITH_SORT, true);
             this.submitSectionTasks(semiImportantCollector, ChunkUpdateType.IMPORTANT_REBUILD, true);
 
             // since the sort tasks are run last, the effort category can be ignored and
             // simply fills up the remaining budget. Splitting effort categories is still
             // important to prevent high effort tasks from using up the entire budget if it
             // happens to divide evenly.
+            this.submitSectionTasks(deferredCollector, ChunkUpdateType.REBUILD_WITH_SORT, false);
             this.submitSectionTasks(deferredCollector, ChunkUpdateType.REBUILD, false);
             this.submitSectionTasks(deferredCollector, ChunkUpdateType.INITIAL_BUILD, false);
             this.submitSectionTasks(deferredCollector, ChunkUpdateType.SORT, true);
@@ -473,7 +475,7 @@ public class RenderSectionManager {
                     continue;
                 }
             } else {
-                task = this.createRebuildTask(section, frame);
+                task = this.createRebuildTask(section, frame, type.isRebuildWithSort());
 
                 if (task == null) {
                     // if the section is empty or doesn't exist submit this null-task to set the
@@ -506,14 +508,14 @@ public class RenderSectionManager {
         }
     }
 
-    public @Nullable ChunkBuilderMeshingTask createRebuildTask(RenderSection render, int frame) {
+    public @Nullable ChunkBuilderMeshingTask createRebuildTask(RenderSection render, int frame, boolean forceSort) {
         ChunkRenderContext context = LevelSlice.prepare(this.level, render.getPosition(), this.sectionCache);
 
         if (context == null) {
             return null;
         }
 
-        return new ChunkBuilderMeshingTask(render, frame, this.cameraPosition, context);
+        return new ChunkBuilderMeshingTask(render, frame, this.cameraPosition, context, forceSort);
     }
 
     public ChunkBuilderSortingTask createSortTask(RenderSection render, int frame) {
@@ -582,7 +584,7 @@ public class RenderSectionManager {
                     || priorityMode == PriorityMode.NEARBY && this.shouldPrioritizeTask(section, NEARBY_SORT_DISTANCE)) {
                 pendingUpdate = ChunkUpdateType.IMPORTANT_SORT;
             }
-            pendingUpdate = ChunkUpdateType.getPromotionUpdateType(section.getPendingUpdate(), pendingUpdate);
+            pendingUpdate = ChunkUpdateType.getPromotedUpdateType(section.getPendingUpdate(), pendingUpdate);
             if (pendingUpdate != null) {
                 section.setPendingUpdate(pendingUpdate);
                 section.prepareTrigger(isDirectTrigger);
@@ -606,7 +608,7 @@ public class RenderSectionManager {
                 pendingUpdate = ChunkUpdateType.REBUILD;
             }
 
-            pendingUpdate = ChunkUpdateType.getPromotionUpdateType(section.getPendingUpdate(), pendingUpdate);
+            pendingUpdate = ChunkUpdateType.getPromotedUpdateType(section.getPendingUpdate(), pendingUpdate);
             if (pendingUpdate != null) {
                 section.setPendingUpdate(pendingUpdate);
 
