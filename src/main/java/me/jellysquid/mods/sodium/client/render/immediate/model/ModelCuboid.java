@@ -2,7 +2,6 @@ package me.jellysquid.mods.sodium.client.render.immediate.model;
 
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
-import org.joml.*;
 
 import java.util.Set;
 
@@ -75,7 +74,6 @@ public class ModelCuboid {
         this.v2 = scaleV * (v + sizeZ + sizeY);
 
         this.mirror = mirror;
-
 
         int cullBitmask = 0;
 

@@ -7,25 +7,18 @@ import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Direction;
 import org.apache.commons.lang3.ArrayUtils;
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
+
+import static me.jellysquid.mods.sodium.client.render.immediate.model.ModelCuboid.*;
 
 public class EntityRenderer {
-
     private static final int NUM_CUBE_VERTICES = 8;
     private static final int NUM_CUBE_FACES = 6;
     private static final int NUM_FACE_VERTICES = 4;
-
-    private static final int
-            FACE_NEG_Y = 0, // DOWN
-            FACE_POS_Y = 1, // UP
-            FACE_NEG_Z = 2, // NORTH
-            FACE_POS_Z = 3, // SOUTH
-            FACE_NEG_X = 4, // WEST
-            FACE_POS_X = 5; // EAST
 
     private static final int
             VERTEX_X1_Y1_Z1 = 0,
@@ -37,18 +30,12 @@ public class EntityRenderer {
             VERTEX_X2_Y2_Z2 = 6,
             VERTEX_X1_Y2_Z2 = 7;
 
+    private static final Matrix3f lastNormalMatrix = new Matrix3f();
 
-    private static final long SCRATCH_BUFFER = MemoryUtil.nmemAlignedAlloc(64, NUM_CUBE_FACES * NUM_FACE_VERTICES * ModelVertex.STRIDE);
+    private static final int VERTEX_BUFFER_BYTES = NUM_CUBE_FACES * NUM_FACE_VERTICES * ModelVertex.STRIDE;
 
     private static final Vector3f[] CUBE_CORNERS = new Vector3f[NUM_CUBE_VERTICES];
-    private static final int[][] CUBE_VERTICES = new int[][] {
-            { VERTEX_X2_Y1_Z2, VERTEX_X1_Y1_Z2, VERTEX_X1_Y1_Z1, VERTEX_X2_Y1_Z1 },
-            { VERTEX_X2_Y2_Z1, VERTEX_X1_Y2_Z1, VERTEX_X1_Y2_Z2, VERTEX_X2_Y2_Z2 },
-            { VERTEX_X2_Y1_Z1, VERTEX_X1_Y1_Z1, VERTEX_X1_Y2_Z1, VERTEX_X2_Y2_Z1 },
-            { VERTEX_X1_Y1_Z2, VERTEX_X2_Y1_Z2, VERTEX_X2_Y2_Z2, VERTEX_X1_Y2_Z2 },
-            { VERTEX_X2_Y1_Z2, VERTEX_X2_Y1_Z1, VERTEX_X2_Y2_Z1, VERTEX_X2_Y2_Z2 },
-            { VERTEX_X1_Y1_Z1, VERTEX_X1_Y1_Z2, VERTEX_X1_Y2_Z2, VERTEX_X1_Y2_Z1 },
-    };
+    private static final int[][] CUBE_VERTICES = new int[NUM_CUBE_FACES][];
 
     private static final Vector3f[][] VERTEX_POSITIONS = new Vector3f[NUM_CUBE_FACES][NUM_FACE_VERTICES];
     private static final Vector3f[][] VERTEX_POSITIONS_MIRRORED = new Vector3f[NUM_CUBE_FACES][NUM_FACE_VERTICES];
@@ -60,6 +47,13 @@ public class EntityRenderer {
     private static final int[] CUBE_NORMALS_MIRRORED = new int[NUM_CUBE_FACES];
 
     static {
+        CUBE_VERTICES[FACE_NEG_Y] = new int[] { VERTEX_X2_Y1_Z2, VERTEX_X1_Y1_Z2, VERTEX_X1_Y1_Z1, VERTEX_X2_Y1_Z1 };
+        CUBE_VERTICES[FACE_POS_Y] = new int[] { VERTEX_X2_Y2_Z1, VERTEX_X1_Y2_Z1, VERTEX_X1_Y2_Z2, VERTEX_X2_Y2_Z2 };
+        CUBE_VERTICES[FACE_NEG_Z] = new int[] { VERTEX_X2_Y1_Z1, VERTEX_X1_Y1_Z1, VERTEX_X1_Y2_Z1, VERTEX_X2_Y2_Z1 };
+        CUBE_VERTICES[FACE_POS_Z] = new int[] { VERTEX_X1_Y1_Z2, VERTEX_X2_Y1_Z2, VERTEX_X2_Y2_Z2, VERTEX_X1_Y2_Z2 };
+        CUBE_VERTICES[FACE_NEG_X] = new int[] { VERTEX_X2_Y1_Z2, VERTEX_X2_Y1_Z1, VERTEX_X2_Y2_Z1, VERTEX_X2_Y2_Z2 };
+        CUBE_VERTICES[FACE_POS_X] = new int[] { VERTEX_X1_Y1_Z1, VERTEX_X1_Y1_Z2, VERTEX_X1_Y2_Z2, VERTEX_X1_Y2_Z1 };
+
         for (int cornerIndex = 0; cornerIndex < NUM_CUBE_VERTICES; cornerIndex++) {
             CUBE_CORNERS[cornerIndex] = new Vector3f();
         }
@@ -81,7 +75,7 @@ public class EntityRenderer {
 
     public static void render(MatrixStack matrixStack, VertexBufferWriter writer, ModelPart part, int light, int overlay, int color) {
         ModelPartData accessor = ModelPartData.from(part);
-        
+
         if (!accessor.isVisible()) {
             return;
         }
@@ -112,28 +106,34 @@ public class EntityRenderer {
         }
     }
 
-    private static void renderCuboids(MatrixStack.Entry matrices, VertexBufferWriter writer, ModelCuboid[] cuboids, int light, int overlay, int color) {
-        prepareNormals(matrices);
+    public static void renderCuboids(MatrixStack.Entry matrices, VertexBufferWriter writer, ModelCuboid[] cuboids, int light, int overlay, int color) {
+        for (var cuboid : cuboids) {
+            renderCuboid(matrices, writer, cuboid, light, overlay, color);
+        }
+    }
 
-        for (ModelCuboid cuboid : cuboids) {
-            prepareVertices(matrices, cuboid);
+    public static void renderCuboid(MatrixStack.Entry matrices, VertexBufferWriter writer, ModelCuboid cuboid, int light, int overlay, int color) {
+        prepareNormalsIfChanged(matrices);
+        prepareVertices(matrices, cuboid);
 
-            var vertexCount = emitQuads(cuboid, color, overlay, light);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            final var vertexBuffer = stack.nmalloc(16, VERTEX_BUFFER_BYTES);
+            final var vertexCount = emitQuads(vertexBuffer, cuboid, color, overlay, light);
 
-            try (MemoryStack stack = MemoryStack.stackPush()) {
-                writer.push(stack, SCRATCH_BUFFER, vertexCount, ModelVertex.FORMAT);
+            if (vertexCount > 0) {
+                writer.push(stack, vertexBuffer, vertexCount, ModelVertex.FORMAT);
             }
         }
     }
 
-    private static int emitQuads(ModelCuboid cuboid, int color, int overlay, int light) {
+    private static int emitQuads(final long buffer, ModelCuboid cuboid, int color, int overlay, int light) {
         final var positions = cuboid.mirror ? VERTEX_POSITIONS_MIRRORED : VERTEX_POSITIONS;
         final var textures = cuboid.mirror ? VERTEX_TEXTURES_MIRRORED : VERTEX_TEXTURES;
         final var normals = cuboid.mirror ? CUBE_NORMALS_MIRRORED :  CUBE_NORMALS;
 
         var vertexCount = 0;
 
-        long ptr = SCRATCH_BUFFER;
+        long ptr = buffer;
 
         for (int quadIndex = 0; quadIndex < NUM_CUBE_FACES; quadIndex++) {
             if (!cuboid.shouldDrawFace(quadIndex)) {
@@ -180,21 +180,25 @@ public class EntityRenderer {
         buildVertexTexCoord(VERTEX_TEXTURES[FACE_POS_X], cuboid.u0, cuboid.v1, cuboid.u1, cuboid.v2);
     }
 
-    private static void prepareNormals(MatrixStack.Entry matrices) {
-        CUBE_NORMALS[FACE_NEG_Y] = MatrixHelper.transformNormal(matrices.getNormalMatrix(), true, Direction.DOWN);
-        CUBE_NORMALS[FACE_POS_Y] = MatrixHelper.transformNormal(matrices.getNormalMatrix(), true, Direction.UP);
-        CUBE_NORMALS[FACE_NEG_Z] = MatrixHelper.transformNormal(matrices.getNormalMatrix(), true, Direction.NORTH);
-        CUBE_NORMALS[FACE_POS_Z] = MatrixHelper.transformNormal(matrices.getNormalMatrix(), true, Direction.SOUTH);
-        CUBE_NORMALS[FACE_POS_X] = MatrixHelper.transformNormal(matrices.getNormalMatrix(), true, Direction.WEST);
-        CUBE_NORMALS[FACE_NEG_X] = MatrixHelper.transformNormal(matrices.getNormalMatrix(), true, Direction.EAST);
+    public static void prepareNormalsIfChanged(MatrixStack.Entry matrices) {
+        if (!matrices.getNormalMatrix().equals(lastNormalMatrix)) {
+            lastNormalMatrix.set(matrices.getNormalMatrix());
 
-        // When mirroring is used, the normals for EAST and WEST are swapped.
-        CUBE_NORMALS_MIRRORED[FACE_NEG_Y] = CUBE_NORMALS[FACE_NEG_Y];
-        CUBE_NORMALS_MIRRORED[FACE_POS_Y] = CUBE_NORMALS[FACE_POS_Y];
-        CUBE_NORMALS_MIRRORED[FACE_NEG_Z] = CUBE_NORMALS[FACE_NEG_Z];
-        CUBE_NORMALS_MIRRORED[FACE_POS_Z] = CUBE_NORMALS[FACE_POS_Z];
-        CUBE_NORMALS_MIRRORED[FACE_POS_X] = CUBE_NORMALS[FACE_NEG_X]; // mirrored
-        CUBE_NORMALS_MIRRORED[FACE_NEG_X] = CUBE_NORMALS[FACE_POS_X]; // mirrored
+            CUBE_NORMALS[FACE_NEG_Y] = MatrixHelper.transformNormal(matrices.getNormalMatrix(), true, Direction.DOWN);
+            CUBE_NORMALS[FACE_POS_Y] = MatrixHelper.transformNormal(matrices.getNormalMatrix(), true, Direction.UP);
+            CUBE_NORMALS[FACE_NEG_Z] = MatrixHelper.transformNormal(matrices.getNormalMatrix(), true, Direction.NORTH);
+            CUBE_NORMALS[FACE_POS_Z] = MatrixHelper.transformNormal(matrices.getNormalMatrix(), true, Direction.SOUTH);
+            CUBE_NORMALS[FACE_POS_X] = MatrixHelper.transformNormal(matrices.getNormalMatrix(), true, Direction.WEST);
+            CUBE_NORMALS[FACE_NEG_X] = MatrixHelper.transformNormal(matrices.getNormalMatrix(), true, Direction.EAST);
+
+            // When mirroring is used, the normals for EAST and WEST are swapped.
+            CUBE_NORMALS_MIRRORED[FACE_NEG_Y] = CUBE_NORMALS[FACE_NEG_Y];
+            CUBE_NORMALS_MIRRORED[FACE_POS_Y] = CUBE_NORMALS[FACE_POS_Y];
+            CUBE_NORMALS_MIRRORED[FACE_NEG_Z] = CUBE_NORMALS[FACE_NEG_Z];
+            CUBE_NORMALS_MIRRORED[FACE_POS_Z] = CUBE_NORMALS[FACE_POS_Z];
+            CUBE_NORMALS_MIRRORED[FACE_POS_X] = CUBE_NORMALS[FACE_NEG_X]; // mirrored
+            CUBE_NORMALS_MIRRORED[FACE_NEG_X] = CUBE_NORMALS[FACE_POS_X]; // mirrored
+        }
     }
 
     private static void buildVertexPosition(Vector3f vector, float x, float y, float z, Matrix4f matrix) {
