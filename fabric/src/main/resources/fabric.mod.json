@@ -102,7 +102,8 @@
     "sodium-extra" : "<0.6.0",
     "sspb" : "<4.0.0",
     "moreculling": "<1.1.1",
-    "simply-no-shading": "<7.6.2"
+    "simply-no-shading": "<7.6.2",
+    "betterend": "<=21.0.11"
   },
   "provides" : [
     "indium"
