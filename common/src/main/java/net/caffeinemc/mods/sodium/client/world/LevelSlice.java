@@ -48,11 +48,6 @@ import java.util.Objects;
  * <p>Object pooling should be used to avoid huge allocations as this class contains many large arrays.</p>
  */
 public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlockView, FabricBlockView {
-    private static final LightLayer[] LIGHT_TYPES = LightLayer.values();
-
-    // The number of blocks in a section.
-    private static final int SECTION_BLOCK_COUNT = 16 * 16 * 16;
-
     // The radius of chunks around the origin chunk that should be copied.
     private static final int NEIGHBOR_CHUNK_RADIUS = 1;
 
@@ -85,7 +80,8 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
     private final SodiumAuxiliaryLightManager[] auxLightManager;
 
     // (Local Section -> Light Arrays) table.
-    private final @Nullable DataLayer[][] lightArrays;
+    private final @Nullable DataLayer[] skyLightArrays;
+    private final @Nullable DataLayer[] blockLightArrays;
 
     // (Local Section -> Block Entity) table.
     private final @Nullable Int2ReferenceMap<BlockEntity>[] blockEntityArrays;
@@ -140,7 +136,9 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
         this.level = level;
 
         this.blockArrays = new BlockState[SECTION_ARRAY_SIZE][];
-        this.lightArrays = new DataLayer[SECTION_ARRAY_SIZE][LIGHT_TYPES.length];
+
+        this.skyLightArrays = new DataLayer[SECTION_ARRAY_SIZE];
+        this.blockLightArrays = new DataLayer[SECTION_ARRAY_SIZE];
 
         this.blockEntityArrays = new Int2ReferenceMap[SECTION_ARRAY_SIZE];
         this.blockEntityRenderDataArrays = new Int2ReferenceMap[SECTION_ARRAY_SIZE];
@@ -175,8 +173,8 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
 
         this.blockArrays[sectionIndex] = section.getBlockData();
 
-        this.lightArrays[sectionIndex][LightLayer.BLOCK.ordinal()] = section.getLightArray(LightLayer.BLOCK);
-        this.lightArrays[sectionIndex][LightLayer.SKY.ordinal()] = section.getLightArray(LightLayer.SKY);
+        this.skyLightArrays[sectionIndex] = section.getLightArray(LightLayer.SKY);
+        this.blockLightArrays[sectionIndex] = section.getLightArray(LightLayer.BLOCK);
 
         this.blockEntityArrays[sectionIndex] = section.getBlockEntityMap();
         this.auxLightManager[sectionIndex] = section.getAuxLightManager();
@@ -189,7 +187,10 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
         // no point in cleaning the pre-allocated arrays (such as block state storage) since we hold the
         // only reference.
         for (int sectionIndex = 0; sectionIndex < SECTION_ARRAY_LENGTH; sectionIndex++) {
-            Arrays.fill(this.lightArrays[sectionIndex], null);
+            this.blockArrays[sectionIndex] = null;
+
+            this.skyLightArrays[sectionIndex] = null;
+            this.blockLightArrays[sectionIndex] = null;
 
             this.blockEntityArrays[sectionIndex] = null;
             this.auxLightManager[sectionIndex] = null;
@@ -242,7 +243,7 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
             return 0;
         }
 
-        var lightArray = this.lightArrays[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)][type.ordinal()];
+        var lightArray = this.getLightArrays(type)[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
 
         if (lightArray == null) {
             // If the array is null, it means the dimension for the current level does not support that light type
@@ -250,6 +251,13 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
         }
 
         return lightArray.get(relBlockX & 15, relBlockY & 15, relBlockZ & 15);
+    }
+
+    private DataLayer[] getLightArrays(LightLayer type) {
+        return switch (type) {
+            case SKY -> this.skyLightArrays;
+            case BLOCK -> this.blockLightArrays;
+        };
     }
 
     @Override
@@ -262,10 +270,10 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
             return 0;
         }
 
-        var lightArrays = this.lightArrays[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
+        var sectionIndex = getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4);
 
-        var skyLightArray = lightArrays[LightLayer.SKY.ordinal()];
-        var blockLightArray = lightArrays[LightLayer.BLOCK.ordinal()];
+        var skyLightArray = this.skyLightArrays[sectionIndex];
+        var blockLightArray = this.blockLightArrays[sectionIndex];
 
         int localBlockX = relBlockX & 15;
         int localBlockY = relBlockY & 15;
