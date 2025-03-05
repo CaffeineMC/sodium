@@ -398,6 +398,6 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
     }
 
     private static boolean isLocalBlockCoordWithinBounds(int x, int y, int z) {
-        return x > 0 && y > 0 && z > 0 && x < 48 && y < 48 && z < 48;
+        return x >= 0 && y >= 0 && z >= 0 && x < 48 && y < 48 && z < 48;
     }
 }
