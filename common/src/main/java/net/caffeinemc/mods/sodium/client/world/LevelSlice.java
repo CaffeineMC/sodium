@@ -139,7 +139,7 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
     public LevelSlice(ClientLevel level) {
         this.level = level;
 
-        this.blockArrays = new BlockState[SECTION_ARRAY_SIZE][SECTION_BLOCK_COUNT];
+        this.blockArrays = new BlockState[SECTION_ARRAY_SIZE][];
         this.lightArrays = new DataLayer[SECTION_ARRAY_SIZE][LIGHT_TYPES.length];
 
         this.blockEntityArrays = new Int2ReferenceMap[SECTION_ARRAY_SIZE];
@@ -149,10 +149,6 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
 
         this.biomeSlice = new LevelBiomeSlice();
         this.biomeColors = new LevelColorCache(this.biomeSlice, Minecraft.getInstance().options.biomeBlendRadius().get());
-
-        for (BlockState[] blockArray : this.blockArrays) {
-            Arrays.fill(blockArray, EMPTY_BLOCK_STATE);
-        }
     }
 
     public void copyData(ChunkRenderContext context) {
