@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.client.world;
 
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import net.caffeinemc.mods.sodium.client.services.*;
+import net.caffeinemc.mods.sodium.client.util.collections.NibbleArray;
 import net.caffeinemc.mods.sodium.client.world.biome.LevelColorCache;
 import net.caffeinemc.mods.sodium.client.world.biome.LevelBiomeSlice;
 import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
@@ -15,7 +16,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.SectionPos;
-import net.minecraft.util.Mth;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.ColorResolver;
 import net.minecraft.world.level.Level;
@@ -24,16 +24,13 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.DataLayer;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
-import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.FluidState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -80,8 +77,8 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
     private final SodiumAuxiliaryLightManager[] auxLightManager;
 
     // (Local Section -> Light Arrays) table.
-    private final @Nullable DataLayer[] skyLightArrays;
-    private final @Nullable DataLayer[] blockLightArrays;
+    private final byte[][] skyLightArrays;
+    private final byte[][] blockLightArrays;
 
     // (Local Section -> Block Entity) table.
     private final @Nullable Int2ReferenceMap<BlockEntity>[] blockEntityArrays;
@@ -137,8 +134,8 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
 
         this.blockArrays = new BlockState[SECTION_ARRAY_SIZE][];
 
-        this.skyLightArrays = new DataLayer[SECTION_ARRAY_SIZE];
-        this.blockLightArrays = new DataLayer[SECTION_ARRAY_SIZE];
+        this.skyLightArrays = new byte[SECTION_ARRAY_SIZE][];
+        this.blockLightArrays = new byte[SECTION_ARRAY_SIZE][];
 
         this.blockEntityArrays = new Int2ReferenceMap[SECTION_ARRAY_SIZE];
         this.blockEntityRenderDataArrays = new Int2ReferenceMap[SECTION_ARRAY_SIZE];
@@ -173,8 +170,8 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
 
         this.blockArrays[sectionIndex] = section.getBlockData();
 
-        this.skyLightArrays[sectionIndex] = section.getLightArray(LightLayer.SKY);
-        this.blockLightArrays[sectionIndex] = section.getLightArray(LightLayer.BLOCK);
+        this.skyLightArrays[sectionIndex] = section.getSkyLightArray();
+        this.blockLightArrays[sectionIndex] = section.getBlockLightArray();
 
         this.blockEntityArrays[sectionIndex] = section.getBlockEntityMap();
         this.auxLightManager[sectionIndex] = section.getAuxLightManager();
@@ -243,21 +240,21 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
             return 0;
         }
 
-        var lightArray = this.getLightArrays(type)[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
+        int localSectionIndex = getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4);
+        int localBlockIndex = getLocalBlockIndex(relBlockX & 15, relBlockY & 15, relBlockZ & 15);
 
-        if (lightArray == null) {
-            // If the array is null, it means the dimension for the current level does not support that light type
-            return 0;
-        }
+        byte[] lightArray = this.getLightArray(localSectionIndex, type);
 
-        return lightArray.get(relBlockX & 15, relBlockY & 15, relBlockZ & 15);
+        return NibbleArray.get(lightArray, localBlockIndex);
     }
 
-    private DataLayer[] getLightArrays(LightLayer type) {
-        return switch (type) {
+    private byte[] getLightArray(int localSectionIndex, LightLayer type) {
+        byte[][] arrays = switch (type) {
             case SKY -> this.skyLightArrays;
             case BLOCK -> this.blockLightArrays;
         };
+
+        return arrays[localSectionIndex];
     }
 
     @Override
@@ -270,17 +267,14 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
             return 0;
         }
 
-        var sectionIndex = getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4);
+        int localSectionIndex = getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4);
+        int localBlockIndex = getLocalBlockIndex(relBlockX & 15, relBlockY & 15, relBlockZ & 15);
 
-        var skyLightArray = this.skyLightArrays[sectionIndex];
-        var blockLightArray = this.blockLightArrays[sectionIndex];
+        var skyLightArray = this.skyLightArrays[localSectionIndex];
+        var blockLightArray = this.blockLightArrays[localSectionIndex];
 
-        int localBlockX = relBlockX & 15;
-        int localBlockY = relBlockY & 15;
-        int localBlockZ = relBlockZ & 15;
-
-        int skyLight = skyLightArray == null ? 0 : skyLightArray.get(localBlockX, localBlockY, localBlockZ) - ambientDarkness;
-        int blockLight = blockLightArray == null ? 0 : blockLightArray.get(localBlockX, localBlockY, localBlockZ);
+        int skyLight = NibbleArray.get(skyLightArray, localBlockIndex) - ambientDarkness;
+        int blockLight = NibbleArray.get(blockLightArray, localBlockIndex);
 
         return Math.max(blockLight, skyLight);
     }

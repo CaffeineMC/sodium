@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMaps;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.services.*;
+import net.caffeinemc.mods.sodium.client.util.collections.NibbleArray;
 import net.caffeinemc.mods.sodium.client.util.iterator.WrappedIterator;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.caffeinemc.mods.sodium.client.world.PalettedContainerROExtension;
@@ -13,7 +14,6 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -26,12 +26,18 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 
 public class ClonedChunkSection {
-    private static final DataLayer DEFAULT_SKY_LIGHT_ARRAY = new DataLayer(15);
-    private static final DataLayer DEFAULT_BLOCK_LIGHT_ARRAY = new DataLayer(0);
-    private static final BlockState[] DEFAULT_BLOCK_DATA = new BlockState[16 * 16 * 16];
+    private static final int SECTION_BLOCK_COUNT = 16 * 16 * 16;
+
+    private static final byte[] DEFAULT_LIGHT_ARRAY_15 = NibbleArray.create(SECTION_BLOCK_COUNT);
+    private static final byte[] DEFAULT_LIGHT_ARRAY_0 = NibbleArray.create(SECTION_BLOCK_COUNT);
+
+    private static final BlockState[] DEFAULT_BLOCK_DATA = new BlockState[SECTION_BLOCK_COUNT];
 
     static {
         Arrays.fill(DEFAULT_BLOCK_DATA, Blocks.AIR.defaultBlockState());
+
+        NibbleArray.fill(DEFAULT_LIGHT_ARRAY_15, 15);
+        NibbleArray.fill(DEFAULT_LIGHT_ARRAY_0, 0);
     }
 
     private final SectionPos pos;
@@ -39,10 +45,12 @@ public class ClonedChunkSection {
     private final @Nullable Int2ReferenceMap<BlockEntity> blockEntityMap;
     private final @Nullable Int2ReferenceMap<Object> blockEntityRenderDataMap;
 
-    private final @Nullable DataLayer[] lightDataArrays;
+    private final byte[] skyLightArray;
+    private final byte[] blockLightArray;
+
     private final @Nullable SodiumAuxiliaryLightManager auxLightManager;
 
-    private final @NotNull BlockState[] blockData;
+    private final BlockState[] blockData;
 
     private final @Nullable PalettedContainerRO<Holder<Biome>> biomeData;
     private final SodiumModelDataContainer modelMap;
@@ -83,7 +91,14 @@ public class ClonedChunkSection {
         this.blockEntityMap = blockEntityMap;
         this.blockEntityRenderDataMap = blockEntityRenderDataMap;
 
-        this.lightDataArrays = copyLightData(level, pos);
+        // Dimensions without sky-light should not have a default-initialized array
+        if (level.dimensionType().hasSkyLight()) {
+            this.skyLightArray = copyLightArray(level, pos, LightLayer.SKY, DEFAULT_LIGHT_ARRAY_15);
+        } else {
+            this.skyLightArray = DEFAULT_LIGHT_ARRAY_0;
+        }
+
+        this.blockLightArray = copyLightArray(level, pos, LightLayer.BLOCK, DEFAULT_LIGHT_ARRAY_0);
     }
 
     private static @Nullable BlockState[] copyBlockData(PalettedContainerRO<BlockState> container) {
@@ -91,8 +106,9 @@ public class ClonedChunkSection {
             return DEFAULT_BLOCK_DATA;
         }
 
-        BlockState[] array = new BlockState[DEFAULT_BLOCK_DATA.length];
-        PalettedContainerROExtension.of(container).sodium$unpack(array);
+        BlockState[] array = new BlockState[SECTION_BLOCK_COUNT];
+        PalettedContainerROExtension.of(container)
+                .sodium$unpack(array);
 
         return array;
     }
@@ -131,37 +147,24 @@ public class ClonedChunkSection {
         return blocks;
     }
 
-    @NotNull
-    private static DataLayer[] copyLightData(Level level, SectionPos pos) {
-        var arrays = new DataLayer[2];
-        arrays[LightLayer.BLOCK.ordinal()] = copyLightArray(level, LightLayer.BLOCK, pos);
-
-        // Dimensions without sky-light should not have a default-initialized array
-        if (level.dimensionType().hasSkyLight()) {
-            arrays[LightLayer.SKY.ordinal()] = copyLightArray(level, LightLayer.SKY, pos);
-        }
-
-        return arrays;
-    }
-
     /**
      * Copies the light data array for the given light type for this chunk, or returns a default-initialized value if
      * the light array is not loaded.
      */
-    @NotNull
-    private static DataLayer copyLightArray(Level level, LightLayer type, SectionPos pos) {
-        var array = level.getLightEngine()
+    private static byte[] copyLightArray(Level level, SectionPos pos, LightLayer type, byte[] defaultValue) {
+        var layer = level.getLightEngine()
                 .getLayerListener(type)
                 .getDataLayerData(pos);
 
-        if (array == null) {
-            array = switch (type) {
-                case SKY -> DEFAULT_SKY_LIGHT_ARRAY;
-                case BLOCK -> DEFAULT_BLOCK_LIGHT_ARRAY;
-            };
+        byte[] data;
+
+        if (layer == null || layer.isDefinitelyHomogenous()) {
+            data = defaultValue;
+        } else {
+            data = layer.getData();
         }
 
-        return array;
+        return data;
     }
 
     @Nullable
@@ -271,8 +274,12 @@ public class ClonedChunkSection {
         return modelMap;
     }
 
-    public @Nullable DataLayer getLightArray(LightLayer lightType) {
-        return this.lightDataArrays[lightType.ordinal()];
+    public byte[] getSkyLightArray() {
+        return this.skyLightArray;
+    }
+
+    public byte[] getBlockLightArray() {
+        return this.blockLightArray;
     }
 
     public long getLastUsedTimestamp() {
