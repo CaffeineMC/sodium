@@ -23,10 +23,16 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
+
 public class ClonedChunkSection {
     private static final DataLayer DEFAULT_SKY_LIGHT_ARRAY = new DataLayer(15);
     private static final DataLayer DEFAULT_BLOCK_LIGHT_ARRAY = new DataLayer(0);
-    private static final PalettedContainer<BlockState> DEFAULT_STATE_CONTAINER = new PalettedContainer<>(Block.BLOCK_STATE_REGISTRY, Blocks.AIR.defaultBlockState(), PalettedContainer.Strategy.SECTION_STATES);
+    private static final BlockState[] DEFAULT_BLOCK_DATA = new BlockState[16 * 16 * 16];
+
+    static {
+        Arrays.fill(DEFAULT_BLOCK_DATA, Blocks.AIR.defaultBlockState());
+    }
 
     private final SectionPos pos;
 
@@ -36,7 +42,7 @@ public class ClonedChunkSection {
     private final @Nullable DataLayer[] lightDataArrays;
     private final @Nullable SodiumAuxiliaryLightManager auxLightManager;
 
-    private final @Nullable PalettedContainerRO<BlockState> blockData;
+    private final @NotNull BlockState[] blockData;
 
     private final @Nullable PalettedContainerRO<Holder<Biome>> biomeData;
     private final SodiumModelDataContainer modelMap;
@@ -46,9 +52,8 @@ public class ClonedChunkSection {
     public ClonedChunkSection(Level level, LevelChunk chunk, @Nullable LevelChunkSection section, SectionPos pos) {
         this.pos = pos;
 
-        PalettedContainerRO<BlockState> blockData = null;
         PalettedContainerRO<Holder<Biome>> biomeData = null;
-
+        BlockState[] blockData = DEFAULT_BLOCK_DATA;
         Int2ReferenceMap<BlockEntity> blockEntityMap = null;
         Int2ReferenceMap<Object> blockEntityRenderDataMap = null;
         SodiumModelDataContainer modelMap = PlatformModelAccess.getInstance().getModelDataContainer(level, pos);
@@ -57,10 +62,11 @@ public class ClonedChunkSection {
         if (section != null) {
             if (!section.hasOnlyAir()) {
                 if (!level.isDebug()) {
-                    blockData = PalettedContainerROExtension.clone(section.getStates());
+                    blockData = copyBlockData(section.getStates());
                 } else {
                     blockData = constructDebugWorldContainer(pos);
                 }
+
                 blockEntityMap = tryCopyBlockEntities(chunk, pos);
                 if (blockEntityMap != null && PlatformBlockAccess.getInstance().platformHasBlockData()) {
                     blockEntityRenderDataMap = copyBlockEntityRenderData(level, blockEntityMap);
@@ -80,35 +86,49 @@ public class ClonedChunkSection {
         this.lightDataArrays = copyLightData(level, pos);
     }
 
+    private static @Nullable BlockState[] copyBlockData(PalettedContainerRO<BlockState> container) {
+        if (container == null) {
+            return DEFAULT_BLOCK_DATA;
+        }
+
+        BlockState[] array = new BlockState[DEFAULT_BLOCK_DATA.length];
+        PalettedContainerROExtension.of(container).sodium$unpack(array);
+
+        return array;
+    }
+
     /**
      * Construct a fake PalettedContainer whose contents match those of the debug world. This is needed to
      * match vanilla's odd approach of short-circuiting getBlockState calls inside its render region class.
      */
     @NotNull
-    private static PalettedContainer<BlockState> constructDebugWorldContainer(SectionPos pos) {
+    private static BlockState[] constructDebugWorldContainer(SectionPos pos) {
         // Fast path for sections which are guaranteed to be empty
-        if (pos.getY() != 3 && pos.getY() != 4)
-            return DEFAULT_STATE_CONTAINER;
+        if (pos.getY() != 3 && pos.getY() != 4) {
+            return DEFAULT_BLOCK_DATA;
+        }
 
         // We use swapUnsafe in the loops to avoid acquiring/releasing the lock on each iteration
-        var container = new PalettedContainer<>(Block.BLOCK_STATE_REGISTRY, Blocks.AIR.defaultBlockState(), PalettedContainer.Strategy.SECTION_STATES);
+        var blocks = DEFAULT_BLOCK_DATA.clone();
+
         if (pos.getY() == 3) {
             // Set the blocks at relative Y 12 (world Y 60) to barriers
             BlockState barrier = Blocks.BARRIER.defaultBlockState();
             for (int z = 0; z < 16; z++) {
                 for (int x = 0; x < 16; x++) {
-                    container.getAndSetUnchecked(x, 12, z, barrier);
+                    blocks[LevelSlice.getLocalBlockIndex(x, 12, z)] = barrier;
                 }
             }
         } else if (pos.getY() == 4) {
             // Set the blocks at relative Y 6 (world Y 70) to the appropriate state from the generator
             for (int z = 0; z < 16; z++) {
                 for (int x = 0; x < 16; x++) {
-                    container.getAndSetUnchecked(x, 6, z, DebugLevelSource.getBlockStateFor(SectionPos.sectionToBlockCoord(pos.getX(), x), SectionPos.sectionToBlockCoord(pos.getZ(), z)));
+                    blocks[LevelSlice.getLocalBlockIndex(x, 6, z)] =
+                            DebugLevelSource.getBlockStateFor(SectionPos.sectionToBlockCoord(pos.getX(), x), SectionPos.sectionToBlockCoord(pos.getZ(), z));
                 }
             }
         }
-        return container;
+        return blocks;
     }
 
     @NotNull
@@ -231,7 +251,7 @@ public class ClonedChunkSection {
         return this.pos;
     }
 
-    public @Nullable PalettedContainerRO<BlockState> getBlockData() {
+    public @NotNull BlockState[] getBlockData() {
         return this.blockData;
     }
 

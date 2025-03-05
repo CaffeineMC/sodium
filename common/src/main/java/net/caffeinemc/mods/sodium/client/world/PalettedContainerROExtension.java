@@ -17,7 +17,6 @@ public interface PalettedContainerROExtension<T> {
     }
 
     void sodium$unpack(T[] values);
-    void sodium$unpack(T[] values, int minX, int minY, int minZ, int maxX, int maxY, int maxZ);
 
     PalettedContainerRO<T> sodium$copy();
 }

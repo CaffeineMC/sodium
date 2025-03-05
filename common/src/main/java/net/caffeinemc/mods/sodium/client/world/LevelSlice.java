@@ -53,11 +53,8 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
     // The number of blocks in a section.
     private static final int SECTION_BLOCK_COUNT = 16 * 16 * 16;
 
-    // The radius of blocks around the origin chunk that should be copied.
-    private static final int NEIGHBOR_BLOCK_RADIUS = 2;
-
     // The radius of chunks around the origin chunk that should be copied.
-    private static final int NEIGHBOR_CHUNK_RADIUS = Mth.roundToward(NEIGHBOR_BLOCK_RADIUS, 16) >> 4;
+    private static final int NEIGHBOR_CHUNK_RADIUS = 1;
 
     // The number of sections on each axis of this slice.
     private static final int SECTION_ARRAY_LENGTH = 1 + (NEIGHBOR_CHUNK_RADIUS * 2);
@@ -102,9 +99,6 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
     // The starting point from which this slice captures blocks
     private int originBlockX, originBlockY, originBlockZ;
 
-    // The volume that this WorldSlice contains
-    private BoundingBox volume;
-
     public static ChunkRenderContext prepare(Level level, SectionPos pos, ClonedChunkSectionCache cache) {
         LevelChunk chunk = level.getChunk(pos.getX(), pos.getZ());
         LevelChunkSection section = chunk.getSections()[level.getSectionIndexFromSectionY(pos.getY())];
@@ -115,13 +109,6 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
         if (section == null || section.hasOnlyAir()) {
             return null;
         }
-
-        BoundingBox box = new BoundingBox(pos.minBlockX() - NEIGHBOR_BLOCK_RADIUS,
-                pos.minBlockY() - NEIGHBOR_BLOCK_RADIUS,
-                pos.minBlockZ() - NEIGHBOR_BLOCK_RADIUS,
-                pos.maxBlockX() + NEIGHBOR_BLOCK_RADIUS,
-                pos.maxBlockY() + NEIGHBOR_BLOCK_RADIUS,
-                pos.maxBlockZ() + NEIGHBOR_BLOCK_RADIUS);
 
         // The min/max bounds of the chunks copied by this slice
         final int minChunkX = pos.getX() - NEIGHBOR_CHUNK_RADIUS;
@@ -145,7 +132,7 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
 
         List<?> renderers = PlatformLevelRenderHooks.getInstance().retrieveChunkMeshAppenders(level, pos.origin());
 
-        return new ChunkRenderContext(pos, sections, box, renderers);
+        return new ChunkRenderContext(pos, sections, renderers);
     }
 
     @SuppressWarnings("unchecked")
@@ -173,8 +160,6 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
         this.originBlockY = SectionPos.sectionToBlockCoord(context.getOrigin().getY() - NEIGHBOR_CHUNK_RADIUS);
         this.originBlockZ = SectionPos.sectionToBlockCoord(context.getOrigin().getZ() - NEIGHBOR_CHUNK_RADIUS);
 
-        this.volume = context.getVolume();
-
         for (int x = 0; x < SECTION_ARRAY_LENGTH; x++) {
             for (int y = 0; y < SECTION_ARRAY_LENGTH; y++) {
                 for (int z = 0; z < SECTION_ARRAY_LENGTH; z++) {
@@ -192,7 +177,7 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
 
         Objects.requireNonNull(section, "Chunk section must be non-null");
 
-        this.unpackBlockData(this.blockArrays[sectionIndex], context, section);
+        this.blockArrays[sectionIndex] = section.getBlockData();
 
         this.lightArrays[sectionIndex][LightLayer.BLOCK.ordinal()] = section.getLightArray(LightLayer.BLOCK);
         this.lightArrays[sectionIndex][LightLayer.SKY.ordinal()] = section.getLightArray(LightLayer.SKY);
@@ -201,35 +186,6 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
         this.auxLightManager[sectionIndex] = section.getAuxLightManager();
         this.blockEntityRenderDataArrays[sectionIndex] = section.getBlockEntityRenderDataMap();
         this.modelMapArrays[sectionIndex] = section.getModelMap();
-    }
-
-    private void unpackBlockData(BlockState[] blockArray, ChunkRenderContext context, ClonedChunkSection section) {
-        if (section.getBlockData() == null) {
-            Arrays.fill(blockArray, EMPTY_BLOCK_STATE);
-            return;
-        }
-
-        var container = PalettedContainerROExtension.of(section.getBlockData());
-
-        SectionPos sectionPos = section.getPosition();
-
-        if (sectionPos.equals(context.getOrigin())) {
-            container.sodium$unpack(blockArray);
-        } else {
-            var bounds = context.getVolume();
-
-            int minBlockX = Math.max(bounds.minX(), sectionPos.minBlockX());
-            int maxBlockX = Math.min(bounds.maxX(), sectionPos.maxBlockX());
-
-            int minBlockY = Math.max(bounds.minY(), sectionPos.minBlockY());
-            int maxBlockY = Math.min(bounds.maxY(), sectionPos.maxBlockY());
-
-            int minBlockZ = Math.max(bounds.minZ(), sectionPos.minBlockZ());
-            int maxBlockZ = Math.min(bounds.maxZ(), sectionPos.maxBlockZ());
-
-            container.sodium$unpack(blockArray, minBlockX & 15, minBlockY & 15, minBlockZ & 15,
-                    maxBlockX & 15, maxBlockY & 15, maxBlockZ & 15);
-        }
     }
 
     public void reset() {
@@ -251,13 +207,13 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
     }
 
     public BlockState getBlockState(int blockX, int blockY, int blockZ) {
-        if (!this.volume.isInside(blockX, blockY, blockZ)) {
-            return EMPTY_BLOCK_STATE;
-        }
-
         int relBlockX = blockX - this.originBlockX;
         int relBlockY = blockY - this.originBlockY;
         int relBlockZ = blockZ - this.originBlockZ;
+
+        if (!isLocalBlockCoordWithinBounds(relBlockX, relBlockY, relBlockZ)) {
+            return EMPTY_BLOCK_STATE;
+        }
 
         return this.blockArrays[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)]
                 [getLocalBlockIndex(relBlockX & 15, relBlockY & 15, relBlockZ & 15)];
@@ -282,13 +238,13 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
 
     @Override
     public int getBrightness(LightLayer type, BlockPos pos) {
-        if (!this.volume.isInside(pos.getX(), pos.getY(), pos.getZ())) {
-            return 0;
-        }
-
         int relBlockX = pos.getX() - this.originBlockX;
         int relBlockY = pos.getY() - this.originBlockY;
         int relBlockZ = pos.getZ() - this.originBlockZ;
+
+        if (!isLocalBlockCoordWithinBounds(relBlockX, relBlockY, relBlockZ)) {
+            return 0;
+        }
 
         var lightArray = this.lightArrays[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)][type.ordinal()];
 
@@ -302,13 +258,13 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
 
     @Override
     public int getRawBrightness(BlockPos pos, int ambientDarkness) {
-        if (!this.volume.isInside(pos.getX(), pos.getY(), pos.getZ())) {
-            return 0;
-        }
-
         int relBlockX = pos.getX() - this.originBlockX;
         int relBlockY = pos.getY() - this.originBlockY;
         int relBlockZ = pos.getZ() - this.originBlockZ;
+
+        if (!isLocalBlockCoordWithinBounds(relBlockX, relBlockY, relBlockZ)) {
+            return 0;
+        }
 
         var lightArrays = this.lightArrays[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
 
@@ -326,18 +282,18 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
     }
 
     @Override
-    public BlockEntity getBlockEntity(BlockPos pos) {
+    public @Nullable BlockEntity getBlockEntity(BlockPos pos) {
         return this.getBlockEntity(pos.getX(), pos.getY(), pos.getZ());
     }
 
-    public BlockEntity getBlockEntity(int blockX, int blockY, int blockZ) {
-        if (!this.volume.isInside(blockX, blockY, blockZ)) {
-            return null;
-        }
-
+    public @Nullable BlockEntity getBlockEntity(int blockX, int blockY, int blockZ) {
         int relBlockX = blockX - this.originBlockX;
         int relBlockY = blockY - this.originBlockY;
         int relBlockZ = blockZ - this.originBlockZ;
+
+        if (!isLocalBlockCoordWithinBounds(relBlockX, relBlockY, relBlockZ)) {
+            return null;
+        }
 
         var blockEntities = this.blockEntityArrays[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
 
@@ -365,13 +321,13 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
 
     @Override
     public @Nullable Object getBlockEntityRenderData(BlockPos pos) {
-        if (!this.volume.isInside(pos.getX(), pos.getY(), pos.getZ())) {
-            return null;
-        }
-
         int relBlockX = pos.getX() - this.originBlockX;
         int relBlockY = pos.getY() - this.originBlockY;
         int relBlockZ = pos.getZ() - this.originBlockZ;
+
+        if (!isLocalBlockCoordWithinBounds(relBlockX, relBlockY, relBlockZ)) {
+            return null;
+        }
 
         var blockEntityRenderDataMap = this.blockEntityRenderDataArrays[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
 
@@ -383,13 +339,13 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
     }
 
     public SodiumModelData getPlatformModelData(BlockPos pos) {
-        if (!this.volume.isInside(pos.getX(), pos.getY(), pos.getZ())) {
-            return SodiumModelData.EMPTY;
-        }
-
         int relBlockX = pos.getX() - this.originBlockX;
         int relBlockY = pos.getY() - this.originBlockY;
         int relBlockZ = pos.getZ() - this.originBlockZ;
+
+        if (!isLocalBlockCoordWithinBounds(relBlockX, relBlockY, relBlockZ)) {
+            return SodiumModelData.EMPTY;
+        }
 
         var modelMap = this.modelMapArrays[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
 
@@ -420,13 +376,13 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
 
     @Override
     public @Nullable Object getBlockEntityRenderAttachment(BlockPos pos) {
-        if (!this.volume.isInside(pos.getX(), pos.getY(), pos.getZ())) {
-            return null;
-        }
-
         int relBlockX = pos.getX() - this.originBlockX;
         int relBlockY = pos.getY() - this.originBlockY;
         int relBlockZ = pos.getZ() - this.originBlockZ;
+
+        if (!isLocalBlockCoordWithinBounds(relBlockX, relBlockY, relBlockZ)) {
+            return null;
+        }
 
         var blockEntityRenderDataMap = this.blockEntityRenderDataArrays[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
 
@@ -435,5 +391,9 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
         }
 
         return blockEntityRenderDataMap.get(getLocalBlockIndex(relBlockX & 15, relBlockY & 15, relBlockZ & 15));
+    }
+
+    private static boolean isLocalBlockCoordWithinBounds(int x, int y, int z) {
+        return x > 0 && y > 0 && z > 0 && x < 48 && y < 48 && z < 48;
     }
 }
