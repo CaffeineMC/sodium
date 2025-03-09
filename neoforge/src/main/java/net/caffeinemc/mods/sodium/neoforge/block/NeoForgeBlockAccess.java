@@ -37,7 +37,7 @@ public class NeoForgeBlockAccess implements PlatformBlockAccess {
 
     @Override
     public boolean platformHasBlockData() {
-        return false;
+        return true;
     }
 
     @Override
