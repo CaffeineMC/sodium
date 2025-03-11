@@ -68,7 +68,6 @@
     "features.render.world.sky.FogRendererMixin",
     "features.render.world.sky.ClientLevelMixin",
     "features.render.world.sky.LevelRendererMixin",
-    "features.shader.uniform.ShaderInstanceMixin",
     "features.textures.NativeImageAccessor",
     "features.textures.SpriteContentsInvoker",
     "features.textures.animations.tracking.ModelBlockRendererMixin",
@@ -89,6 +88,7 @@
     "features.textures.scan.SpriteContentsMixin",
     "features.textures.scan.TextureAtlasSpriteMixin",
     "workarounds.context_creation.WindowMixin",
+    "workarounds.context_creation.RenderSystemMixin",
     "workarounds.event_loop.RenderSystemMixin"
   ]
 }

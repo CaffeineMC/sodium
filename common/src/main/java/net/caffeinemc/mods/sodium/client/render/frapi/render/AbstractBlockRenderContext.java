@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.frapi.render;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.caffeinemc.mods.sodium.client.model.light.LightMode;
 import net.caffeinemc.mods.sodium.client.model.light.LightPipeline;
 import net.caffeinemc.mods.sodium.client.model.light.LightPipelineProvider;
@@ -23,7 +24,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -66,7 +68,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
             clear();
         }
 
-        public void bufferDefaultModel(BakedModel model, BlockState state, Predicate<Direction> cullTest) {
+        public void bufferDefaultModel(BlockStateModel model, BlockState state, Predicate<Direction> cullTest) {
             AbstractBlockRenderContext.this.bufferDefaultModel(model, state, cullTest);
         }
 
@@ -110,6 +112,8 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
      */
     protected SodiumModelData modelData;
 
+    protected boolean allowDowngrade;
+
     private final BlockOcclusionCache occlusionCache = new BlockOcclusionCache();
     private boolean enableCulling = true;
     // Cull cache (as it's checked per-quad instead of once per side like in vanilla)
@@ -118,10 +122,6 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
 
     protected RandomSource random;
     protected long randomSeed;
-    protected final Supplier<RandomSource> randomSupplier = () -> {
-        random.setSeed(randomSeed);
-        return random;
-    };
 
     /**
      * Must be set by the subclass constructor.
@@ -206,34 +206,54 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
         }
     }
 
+    private List<BlockModelPart> parts = new ObjectArrayList<>();
+
     /* Handling of vanilla models - this is the hot path for non-modded models */
-    public void bufferDefaultModel(BakedModel model, @Nullable BlockState state, Predicate<Direction> cullTest) {
+    public void bufferDefaultModel(BlockStateModel model, @Nullable BlockState state, Predicate<Direction> cullTest) {
         MutableQuadViewImpl editorQuad = this.editorQuad;
 
 
         // If there is no transform, we can check the culling face once for all the quads,
         // and we don't need to check for transforms per-quad.
 
-        for (int i = 0; i <= ModelHelper.NULL_FACE_ID; i++) {
-            final Direction cullFace = ModelHelper.faceFromIndex(i);
+        parts.clear();
+        random.setSeed(randomSeed);
+        model.collectParts(random, parts);
 
-            if (cullTest.test(cullFace)) {
-                continue;
+        RenderType renderType = type;
+
+        for (int partIndex = 0; partIndex < parts.size(); partIndex++) {
+            BlockModelPart part = parts.get(partIndex);
+
+            if (PlatformModelAccess.getInstance().getPartRenderType(part, renderType) != renderType) {
+                this.allowDowngrade = false;
             }
+        }
 
-            RandomSource random = this.randomSupplier.get();
-            AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(model, state, modelData, type, slice, pos);
+        for (int partIndex = 0; partIndex < parts.size(); partIndex++) {
+            BlockModelPart part = parts.get(partIndex);
+            this.prepareAoInfo(part.useAmbientOcclusion());
 
-            final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, model, state, cullFace, random, type, modelData);
-            final int count = quads.size();
+            for (int i = 0; i <= ModelHelper.NULL_FACE_ID; i++) {
+                final Direction cullFace = ModelHelper.faceFromIndex(i);
 
-            for (int j = 0; j < count; j++) {
-                final BakedQuad q = quads.get(j);
-                editorQuad.fromVanilla(q, (type == RenderType.tripwire() || type == RenderType.translucent()) ? TRANSLUCENT_MATERIAL : STANDARD_MATERIALS[ao.ordinal()], cullFace);
-                // Call processQuad instead of emit for efficiency
-                // (avoid unnecessarily clearing data, trying to apply transforms, and performing cull check again)
+                if (cullTest.test(cullFace)) {
+                    continue;
+                }
 
-                editorQuad.transformAndEmit();
+                AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, state, modelData, type, slice, pos);
+
+                final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, part, state, cullFace, random, type, modelData);
+                final int count = quads.size();
+
+                for (int j = 0; j < count; j++) {
+                    final BakedQuad q = quads.get(j);
+                    editorQuad.fromVanilla(q, (type == RenderType.tripwire() || type == RenderType.translucent()) ? TRANSLUCENT_MATERIAL : STANDARD_MATERIALS[ao.ordinal()], cullFace);
+                    // Call processQuad instead of emit for efficiency
+                    // (avoid unnecessarily clearing data, trying to apply transforms, and performing cull check again)
+
+                    editorQuad.transformAndEmit();
+                }
             }
         }
 

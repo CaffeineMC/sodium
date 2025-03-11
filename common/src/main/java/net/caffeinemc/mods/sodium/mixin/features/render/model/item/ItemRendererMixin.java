@@ -37,25 +37,7 @@ public abstract class ItemRendererMixin {
      * @reason Avoid Allocations
      * @return JellySquid
      */
-    @WrapOperation(method = "renderModelLists", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/RandomSource;create()Lnet/minecraft/util/RandomSource;"))
-    private static RandomSource renderModelFastRandom(Operation<RandomSource> original) {
-        return ItemRendererMixin.random.get();
-    }
-
-    /**
-     * @reason Avoid Allocations
-     * @return JellySquid
-     */
-    @WrapOperation(method = "renderModelLists", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/Direction;values()[Lnet/minecraft/core/Direction;"))
-    private static Direction[] renderModelFastDirections(Operation<RandomSource> original) {
-        return DirectionUtil.ALL_DIRECTIONS;
-    }
-
-    /**
-     * @reason Avoid Allocations
-     * @return JellySquid
-     */
-    @WrapOperation(method = "renderModelLists", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/ItemRenderer;renderQuadList(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;Ljava/util/List;[III)V"))
+    @WrapOperation(method = "renderItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/ItemRenderer;renderQuadList(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;Ljava/util/List;[III)V"))
     private static void renderModelFast(PoseStack poseStack, VertexConsumer vertexConsumer, List<BakedQuad> quads, int[] colors, int light, int overlay, Operation<Void> original) {
         var writer = VertexConsumerUtils.convertOrLog(vertexConsumer);
 
@@ -76,7 +58,7 @@ public abstract class ItemRendererMixin {
         for (int i = 0; i < quads.size(); i++) {
             BakedQuad bakedQuad = quads.get(i);
 
-            if (bakedQuad.getVertices().length < 32) {
+            if (bakedQuad.vertices().length < 32) {
                 continue; // ignore bad quads
             }
 
@@ -85,7 +67,7 @@ public abstract class ItemRendererMixin {
             int color = 0xFFFFFFFF;
 
             if (bakedQuad.isTinted()) {
-                color = ColorARGB.toABGR(getLayerColorSafe(colors, bakedQuad.getTintIndex()));
+                color = ColorARGB.toABGR(getLayerColorSafe(colors, bakedQuad.tintIndex()));
             }
 
             BakedModelEncoder.writeQuadVertices(writer, matrices, quad, color, light, overlay, BakedModelEncoder.shouldMultiplyAlpha());

@@ -1,7 +1,7 @@
 plugins {
     id("multiloader-platform")
 
-    id("fabric-loom") version ("1.8.9")
+    id("fabric-loom") version ("1.10.1")
 }
 
 base {
@@ -53,7 +53,8 @@ dependencies {
     // Fabric API modules
     addEmbeddedFabricModule("fabric-api-base")
     addEmbeddedFabricModule("fabric-block-view-api-v2")
-    addEmbeddedFabricModule("fabric-renderer-api-v1")
+    //addDependentFabricModule("fabric-renderer-api-v1")
+    modImplementation(files(rootDir.resolve("libs").resolve("fabric-renderer-api-v1-5.0.6+local.jar")))
     addEmbeddedFabricModule("fabric-rendering-data-attachment-v1")
     addEmbeddedFabricModule("fabric-rendering-fluids-v1")
     addEmbeddedFabricModule("fabric-resource-loader-v0")

@@ -30,12 +30,12 @@ import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.fabricmc.fabric.api.renderer.v1.material.BlendMode;
 import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
 import net.fabricmc.fabric.api.renderer.v1.material.ShadeMode;
-import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
+import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
 import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
@@ -57,7 +57,6 @@ public class BlockRenderer extends AbstractBlockRenderContext {
     @Nullable
     private ColorProvider<BlockState> colorProvider;
     private TranslucentGeometryCollector collector;
-    private boolean allowDowngrade;
 
     public BlockRenderer(ColorProviderRegistry colorRegistry, LightPipelineProvider lighters) {
         this.colorProviderRegistry = colorRegistry;
@@ -80,7 +79,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         this.slice = null;
     }
 
-    public void renderModel(BakedModel model, BlockState state, BlockPos pos, BlockPos origin) {
+    public void renderModel(BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin) {
         this.state = state;
         this.pos = pos;
 
@@ -97,27 +96,12 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         type = ItemBlockRenderTypes.getChunkRenderType(state);
 
         this.prepareCulling(true);
-        this.prepareAoInfo(model.useAmbientOcclusion());
 
         modelData = PlatformModelAccess.getInstance().getModelData(slice, model, state, pos, slice.getPlatformModelData(pos));
 
-        Iterable<RenderType> renderTypes = PlatformModelAccess.getInstance().getModelRenderTypes(level, model, state, pos, random, modelData);
         this.allowDowngrade = true;
 
-        Iterator<RenderType> it = renderTypes.iterator();
-        var defaultType = ItemBlockRenderTypes.getChunkRenderType(state);
-
-        while (it.hasNext()) {
-            this.type = it.next();
-
-            // TODO: This can be removed once we have a better solution for https://github.com/CaffeineMC/sodium/issues/2868
-            // If the model contains any materials that are not the default, we can't allow the block to be downgraded. This avoids a potentially incorrect render order if there are overlapping quads.
-            if (it.hasNext() || this.type != defaultType) {
-                this.allowDowngrade = false;
-            }
-
-            ((FabricBakedModel) model).emitBlockQuads(getEmitter(), this.level, state, pos, this.randomSupplier, this::isFaceCulled);
-        }
+        ((FabricBlockStateModel) model).emitQuads(getEmitter(), this.level, pos, state, this.random, this::isFaceCulled);
 
         type = null;
         modelData = SodiumModelData.EMPTY;

@@ -2,7 +2,7 @@ plugins {
     id("multiloader-base")
     id("java-library")
 
-    id("fabric-loom") version ("1.8.9")
+    id("fabric-loom") version ("1.10.1")
 }
 
 base {
@@ -62,7 +62,8 @@ dependencies {
 
     addDependentFabricModule("fabric-api-base")
     addDependentFabricModule("fabric-block-view-api-v2")
-    addDependentFabricModule("fabric-renderer-api-v1")
+    //addDependentFabricModule("fabric-renderer-api-v1")
+    modCompileOnly(files(rootDir.resolve("libs").resolve("fabric-renderer-api-v1-5.0.6+local.jar")))
     addDependentFabricModule("fabric-rendering-data-attachment-v1")
 
     // We need to be careful during pre-launch that we don't touch any Minecraft classes, since other mods

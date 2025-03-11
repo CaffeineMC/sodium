@@ -40,10 +40,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(ItemRenderer.class)
 public abstract class ItemRendererMixin {
-    @Shadow
-    private static void renderModelLists(BakedModel bakedModel, int[] is, int i, int j, PoseStack poseStack, VertexConsumer vertexConsumer) {
-    }
-
     @Unique
     private static final ItemRenderContext.VanillaModelBufferer vanillaBufferer = ItemRendererMixin::renderModelLists;
 

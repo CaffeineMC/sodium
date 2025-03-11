@@ -3,7 +3,7 @@ package net.caffeinemc.mods.sodium.client.services;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
@@ -24,18 +24,6 @@ public interface PlatformModelAccess {
     }
 
     /**
-     * Returns all the render types used by this model.
-     * @param level The level slice.
-     * @param model The {@code BakedModel} currently being drawn.
-     * @param state The block state of the current block.
-     * @param pos The position of the block being rendered.
-     * @param random The random source used by the current block renderer.
-     * @param modelData The platform specific model data.
-     * @return A list of render types used by this model.
-     */
-    Iterable<RenderType> getModelRenderTypes(BlockAndTintGetter level, BakedModel model, BlockState state, BlockPos pos, RandomSource random, SodiumModelData modelData);
-
-    /**
      * Returns a list of quads used by this model.
      * @param level The level slice.
      * @param pos The position of the block being rendered.
@@ -47,7 +35,7 @@ public interface PlatformModelAccess {
      * @param modelData The platform specific model data.
      * @return The list of quads used by the model.
      */
-    List<BakedQuad> getQuads(BlockAndTintGetter level, BlockPos pos, BakedModel model, BlockState state, Direction face, RandomSource random, RenderType renderType, SodiumModelData modelData);
+    List<BakedQuad> getQuads(BlockAndTintGetter level, BlockPos pos, BlockModelPart model, BlockState state, Direction face, RandomSource random, RenderType renderType, SodiumModelData modelData);
 
     /**
      * Gets the container holding model data for this chunk. <b>This operation is not thread safe.</b>
@@ -74,4 +62,6 @@ public interface PlatformModelAccess {
      */
     @ApiStatus.Internal
     SodiumModelData getEmptyModelData();
+
+    RenderType getPartRenderType(BlockModelPart part, RenderType defaultType);
 }

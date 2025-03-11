@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gl.shader;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import net.caffeinemc.mods.sodium.client.gl.GlObject;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
