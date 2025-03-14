@@ -19,34 +19,15 @@ import java.util.function.Supplier;
 
 @Mixin(BlockStateModel.class)
 public interface BakedModelMixin extends FabricBlockStateModel {
-    @Override
-    default void emitItemQuads(QuadEmitter emitter, Supplier<RandomSource> randomSupplier) {
-        if (emitter instanceof ItemRenderContext.ItemEmitter itemE && !itemE.hasTransforms()) {
-            itemE.bufferDefaultModel((BakedModel) this);
-        } else {
-            FabricBakedModel.super.emitItemQuads(emitter, randomSupplier);
-        }
-    }
 
     @Override
     default void emitQuads(QuadEmitter emitter, BlockAndTintGetter blockView, BlockPos pos, BlockState state, RandomSource random, Predicate<@Nullable Direction> cullTest) {
         if (emitter instanceof AbstractBlockRenderContext.BlockEmitter blockE) {
-            blockE.bufferDefaultModel(this, state, cullTest);
+            blockE.bufferDefaultModel((BlockStateModel) this, state, cullTest);
         } else if (emitter instanceof ItemRenderContext.ItemEmitter itemE) {
             throw new IllegalStateException("TODO");
         } else {
             FabricBlockStateModel.super.emitQuads(emitter, blockView, pos, state, random, cullTest);
-        }
-    }
-
-    @Override
-    default void emitBlockQuads(QuadEmitter emitter, BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, Predicate<@Nullable Direction> cullTest) {
-        if (emitter instanceof AbstractBlockRenderContext.BlockEmitter) {
-            ((AbstractBlockRenderContext.BlockEmitter) emitter).bufferDefaultModel((BakedModel) this, state, cullTest);
-        } else if (emitter instanceof ItemRenderContext.ItemEmitter itemE && !itemE.hasTransforms()) {
-            itemE.bufferDefaultModel((BakedModel) this);
-        } else {
-            FabricBakedModel.super.emitBlockQuads(emitter, blockView, state, pos, randomSupplier, cullTest);
         }
     }
 }

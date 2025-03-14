@@ -292,17 +292,17 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
 
     @Override
     public final MutableQuadViewImpl fromVanilla(BakedQuad quad, RenderMaterial material, @Nullable Direction cullFace) {
-        fromVanillaInternal(quad.getVertices(), 0);
+        fromVanillaInternal(quad.vertices(), 0);
         data[baseIndex + HEADER_BITS] = EncodingFormat.cullFace(0, cullFace);
-        nominalFace(quad.getDirection());
-        tintIndex(quad.getTintIndex());
+        nominalFace(quad.direction());
+        tintIndex(quad.tintIndex());
 
         // TODO: Is this the same as hasShade?
-        if (!((BakedQuadView) quad).hasShade()) {
+        if (!((BakedQuadView) (Object) quad).hasShade()) {
             material = RenderMaterialImpl.setDisableDiffuse((RenderMaterialImpl) material, true);
         }
 
-        if (material.ambientOcclusion().orElse(true) && !((BakedQuadView) quad).hasAO()) {
+        if (material.ambientOcclusion().orElse(true) && !((BakedQuadView) (Object) quad).hasAO()) {
             material = RenderMaterialImpl.setAmbientOcclusion((RenderMaterialImpl) material, TriState.FALSE);
         }
 
@@ -310,7 +310,7 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
         tag(0);
 
         // Copy geometry cached inside the quad
-        BakedQuadView bakedView = (BakedQuadView) quad;
+        BakedQuadView bakedView = (BakedQuadView) (Object) quad;
         NormI8.unpack(bakedView.getFaceNormal(), faceNormal);
         data[baseIndex + HEADER_FACE_NORMAL] = bakedView.getFaceNormal();
         int headerBits = EncodingFormat.lightFace(data[baseIndex + HEADER_BITS], bakedView.getLightFace());
@@ -318,7 +318,7 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
         data[baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(headerBits, bakedView.getFlags());
         isGeometryInvalid = false;
 
-        int lightEmission = quad.getLightEmission();
+        int lightEmission = quad.lightEmission();
 
         if (lightEmission > 0) {
             for (int i = 0; i < 4; i++) {
@@ -326,7 +326,7 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
             }
         }
 
-        cachedSprite(quad.getSprite());
+        cachedSprite(quad.sprite());
         return this;
     }
 

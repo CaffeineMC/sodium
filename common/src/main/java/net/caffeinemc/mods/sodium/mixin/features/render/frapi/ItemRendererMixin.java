@@ -19,12 +19,12 @@ package net.caffeinemc.mods.sodium.mixin.features.render.frapi;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.ItemRenderContext;
-import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
+import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Final;
@@ -40,17 +40,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(ItemRenderer.class)
 public abstract class ItemRendererMixin {
-    @Unique
-    private static final ItemRenderContext.VanillaModelBufferer vanillaBufferer = ItemRendererMixin::renderModelLists;
+   // @Unique
+    //private static final ItemRenderContext.VanillaModelBufferer vanillaBufferer = ItemRendererMixin::renderModelLists;
 
     @Unique
-    private static final ThreadLocal<ItemRenderContext> contexts = ThreadLocal.withInitial(() -> new ItemRenderContext(vanillaBufferer));
+    //private static final ThreadLocal<ItemRenderContext> contexts = ThreadLocal.withInitial(() -> new ItemRenderContext(vanillaBufferer));
 
-    @Inject(method = "renderItem", at = @At(value = "HEAD"), cancellable = true)
-    private static void beforeRenderItem(ItemDisplayContext itemDisplayContext, PoseStack poseStack, MultiBufferSource multiBufferSource, int light, int overlay, int[] colors, BakedModel model, RenderType renderType, ItemStackRenderState.FoilType foilType, CallbackInfo ci) {
-        if (!((FabricBakedModel) model).isVanillaAdapter()) {
-            contexts.get().renderModel(itemDisplayContext, poseStack, multiBufferSource, light, overlay, model, colors, renderType, foilType);
-            ci.cancel();
-        }
+    //@Inject(method = "renderItem", at = @At(value = "HEAD"), cancellable = true)
+    private static void beforeRenderItem(ItemDisplayContext itemDisplayContext, PoseStack poseStack, MultiBufferSource multiBufferSource, int light, int overlay, int[] colors, BlockStateModel model, RenderType renderType, ItemStackRenderState.FoilType foilType, CallbackInfo ci) {
+     //   if (!((FabricBlockStateModel) model).isVanillaAdapter()) {
+        //    contexts.get().renderModel(itemDisplayContext, poseStack, multiBufferSource, light, overlay, model, colors, renderType, foilType);
+      //      ci.cancel();
+      //  }
     }
 }

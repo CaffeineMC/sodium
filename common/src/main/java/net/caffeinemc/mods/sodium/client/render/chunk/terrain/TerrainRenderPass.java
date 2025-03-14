@@ -1,5 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.terrain;
 
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.minecraft.client.renderer.RenderType;
 
 public class TerrainRenderPass {
@@ -32,5 +34,13 @@ public class TerrainRenderPass {
 
     public boolean supportsFragmentDiscard() {
         return this.fragmentDiscard;
+    }
+
+    public RenderPipeline getPipeline() {
+        return renderType.getRenderPipeline();
+    }
+
+    public RenderTarget getTarget() {
+        return renderType.getRenderTarget();
     }
 }

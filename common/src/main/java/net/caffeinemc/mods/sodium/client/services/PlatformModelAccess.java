@@ -4,6 +4,7 @@ import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
@@ -54,7 +55,7 @@ public interface PlatformModelAccess {
      * @param originalData The model data, as retrieved by {@code getModelDataContainer()}.
      * @return The true model data, to render with.
      */
-    SodiumModelData getModelData(LevelSlice slice, BakedModel model, BlockState state, BlockPos pos, SodiumModelData originalData);
+    SodiumModelData getModelData(LevelSlice slice, BlockStateModel model, BlockState state, BlockPos pos, SodiumModelData originalData);
 
     /**
      * Should not use. <b>Use {@code SodiumModelData.EMPTY} instead.</b>

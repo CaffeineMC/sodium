@@ -19,11 +19,17 @@ package net.caffeinemc.mods.sodium.mixin.features.render.frapi;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.NonTerrainBlockRenderContext;
+import net.caffeinemc.mods.sodium.client.render.frapi.render.SimpleBlockRenderContext;
+import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
 import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
+import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.EmptyBlockAndTintGetter;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,6 +38,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.List;
 
 /**
  * Entrypoint of the FRAPI pipeline for non-terrain block rendering, for the baked models that require it.
@@ -42,13 +50,10 @@ public abstract class ModelBlockRendererMixin {
     @Final
     private BlockColors blockColors;
 
-    @Unique
-    private final ThreadLocal<NonTerrainBlockRenderContext> contexts = ThreadLocal.withInitial(() -> new NonTerrainBlockRenderContext(blockColors));
-
-    @Inject(method = "tesselateBlock", at = @At("HEAD"), cancellable = true)
-    private void onRender(BlockAndTintGetter blockView, BakedModel model, BlockState state, BlockPos pos, PoseStack matrix, VertexConsumer buffer, boolean cull, RandomSource rand, long seed, int overlay, CallbackInfo ci) {
-        if (!((FabricBakedModel) model).isVanillaAdapter()) {
-            contexts.get().renderModel(blockView, model, state, pos, matrix, buffer, cull, rand, seed, overlay);
+    @Inject(method = "renderModel", at = @At("HEAD"), cancellable = true)
+    private static void onRender(PoseStack.Pose pose, VertexConsumer vertexConsumer, BlockStateModel model, float red, float green, float blue, int light, int overlay, CallbackInfo ci) {
+        if (!((FabricBlockStateModel) model).isVanillaAdapter()) {
+            SimpleBlockRenderContext.POOL.get().bufferModel(pose, layer -> vertexConsumer, model, red, green, blue, light, overlay, EmptyBlockAndTintGetter.INSTANCE, BlockPos.ZERO, Blocks.AIR.defaultBlockState());
             ci.cancel();
         }
     }

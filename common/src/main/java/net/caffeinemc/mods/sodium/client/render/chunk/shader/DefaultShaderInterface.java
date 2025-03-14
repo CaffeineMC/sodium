@@ -1,6 +1,8 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.shader;
 
 import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.opengl.GlTexture;
+import com.mojang.blaze3d.textures.GpuTexture;
 import net.caffeinemc.mods.sodium.client.gl.device.GLRenderDevice;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat2v;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat3v;
@@ -74,9 +76,11 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
     }
 
     @Deprecated(forRemoval = true) // should be handled properly in GFX instead.
-    private void bindTexture(ChunkShaderTextureSlot slot, int textureId) {
+    private void bindTexture(ChunkShaderTextureSlot slot, GpuTexture textureId) {
+        GlTexture tex = (GlTexture) textureId;
         GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + slot.ordinal());
-        GlStateManager._bindTexture(textureId);
+        tex.flushModeChanges();
+        GlStateManager._bindTexture(tex.glId());
 
         var uniform = this.uniformTextures.get(slot);
         uniform.setInt(slot.ordinal());

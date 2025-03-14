@@ -62,7 +62,7 @@ public abstract class ItemRendererMixin {
                 continue; // ignore bad quads
             }
 
-            BakedQuadView quad = (BakedQuadView) bakedQuad;
+            BakedQuadView quad = (BakedQuadView) (Object) bakedQuad;
 
             int color = 0xFFFFFFFF;
 

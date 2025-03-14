@@ -10,6 +10,7 @@ import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -21,9 +22,9 @@ public class ModelBlockRendererMixin {
      * @author embeddedt
      */
     @Inject(method = "putQuadData", at = @At("HEAD"))
-    private void preRenderQuad(BlockAndTintGetter level, BlockState state, BlockPos pos, VertexConsumer vertexConsumer, PoseStack.Pose matrices, BakedQuad quad, float brightness0, float brightness1, float brightness2, float brightness3, int light0, int light1, int light2, int light3, int overlay, CallbackInfo ci) {
-        if (quad.getSprite() != null) {
-            SpriteUtil.INSTANCE.markSpriteActive(quad.getSprite());
+    private void preRenderQuad(BlockAndTintGetter blockAndTintGetter, BlockState blockState, BlockPos blockPos, VertexConsumer vertexConsumer, PoseStack.Pose pose, BakedQuad quad, @Coerce Object commonRenderStorage, int i, CallbackInfo ci) {
+        if (quad.sprite() != null) {
+            SpriteUtil.INSTANCE.markSpriteActive(quad.sprite());
         }
     }
 }
