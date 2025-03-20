@@ -113,12 +113,16 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
         matrices = entry;
         this.overlay = overlay;
 
+        this.prepareAoInfo(true);
+
         this.vertexConsumers = vertexConsumers;
         this.defaultRenderLayer = ItemBlockRenderTypes.getChunkRenderType(state);
         this.red = Mth.clamp(red, 0, 1);
         this.green = Mth.clamp(green, 0, 1);
         this.blue = Mth.clamp(blue, 0, 1);
         this.light = light;
+        this.state = state;
+        this.pos = pos;
 
         random.setSeed(42L);
 

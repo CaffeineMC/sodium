@@ -2,8 +2,13 @@ package net.caffeinemc.mods.sodium.mixin.features.render.frapi;
 
 import net.caffeinemc.mods.sodium.client.render.frapi.render.AbstractBlockRenderContext;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.ItemRenderContext;
+import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
+import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockModelPart;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -14,20 +19,30 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 @Mixin(BlockStateModel.class)
 public interface BakedModelMixin extends FabricBlockStateModel {
-
     @Override
     default void emitQuads(QuadEmitter emitter, BlockAndTintGetter blockView, BlockPos pos, BlockState state, RandomSource random, Predicate<@Nullable Direction> cullTest) {
-        if (emitter instanceof AbstractBlockRenderContext.BlockEmitter blockE) {
-            blockE.bufferDefaultModel((BlockStateModel) this, state, cullTest);
-        } else if (emitter instanceof ItemRenderContext.ItemEmitter itemE) {
-            throw new IllegalStateException("TODO");
-        } else {
-            FabricBlockStateModel.super.emitQuads(emitter, blockView, pos, state, random, cullTest);
+        List<BlockModelPart> parts = ((BlockStateModel)this).collectParts(random);
+        int partCount = parts.size();
+
+        if (emitter instanceof AbstractBlockRenderContext.BlockEmitter be) {
+            RenderType type = ItemBlockRenderTypes.getChunkRenderType(state);
+
+            for (int i = 0; i < partCount; ++i) {
+                if (PlatformModelAccess.getInstance().getPartRenderType(parts.get(i), type) != type) {
+                    be.markInvalidToDowngrade();
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < partCount; ++i) {
+            ((FabricBlockModelPart) parts.get(i)).emitQuads(emitter, cullTest);
         }
     }
 }

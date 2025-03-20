@@ -14,6 +14,7 @@ import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
 import net.caffeinemc.mods.sodium.client.services.SodiumModelData;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
+import net.caffeinemc.mods.sodium.mixin.features.render.frapi.BlockModelPartMixin;
 import net.fabricmc.fabric.api.renderer.v1.material.BlendMode;
 import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
 import net.fabricmc.fabric.api.renderer.v1.material.ShadeMode;
@@ -46,10 +47,11 @@ import java.util.function.Supplier;
  */
 public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     private static final RenderMaterial[] STANDARD_MATERIALS;
-    private static final RenderMaterial TRANSLUCENT_MATERIAL = SodiumRenderer.INSTANCE.materialFinder().blendMode(BlendMode.TRANSLUCENT).find();
+    private static final RenderMaterial[] TRANSLUCENT_MATERIALS;
 
     static {
         STANDARD_MATERIALS = new RenderMaterial[AmbientOcclusionMode.values().length];
+        TRANSLUCENT_MATERIALS = new RenderMaterial[AmbientOcclusionMode.values().length];
 
         AmbientOcclusionMode[] values = AmbientOcclusionMode.values();
         for (int i = 0; i < values.length; i++) {
@@ -60,6 +62,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
             };
 
             STANDARD_MATERIALS[i] = SodiumRenderer.INSTANCE.materialFinder().ambientOcclusion(state).find();
+            TRANSLUCENT_MATERIALS[i] = SodiumRenderer.INSTANCE.materialFinder().ambientOcclusion(state).blendMode(BlendMode.TRANSLUCENT).find();
         }
     }
 
@@ -69,13 +72,17 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
             clear();
         }
 
-        public void bufferDefaultModel(BlockStateModel model, BlockState state, Predicate<Direction> cullTest) {
-            AbstractBlockRenderContext.this.bufferDefaultModel(model, state, cullTest);
-        }
-
         @Override
         public void emitDirectly() {
             renderQuad(this);
+        }
+
+        public void markInvalidToDowngrade() {
+            AbstractBlockRenderContext.this.allowDowngrade = false;
+        }
+
+        public void emitPart(BlockModelPart part, Predicate<@Nullable Direction> cullTest) {
+            AbstractBlockRenderContext.this.bufferDefaultModel(part, cullTest);
         }
     }
 
@@ -174,7 +181,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     protected void prepareAoInfo(boolean modelAo) {
         this.useAmbientOcclusion = Minecraft.useAmbientOcclusion();
         // Ignore the incorrect IDEA warning here.
-        this.defaultLightMode = this.useAmbientOcclusion && modelAo && PlatformBlockAccess.getInstance().getLightEmission(state, level, pos) == 0 ? LightMode.SMOOTH : LightMode.FLAT;
+        this.defaultLightMode = this.useAmbientOcclusion && modelAo && (state != null && PlatformBlockAccess.getInstance().getLightEmission(state, level, pos) == 0) ? LightMode.SMOOTH : LightMode.FLAT;
     }
 
     protected void shadeQuad(MutableQuadViewImpl quad, LightMode lightMode, boolean emissive, ShadeMode shadeMode) {
@@ -198,53 +205,32 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     private List<BlockModelPart> parts = new ObjectArrayList<>();
 
     /* Handling of vanilla models - this is the hot path for non-modded models */
-    public void bufferDefaultModel(BlockStateModel model, @Nullable BlockState state, Predicate<Direction> cullTest) {
+    public void bufferDefaultModel(BlockModelPart part, Predicate<Direction> cullTest) {
         MutableQuadViewImpl editorQuad = this.editorQuad;
+        this.prepareAoInfo(part.useAmbientOcclusion());
 
+        RenderType renderType = PlatformModelAccess.getInstance().getPartRenderType(part, this.defaultRenderType);
 
-        // If there is no transform, we can check the culling face once for all the quads,
-        // and we don't need to check for transforms per-quad.
+        for (int i = 0; i <= ModelHelper.NULL_FACE_ID; i++) {
+            final Direction cullFace = ModelHelper.faceFromIndex(i);
 
-        parts.clear();
-        random.setSeed(state.getSeed(pos));
-        model.collectParts(random, parts);
-
-        RenderType renderType = ItemBlockRenderTypes.getChunkRenderType(state);
-
-        for (int partIndex = 0; partIndex < parts.size(); partIndex++) {
-            BlockModelPart part = parts.get(partIndex);
-
-            if (PlatformModelAccess.getInstance().getPartRenderType(part, renderType) != renderType) {
-                this.allowDowngrade = false;
+            if (cullTest.test(cullFace)) {
+                continue;
             }
-        }
 
-        for (int partIndex = 0; partIndex < parts.size(); partIndex++) {
-            BlockModelPart part = parts.get(partIndex);
-            this.prepareAoInfo(part.useAmbientOcclusion());
+            // TODO NeoForge 1.21.5
+            AmbientOcclusionMode ao = part.useAmbientOcclusion() ? AmbientOcclusionMode.DEFAULT : AmbientOcclusionMode.DISABLED; // PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, state, renderType, slice, pos);
 
-            renderType = PlatformModelAccess.getInstance().getPartRenderType(part, renderType);
+            final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, part, state, cullFace, random, renderType);
+            final int count = quads.size();
 
-            for (int i = 0; i <= ModelHelper.NULL_FACE_ID; i++) {
-                final Direction cullFace = ModelHelper.faceFromIndex(i);
+            for (int j = 0; j < count; j++) {
+                final BakedQuad q = quads.get(j);
+                editorQuad.fromVanilla(q, (renderType == RenderType.tripwire() || renderType == RenderType.translucent()) ? TRANSLUCENT_MATERIALS[ao.ordinal()] : STANDARD_MATERIALS[ao.ordinal()], cullFace);
+                // Call processQuad instead of emit for efficiency
+                // (avoid unnecessarily clearing data, trying to apply transforms, and performing cull check again)
 
-                if (cullTest.test(cullFace)) {
-                    continue;
-                }
-
-                AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, state, renderType, slice, pos);
-
-                final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, part, state, cullFace, random, renderType);
-                final int count = quads.size();
-
-                for (int j = 0; j < count; j++) {
-                    final BakedQuad q = quads.get(j);
-                    editorQuad.fromVanilla(q, (renderType == RenderType.tripwire() || renderType == RenderType.translucent()) ? TRANSLUCENT_MATERIAL : STANDARD_MATERIALS[ao.ordinal()], cullFace);
-                    // Call processQuad instead of emit for efficiency
-                    // (avoid unnecessarily clearing data, trying to apply transforms, and performing cull check again)
-
-                    editorQuad.transformAndEmit();
-                }
+                editorQuad.transformAndEmit();
             }
         }
 

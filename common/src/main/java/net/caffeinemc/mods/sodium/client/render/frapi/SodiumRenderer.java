@@ -91,22 +91,12 @@ public class SodiumRenderer implements Renderer {
 
     @Override
     public void render(ModelBlockRenderer modelBlockRenderer, BlockAndTintGetter blockView, BlockStateModel model, BlockState state, BlockPos pos, PoseStack poseStack, MultiBufferSource multiBufferSource, boolean cull, long seed, int overlay) {
-        if (!((FabricBlockStateModel) model).isVanillaAdapter()) {
-            NonTerrainBlockRenderContext.POOL.get().renderModel(blockView, ((ModelBlockRendererAccessor) modelBlockRenderer).getBlockColors(), model, state, pos, poseStack, multiBufferSource, cull, seed, overlay);
-        } else {
-            VertexConsumer vertexConsumer = multiBufferSource.getBuffer(ItemBlockRenderTypes.getChunkRenderType(state));
-            List<BlockModelPart> modelParts = model.collectParts(new SingleThreadedRandomSource(state.getSeed(pos)));
-            modelBlockRenderer.tesselateBlock(blockView, modelParts, state, pos, poseStack, vertexConsumer, cull, overlay);
-        }
+        NonTerrainBlockRenderContext.POOL.get().renderModel(blockView, ((ModelBlockRendererAccessor) modelBlockRenderer).getBlockColors(), model, state, pos, poseStack, multiBufferSource, cull, seed, overlay);
     }
 
     @Override
     public void render(PoseStack.Pose entry, MultiBufferSource vertexConsumers, BlockStateModel model, float red, float green, float blue, int light, int overlay, BlockAndTintGetter blockView, BlockPos pos, BlockState state) {
-        if (!((FabricBlockStateModel) model).isVanillaAdapter()) {
-            SimpleBlockRenderContext.POOL.get().bufferModel(entry, vertexConsumers, model, red, green, blue, light, overlay, blockView, pos, state);
-        } else {
-            ModelBlockRenderer.renderModel(entry, vertexConsumers.getBuffer(ItemBlockRenderTypes.getChunkRenderType(state)), model, red, green, blue, light, overlay);
-        }
+        SimpleBlockRenderContext.POOL.get().bufferModel(entry, vertexConsumers, model, red, green, blue, light, overlay, blockView, pos, state);
     }
 
     @Override

@@ -83,6 +83,9 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         this.state = state;
         this.pos = pos;
 
+        this.prepareAoInfo(true);
+
+
         this.posOffset.set(origin.getX(), origin.getY(), origin.getZ());
         if (state.hasOffsetFunction()) {
             Vec3 modelOffset = state.getOffset(pos);
@@ -96,11 +99,9 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         this.defaultRenderType = ItemBlockRenderTypes.getChunkRenderType(state);
         this.allowDowngrade = true;
 
-        if (((FabricBlockStateModel) model).isVanillaAdapter()) {
-            bufferDefaultModel(model, state, this::isFaceCulled);
-        } else {
-            ((FabricBlockStateModel) model).emitQuads(getEmitter(), this.level, pos, state, this.random, this::isFaceCulled);
-        }
+
+        random.setSeed(state.getSeed(pos));
+        ((FabricBlockStateModel) model).emitQuads(getEmitter(), this.level, pos, state, this.random, this::isFaceCulled);
 
         this.defaultRenderType = null;
     }

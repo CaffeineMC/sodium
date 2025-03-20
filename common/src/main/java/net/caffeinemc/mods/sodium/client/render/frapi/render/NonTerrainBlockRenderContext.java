@@ -79,12 +79,8 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
         this.lightDataCache.reset(pos, blockView);
         this.prepareCulling(cull);
 
-        if (((FabricBlockStateModel) model).isVanillaAdapter()) {
-            bufferDefaultModel(model, state, this::isFaceCulled);
-        } else {
-            this.random.setSeed(state.getSeed(pos));
-            ((FabricBlockStateModel) model).emitQuads(getEmitter(), blockView, pos, state, this.random, this::isFaceCulled);
-        }
+        random.setSeed(state.getSeed(pos));
+        ((FabricBlockStateModel) model).emitQuads(getEmitter(), blockView, pos, state, this.random, this::isFaceCulled);
 
         this.defaultRenderType = null;
         this.level = null;
