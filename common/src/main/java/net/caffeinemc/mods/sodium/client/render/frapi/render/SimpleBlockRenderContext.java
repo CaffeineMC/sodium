@@ -20,8 +20,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.caffeinemc.mods.sodium.client.render.frapi.helper.ColorHelper;
 import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.immediate.model.BakedModelEncoder;
+import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.LightTexture;
@@ -46,7 +48,6 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
     private final RandomSource random = RandomSource.createNewThreadLocalInstance();
 
     private MultiBufferSource vertexConsumers;
-    private RenderType defaultRenderLayer;
     private float red;
     private float green;
     private float blue;
@@ -63,7 +64,7 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
     protected void processQuad(MutableQuadViewImpl quad) {
         final RenderMaterial mat = quad.material();
         final BlendMode blendMode = mat.blendMode();
-        final RenderType renderLayer = blendMode == BlendMode.DEFAULT ? defaultRenderLayer : blendMode.blockRenderLayer;
+        final RenderType renderLayer = blendMode == BlendMode.DEFAULT ? defaultRenderType : blendMode.blockRenderLayer;
         final VertexConsumer vertexConsumer;
 
         if (renderLayer == lastRenderLayer) {
@@ -72,8 +73,6 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
             lastVertexConsumer = vertexConsumer = vertexConsumers.getBuffer(renderLayer);
             lastRenderLayer = renderLayer;
         }
-
-        VertexBufferWriter writer = VertexBufferWriter.of(vertexConsumer);
 
         if (quad.tintIndex() != -1) {
             final float red = this.red;
@@ -93,20 +92,13 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
             final int light = this.light;
 
             for (int i = 0; i < 4; i++) {
-                quad.lightmap(i, LightTexture.lightCoordsWithEmission(quad.lightmap(i), light));
+                quad.lightmap(i, ColorHelper.maxBrightness(quad.lightmap(i), light));
             }
         }
 
-        bufferQuad(quad, writer);
-    }
+        QuadEncoder.writeQuadVertices(quad, vertexConsumer, overlay, matrices.pose(), matrices.trustedNormals, matrices.normal());
 
-    private void bufferQuad(MutableQuadViewImpl quad, VertexBufferWriter writer) {
-        // TODO: Confirm
-        BakedModelEncoder.writeQuadVertices(writer, matrices, quad, 0xFFFFFFFF, light, overlay, false);
-
-        if (quad.getSprite() != null) {
-            SpriteUtil.INSTANCE.markSpriteActive(quad.getSprite());
-        }
+        SpriteUtil.INSTANCE.markSpriteActive(quad.sprite(SpriteFinderCache.forBlockAtlas()));
     }
 
     public void bufferModel(PoseStack.Pose entry, MultiBufferSource vertexConsumers, BlockStateModel model, float red, float green, float blue, int light, int overlay, BlockAndTintGetter blockView, BlockPos pos, BlockState state) {
@@ -116,11 +108,12 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
         this.prepareAoInfo(true);
 
         this.vertexConsumers = vertexConsumers;
-        this.defaultRenderLayer = ItemBlockRenderTypes.getChunkRenderType(state);
+        this.defaultRenderType = ItemBlockRenderTypes.getChunkRenderType(state);
         this.red = Mth.clamp(red, 0, 1);
         this.green = Mth.clamp(green, 0, 1);
         this.blue = Mth.clamp(blue, 0, 1);
         this.light = light;
+        this.level = blockView;
         this.state = state;
         this.pos = pos;
 
@@ -128,6 +121,9 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
 
         ((FabricBlockStateModel) model).emitQuads(getEmitter(), blockView, pos, state, random, cullFace -> false);
 
+        this.level = null;
+        this.state = null;
+        this.pos = null;
         this.vertexConsumers = null;
         lastRenderLayer = null;
         lastVertexConsumer = null;

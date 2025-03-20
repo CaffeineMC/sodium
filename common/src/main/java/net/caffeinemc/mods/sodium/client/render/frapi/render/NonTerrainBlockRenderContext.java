@@ -85,7 +85,6 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
         this.defaultRenderType = null;
         this.level = null;
         this.lightDataCache.release();
-        this.random = null;
         this.vertexConsumer = null;
     }
 
