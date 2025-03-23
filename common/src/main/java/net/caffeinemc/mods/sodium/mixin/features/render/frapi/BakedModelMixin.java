@@ -27,14 +27,14 @@ import java.util.function.Supplier;
 public interface BakedModelMixin extends FabricBlockStateModel {
     @Override
     default void emitQuads(QuadEmitter emitter, BlockAndTintGetter blockView, BlockPos pos, BlockState state, RandomSource random, Predicate<@Nullable Direction> cullTest) {
-        List<BlockModelPart> parts = ((BlockStateModel)this).collectParts(random);
+        List<BlockModelPart> parts = PlatformModelAccess.getInstance().collectPartsOf((BlockStateModel) this, blockView, pos, state, random, emitter);
         int partCount = parts.size();
 
         if (emitter instanceof AbstractBlockRenderContext.BlockEmitter be) {
             RenderType type = ItemBlockRenderTypes.getChunkRenderType(state);
 
             for (int i = 0; i < partCount; ++i) {
-                if (PlatformModelAccess.getInstance().getPartRenderType(parts.get(i), type) != type) {
+                if (PlatformModelAccess.getInstance().getPartRenderType(parts.get(i), state, type) != type) {
                     be.markInvalidToDowngrade();
                     break;
                 }

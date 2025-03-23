@@ -42,7 +42,7 @@ public abstract class BakedQuadMixin implements BakedQuadView {
     public abstract boolean hasAmbientOcclusion();
 
     @Shadow
-    public abstract int getLightEmission();
+    public abstract int lightEmission();
 
     @Unique
     private int flags;
@@ -140,7 +140,7 @@ public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Override
     public int getMaxLightQuad(int idx) {
-        return LightTexture.lightCoordsWithEmission(getLight(idx), getLightEmission());
+        return LightTexture.lightCoordsWithEmission(getLight(idx), lightEmission());
     }
 
     @Override

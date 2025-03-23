@@ -24,14 +24,4 @@ public abstract class AbstractBlockRenderContextMixin implements QuadEmitter {
     public void assignParent(AbstractBlockRenderContext parent, CallbackInfo ci) {
         this.parent = parent;
     }
-
-    @Override
-    public ModelData getModelData() {
-        return (ModelData) (Object) this.parent.getModelData();
-    }
-
-    @Override
-    public RenderType getRenderType() {
-        return this.parent.getRenderType();
-    }
 }

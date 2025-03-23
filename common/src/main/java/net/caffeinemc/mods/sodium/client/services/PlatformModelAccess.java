@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.services;
 
-import net.caffeinemc.mods.sodium.client.world.LevelSlice;
+import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
@@ -10,7 +10,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.ApiStatus;
@@ -46,22 +45,13 @@ public interface PlatformModelAccess {
     SodiumModelDataContainer getModelDataContainer(Level level, SectionPos sectionPos);
 
     /**
-     * Gets the true model data from the block data in the container.
-     * @param slice The current world slice.
-     * @param model The current model.
-     * @param state The current block.
-     * @param pos The current block position.
-     * @param originalData The model data, as retrieved by {@code getModelDataContainer()}.
-     * @return The true model data, to render with.
-     */
-    SodiumModelData getModelData(LevelSlice slice, BlockStateModel model, BlockState state, BlockPos pos, SodiumModelData originalData);
-
-    /**
      * Should not use. <b>Use {@code SodiumModelData.EMPTY} instead.</b>
      * @return The empty model data for this platform.
      */
     @ApiStatus.Internal
     SodiumModelData getEmptyModelData();
 
-    RenderType getPartRenderType(BlockModelPart part, RenderType defaultType);
+    RenderType getPartRenderType(BlockModelPart part, BlockState state, RenderType defaultType);
+
+    List<BlockModelPart> collectPartsOf(BlockStateModel blockStateModel, BlockAndTintGetter blockView, BlockPos pos, BlockState state, RandomSource random, QuadEmitter emitter);
 }

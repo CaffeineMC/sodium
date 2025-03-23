@@ -36,6 +36,7 @@ import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -67,6 +68,8 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     }
 
     public class BlockEmitter extends MutableQuadViewImpl {
+        private final List<BlockModelPart> cachedList = new ObjectArrayList<>();
+
         {
             data = new int[EncodingFormat.TOTAL_STRIDE];
             clear();
@@ -83,6 +86,10 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
 
         public void emitPart(BlockModelPart part, Predicate<@Nullable Direction> cullTest) {
             AbstractBlockRenderContext.this.bufferDefaultModel(part, cullTest);
+        }
+
+        public List<BlockModelPart> cachedList() {
+            return cachedList;
         }
     }
 
@@ -209,7 +216,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
         MutableQuadViewImpl editorQuad = this.editorQuad;
         this.prepareAoInfo(part.useAmbientOcclusion());
 
-        RenderType renderType = PlatformModelAccess.getInstance().getPartRenderType(part, this.defaultRenderType);
+        RenderType renderType = PlatformModelAccess.getInstance().getPartRenderType(part, state, this.defaultRenderType);
 
         for (int i = 0; i <= ModelHelper.NULL_FACE_ID; i++) {
             final Direction cullFace = ModelHelper.faceFromIndex(i);
