@@ -225,7 +225,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
             }
 
             // TODO NeoForge 1.21.5
-            AmbientOcclusionMode ao = part.useAmbientOcclusion() ? AmbientOcclusionMode.DEFAULT : AmbientOcclusionMode.DISABLED; // PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, state, renderType, slice, pos);
+            AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, state, renderType, slice, pos);
 
             final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, part, state, cullFace, random, renderType);
             final int count = quads.size();
