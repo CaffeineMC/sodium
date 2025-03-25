@@ -9,20 +9,11 @@ base {
 }
 
 repositories {
-    maven("https://maven.pkg.github.com/ims212/ForgifiedFabricAPI") {
+    maven("https://maven.pkg.github.com/ims212/FRAPI-Testing") {
         credentials {
             username = "IMS212"
             // Read only token
             password = "ghp_" + "DEuGv0Z56vnSOYKLCXdsS9svK4nb9K39C1Hn"
-        }
-    }
-
-    maven {
-        name = "Maven for PR #2039" // https://github.com/neoforged/NeoForge/pull/2039
-        url = uri("https://prmaven.neoforged.net/NeoForge/pr2039")
-        content {
-            includeModule("net.neoforged", "neoforge")
-            includeModule("net.neoforged", "testframework")
         }
     }
 
@@ -63,10 +54,8 @@ dependencies {
     }
 
     addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")
-    if (rootDir.resolve("libs").resolve("frapi-neo-1.21.5.jar").exists()) {
-        compileOnly(files(rootDir.resolve("libs").resolve("frapi-neo-1.21.5.jar")))
-    }
-    //jarJar(files(rootDir.resolve("libs").resolve("frapi-neo-1.21.5.jar")))
+    implementation("net.caffeinemc:fabric-renderer-api-v1:6.0.0")
+    jarJar("net.caffeinemc:fabric-renderer-api-v1:6.0.0")
     addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48+73761d2e19")
     addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
 
