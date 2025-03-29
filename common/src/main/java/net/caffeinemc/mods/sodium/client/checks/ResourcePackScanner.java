@@ -38,7 +38,10 @@ public class ResourcePackScanner {
             "rendertype_translucent.json",
             "rendertype_tripwire.vsh",
             "rendertype_tripwire.fsh",
-            "rendertype_tripwire.json"
+            "rendertype_tripwire.json",
+            "rendertype_clouds.vsh",
+            "rendertype_clouds.fsh",
+            "rendertype_clouds.json"
     );
 
     private static final Set<String> SHADER_INCLUDE_BLACKLIST = Set.of(
