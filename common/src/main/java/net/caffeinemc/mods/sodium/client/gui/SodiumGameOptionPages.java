@@ -163,7 +163,13 @@ public class SodiumGameOptionPages {
                 .add(OptionImpl.createBuilder(GraphicsStatus.class, vanillaOpts)
                         .setName(Component.translatable("options.graphics"))
                         .setTooltip(Component.translatable("sodium.options.graphics_quality.tooltip"))
-                        .setControl(option -> new CyclingControl<>(option, GraphicsStatus.class, new Component[] { Component.translatable("options.graphics.fast"), Component.translatable("options.graphics.fancy"), Component.translatable("options.graphics.fabulous") }))
+                        .setControl(option -> {
+                            GraphicsStatus[] allowedValues = GraphicsStatus.values();
+                            if (Minecraft.getInstance().isRunning() && Minecraft.getInstance().getGpuWarnlistManager().isSkippingFabulous()) {
+                                allowedValues = new GraphicsStatus[] { GraphicsStatus.FAST, GraphicsStatus.FANCY };
+                            }
+                            return new CyclingControl<>(option, allowedValues, new Component[] { Component.translatable("options.graphics.fast"), Component.translatable("options.graphics.fancy"), Component.translatable("options.graphics.fabulous") });
+                        })
                         .setBinding(
                                 (opts, value) -> opts.graphicsMode().set(value),
                                 opts -> opts.graphicsMode().get())
