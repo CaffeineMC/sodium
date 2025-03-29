@@ -5,9 +5,13 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.List;
 import net.minecraft.client.renderer.texture.SpriteContents;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(SpriteContents.AnimatedTexture.class)
 public interface AnimatedTextureAccessor {
     @Accessor("frames")
-    List<SpriteContents.FrameInfo> getFrames();
+    List<SpriteContents.FrameInfo> sodium$getFrames();
+
+    @Invoker("uploadFrame")
+    void sodium$uploadFrame(int x, int y, int frameIndex);
 }
