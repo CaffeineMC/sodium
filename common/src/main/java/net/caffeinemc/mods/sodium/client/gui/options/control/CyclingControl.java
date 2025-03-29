@@ -50,6 +50,12 @@ public class CyclingControl<T extends Enum<T>> implements Control<T> {
         }
     }
 
+    public CyclingControl(Option<T> option, T[] allowedValues, Component[] names) {
+        this.option = option;
+        this.allowedValues = allowedValues;
+        this.names = names;
+    }
+
     @Override
     public Option<T> getOption() {
         return this.option;
