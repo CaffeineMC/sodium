@@ -216,6 +216,8 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
         this.prepareAoInfo(part.useAmbientOcclusion());
 
         RenderType renderType = PlatformModelAccess.getInstance().getPartRenderType(part, state, this.defaultRenderType);
+        RenderType defaultType = this.defaultRenderType;
+        this.defaultRenderType = renderType;
 
         for (int i = 0; i <= ModelHelper.NULL_FACE_ID; i++) {
             final Direction cullFace = ModelHelper.faceFromIndex(i);
@@ -241,5 +243,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
         }
 
         editorQuad.clear();
+
+        this.defaultRenderType = defaultType;
     }
 }
