@@ -116,7 +116,9 @@ public class BakedModelEncoder {
 
                 int color = ColorABGR.pack(fR, fG, fB, fA);
 
-                EntityVertex.write(ptr, xt, yt, zt, color, quad.getTexU(i), quad.getTexV(i), overlay, light[i], normal);
+                int newLight = mergeLighting(quad.getMaxLightQuad(i), light[i]);
+
+                EntityVertex.write(ptr, xt, yt, zt, color, quad.getTexU(i), quad.getTexV(i), overlay, newLight, normal);
                 ptr += EntityVertex.STRIDE;
             }
 
