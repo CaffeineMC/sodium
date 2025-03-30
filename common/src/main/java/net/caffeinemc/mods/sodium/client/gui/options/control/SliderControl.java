@@ -45,7 +45,7 @@ public class SliderControl implements Control<Integer> {
         return 170;
     }
 
-    private static class Button extends ControlElement<Integer> {
+    static class Button extends ControlElement<Integer> {
         private static final int THUMB_WIDTH = 2, TRACK_HEIGHT = 1;
 
         private final Rect2i sliderBounds;
