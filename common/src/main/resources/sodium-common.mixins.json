@@ -77,6 +77,7 @@
     "features.textures.animations.tracking.GuiGraphicsMixin",
     "features.textures.animations.tracking.InterpolationDataAccessor",
     "features.textures.animations.tracking.TextureAtlasMixin",
+    "features.textures.animations.tracking.TextureAtlasSpriteTickerImplMixin",
     "features.textures.animations.tracking.TextureSheetParticleMixin",
     "features.textures.animations.tracking.AnimatedTextureAccessor",
     "features.textures.animations.tracking.SpriteContentsFrameInfoAccessor",
