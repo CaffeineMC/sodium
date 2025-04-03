@@ -6,20 +6,18 @@ import com.mojang.blaze3d.platform.Monitor;
 import com.mojang.blaze3d.platform.VideoMode;
 import com.mojang.blaze3d.platform.Window;
 import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
+import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
 import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gui.options.*;
 import net.caffeinemc.mods.sodium.client.gui.options.binding.compat.VanillaBooleanOptionBinding;
-import net.caffeinemc.mods.sodium.client.gui.options.control.*;
+import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatter;
+import net.caffeinemc.mods.sodium.client.gui.options.control.CyclingControl;
+import net.caffeinemc.mods.sodium.client.gui.options.control.SliderControl;
+import net.caffeinemc.mods.sodium.client.gui.options.control.TickBoxControl;
 import net.caffeinemc.mods.sodium.client.gui.options.storage.MinecraftOptionsStorage;
 import net.caffeinemc.mods.sodium.client.gui.options.storage.SodiumOptionsStorage;
-import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
-import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
-import net.minecraft.client.AttackIndicatorStatus;
-import net.minecraft.client.CloudStatus;
-import net.minecraft.client.GraphicsStatus;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.ParticleStatus;
+import net.minecraft.client.*;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
@@ -335,19 +333,6 @@ public class SodiumGameOptionPages {
                         .setFlags(OptionFlag.REQUIRES_GAME_RESTART)
                         .build())
                 .build());
-
-        if (PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
-            groups.add(OptionGroup.createBuilder()
-                    .add(OptionImpl.createBuilder(boolean.class, sodiumOpts)
-                            .setName(Component.translatable("sodium.options.sort_behavior.name"))
-                            .setTooltip(Component.translatable("sodium.options.sort_behavior.tooltip"))
-                            .setControl(TickBoxControl::new)
-                            .setBinding((opts, value) -> opts.performance.sortingEnabled = value, opts -> opts.performance.sortingEnabled)
-                            .setImpact(OptionImpact.LOW)
-                            .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
-                            .build())
-                    .build());
-        }
 
         return new OptionPage(Component.translatable("sodium.options.pages.performance"), ImmutableList.copyOf(groups));
     }
