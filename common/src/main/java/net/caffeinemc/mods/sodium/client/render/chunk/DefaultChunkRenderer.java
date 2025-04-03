@@ -101,7 +101,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
     }
 
     private static boolean isTranslucentRenderPass(TerrainRenderPass renderPass) {
-        return renderPass.isTranslucent() && SodiumClientMod.options().performance.getSortBehavior() != SortBehavior.OFF;
+        return renderPass.isTranslucent() && SodiumClientMod.options().debug.getSortBehavior() != SortBehavior.OFF;
     }
 
     private static void fillCommandBuffer(MultiDrawBatch batch,
