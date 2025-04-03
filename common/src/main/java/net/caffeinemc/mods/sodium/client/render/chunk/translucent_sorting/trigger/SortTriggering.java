@@ -224,7 +224,7 @@ public class SortTriggering {
     }
 
     public void addDebugStrings(List<String> list) {
-        var sortBehavior = SodiumClientMod.options().performance.getSortBehavior();
+        var sortBehavior = SodiumClientMod.options().debug.getSortBehavior();
         if (sortBehavior.getSortMode() == SortBehavior.SortMode.NONE) {
             list.add("TS OFF");
         } else {

@@ -415,7 +415,7 @@ public class RenderSectionManager {
 
             // if zero frame delay is allowed, submit important sorts with the current frame blocking collector.
             // otherwise submit with the collector that the next frame is blocking on.
-            if (SodiumClientMod.options().performance.getSortBehavior().getDeferMode() == DeferMode.ZERO_FRAMES) {
+            if (SodiumClientMod.options().debug.getSortBehavior().getDeferMode() == DeferMode.ZERO_FRAMES) {
                 this.submitSectionTasks(thisFrameBlockingCollector, nextFrameBlockingCollector, deferredCollector);
             } else {
                 this.submitSectionTasks(nextFrameBlockingCollector, nextFrameBlockingCollector, deferredCollector);
@@ -577,7 +577,7 @@ public class RenderSectionManager {
 
         if (section != null) {
             var pendingUpdate = ChunkUpdateType.SORT;
-            var priorityMode = SodiumClientMod.options().performance.getSortBehavior().getPriorityMode();
+            var priorityMode = SodiumClientMod.options().debug.getSortBehavior().getPriorityMode();
             if (priorityMode == PriorityMode.ALL
                     || priorityMode == PriorityMode.NEARBY && this.shouldPrioritizeTask(section, NEARBY_SORT_DISTANCE)) {
                 pendingUpdate = ChunkUpdateType.IMPORTANT_SORT;
