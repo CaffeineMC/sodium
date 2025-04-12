@@ -4,11 +4,12 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.caffeinemc.mods.sodium.client.gl.attribute.GlVertexFormat;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
+import net.caffeinemc.mods.sodium.client.gl.shader.*;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.*;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
-import net.caffeinemc.mods.sodium.client.gl.shader.*;
 import net.minecraft.resources.ResourceLocation;
+
 import java.util.Map;
 
 public abstract class ShaderChunkRenderer implements ChunkRenderer {
@@ -38,7 +39,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
     }
 
     private GlProgram<ChunkShaderInterface> createShader(String path, ChunkShaderOptions options) {
-        ShaderConstants constants = options.constants();
+        ShaderConstants constants = createShaderConstants(options);
 
         GlShader vertShader = ShaderLoader.loadShader(ShaderType.VERTEX,
                 ResourceLocation.fromNamespaceAndPath("sodium", path + ".vsh"), constants);
@@ -60,6 +61,20 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
             vertShader.delete();
             fragShader.delete();
         }
+    }
+
+    private static ShaderConstants createShaderConstants(ChunkShaderOptions options) {
+        ShaderConstants.Builder builder = ShaderConstants.builder();
+        builder.addAll(options.fog().getDefines());
+
+        if (options.pass().supportsFragmentDiscard()) {
+            builder.add("USE_FRAGMENT_DISCARD");
+        }
+
+        builder.add("USE_VERTEX_COMPRESSION"); // TODO: allow compact vertex format to be disabled
+        builder.add("MAX_TEXTURE_LOD_BIAS", String.valueOf(RenderDevice.INSTANCE.getMaxTextureLodBias()));
+
+        return builder.build();
     }
 
     protected void begin(TerrainRenderPass pass) {
