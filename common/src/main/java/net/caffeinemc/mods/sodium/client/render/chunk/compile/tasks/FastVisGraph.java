@@ -9,8 +9,8 @@ import java.util.BitSet;
 
 public class FastVisGraph {
 
+    private static final int DIRECTION_COUNT = Direction.values().length;
     private int empty = 4096;
-
     private final BitSet bitSet = new BitSet(4096);
 
     private static final int DX = (int)Math.pow(16.0, 0.0);
@@ -31,6 +31,17 @@ public class FastVisGraph {
     private static final byte VIS_BIT_PLUS_Y = 1 << 3;
     private static final byte VIS_BIT_MINUS_Z = 1 << 4;
     private static final byte VIS_BIT_PLUS_Z = 1 << 5;
+    private static final Direction[] DIRECTION_PAIRS = Util.make(new Direction[30], (pairs) -> {
+        int index = 0;
+        for (Direction direction1 : Direction.values()) {
+            for (Direction direction2 : Direction.values()) {
+                if (direction2.ordinal() > direction1.ordinal()) {
+                    pairs[index++] = direction1;
+                    pairs[index++] = direction2;
+                }
+            }
+        }
+    });
     private static final byte[] BASE_VISIBILITY = Util.make(new byte[4096], (visibility) -> {
         int index = 0;
         for(int y = 0; y < 16; y++) {
@@ -138,7 +149,7 @@ public class FastVisGraph {
                                         }
                                     }
                                 } else {
-                                    outputMinusZ |= vis;
+                                    outputMinusZ |= (byte)(vis & ~VIS_BIT_PLUS_Y & ~VIS_BIT_MINUS_Z);
                                 }
                                 if (x > 0) {
                                     visibility[index + DY - DX] |= (byte)(vis & ~VIS_BIT_PLUS_Y & ~VIS_BIT_MINUS_X);
@@ -201,7 +212,7 @@ public class FastVisGraph {
                                         }
                                     }
                                 } else {
-                                    outputPlusZ |= vis;
+                                    outputPlusZ |= (byte)(vis & ~VIS_BIT_MINUS_Y & ~VIS_BIT_PLUS_Z);
                                 }
                                 if (x < 15) {
                                     visibility[index - DY + DX] |= (byte)(vis & ~VIS_BIT_MINUS_Y & ~VIS_BIT_PLUS_X);
@@ -217,34 +228,46 @@ public class FastVisGraph {
                 }
             }
 
-            Direction plusX = Direction.EAST;
             Direction minusX = Direction.WEST;
-            Direction plusY = Direction.UP;
+            Direction plusX = Direction.EAST;
             Direction minusY = Direction.DOWN;
-            Direction plusZ = Direction.SOUTH;
+            Direction plusY = Direction.UP;
             Direction minusZ = Direction.NORTH;
+            Direction plusZ = Direction.SOUTH;
+
+            long output = 0;
 
             for (int i = 0; i < VIS_DIRECTIONS.length; i++) {
                 Direction visDirection = VIS_DIRECTIONS[i];
                 int visIndex = 1 << i;
 
                 if ((outputPlusX & visIndex) != 0) {
-                    visibilitySet.set(plusX, visDirection, true);
+                    output |= 1L << (plusX.ordinal() + visDirection.ordinal() * DIRECTION_COUNT);
                 }
                 if ((outputPlusY & visIndex) != 0) {
-                    visibilitySet.set(plusY, visDirection, true);
+                    output |= 1L << (plusY.ordinal() + visDirection.ordinal() * DIRECTION_COUNT);
                 }
                 if ((outputPlusZ & visIndex) != 0) {
-                    visibilitySet.set(plusZ, visDirection, true);
+                    output |= 1L << (plusZ.ordinal() + visDirection.ordinal() * DIRECTION_COUNT);
                 }
                 if ((outputMinusX & visIndex) != 0) {
-                    visibilitySet.set(minusX, visDirection, true);
+                    output |= 1L << (minusX.ordinal() + visDirection.ordinal() * DIRECTION_COUNT);
                 }
                 if ((outputMinusY & visIndex) != 0) {
-                    visibilitySet.set(minusY, visDirection, true);
+                    output |= 1L << (minusY.ordinal() + visDirection.ordinal() * DIRECTION_COUNT);
                 }
                 if ((outputMinusZ & visIndex) != 0) {
-                    visibilitySet.set(minusZ, visDirection, true);
+                    output |= 1L << (minusZ.ordinal() + visDirection.ordinal() * DIRECTION_COUNT);
+                }
+            }
+
+            for (int i = 0; i < DIRECTION_PAIRS.length; i += 2) {
+                Direction one = DIRECTION_PAIRS[i];
+                Direction two = DIRECTION_PAIRS[i+1];
+                long oneTwoBit = 1L << (one.ordinal() + two.ordinal() * DIRECTION_COUNT);
+                long twoOneBit = 1L << (two.ordinal() + one.ordinal() * DIRECTION_COUNT);
+                if ((output & oneTwoBit) != 0 && (output & twoOneBit) != 0) {
+                    visibilitySet.set(one, two, true);
                 }
             }
         }
