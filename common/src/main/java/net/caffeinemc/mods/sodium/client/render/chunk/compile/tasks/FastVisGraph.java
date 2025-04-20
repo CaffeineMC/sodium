@@ -39,15 +39,20 @@ public class FastVisGraph {
                     byte vis = 0;
                     if (x == 0) {
                         vis |= VIS_BIT_MINUS_X;
-                    } else if (x == 15) {
+                    }
+                    if (x == 15) {
                         vis |= VIS_BIT_PLUS_X;
-                    } else if (y == 0) {
+                    }
+                    if (y == 0) {
                         vis |= VIS_BIT_MINUS_Y;
-                    } else if (y == 15) {
+                    }
+                    if (y == 15) {
                         vis |= VIS_BIT_PLUS_Y;
-                    } else if (z == 0) {
+                    }
+                    if (z == 0) {
                         vis |= VIS_BIT_MINUS_Z;
-                    } else if (z == 15) {
+                    }
+                    if (z == 15) {
                         vis |= VIS_BIT_PLUS_Z;
                     }
 
