@@ -70,16 +70,6 @@ public class FastVisGraph {
         return x | (z << 4) | (y << 8);
     }
 
-    public boolean isTrivial() {
-        if (4096 - this.empty < 256) {
-            return true;
-        } else if (this.empty == 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public VisibilitySet resolve() {
         VisibilitySet visibilitySet = new VisibilitySet();
         if (4096 - this.empty < 256) {
