@@ -62,7 +62,7 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
     public ChunkBuildOutput execute(ChunkBuildContext buildContext, CancellationToken cancellationToken) {
         ProfilerFiller profiler = Profiler.get();
         BuiltSectionInfo.Builder renderData = new BuiltSectionInfo.Builder();
-        VisGraph occluder = new VisGraph();
+        FastVisGraph occluder = new FastVisGraph();
 
         ChunkBuildBuffers buffers = buildContext.buffers;
         buffers.init(renderData, this.render.getSectionIndex());
