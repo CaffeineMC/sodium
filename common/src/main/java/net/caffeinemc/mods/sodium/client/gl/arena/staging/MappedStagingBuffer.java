@@ -134,6 +134,13 @@ public class MappedStagingBuffer implements StagingBuffer {
 
     @Override
     public void delete(CommandList commandList) {
+        while (!this.fencedRegions.isEmpty()) {
+            var region = this.fencedRegions.dequeue();
+            var fence = region.fence();
+            fence.sync();
+            fence.delete();
+        }
+
         this.mappedBuffer.delete(commandList);
         this.fallbackStagingBuffer.delete(commandList);
         this.pendingCopies.clear();
