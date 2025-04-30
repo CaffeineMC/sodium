@@ -357,6 +357,8 @@ public class RenderSectionManager {
 
         RenderSystem.colorMask(true, true, true, true);
         RenderSystem.depthMask(true);
+
+        this.pendingStartVisibilityQuery.clear();
     }
 
     public void tickVisibleRenders() {
