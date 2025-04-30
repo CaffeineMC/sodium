@@ -31,6 +31,9 @@ public class RenderSection {
 
     private int incomingDirections;
     private int lastVisibleFrame = -1;
+    private boolean needsVisibilityCheck = false;
+    private boolean failedVisibilityCheck = false;
+    private int visibilityQueryId = -1;
 
     private int adjacentMask;
     public RenderSection
@@ -301,6 +304,30 @@ public class RenderSection {
 
     public void setIncomingDirections(int directions) {
         this.incomingDirections = directions;
+    }
+
+    public boolean needsVisibilityCheck() {
+        return this.needsVisibilityCheck;
+    }
+
+    public void setNeedsVisibilityCheck(boolean needsVisibilityCheck) {
+        this.needsVisibilityCheck = needsVisibilityCheck;
+    }
+
+    public boolean failedVisibilityCheck() {
+        return this.failedVisibilityCheck;
+    }
+
+    public void setFailedVisibilityCheck(boolean failedVisibilityCheck) {
+        this.failedVisibilityCheck = failedVisibilityCheck;
+    }
+
+    public int getVisibilityQueryId() {
+        return this.visibilityQueryId;
+    }
+
+    public void setVisibilityQueryId(int visibilityQueryId) {
+        this.visibilityQueryId = visibilityQueryId;
     }
 
     /**

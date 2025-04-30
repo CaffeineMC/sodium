@@ -211,6 +211,7 @@ public class SodiumWorldRenderer {
 
         this.lastFogDistance = fogDistance;
 
+        this.renderSectionManager.finishVisibilityChecks();
         this.renderSectionManager.updateCameraState(pos, camera);
 
         if (cameraLocationChanged) {
@@ -264,6 +265,7 @@ public class SodiumWorldRenderer {
         if (renderLayer == RenderType.solid()) {
             this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.SOLID, x, y, z);
             this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.CUTOUT, x, y, z);
+            this.renderSectionManager.performVisibilityChecks(matrices, x, y, z);
         } else if (renderLayer == RenderType.translucent()) {
             this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.TRANSLUCENT, x, y, z);
         }

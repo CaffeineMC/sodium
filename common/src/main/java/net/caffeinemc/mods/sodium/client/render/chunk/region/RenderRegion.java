@@ -220,6 +220,10 @@ public class RenderRegion {
         return this.sections[id];
     }
 
+    public RenderSection[] getSections() {
+        return this.sections;
+    }
+
     public DeviceResources getResources() {
         return this.resources;
     }

@@ -4,12 +4,15 @@ import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.caffeinemc.mods.sodium.client.render.chunk.ChunkUpdateType;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
+import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
@@ -20,6 +23,7 @@ import java.util.Queue;
 public class VisibleChunkCollector implements OcclusionCuller.Visitor {
     private final ObjectArrayList<ChunkRenderList> sortedRenderLists;
     private final EnumMap<ChunkUpdateType, ArrayDeque<RenderSection>> sortedRebuildLists;
+    private final List<RenderSection> needVisibilityCheck = new ArrayList<>();
 
     private final int frame;
 
@@ -48,6 +52,9 @@ public class VisibleChunkCollector implements OcclusionCuller.Visitor {
             }
 
             renderList.add(section);
+        }
+        if (RenderSectionManager.DO_VISIBILITY_CHECKS && section.needsVisibilityCheck()) {
+            this.needVisibilityCheck.add(section);
         }
 
         // always add to rebuild lists though, because it might just not be built yet
@@ -107,5 +114,9 @@ public class VisibleChunkCollector implements OcclusionCuller.Visitor {
 
     public Map<ChunkUpdateType, ArrayDeque<RenderSection>> getRebuildLists() {
         return this.sortedRebuildLists;
+    }
+
+    public List<RenderSection> getSectionsThatNeedVisibilityCheck() {
+        return this.needVisibilityCheck;
     }
 }

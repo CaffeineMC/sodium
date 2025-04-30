@@ -2,6 +2,8 @@ package net.caffeinemc.mods.sodium.client.render.chunk.occlusion;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
+import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionFlags;
+import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.util.collections.DoubleBufferedQueue;
@@ -56,7 +58,19 @@ public class OcclusionCuller {
                 continue;
             }
 
+            boolean failedVisibilityCheck = RenderSectionManager.DO_VISIBILITY_CHECKS && (!section.isBuilt() || section.failedVisibilityCheck());
+            if (failedVisibilityCheck) {
+                section.setNeedsVisibilityCheck(true);
+                section.setFailedVisibilityCheck(true);
+            }
+
             visitor.visit(section);
+
+            // todo: don't do this for nearby sections
+            // todo: don't do this if perfect frames are enabled
+            if (failedVisibilityCheck) {
+                continue;
+            }
 
             int connections;
 
@@ -221,7 +235,7 @@ public class OcclusionCuller {
 
     // this bigger chunk section size is only used for frustum-testing nearby sections with large models
     private static final float CHUNK_SECTION_SIZE_NEARBY = CHUNK_SECTION_RADIUS + 2.0f /* bigger model extent */ + 0.125f /* epsilon */;
-    
+
     public static boolean isWithinNearbySectionFrustum(Viewport viewport, RenderSection section) {
         return viewport.isBoxVisible(section.getCenterX(), section.getCenterY(), section.getCenterZ(),
                 CHUNK_SECTION_SIZE_NEARBY, CHUNK_SECTION_SIZE_NEARBY, CHUNK_SECTION_SIZE_NEARBY);

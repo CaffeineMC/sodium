@@ -1,5 +1,10 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMaps;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
@@ -37,6 +42,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.T
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.CameraMovement;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.SortTriggering;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
+import net.caffeinemc.mods.sodium.client.render.immediate.DummyVisibilityCheckRenderer;
 import net.caffeinemc.mods.sodium.client.render.util.RenderAsserts;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
@@ -57,7 +63,10 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 import org.joml.Vector3dc;
+import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL31C;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -71,6 +80,13 @@ public class RenderSectionManager {
     private final Long2ReferenceMap<RenderSection> sectionByPosition = new Long2ReferenceOpenHashMap<>();
 
     private final ConcurrentLinkedDeque<ChunkJobResult<? extends BuilderTaskOutput>> buildResults = new ConcurrentLinkedDeque<>();
+
+    private final IntList availableQueryObjects = new IntArrayList(32);
+    private final List<RenderSection> pendingFinishVisibilityQuery = new ArrayList<>();
+    private List<RenderSection> pendingStartVisibilityQuery = new ArrayList<>();
+    private int lastVisibilityQuery = -1;
+    private int lastTotalVisibilityQueryCount = 0;
+    private int lastPassedVisibilityQueryCount = 0;
 
     private final ChunkRenderer chunkRenderer;
 
@@ -148,6 +164,7 @@ public class RenderSectionManager {
 
         this.renderLists = visitor.createRenderLists(viewport);
         this.taskLists = visitor.getRebuildLists();
+        this.pendingStartVisibilityQuery = visitor.getSectionsThatNeedVisibilityCheck();
     }
 
     private float getSearchDistance(FogParameters fogParameters) {
@@ -247,6 +264,89 @@ public class RenderSectionManager {
         this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z));
 
         commandList.flush();
+    }
+
+    public static final boolean DO_VISIBILITY_CHECKS = true;
+
+    public void finishVisibilityChecks() {
+        if (!DO_VISIBILITY_CHECKS) {
+            return;
+        }
+        if (this.pendingFinishVisibilityQuery.isEmpty()) {
+            return;
+        }
+        if (GL31C.glGetQueryObjecti(this.lastVisibilityQuery, GL31C.GL_QUERY_RESULT_AVAILABLE) == GL31C.GL_FALSE) {
+            return;
+        }
+
+        this.lastTotalVisibilityQueryCount = this.pendingFinishVisibilityQuery.size();
+        this.lastPassedVisibilityQueryCount = 0;
+
+        for (RenderSection section : this.pendingFinishVisibilityQuery) {
+            int query = section.getVisibilityQueryId();
+
+            boolean passed = GL31C.glGetQueryObjecti(query, GL31C.GL_QUERY_RESULT) > 0;
+            section.setFailedVisibilityCheck(!passed);
+            section.setVisibilityQueryId(-1);
+
+            if (passed) {
+                this.lastPassedVisibilityQueryCount += 1;
+            }
+
+            this.availableQueryObjects.add(query);
+
+        }
+
+        this.pendingFinishVisibilityQuery.clear();
+        this.lastVisibilityQuery = -1;
+    }
+
+    public void performVisibilityChecks(ChunkRenderMatrices matrices, double x, double y, double z) {
+        if (!DO_VISIBILITY_CHECKS) {
+            return;
+        }
+        if (this.pendingStartVisibilityQuery.isEmpty()) {
+            return;
+        }
+        if (!this.pendingFinishVisibilityQuery.isEmpty()) {
+            this.finishVisibilityChecks();
+            if (!this.pendingFinishVisibilityQuery.isEmpty()) {
+                return;
+            }
+        }
+
+        Matrix4f modelView = new Matrix4f(matrices.modelView());
+
+        RenderSystem.colorMask(false, false, false, false);
+        RenderSystem.depthMask(false);
+
+        DummyVisibilityCheckRenderer.setup(new Matrix4f(matrices.projection()));
+
+        for (RenderSection section : this.pendingStartVisibilityQuery) {
+            section.setNeedsVisibilityCheck(false);
+
+            int query;
+            if (this.availableQueryObjects.isEmpty()) {
+                query = GL31C.glGenQueries();
+            } else {
+                query = this.availableQueryObjects.removeInt(this.availableQueryObjects.size() - 1);
+            }
+
+            GL30C.glBeginQuery(GL31C.GL_SAMPLES_PASSED, query);
+
+            DummyVisibilityCheckRenderer.render(section.getOriginX() - x, section.getOriginY() - y, section.getOriginZ() - z, modelView);
+
+            GL31C.glEndQuery(GL31C.GL_SAMPLES_PASSED);
+
+            section.setVisibilityQueryId(query);
+            this.pendingFinishVisibilityQuery.add(section);
+            this.lastVisibilityQuery = query;
+        }
+
+        DummyVisibilityCheckRenderer.teardown();
+
+        RenderSystem.colorMask(true, true, true, true);
+        RenderSystem.depthMask(true);
     }
 
     public void tickVisibleRenders() {
@@ -718,6 +818,8 @@ public class RenderSectionManager {
         );
 
         this.sortTriggering.addDebugStrings(list);
+
+        list.add(String.format("Visibility Queries: P=%d T=%d", this.lastPassedVisibilityQueryCount, this.lastTotalVisibilityQueryCount));
 
         return list;
     }
