@@ -65,8 +65,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3dc;
-import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL31C;
+import org.lwjgl.opengl.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -81,12 +80,14 @@ public class RenderSectionManager {
 
     private final ConcurrentLinkedDeque<ChunkJobResult<? extends BuilderTaskOutput>> buildResults = new ConcurrentLinkedDeque<>();
 
+    // todo: move all of this into a different class
     private final IntList availableQueryObjects = new IntArrayList(32);
     private final List<RenderSection> pendingFinishVisibilityQuery = new ArrayList<>();
     private List<RenderSection> pendingStartVisibilityQuery = new ArrayList<>();
     private int lastVisibilityQuery = -1;
     private int lastTotalVisibilityQueryCount = 0;
     private int lastPassedVisibilityQueryCount = 0;
+    private int bestOcclusionQueryObjectType = GL31C.GL_SAMPLES_PASSED;
 
     private final ChunkRenderer chunkRenderer;
 
@@ -136,6 +137,15 @@ public class RenderSectionManager {
 
         for (var type : ChunkUpdateType.values()) {
             this.taskLists.put(type, new ArrayDeque<>());
+        }
+
+        var capabilities = RenderDevice.INSTANCE.getCapabilities();
+        if (capabilities.OpenGL43) {
+            this.bestOcclusionQueryObjectType = GL43.GL_ANY_SAMPLES_PASSED_CONSERVATIVE;
+        } else if (capabilities.OpenGL33 || capabilities.GL_ARB_occlusion_query2) {
+            this.bestOcclusionQueryObjectType = GL33.GL_ANY_SAMPLES_PASSED;
+        } else {
+            this.bestOcclusionQueryObjectType = GL15.GL_SAMPLES_PASSED;
         }
     }
 
@@ -332,11 +342,11 @@ public class RenderSectionManager {
                 query = this.availableQueryObjects.removeInt(this.availableQueryObjects.size() - 1);
             }
 
-            GL30C.glBeginQuery(GL31C.GL_SAMPLES_PASSED, query);
+            GL30C.glBeginQuery(this.bestOcclusionQueryObjectType, query);
 
             DummyVisibilityCheckRenderer.render(section.getOriginX() - x, section.getOriginY() - y, section.getOriginZ() - z, modelView);
 
-            GL31C.glEndQuery(GL31C.GL_SAMPLES_PASSED);
+            GL31C.glEndQuery(this.bestOcclusionQueryObjectType);
 
             section.setVisibilityQueryId(query);
             this.pendingFinishVisibilityQuery.add(section);
