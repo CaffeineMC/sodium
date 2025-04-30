@@ -39,7 +39,7 @@ public class OcclusionCuller {
 
         int iteration = 0;
         while (queues.flip()) {
-            processQueue(visitor, viewport, searchDistance, useOcclusionCulling, useVisibilityCulling && iteration >= 2, frame, queues.read(), queues.write());
+            processQueue(visitor, viewport, searchDistance, useOcclusionCulling, useVisibilityCulling && iteration >= 1, frame, queues.read(), queues.write());
             iteration += 1;
         }
 
