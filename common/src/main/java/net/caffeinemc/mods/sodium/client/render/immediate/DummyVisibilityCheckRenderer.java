@@ -31,7 +31,7 @@ public class DummyVisibilityCheckRenderer {
 
         RenderSystem.setShader(DUMMY_VISIBILITY_CHECK_SHADER);
 
-        RenderSystem.disableCull();
+        RenderSystem.enableCull();
         RenderSystem.enableDepthTest();
 
         vertexBuffer.bind();
@@ -58,11 +58,6 @@ public class DummyVisibilityCheckRenderer {
         program.clear();
 
         VertexBuffer.unbind();
-
-        // State teardown
-        RenderSystem.depthFunc(GL32C.GL_LEQUAL);
-        RenderSystem.disableDepthTest();
-        RenderSystem.enableCull();
     }
 
     private static VertexBuffer rebuildGeometry()
