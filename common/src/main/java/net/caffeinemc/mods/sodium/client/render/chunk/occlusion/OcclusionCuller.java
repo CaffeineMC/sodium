@@ -34,10 +34,13 @@ public class OcclusionCuller {
         final var queues = this.queue;
         queues.reset();
 
+        boolean useVisibilityCulling = true; // todo: setting
         this.init(visitor, queues.write(), viewport, searchDistance, useOcclusionCulling, frame);
 
+        int iteration = 0;
         while (queues.flip()) {
-            processQueue(visitor, viewport, searchDistance, useOcclusionCulling, frame, queues.read(), queues.write());
+            processQueue(visitor, viewport, searchDistance, useOcclusionCulling, useVisibilityCulling && iteration >= 2, frame, queues.read(), queues.write());
+            iteration += 1;
         }
 
         this.addNearbySections(visitor, viewport, searchDistance, frame);
@@ -47,6 +50,7 @@ public class OcclusionCuller {
                                      Viewport viewport,
                                      float searchDistance,
                                      boolean useOcclusionCulling,
+                                     boolean useVisibilityCulling,
                                      int frame,
                                      ReadQueue<RenderSection> readQueue,
                                      WriteQueue<RenderSection> writeQueue)
@@ -58,7 +62,7 @@ public class OcclusionCuller {
                 continue;
             }
 
-            boolean failedVisibilityCheck = RenderSectionManager.DO_VISIBILITY_CHECKS && (!section.isBuilt() || section.failedVisibilityCheck());
+            boolean failedVisibilityCheck = RenderSectionManager.DO_VISIBILITY_CHECKS && useVisibilityCulling && (!section.isBuilt() || section.failedVisibilityCheck());
             if (failedVisibilityCheck) {
                 section.setNeedsVisibilityCheck(true);
                 section.setFailedVisibilityCheck(true);
@@ -66,7 +70,6 @@ public class OcclusionCuller {
 
             visitor.visit(section);
 
-            // todo: don't do this for nearby sections
             // todo: don't do this if perfect frames are enabled
             if (failedVisibilityCheck) {
                 continue;
