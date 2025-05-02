@@ -57,7 +57,8 @@ public class NormalPlanes {
         var size = this.relativeDistancesSet.size();
         this.relativeDistances = new float[this.relativeDistancesSet.size()];
         int i = 0;
-        for (float relDistance : this.relativeDistancesSet) {
+        for (var it = this.relativeDistancesSet.iterator(); it.hasNext(); ) {
+            float relDistance = it.nextFloat();
             this.relativeDistances[i++] = relDistance;
 
             long distanceBits = Double.doubleToLongBits(relDistance);

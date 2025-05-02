@@ -245,7 +245,8 @@ abstract class InnerPartitionBSPNode extends BSPNode {
 
             // collect all the geometry's start and end points in this direction
             points.clear();
-            for (int quadIndex : indexes) {
+            for (int i = 0, size = indexes.size(); i < size; i++) {
+                int quadIndex = indexes.getInt(i);
                 var quad = workspace.quads[quadIndex];
                 var extents = quad.getExtents();
                 var posExtent = extents[axis];
@@ -288,7 +289,8 @@ abstract class InnerPartitionBSPNode extends BSPNode {
             IntArrayList quadsBefore = null;
             IntArrayList quadsOn = null;
             int thickness = 0;
-            for (long point : points) {
+            for (int i = 0, size = points.size(); i < size; i++) {
+                long point = points.getLong(i);
                 switch (decodeType(point)) {
                     case INTERVAL_START -> {
                         // unless at the start, flush if there's a gap
