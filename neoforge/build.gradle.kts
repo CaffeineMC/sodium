@@ -68,9 +68,6 @@ val modJar = tasks.register<Jar>("modJar") {
     from(sourceSets["mod"].output)
 
     from(rootDir.resolve("LICENSE.md"))
-    filesMatching(listOf("META-INF/neoforge.mods.toml")) {
-        expand(mapOf("version" to inputs.properties["version"]))
-    }
 
     archiveClassifier = "mod"
 }
@@ -145,9 +142,6 @@ tasks {
     }
 
     getByName<ProcessResources>("processModResources") {
-        eachFile {
-            println(path)
-        }
         filesMatching(listOf("META-INF/neoforge.mods.toml")) {
             expand(mapOf("version" to BuildConfig.createVersionString(rootProject)))
         }
