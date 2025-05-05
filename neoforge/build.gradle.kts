@@ -58,41 +58,42 @@ dependencies {
     addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48+73761d2e19")
     addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
 
-    jarJar(project(":neoforge", "service"))
+    jarJar(project(":neoforge", "mod"))
 }
 
-val serviceJar = tasks.register<Jar>("serviceJar") {
-    from(configurationCommonServiceJava)
-    from(configurationCommonServiceResources)
+val modJar = tasks.register<Jar>("modJar") {
+    from(configurationCommonModJava)
+    from(configurationCommonModResources)
 
-    from(sourceSets["service"].output)
+    from(sourceSets["mod"].output)
 
     from(rootDir.resolve("LICENSE.md"))
+    filesMatching(listOf("META-INF/neoforge.mods.toml")) {
+        expand(mapOf("version" to inputs.properties["version"]))
+    }
 
-    manifest.attributes["FMLModType"] = "LIBRARY"
-
-    archiveClassifier = "service"
+    archiveClassifier = "mod"
 }
 
-val configurationService: Configuration = configurations.create("service") {
+val configurationService: Configuration = configurations.create("mod") {
     isCanBeConsumed = true
     isCanBeResolved = true
 
     outgoing {
-        artifact(serviceJar)
+        artifact(modJar)
     }
 }
 
 sourceSets {
-    named("service") {
-        compileClasspath = sourceSets["main"].compileClasspath
-        runtimeClasspath = sourceSets["main"].runtimeClasspath
-
+    named("main") {
         compileClasspath += configurationCommonServiceJava
         runtimeClasspath += configurationCommonServiceJava
     }
 
-    main {
+    create("mod") {
+        compileClasspath = sourceSets["main"].compileClasspath
+        runtimeClasspath = sourceSets["main"].runtimeClasspath
+
         compileClasspath += configurationCommonModJava
         runtimeClasspath += configurationCommonModJava
     }
@@ -131,12 +132,25 @@ neoForge {
 
 tasks {
     jar {
-        from(configurationCommonModJava)
+        from(configurationCommonServiceJava)
         destinationDirectory.set(file(rootProject.layout.buildDirectory).resolve("mods"))
+        from(sourceSets.getByName("mod").output.resourcesDir!!.resolve("META-INF/neoforge.mods.toml")) {
+            into("META-INF")
+        }
+        from(project(":common").sourceSets.main.get().output.resourcesDir!!.resolve("sodium-icon.png"))
     }
 
     processResources {
-        from(configurationCommonModResources)
+        from(configurationCommonServiceResources)
+    }
+
+    getByName<ProcessResources>("processModResources") {
+        eachFile {
+            println(path)
+        }
+        filesMatching(listOf("META-INF/neoforge.mods.toml")) {
+            expand(mapOf("version" to BuildConfig.createVersionString(rootProject)))
+        }
     }
 }
 
