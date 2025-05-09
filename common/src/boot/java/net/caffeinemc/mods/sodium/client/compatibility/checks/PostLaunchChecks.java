@@ -26,7 +26,11 @@ public class PostLaunchChecks {
             String clientVersion = System.getProperty("minecraft.version", "unknown");
 
             LOGGER.error("Pojav or equivalent user detected. Developers, Ignore their support request. (ID: {}, Version: {})", randomId, clientVersion);
-            LOGGER.error("Give issue opener This link https://github.com/CaffeineMC/sodium/issues/1916")
+            LOGGER.error("Closing Game In 5 second :(")
+            throw new RuntimeException("https://github.com/CaffeineMC/sodium/issues/1916" + 
+                                       "Pojav or equivalent user detected. Developers, Ignore their support request. (ID: {}, Version: {})", randomId, clientVersion
+                                      + "It appears that you are using PojavLauncher, which is not supported when " +
+                                        "using Sodium. Please check your mods list.");
         }
     }
 
