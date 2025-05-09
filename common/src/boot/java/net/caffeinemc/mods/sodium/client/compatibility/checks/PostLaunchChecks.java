@@ -8,6 +8,8 @@ import net.caffeinemc.mods.sodium.client.platform.NativeWindowHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
+
 /**
  * Performs OpenGL driver validation after the game creates an OpenGL context. This runs immediately after OpenGL
  * context creation, and uses the implementation details of the OpenGL context to perform validation.
@@ -18,15 +20,16 @@ public class PostLaunchChecks {
     public static void onContextInitialized(NativeWindowHandle window, GlContextInfo context) {
         GraphicsDriverChecks.postContextInit(window, context);
         NvidiaWorkarounds.applyContextChanges(context);
-
-        // FIXME: This can be determined earlier, but we can't access the GUI classes in pre-launch
+        
         if (isUsingPojavLauncher()) {
-            throw new RuntimeException("It appears that you are using PojavLauncher, which is not supported when " +
-                    "using Sodium. Please check your mods list.");
+            String randomId = UUID.randomUUID().toString();
+            String clientVersion = System.getProperty("minecraft.version", "unknown");
+
+            LOGGER.warn("Pojav or equivalent user detected. Developers, Ignore their support request. (ID: {}, Version: {})", randomId, clientVersion);
         }
     }
 
-    // https://github.com/CaffeineMC/sodium/issues/1916
+    // I removed the exception instead i put log as Tell them and developer as no support
     private static boolean isUsingPojavLauncher() {
         if (System.getenv("POJAV_RENDERER") != null) {
             LOGGER.warn("Detected presence of environment variable POJAV_LAUNCHER, which seems to indicate we are running on Android");
