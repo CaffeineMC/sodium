@@ -25,7 +25,7 @@ public class PostLaunchChecks {
             String randomId = UUID.randomUUID().toString();
             String clientVersion = System.getProperty("minecraft.version", "unknown");
 
-            LOGGER.warn("Pojav or equivalent user detected. Developers, Ignore their support request. (ID: {}, Version: {})", randomId, clientVersion);
+            LOGGER.warn("Pojav or equivalent user detected. Developers, Ignore their support request. (ID: {}, Version: {}) ignore.as.relateto.1068", randomId, clientVersion);
         }
     }
 
