@@ -3,13 +3,15 @@ package net.caffeinemc.mods.sodium.client.render.chunk.shader;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTexture;
 import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import net.caffeinemc.mods.sodium.client.gl.device.GLRenderDevice;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat2v;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat3v;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformInt;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformMatrix4f;
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl.CompactChunkVertex;
-import net.caffeinemc.mods.sodium.client.util.TextureUtil;
+import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.mixin.core.render.texture.TextureAtlasAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -47,10 +49,10 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
     }
 
     @Override // the shader interface should not modify pipeline state
-    public void setupState() {
+    public void setupState(TerrainRenderPass pass, FogParameters parameters) {
         // TODO: Bind to these textures directly rather than using fragile RenderSystem state
-        this.bindTexture(ChunkShaderTextureSlot.BLOCK, TextureUtil.getBlockTextureId());
-        this.bindTexture(ChunkShaderTextureSlot.LIGHT, TextureUtil.getLightTextureId());
+        this.bindTexture(ChunkShaderTextureSlot.BLOCK, pass.getAtlas());
+        this.bindTexture(ChunkShaderTextureSlot.LIGHT, Minecraft.getInstance().gameRenderer.lightTexture().getTextureView());
 
         var textureAtlas = (TextureAtlasAccessor) Minecraft.getInstance()
                 .getTextureManager()
@@ -67,7 +69,7 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
                 (float) (subTexelOffset - (((1.0D / textureAtlas.getHeight()) / subTexelPrecision)))
         );
 
-        this.fogShader.setup();
+        this.fogShader.setup(parameters);
     }
 
     @Override // the shader interface should not modify pipeline state
@@ -76,11 +78,13 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
     }
 
     @Deprecated(forRemoval = true) // should be handled properly in GFX instead.
-    private void bindTexture(ChunkShaderTextureSlot slot, GpuTexture textureId) {
-        GlTexture tex = (GlTexture) textureId;
+    private void bindTexture(ChunkShaderTextureSlot slot, GpuTextureView textureView) {
+        GlTexture tex = (GlTexture) textureView.texture();
         GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + slot.ordinal());
         GlStateManager._bindTexture(tex.glId());
-        tex.flushModeChanges();
+        GlStateManager._texParameter(GL32C.GL_TEXTURE_2D, 33084, textureView.baseMipLevel());
+        GlStateManager._texParameter(GL32C.GL_TEXTURE_2D, 33085, textureView.baseMipLevel() + textureView.mipLevels() - 1);
+        tex.flushModeChanges(GL32C.GL_TEXTURE_2D);
 
         var uniform = this.uniformTextures.get(slot);
         uniform.setInt(slot.ordinal());

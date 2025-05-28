@@ -4,6 +4,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.terrain.DefaultTerrainRend
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.parameters.AlphaCutoffParameter;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 
@@ -15,11 +16,11 @@ public class DefaultMaterials {
     public static final Material TRIPWIRE = new Material(DefaultTerrainRenderPasses.TRANSLUCENT, AlphaCutoffParameter.ONE_TENTH, true);
 
     public static Material forBlockState(BlockState state) {
-        return forRenderLayer(ItemBlockRenderTypes.getChunkRenderType(state));
+        return forChunkLayer(ItemBlockRenderTypes.getChunkRenderType(state));
     }
 
     public static Material forFluidState(FluidState state) {
-        return forRenderLayer(ItemBlockRenderTypes.getRenderLayer(state));
+        return forChunkLayer(ItemBlockRenderTypes.getRenderLayer(state));
     }
 
     public static Material forRenderLayer(RenderType layer) {
@@ -31,10 +32,20 @@ public class DefaultMaterials {
             return CUTOUT_MIPPED;
         } else if (layer == RenderType.tripwire()) {
             return TRIPWIRE;
-        } else if (layer == RenderType.translucent()) {
+        } else if (layer == RenderType.translucentMovingBlock()) {
             return TRANSLUCENT;
         }
 
         throw new IllegalArgumentException("No material mapping exists for " + layer);
+    }
+
+    public static Material forChunkLayer(ChunkSectionLayer layer) {
+        return switch (layer) {
+            case SOLID -> SOLID;
+            case CUTOUT_MIPPED -> CUTOUT_MIPPED;
+            case CUTOUT -> CUTOUT;
+            case TRANSLUCENT -> TRANSLUCENT;
+            case TRIPWIRE -> TRIPWIRE;
+        };
     }
 }

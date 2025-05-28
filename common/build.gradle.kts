@@ -40,6 +40,10 @@ sourceSets {
     create("desktop")
 }
 
+repositories {
+    mavenLocal()
+}
+
 dependencies {
     minecraft(group = "com.mojang", name = "minecraft", version = BuildConfig.MINECRAFT_VERSION)
     mappings(loom.layered {
@@ -62,8 +66,7 @@ dependencies {
 
     addDependentFabricModule("fabric-api-base")
     addDependentFabricModule("fabric-block-view-api-v2")
-    addDependentFabricModule("fabric-renderer-api-v1")
-    addDependentFabricModule("fabric-rendering-data-attachment-v1")
+    modCompileOnly("net.fabricmc.fabric-api:fabric-renderer-api-v1:6.0.5+local")
 
     // We need to be careful during pre-launch that we don't touch any Minecraft classes, since other mods
     // will not yet have an opportunity to apply transformations.

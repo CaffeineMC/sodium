@@ -14,6 +14,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.shader.*;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.caffeinemc.mods.sodium.client.gl.shader.*;
+import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.mixin.core.GlCommandEncoderAccessor;
 import net.minecraft.resources.ResourceLocation;
 import java.util.Map;
@@ -69,9 +70,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         }
     }
 
-    protected void begin(TerrainRenderPass pass) {
-        pass.startDrawing();
-
+    protected void begin(TerrainRenderPass pass, FogParameters parameters) {
         RenderTarget target = pass.getTarget();
 
         GlStateManager._viewport(0, 0, target.getColorTexture().getWidth(0), target.getColorTexture().getHeight(0));
@@ -84,7 +83,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         this.activeProgram = this.compileProgram(options);
         this.activeProgram.bind();
         this.activeProgram.getInterface()
-                .setupState();
+                .setupState(pass, parameters);
     }
 
     protected void end(TerrainRenderPass pass) {
@@ -92,8 +91,6 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
                 .resetState();
         this.activeProgram.unbind();
         this.activeProgram = null;
-
-        pass.endDrawing();
     }
 
     @Override

@@ -2,7 +2,6 @@ package net.caffeinemc.mods.sodium.mixin.features.render.world.sky;
 
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.world.level.material.FogType;
 import org.spongepowered.asm.mixin.Mixin;

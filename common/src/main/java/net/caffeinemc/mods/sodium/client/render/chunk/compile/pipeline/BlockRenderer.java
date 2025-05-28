@@ -123,7 +123,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         final boolean emissive = mat.emissive();
 
         final BlendMode blendMode = mat.blendMode();
-        final Material material = DefaultMaterials.forRenderLayer(blendMode.blockRenderLayer == null ? defaultRenderType : blendMode.blockRenderLayer);
+        final Material material = DefaultMaterials.forChunkLayer(blendMode.blockRenderLayer == null ? defaultRenderType : blendMode.blockRenderLayer);
 
         this.tintQuad(quad);
         this.shadeQuad(quad, lightMode, emissive, shadeMode);

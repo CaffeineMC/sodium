@@ -21,7 +21,6 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.MatrixUtil;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.api.util.ColorMixer;
-import net.caffeinemc.mods.sodium.client.model.light.data.ArrayLightDataCache;
 import net.caffeinemc.mods.sodium.client.render.frapi.SodiumRenderer;
 import net.caffeinemc.mods.sodium.client.render.frapi.helper.ColorHelper;
 import net.caffeinemc.mods.sodium.client.render.frapi.mesh.EncodingFormat;
@@ -33,7 +32,6 @@ import net.fabricmc.fabric.api.renderer.v1.material.BlendMode;
 import net.fabricmc.fabric.api.renderer.v1.material.GlintMode;
 import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
-import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -44,9 +42,7 @@ import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
@@ -250,7 +246,7 @@ public class ItemRenderContext extends AbstractRenderContext {
                 }
             }
 
-            return ItemRendererAccessor.sodium$getCompassFoilBuffer(bufferSource, type, specialGlintEntry);
+            return ItemRendererAccessor.sodium$getSpecialFoilBuffer(bufferSource, type, specialGlintEntry);
         }
 
         return ItemRenderer.getFoilBuffer(bufferSource, type, true, glint != ItemStackRenderState.FoilType.NONE);

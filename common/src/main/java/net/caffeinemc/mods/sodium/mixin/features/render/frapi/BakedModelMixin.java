@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -31,7 +32,7 @@ public interface BakedModelMixin extends FabricBlockStateModel {
         int partCount = parts.size();
 
         if (emitter instanceof AbstractBlockRenderContext.BlockEmitter be) {
-            RenderType type = ItemBlockRenderTypes.getChunkRenderType(state);
+            ChunkSectionLayer type = ItemBlockRenderTypes.getChunkRenderType(state);
 
             for (int i = 0; i < partCount; ++i) {
                 if (PlatformModelAccess.getInstance().getPartRenderType(parts.get(i), state, type) != type) {

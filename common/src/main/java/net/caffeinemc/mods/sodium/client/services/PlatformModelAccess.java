@@ -5,6 +5,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
@@ -34,7 +35,7 @@ public interface PlatformModelAccess {
      * @param renderType The current render type being drawn.
      * @return The list of quads used by the model.
      */
-    List<BakedQuad> getQuads(BlockAndTintGetter level, BlockPos pos, BlockModelPart model, BlockState state, Direction face, RandomSource random, RenderType renderType);
+    List<BakedQuad> getQuads(BlockAndTintGetter level, BlockPos pos, BlockModelPart model, BlockState state, Direction face, RandomSource random, ChunkSectionLayer renderType);
 
     /**
      * Gets the container holding model data for this chunk. <b>This operation is not thread safe.</b>
@@ -51,7 +52,7 @@ public interface PlatformModelAccess {
     @ApiStatus.Internal
     SodiumModelData getEmptyModelData();
 
-    RenderType getPartRenderType(BlockModelPart part, BlockState state, RenderType defaultType);
+    ChunkSectionLayer getPartRenderType(BlockModelPart part, BlockState state, ChunkSectionLayer defaultType);
 
     List<BlockModelPart> collectPartsOf(BlockStateModel blockStateModel, BlockAndTintGetter blockView, BlockPos pos, BlockState state, RandomSource random, QuadEmitter emitter);
 }

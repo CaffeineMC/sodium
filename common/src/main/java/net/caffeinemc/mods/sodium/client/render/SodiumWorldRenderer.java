@@ -20,6 +20,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.terrain.DefaultTerrainRend
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.CameraMovement;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
+import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
 import net.caffeinemc.mods.sodium.client.world.LevelRendererExtension;
 import net.caffeinemc.mods.sodium.mixin.core.render.world.EntityRendererAccessor;
@@ -29,6 +30,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.resources.model.ModelBakery;
@@ -163,7 +165,8 @@ public class SodiumWorldRenderer {
                              Viewport viewport,
                              FogParameters fogParameters,
                              boolean spectator,
-                             boolean updateChunksImmediately) {
+                             boolean updateChunksImmediately,
+                             ChunkRenderMatrices matrices) {
         NativeBuffer.reclaim(false);
 
         this.processChunkEvents();
@@ -185,22 +188,21 @@ public class SodiumWorldRenderer {
 
         Vec3 posRaw = camera.getPosition();
         Vector3d pos = new Vector3d(posRaw.x(), posRaw.y(), posRaw.z());
-        Matrix4f projectionMatrix = new Matrix4f(RenderSystem.getProjectionMatrix());
         float pitch = camera.getXRot();
         float yaw = camera.getYRot();
-        float fogDistance = RenderSystem.getShaderFog().end();
+        float fogDistance = fogParameters.renderEnd();
 
         if (this.lastCameraPos == null) {
             this.lastCameraPos = new Vector3d(pos);
         }
         if (this.lastProjectionMatrix == null) {
-            this.lastProjectionMatrix = new Matrix4f(projectionMatrix);
+            this.lastProjectionMatrix = new Matrix4f(matrices.projection());
         }
         boolean cameraLocationChanged = !pos.equals(this.lastCameraPos);
         boolean cameraAngleChanged = pitch != this.lastCameraPitch || yaw != this.lastCameraYaw || fogDistance != this.lastFogDistance;
-        boolean cameraProjectionChanged = !projectionMatrix.equals(this.lastProjectionMatrix);
+        boolean cameraProjectionChanged = !matrices.projection().equals(this.lastProjectionMatrix);
 
-        this.lastProjectionMatrix = projectionMatrix;
+        this.lastProjectionMatrix.set(matrices.projection());
 
         this.lastCameraPitch = pitch;
         this.lastCameraYaw = yaw;
@@ -260,11 +262,11 @@ public class SodiumWorldRenderer {
     /**
      * Performs a render pass for the given {@link RenderType} and draws all visible chunks for it.
      */
-    public void drawChunkLayer(RenderType renderLayer, ChunkRenderMatrices matrices, double x, double y, double z) {
-        if (renderLayer == RenderType.solid()) {
+    public void drawChunkLayer(ChunkSectionLayerGroup group, ChunkRenderMatrices matrices, double x, double y, double z) {
+        if (group == ChunkSectionLayerGroup.OPAQUE) {
             this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.SOLID, x, y, z);
             this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.CUTOUT, x, y, z);
-        } else if (renderLayer == RenderType.translucent()) {
+        } else if (group == ChunkSectionLayerGroup.TRANSLUCENT) {
             this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.TRANSLUCENT, x, y, z);
         }
     }

@@ -30,6 +30,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
@@ -64,7 +65,7 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
     protected void processQuad(MutableQuadViewImpl quad) {
         final RenderMaterial mat = quad.material();
         final BlendMode blendMode = mat.blendMode();
-        final RenderType renderLayer = blendMode == BlendMode.DEFAULT ? defaultRenderType : blendMode.blockRenderLayer;
+        final RenderType renderLayer = blendMode == BlendMode.DEFAULT ? toRenderLayer(defaultRenderType) : blendMode.itemRenderLayer;
         final VertexConsumer vertexConsumer;
 
         if (renderLayer == lastRenderLayer) {
@@ -99,6 +100,16 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
         QuadEncoder.writeQuadVertices(quad, vertexConsumer, overlay, matrices.pose(), matrices.trustedNormals, matrices.normal());
 
         SpriteUtil.INSTANCE.markSpriteActive(quad.sprite(SpriteFinderCache.forBlockAtlas()));
+    }
+
+    private RenderType toRenderLayer(ChunkSectionLayer defaultRenderType) {
+        return switch (defaultRenderType) {
+            case SOLID -> RenderType.solid();
+            case CUTOUT_MIPPED -> RenderType.cutoutMipped();
+            case CUTOUT -> RenderType.cutout();
+            case TRANSLUCENT -> RenderType.translucentMovingBlock();
+            case TRIPWIRE -> RenderType.tripwire();
+        };
     }
 
     public void bufferModel(PoseStack.Pose entry, MultiBufferSource vertexConsumers, BlockStateModel model, float red, float green, float blue, int light, int overlay, BlockAndTintGetter blockView, BlockPos pos, BlockState state) {

@@ -23,6 +23,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBe
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.util.BitwiseMath;
+import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.client.util.UInt32;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.Pointer;
@@ -51,8 +52,9 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                        CommandList commandList,
                        ChunkRenderListIterable renderLists,
                        TerrainRenderPass renderPass,
-                       CameraTransform camera) {
-        super.begin(renderPass);
+                       CameraTransform camera,
+                       FogParameters parameters) {
+        super.begin(renderPass, parameters);
 
         final boolean useBlockFaceCulling = SodiumClientMod.options().performance.useBlockFaceCulling;
         final boolean useIndexedTessellation = isTranslucentRenderPass(renderPass);

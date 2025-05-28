@@ -40,6 +40,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFor
 import net.caffeinemc.mods.sodium.client.render.util.RenderAsserts;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
+import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.client.util.MathUtil;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
@@ -47,7 +48,6 @@ import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.FogParameters;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -98,6 +98,7 @@ public class RenderSectionManager {
 
     private @Nullable BlockPos cameraBlockPos;
     private @Nullable Vector3dc cameraPosition;
+    private FogParameters lastFogParameters = FogParameters.NONE;
 
     public RenderSectionManager(ClientLevel level, int renderDistance, CommandList commandList) {
         this.chunkRenderer = new DefaultChunkRenderer(RenderDevice.INSTANCE, ChunkMeshFormats.COMPACT);
@@ -130,6 +131,7 @@ public class RenderSectionManager {
 
     public void update(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
         this.lastUpdatedFrame += 1;
+        this.lastFogParameters = fogParameters;
 
         this.createTerrainRenderList(camera, viewport, fogParameters, this.lastUpdatedFrame, spectator);
 
@@ -244,7 +246,7 @@ public class RenderSectionManager {
         RenderDevice device = RenderDevice.INSTANCE;
         CommandList commandList = device.createCommandList();
 
-        this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z));
+        this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z), lastFogParameters);
 
         commandList.flush();
     }
@@ -629,7 +631,7 @@ public class RenderSectionManager {
 
     private float getEffectiveRenderDistance(FogParameters fogParameters) {
         var alpha = fogParameters.alpha();
-        var distance = fogParameters.end();
+        var distance = fogParameters.renderEnd();
 
         var renderDistance = this.getRenderDistance();
 

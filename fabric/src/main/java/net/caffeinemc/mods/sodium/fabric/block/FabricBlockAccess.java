@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -82,7 +83,7 @@ public class FabricBlockAccess implements PlatformBlockAccess {
     }
 
     @Override
-    public AmbientOcclusionMode usesAmbientOcclusion(BlockModelPart model, BlockState state, RenderType renderType, BlockAndTintGetter level, BlockPos pos) {
+    public AmbientOcclusionMode usesAmbientOcclusion(BlockModelPart model, BlockState state, ChunkSectionLayer renderType, BlockAndTintGetter level, BlockPos pos) {
         return model.useAmbientOcclusion() ? AmbientOcclusionMode.DEFAULT : AmbientOcclusionMode.DISABLED;
     }
 

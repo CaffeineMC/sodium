@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
@@ -27,7 +28,7 @@ public class FabricModelAccess implements PlatformModelAccess {
     private static final SodiumModelDataContainer EMPTY_CONTAINER = new SodiumModelDataContainer(Long2ObjectMaps.emptyMap());
 
     @Override
-    public List<BakedQuad> getQuads(BlockAndTintGetter level, BlockPos pos, BlockModelPart model, BlockState state, Direction face, RandomSource random, RenderType renderType) {
+    public List<BakedQuad> getQuads(BlockAndTintGetter level, BlockPos pos, BlockModelPart model, BlockState state, Direction face, RandomSource random, ChunkSectionLayer renderType) {
         return model.getQuads(face);
     }
 
@@ -42,7 +43,7 @@ public class FabricModelAccess implements PlatformModelAccess {
     }
 
     @Override
-    public RenderType getPartRenderType(BlockModelPart part, BlockState state, RenderType renderType) {
+    public ChunkSectionLayer getPartRenderType(BlockModelPart part, BlockState state, ChunkSectionLayer renderType) {
         return renderType;
     }
 

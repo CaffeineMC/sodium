@@ -4,7 +4,7 @@
 
 in vec4 v_Color; // The interpolated vertex color
 in vec2 v_TexCoord; // The interpolated block texture coordinates
-in float v_FragDistance; // The fragment's distance from the camera
+in vec2 v_FragDistance; // The fragment's distance from the camera (cylindrical and spherical)
 
 in float v_MaterialMipBias;
 in float v_MaterialAlphaCutoff;
@@ -12,8 +12,8 @@ in float v_MaterialAlphaCutoff;
 uniform sampler2D u_BlockTex; // The block texture
 
 uniform vec4 u_FogColor; // The color of the shader fog
-uniform float u_FogStart; // The starting position of the shader fog
-uniform float u_FogEnd; // The ending position of the shader fog
+uniform vec2 u_EnvironmentFog; // The start and end position for environmental fog
+uniform vec2 u_RenderFog; // The start and end position for border fog
 
 out vec4 fragColor; // The output fragment for the color framebuffer
 
@@ -29,5 +29,5 @@ void main() {
     }
 #endif
 
-    fragColor = _linearFog(diffuseColor, v_FragDistance, u_FogColor, u_FogStart, u_FogEnd);
+    fragColor = _linearFog(diffuseColor, v_FragDistance, u_FogColor, u_EnvironmentFog, u_RenderFog);
 }

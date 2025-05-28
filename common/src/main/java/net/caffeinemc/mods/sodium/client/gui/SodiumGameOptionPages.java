@@ -188,6 +188,17 @@ public class SodiumGameOptionPages {
                         }, opts -> opts.cloudStatus().get())
                         .setImpact(OptionImpact.LOW)
                         .build())
+                .add(OptionImpl.createBuilder(int.class, vanillaOpts)
+                        .setName(Component.translatable("options.renderCloudsDistance"))
+                        .setTooltip(Component.translatable("sodium.options.clouds_distance.tooltip"))
+                        .setControl(option -> new SliderControl(option, 2, 128, 2, ControlValueFormatter.translateVariable("options.chunks")))
+                        .setBinding((opts, value) -> {
+                            opts.cloudRange().set(value);
+
+                            Minecraft.getInstance().levelRenderer.getCloudRenderer().markForRebuild();
+                        }, opts -> opts.cloudRange().get())
+                        .setImpact(OptionImpact.LOW)
+                        .build())
                 .add(OptionImpl.createBuilder(SodiumGameOptions.GraphicsQuality.class, sodiumOpts)
                         .setName(Component.translatable("soundCategory.weather"))
                         .setTooltip(Component.translatable("sodium.options.weather_quality.tooltip"))

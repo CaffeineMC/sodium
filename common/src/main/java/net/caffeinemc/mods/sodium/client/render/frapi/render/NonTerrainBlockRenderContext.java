@@ -36,7 +36,9 @@ import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -109,7 +111,17 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
     }
 
     private VertexConsumer getVertexConsumer(BlendMode blendMode) {
-        return vertexConsumer.getBuffer(blendMode == BlendMode.DEFAULT ? defaultRenderType : blendMode.blockRenderLayer);
+        return vertexConsumer.getBuffer(blendMode == BlendMode.DEFAULT ? toRenderLayer(defaultRenderType) : blendMode.itemRenderLayer);
+    }
+
+    private RenderType toRenderLayer(ChunkSectionLayer defaultRenderType) {
+        return switch (defaultRenderType) {
+            case SOLID -> RenderType.solid();
+            case CUTOUT_MIPPED -> RenderType.cutoutMipped();
+            case CUTOUT -> RenderType.cutout();
+            case TRANSLUCENT -> RenderType.translucentMovingBlock();
+            case TRIPWIRE -> RenderType.tripwire();
+        };
     }
 
     private void tintQuad(MutableQuadViewImpl quad) {

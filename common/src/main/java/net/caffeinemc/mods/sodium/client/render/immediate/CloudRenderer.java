@@ -1,7 +1,5 @@
 package net.caffeinemc.mods.sodium.client.render.immediate;
 
-import com.mojang.blaze3d.buffers.BufferType;
-import com.mojang.blaze3d.buffers.BufferUsage;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -21,8 +19,6 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.CloudStatus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.FogParameters;
-import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import net.minecraft.util.ARGB;
@@ -46,13 +42,6 @@ public class CloudRenderer {
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium-CloudRenderer");
 
     private static final RenderPipeline.Snippet CLOUD_SNIPPET = RenderPipeline.builder().withBlend(BlendFunction.TRANSLUCENT).withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
-            .withUniform("ColorModulator", UniformType.VEC4)
-            .withUniform("FogStart", UniformType.FLOAT)
-            .withUniform("FogEnd", UniformType.FLOAT)
-            .withUniform("FogShape", UniformType.INT)
-            .withUniform("FogColor", UniformType.VEC4)
-            .withUniform("ModelViewMat", UniformType.MATRIX4X4)
-            .withUniform("ProjMat", UniformType.MATRIX4X4)
             .withDepthTestFunction(DepthTestFunction.LESS_DEPTH_TEST)
             .withVertexShader(ResourceLocation.fromNamespaceAndPath("sodium", "clouds"))
             .withFragmentShader(ResourceLocation.fromNamespaceAndPath("sodium", "clouds")).buildSnippet();
@@ -96,8 +85,7 @@ public class CloudRenderer {
                        float tickDelta,
                        int color)
     {
-        float height = level.effects()
-                .getCloudHeight() + 0.33f; // arithmetic against NaN always produces NaN
+        float height = 0.33f; // arithmetic against NaN always produces NaN
 
         // Vanilla uses NaN height as a way to disable cloud rendering
         if (Float.isNaN(height)) {
@@ -163,35 +151,6 @@ public class CloudRenderer {
         Matrix4f modelViewMatrix = new Matrix4f(modelView);
         modelViewMatrix.translate(-viewPosX, -viewPosY, -viewPosZ);
 
-        // State setup
-        final var prevFogParameters = copyShaderFogParameters(RenderSystem.getShaderFog());
-        final var flat = geometry.params()
-                .renderMode() == CloudStatus.FAST;
-
-        FogParameters fogParameters = FogRenderer.setupFog(camera, FogRenderer.FogMode.FOG_TERRAIN, new Vector4f(prevFogParameters.red(), prevFogParameters.green(), prevFogParameters.blue(), prevFogParameters.alpha()), renderDistance * 8, shouldUseWorldFog(level, cameraPos), tickDelta);
-
-        RenderSystem.setShaderColor(ARGB.redFloat(color), ARGB.greenFloat(color), ARGB.blueFloat(color), 0.8F);
-        RenderSystem.setShaderFog(fogParameters);
-
-        RenderTarget renderTarget = Minecraft.getInstance().levelRenderer.getCloudsTarget() == null ? Minecraft.getInstance().getMainRenderTarget() : Minecraft.getInstance().levelRenderer.getCloudsTarget();
-
-        RenderSystem.getModelViewStack().pushMatrix();
-        RenderSystem.getModelViewStack().set(modelViewMatrix);
-
-        RenderSystem.AutoStorageIndexBuffer index = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
-
-        GpuBuffer indices = index.getBuffer(builtGeometry.indexCount);
-        try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(renderTarget.getColorTexture(), OptionalInt.empty(), renderTarget.getDepthTexture(), OptionalDouble.empty())) {
-            renderPass.setPipeline(flat ? CLOUDS_FLAT : CLOUDS_FULL);
-            renderPass.setIndexBuffer(indices, index.type());
-            renderPass.setVertexBuffer(0, vertexBuffer);
-            renderPass.drawIndexed(0, builtGeometry.indexCount);
-        }
-
-        RenderSystem.getModelViewStack().popMatrix();
-
-        RenderSystem.setShaderFog(prevFogParameters);
-        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     private static @NotNull CloudGeometry rebuildGeometry(@Nullable CloudGeometry existingGeometry,
@@ -256,24 +215,6 @@ public class CloudRenderer {
             vertexBuffer = existingGeometry.vertexBuffer();
         }
 
-        if (meshData != null) {
-            if (vertexBuffer == null || vertexBuffer.size() < meshData.vertexBuffer().remaining()) {
-                if (vertexBuffer != null) {
-                    vertexBuffer.close();
-                }
-
-                vertexBuffer = RenderSystem.getDevice().createBuffer(() -> "Cloud vertex buffer", BufferType.VERTICES, BufferUsage.DYNAMIC_WRITE, meshData.vertexBuffer());
-            } else {
-                RenderSystem.getDevice().createCommandEncoder().writeToBuffer(vertexBuffer, meshData.vertexBuffer(), 0);
-            }
-
-            meshData.close();
-        } else {
-            if (vertexBuffer != null) {
-                vertexBuffer.close();
-                vertexBuffer = null;
-            }
-        }
 
         Tesselator.getInstance().clear();
 
@@ -566,17 +507,6 @@ public class CloudRenderer {
 
     private static int taxicabDistance(int x, int z) {
         return Math.abs(x) + Math.abs(z);
-    }
-
-    private static FogParameters copyShaderFogParameters(FogParameters shaderFog) {
-        return new FogParameters(
-                shaderFog.start(),
-                shaderFog.end(),
-                shaderFog.shape(),
-                shaderFog.red(),
-                shaderFog.green(),
-                shaderFog.blue(),
-                shaderFog.alpha());
     }
 
     private static class CloudTextureData {

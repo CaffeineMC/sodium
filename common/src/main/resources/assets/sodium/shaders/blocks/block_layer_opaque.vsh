@@ -14,10 +14,9 @@ out float v_MaterialAlphaCutoff;
 #endif
 
 #ifdef USE_FOG
-out float v_FragDistance;
+out vec2 v_FragDistance;
 #endif
 
-uniform int u_FogShape;
 uniform vec3 u_RegionOffset;
 uniform vec2 u_TexCoordShrink;
 
@@ -40,7 +39,7 @@ void main() {
     vec3 position = _vert_position + translation;
 
 #ifdef USE_FOG
-    v_FragDistance = getFragDistance(u_FogShape, position);
+    v_FragDistance = getFragDistance(position);
 #endif
 
     // Transform the vertex position into model-view-projection space

@@ -26,8 +26,8 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(ItemRenderer.class)
 public interface ItemRendererAccessor {
-    @Invoker("getCompassFoilBuffer")
-    static VertexConsumer sodium$getCompassFoilBuffer(MultiBufferSource provider, RenderType layer, PoseStack.Pose entry) {
+    @Invoker("getSpecialFoilBuffer")
+    static VertexConsumer sodium$getSpecialFoilBuffer(MultiBufferSource provider, RenderType layer, PoseStack.Pose entry) {
         throw new AssertionError();
     }
 }

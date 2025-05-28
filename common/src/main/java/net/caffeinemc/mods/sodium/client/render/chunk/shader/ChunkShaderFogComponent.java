@@ -2,8 +2,10 @@ package net.caffeinemc.mods.sodium.client.render.chunk.shader;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat;
+import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat2v;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat4v;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformInt;
+import net.caffeinemc.mods.sodium.client.util.FogParameters;
 
 /**
  * These shader implementations try to remain compatible with the deprecated fixed function pipeline by manually
@@ -16,7 +18,7 @@ import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformInt;
  * not depend on any vendor-specific extensions and is written using very simple GLSL code.
  */
 public abstract class ChunkShaderFogComponent {
-    public abstract void setup();
+    public abstract void setup(FogParameters parameters);
 
     public static class None extends ChunkShaderFogComponent {
         public None(ShaderBindingContext context) {
@@ -24,7 +26,7 @@ public abstract class ChunkShaderFogComponent {
         }
 
         @Override
-        public void setup() {
+        public void setup(FogParameters parameters) {
 
         }
     }
@@ -32,24 +34,21 @@ public abstract class ChunkShaderFogComponent {
     public static class Smooth extends ChunkShaderFogComponent {
         private final GlUniformFloat4v uFogColor;
 
-        private final GlUniformInt uFogShape;
-        private final GlUniformFloat uFogStart;
-        private final GlUniformFloat uFogEnd;
+        private final GlUniformFloat2v uEnvironmentFog;
+        private final GlUniformFloat2v uRenderFog;
 
         public Smooth(ShaderBindingContext context) {
             this.uFogColor = context.bindUniform("u_FogColor", GlUniformFloat4v::new);
-            this.uFogShape = context.bindUniform("u_FogShape", GlUniformInt::new);
-            this.uFogStart = context.bindUniform("u_FogStart", GlUniformFloat::new);
-            this.uFogEnd = context.bindUniform("u_FogEnd", GlUniformFloat::new);
+            this.uEnvironmentFog = context.bindUniform("u_EnvironmentFog", GlUniformFloat2v::new);
+            this.uRenderFog = context.bindUniform("u_RenderFog", GlUniformFloat2v::new);
         }
 
         @Override
-        public void setup() {
-            this.uFogColor.set(RenderSystem.getShaderFog().red(), RenderSystem.getShaderFog().green(), RenderSystem.getShaderFog().blue(), RenderSystem.getShaderFog().alpha());
-            this.uFogShape.set(RenderSystem.getShaderFog().shape().getIndex());
+        public void setup(FogParameters fogParameters) {
+            this.uFogColor.set(fogParameters.red(), fogParameters.green(), fogParameters.blue(), fogParameters.alpha());
 
-            this.uFogStart.setFloat(RenderSystem.getShaderFog().start());
-            this.uFogEnd.setFloat(RenderSystem.getShaderFog().end());
+            this.uEnvironmentFog.set(fogParameters.environmentalStart(), fogParameters.environmentalEnd());
+            this.uRenderFog.set(fogParameters.renderStart(), fogParameters.renderEnd());
         }
     }
 

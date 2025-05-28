@@ -48,11 +48,6 @@ public class ConsoleRenderer {
 
         Minecraft minecraft = Minecraft.getInstance();
 
-        var matrices = context.pose();
-        matrices.pushPose();
-        matrices.translate(0.0f, 0.0f, 1000.0f);
-
-
         var paddingWidth = 3;
         var paddingHeight = 1;
 
@@ -129,7 +124,6 @@ public class ConsoleRenderer {
             }
         }
 
-        matrices.popPose();
     }
 
     private static double getMessageOpacity(ActiveMessage message, double time) {

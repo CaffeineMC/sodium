@@ -48,15 +48,10 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
     }
 
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-        var matrices = graphics.pose();
-        matrices.pushPose();
-        matrices.translate(0.0f, 0.0f, 1000.0f);
-
         var parentDimensions = this.parent.getDimensions();
 
         graphics.fill(0, 0, parentDimensions.width(), parentDimensions.height(), 0x70090909);
 
-        matrices.translate(0.0f, 0.0f, 50.0f);
 
         int boxX = (parentDimensions.width() / 2) - (width / 2);
         int boxY = (parentDimensions.height() / 2) - (height / 2);
@@ -64,7 +59,6 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
         graphics.fill(boxX, boxY, boxX + width, boxY + height, 0xFF171717);
         graphics.renderOutline(boxX, boxY, width, height, 0xFF121212);
 
-        matrices.translate(0.0f, 0.0f, 50.0f);
 
         int padding = 5;
 
@@ -90,8 +84,6 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
         for (var button : getWidgets()) {
             button.render(graphics, mouseX, mouseY, delta);
         }
-
-        matrices.popPose();
     }
 
     private static FlatButtonWidget.Style createButtonStyle() {

@@ -27,6 +27,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -113,7 +114,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
      */
     protected BlockPos pos;
 
-    protected RenderType defaultRenderType;
+    protected ChunkSectionLayer defaultRenderType;
 
     protected boolean allowDowngrade;
 
@@ -215,8 +216,8 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
         MutableQuadViewImpl editorQuad = this.editorQuad;
         this.prepareAoInfo(part.useAmbientOcclusion());
 
-        RenderType renderType = PlatformModelAccess.getInstance().getPartRenderType(part, state, this.defaultRenderType);
-        RenderType defaultType = this.defaultRenderType;
+        ChunkSectionLayer renderType = PlatformModelAccess.getInstance().getPartRenderType(part, state, this.defaultRenderType);
+        ChunkSectionLayer defaultType = this.defaultRenderType;
         this.defaultRenderType = renderType;
 
         for (int i = 0; i <= ModelHelper.NULL_FACE_ID; i++) {
@@ -234,7 +235,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
 
             for (int j = 0; j < count; j++) {
                 final BakedQuad q = quads.get(j);
-                editorQuad.fromVanilla(q, (renderType == RenderType.tripwire() || renderType == RenderType.translucent()) ? TRANSLUCENT_MATERIALS[ao.ordinal()] : STANDARD_MATERIALS[ao.ordinal()], cullFace);
+                editorQuad.fromVanilla(q, (renderType == ChunkSectionLayer.TRANSLUCENT || renderType == ChunkSectionLayer.TRIPWIRE) ? TRANSLUCENT_MATERIALS[ao.ordinal()] : STANDARD_MATERIALS[ao.ordinal()], cullFace);
                 // Call processQuad instead of emit for efficiency
                 // (avoid unnecessarily clearing data, trying to apply transforms, and performing cull check again)
 

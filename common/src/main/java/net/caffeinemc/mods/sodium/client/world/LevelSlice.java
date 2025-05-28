@@ -8,7 +8,6 @@ import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSection;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
 import net.fabricmc.fabric.api.blockview.v2.FabricBlockView;
-import net.fabricmc.fabric.api.rendering.data.v1.RenderAttachedBlockView;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -47,7 +46,7 @@ import java.util.Objects;
  *
  * <p>Object pooling should be used to avoid huge allocations as this class contains many large arrays.</p>
  */
-public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlockView, FabricBlockView {
+public final class LevelSlice implements BlockAndTintGetter, FabricBlockView {
     private static final LightLayer[] LIGHT_TYPES = LightLayer.values();
 
     // The number of blocks in a section.
@@ -416,24 +415,5 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
 
     public static int getLocalSectionIndex(int sectionX, int sectionY, int sectionZ) {
         return (sectionY * SECTION_ARRAY_LENGTH * SECTION_ARRAY_LENGTH) + (sectionZ * SECTION_ARRAY_LENGTH) + sectionX;
-    }
-
-    @Override
-    public @Nullable Object getBlockEntityRenderAttachment(BlockPos pos) {
-        if (!this.volume.isInside(pos.getX(), pos.getY(), pos.getZ())) {
-            return null;
-        }
-
-        int relBlockX = pos.getX() - this.originBlockX;
-        int relBlockY = pos.getY() - this.originBlockY;
-        int relBlockZ = pos.getZ() - this.originBlockZ;
-
-        var blockEntityRenderDataMap = this.blockEntityRenderDataArrays[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
-
-        if (blockEntityRenderDataMap == null) {
-            return null;
-        }
-
-        return blockEntityRenderDataMap.get(getLocalBlockIndex(relBlockX & 15, relBlockY & 15, relBlockZ & 15));
     }
 }

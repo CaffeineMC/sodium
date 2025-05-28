@@ -46,16 +46,7 @@ public class LevelLoadingScreenMixin {
      */
     @Overwrite
     public static void renderChunks(GuiGraphics graphics, StoringChunkProgressListener listener, int mapX, int mapY, int mapScale, int mapPadding) {
-        Matrix4f pose = graphics.pose()
-                .last()
-                .pose();
-
-        graphics.drawSpecial((bufferSource -> {
-            var writer = VertexBufferWriter.of(bufferSource.getBuffer(RenderType.gui()));
-
-            sodium$drawChunkMap(listener, mapX, mapY, mapScale, mapPadding, writer, pose);
-        }));
-
+        sodium$drawChunkMap(listener, mapX, mapY, mapScale, mapPadding, graphics);
     }
 
     @Unique
@@ -64,14 +55,13 @@ public class LevelLoadingScreenMixin {
                                             int mapY,
                                             int mapScale,
                                             int mapPadding,
-                                            VertexBufferWriter writer,
-                                            Matrix4f pose)
+                                            GuiGraphics graphics)
     {
         if (STATUS_TO_COLOR_FAST == null) {
             STATUS_TO_COLOR_FAST = new Reference2IntOpenHashMap<>(COLORS.size());
             STATUS_TO_COLOR_FAST.put(null, NULL_STATUS_COLOR);
             COLORS.object2IntEntrySet()
-                    .forEach(entry -> STATUS_TO_COLOR_FAST.put(entry.getKey(), ColorARGB.toABGR(entry.getIntValue(), 0xFF)));
+                    .forEach(entry -> STATUS_TO_COLOR_FAST.put(entry.getKey(), ColorARGB.withAlpha(entry.getIntValue(), 0xFF)));
         }
 
         int centerSize = listener.getFullDiameter();
@@ -83,10 +73,10 @@ public class LevelLoadingScreenMixin {
             int mapRenderCenterSize = centerSize * tileSize - mapPadding;
             int radius = mapRenderCenterSize / 2 + 1;
 
-            addRect(writer, pose, mapX - radius, mapY - radius, mapX - radius + 1, mapY + radius, DEFAULT_STATUS_COLOR);
-            addRect(writer, pose, mapX + radius - 1, mapY - radius, mapX + radius, mapY + radius, DEFAULT_STATUS_COLOR);
-            addRect(writer, pose, mapX - radius, mapY - radius, mapX + radius, mapY - radius + 1, DEFAULT_STATUS_COLOR);
-            addRect(writer, pose, mapX - radius, mapY + radius - 1, mapX + radius, mapY + radius, DEFAULT_STATUS_COLOR);
+            addRect(graphics, mapX - radius, mapY - radius, mapX - radius + 1, mapY + radius, DEFAULT_STATUS_COLOR);
+            addRect(graphics, mapX + radius - 1, mapY - radius, mapX + radius, mapY + radius, DEFAULT_STATUS_COLOR);
+            addRect(graphics, mapX - radius, mapY - radius, mapX + radius, mapY - radius + 1, DEFAULT_STATUS_COLOR);
+            addRect(graphics, mapX - radius, mapY + radius - 1, mapX + radius, mapY + radius, DEFAULT_STATUS_COLOR);
         }
 
         int mapRenderSize = size * tileSize - mapPadding;
@@ -114,30 +104,13 @@ public class LevelLoadingScreenMixin {
                     prevColor = color;
                 }
 
-                addRect(writer, pose, tileX, tileY, tileX + mapScale, tileY + mapScale, color);
+                addRect(graphics, tileX, tileY, tileX + mapScale, tileY + mapScale, color);
             }
         }
     }
 
     @Unique
-    private static void addRect(VertexBufferWriter writer, Matrix4f matrix, int x1, int y1, int x2, int y2, int color) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            long buffer = stack.nmalloc(4 * ColorVertex.STRIDE);
-            long ptr = buffer;
-
-            ColorVertex.put(ptr, matrix, x1, y2, 0, color);
-            ptr += ColorVertex.STRIDE;
-
-            ColorVertex.put(ptr, matrix, x2, y2, 0, color);
-            ptr += ColorVertex.STRIDE;
-
-            ColorVertex.put(ptr, matrix, x2, y1, 0, color);
-            ptr += ColorVertex.STRIDE;
-
-            ColorVertex.put(ptr, matrix, x1, y1, 0, color);
-            ptr += ColorVertex.STRIDE;
-
-            writer.push(stack, buffer, 4, ColorVertex.FORMAT);
-        }
+    private static void addRect(GuiGraphics graphics, int x1, int y1, int x2, int y2, int color) {
+        graphics.fill(x1, y1, x2, y2, color);
     }
 }
