@@ -569,6 +569,7 @@ public class RenderSectionManager {
             if (task == null) {
                 // when a sort task is null it means the render section has no dynamic data and
                 // doesn't need to be sorted. Nothing needs to be done.
+                section.clearPendingUpdate();
                 return 0;
             }
         }

@@ -50,7 +50,7 @@ public abstract class SectionCollector implements RenderListProvider, RenderSect
         // always add to rebuild lists though, because it might just not be built yet
         var pendingUpdate = section.getPendingUpdate();
 
-        if (pendingUpdate != 0 && section.getTaskCancellationToken() == null) {
+        if (pendingUpdate != 0) {
             var queueType = ChunkUpdateTypes.getQueueType(pendingUpdate, this.importantRebuildQueueType);
             Queue<RenderSection> queue = this.sortedTaskLists.get(queueType);
 
