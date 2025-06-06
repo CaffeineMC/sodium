@@ -7,7 +7,6 @@ import net.caffeinemc.mods.sodium.client.world.biome.LevelBiomeSlice;
 import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSection;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
-import net.fabricmc.fabric.api.blockview.v2.FabricBlockView;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -46,7 +45,7 @@ import java.util.Objects;
  *
  * <p>Object pooling should be used to avoid huge allocations as this class contains many large arrays.</p>
  */
-public final class LevelSlice implements BlockAndTintGetter, FabricBlockView {
+public final class LevelSlice implements BlockAndTintGetter {
     private static final LightLayer[] LIGHT_TYPES = LightLayer.values();
 
     // The number of blocks in a section.
@@ -362,24 +361,6 @@ public final class LevelSlice implements BlockAndTintGetter, FabricBlockView {
         return this.level.getMinY();
     }
 
-    @Override
-    public @Nullable Object getBlockEntityRenderData(BlockPos pos) {
-        if (!this.volume.isInside(pos.getX(), pos.getY(), pos.getZ())) {
-            return null;
-        }
-
-        int relBlockX = pos.getX() - this.originBlockX;
-        int relBlockY = pos.getY() - this.originBlockY;
-        int relBlockZ = pos.getZ() - this.originBlockZ;
-
-        var blockEntityRenderDataMap = this.blockEntityRenderDataArrays[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
-
-        if (blockEntityRenderDataMap == null) {
-            return null;
-        }
-
-        return blockEntityRenderDataMap.get(getLocalBlockIndex(relBlockX & 15, relBlockY & 15, relBlockZ & 15));
-    }
 
     public SodiumModelData getPlatformModelData(BlockPos pos) {
         if (!this.volume.isInside(pos.getX(), pos.getY(), pos.getZ())) {
@@ -397,16 +378,6 @@ public final class LevelSlice implements BlockAndTintGetter, FabricBlockView {
         }
 
         return modelMap.getModelData(pos);
-    }
-
-    @Override
-    public boolean hasBiomes() {
-        return true;
-    }
-
-    @Override
-    public Holder<Biome> getBiomeFabric(BlockPos pos) {
-        return this.biomeSlice.getBiome(pos.getX(), pos.getY(), pos.getZ());
     }
 
     public static int getLocalBlockIndex(int blockX, int blockY, int blockZ) {

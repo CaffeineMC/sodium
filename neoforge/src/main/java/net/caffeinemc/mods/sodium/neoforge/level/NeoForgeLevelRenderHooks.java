@@ -7,6 +7,7 @@ import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -20,7 +21,7 @@ import java.util.function.Function;
 public class NeoForgeLevelRenderHooks implements PlatformLevelRenderHooks {
     @Override
     public void runChunkLayerEvents(RenderType renderType, Level level, LevelRenderer levelRenderer, Matrix4f modelMatrix, Matrix4f projectionMatrix, int renderTick, Camera camera, Frustum frustum) {
-        ClientHooks.dispatchRenderStage(renderType, level, levelRenderer, modelMatrix, projectionMatrix, renderTick, camera, frustum);
+        //ClientHooks.dispatchRenderStage(RenderLev, level, levelRenderer, modelMatrix, projectionMatrix, renderTick, camera, frustum);
     }
 
     @Override
@@ -29,7 +30,7 @@ public class NeoForgeLevelRenderHooks implements PlatformLevelRenderHooks {
     }
 
     @Override
-    public void runChunkMeshAppenders(List<?> renderers, Function<RenderType, VertexConsumer> typeToConsumer, LevelSlice slice) {
+    public void runChunkMeshAppenders(List<?> renderers, Function<ChunkSectionLayer, VertexConsumer> typeToConsumer, LevelSlice slice) {
         AddSectionGeometryEvent.SectionRenderingContext context = new AddSectionGeometryEvent.SectionRenderingContext(typeToConsumer, slice, new PoseStack());
         for (Object o : renderers) {
             ((AddSectionGeometryEvent.AdditionalSectionRenderer) o).render(context);

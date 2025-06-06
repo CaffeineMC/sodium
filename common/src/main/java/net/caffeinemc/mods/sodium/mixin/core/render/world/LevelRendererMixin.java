@@ -272,4 +272,9 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     public void sodium$setMatrices(ChunkRenderMatrices matrices) {
         this.matrices = matrices;
     }
+
+    @Override
+    public ChunkRenderMatrices sodium$getMatrices() {
+        return this.matrices;
+    }
 }

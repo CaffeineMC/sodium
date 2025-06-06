@@ -11,4 +11,6 @@ public interface LevelRendererExtension {
      * @param matrices The new chunk matrices.
      */
     void sodium$setMatrices(ChunkRenderMatrices matrices);
+
+    ChunkRenderMatrices sodium$getMatrices();
 }
