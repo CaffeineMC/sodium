@@ -14,10 +14,8 @@ import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
 import net.caffeinemc.mods.sodium.client.services.SodiumModelData;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
-import net.fabricmc.fabric.api.renderer.v1.material.BlendMode;
-import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
-import net.fabricmc.fabric.api.renderer.v1.material.ShadeMode;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
+import net.fabricmc.fabric.api.renderer.v1.mesh.ShadeMode;
 import net.fabricmc.fabric.api.renderer.v1.model.ModelHelper;
 import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.Minecraft;
@@ -47,26 +45,6 @@ import java.util.function.Supplier;
  * <p>Make sure to set the {@link #lighters} in the subclass constructor.
  */
 public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
-    private static final RenderMaterial[] STANDARD_MATERIALS;
-    private static final RenderMaterial[] TRANSLUCENT_MATERIALS;
-
-    static {
-        STANDARD_MATERIALS = new RenderMaterial[AmbientOcclusionMode.values().length];
-        TRANSLUCENT_MATERIALS = new RenderMaterial[AmbientOcclusionMode.values().length];
-
-        AmbientOcclusionMode[] values = AmbientOcclusionMode.values();
-        for (int i = 0; i < values.length; i++) {
-            TriState state = switch (values[i]) {
-                case ENABLED -> TriState.TRUE;
-                case DISABLED -> TriState.FALSE;
-                case DEFAULT -> TriState.DEFAULT;
-            };
-
-            STANDARD_MATERIALS[i] = SodiumRenderer.INSTANCE.materialFinder().ambientOcclusion(state).find();
-            TRANSLUCENT_MATERIALS[i] = SodiumRenderer.INSTANCE.materialFinder().ambientOcclusion(state).blendMode(BlendMode.TRANSLUCENT).find();
-        }
-    }
-
     public class BlockEmitter extends MutableQuadViewImpl {
         private final List<BlockModelPart> cachedList = new ObjectArrayList<>();
 
@@ -235,7 +213,9 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
 
             for (int j = 0; j < count; j++) {
                 final BakedQuad q = quads.get(j);
-                editorQuad.fromVanilla(q, (renderType == ChunkSectionLayer.TRANSLUCENT || renderType == ChunkSectionLayer.TRIPWIRE) ? TRANSLUCENT_MATERIALS[ao.ordinal()] : STANDARD_MATERIALS[ao.ordinal()], cullFace);
+                editorQuad.fromBakedQuad(q);
+                editorQuad.cullFace(cullFace);
+                editorQuad.renderLayer(renderType);
                 // Call processQuad instead of emit for efficiency
                 // (avoid unnecessarily clearing data, trying to apply transforms, and performing cull check again)
 

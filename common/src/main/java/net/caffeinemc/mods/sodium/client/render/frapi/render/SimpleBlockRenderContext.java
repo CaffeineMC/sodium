@@ -25,6 +25,7 @@ import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.immediate.model.BakedModelEncoder;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
+import net.fabricmc.fabric.api.renderer.v1.render.BlockVertexConsumerProvider;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -39,23 +40,19 @@ import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
-
-import net.fabricmc.fabric.api.renderer.v1.material.BlendMode;
-import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
-
 public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
     public static final ThreadLocal<SimpleBlockRenderContext> POOL = ThreadLocal.withInitial(SimpleBlockRenderContext::new);
 
     private final RandomSource random = RandomSource.createNewThreadLocalInstance();
 
-    private MultiBufferSource vertexConsumers;
+    private BlockVertexConsumerProvider vertexConsumers;
     private float red;
     private float green;
     private float blue;
     private int light;
 
     @Nullable
-    private RenderType lastRenderLayer;
+    private ChunkSectionLayer lastRenderLayer;
     @Nullable
     private VertexConsumer lastVertexConsumer;
     private PoseStack.Pose matrices;
@@ -63,9 +60,8 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
 
     @Override
     protected void processQuad(MutableQuadViewImpl quad) {
-        final RenderMaterial mat = quad.material();
-        final BlendMode blendMode = mat.blendMode();
-        final RenderType renderLayer = blendMode == BlendMode.DEFAULT ? toRenderLayer(defaultRenderType) : blendMode.itemRenderLayer;
+        final ChunkSectionLayer quadRenderLayer = quad.renderLayer();
+        final ChunkSectionLayer renderLayer = quadRenderLayer == null ? defaultRenderType : quadRenderLayer;
         final VertexConsumer vertexConsumer;
 
         if (renderLayer == lastRenderLayer) {
@@ -85,7 +81,7 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
             }
         }
 
-        if (mat.emissive()) {
+        if (quad.emissive()) {
             for (int i = 0; i < 4; i++) {
                 quad.lightmap(i, LightTexture.FULL_BRIGHT);
             }
@@ -112,7 +108,7 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
         };
     }
 
-    public void bufferModel(PoseStack.Pose entry, MultiBufferSource vertexConsumers, BlockStateModel model, float red, float green, float blue, int light, int overlay, BlockAndTintGetter blockView, BlockPos pos, BlockState state) {
+    public void bufferModel(PoseStack.Pose entry, BlockVertexConsumerProvider vertexConsumers, BlockStateModel model, float red, float green, float blue, int light, int overlay, BlockAndTintGetter blockView, BlockPos pos, BlockState state) {
         matrices = entry;
         this.overlay = overlay;
 

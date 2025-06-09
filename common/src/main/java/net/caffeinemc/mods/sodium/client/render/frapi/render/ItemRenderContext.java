@@ -28,21 +28,21 @@ import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MeshViewImpl;
 import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
 import net.caffeinemc.mods.sodium.mixin.features.render.frapi.ItemRendererAccessor;
-import net.fabricmc.fabric.api.renderer.v1.material.BlendMode;
-import net.fabricmc.fabric.api.renderer.v1.material.GlintMode;
-import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
+import net.fabricmc.fabric.api.renderer.v1.render.RenderLayerHelper;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
@@ -141,7 +141,7 @@ public class ItemRenderContext extends AbstractRenderContext {
 
         for (int j = 0; j < vanillaQuadCount; j++) {
             final BakedQuad q = vanillaQuads.get(j);
-            emitter.fromVanilla(q, SodiumRenderer.STANDARD_MATERIAL, null);
+            emitter.fromBakedQuad(q);
             emitter.emit();
         }
 
@@ -149,9 +149,8 @@ public class ItemRenderContext extends AbstractRenderContext {
     }
 
     private void renderQuad(MutableQuadViewImpl quad) {
-        final RenderMaterial mat = quad.material();
-        final boolean emissive = mat.emissive();
-        final VertexConsumer vertexConsumer = getVertexConsumer(mat.blendMode(), mat.glintMode());
+        final boolean emissive = quad.emissive();
+        final VertexConsumer vertexConsumer = getVertexConsumer(quad.renderLayer(), quad.glint());
 
         tintQuad(quad);
         shadeQuad(quad, emissive);
@@ -197,20 +196,20 @@ public class ItemRenderContext extends AbstractRenderContext {
      * in {@code RenderLayers.getEntityBlockLayer}. Layers other than
      * translucent are mapped to cutout.
      */
-    private VertexConsumer getVertexConsumer(BlendMode blendMode, GlintMode glintMode) {
+    private VertexConsumer getVertexConsumer(@Nullable ChunkSectionLayer blendMode, @Nullable ItemStackRenderState.FoilType glintMode) {
         RenderType type;
         ItemStackRenderState.FoilType glint;
 
-        if (blendMode == BlendMode.DEFAULT) {
+        if (blendMode == null) {
             type = defaultLayer;
         } else {
-            type = blendMode == BlendMode.TRANSLUCENT ? Sheets.translucentItemSheet() : Sheets.cutoutBlockSheet();
+            type = RenderLayerHelper.getEntityBlockLayer(blendMode);
         }
 
-        if (glintMode == GlintMode.DEFAULT) {
+        if (glintMode == null) {
             glint = defaultGlint;
         } else {
-            glint = glintMode.glint;
+            glint = glintMode;
         }
 
         int cacheIndex;

@@ -24,8 +24,11 @@ import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFlags;
 import net.caffeinemc.mods.sodium.client.render.frapi.helper.ColorHelper;
 import net.caffeinemc.mods.sodium.client.render.frapi.helper.GeometryHelper;
 import net.caffeinemc.mods.sodium.client.render.frapi.helper.NormalHelper;
-import net.caffeinemc.mods.sodium.client.render.frapi.material.RenderMaterialImpl;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadView;
+import net.fabricmc.fabric.api.renderer.v1.mesh.ShadeMode;
+import net.fabricmc.fabric.api.util.TriState;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import org.jetbrains.annotations.NotNull;
@@ -89,7 +92,7 @@ public class QuadViewImpl implements QuadView, ModelQuadView {
     }
 
     public boolean hasShade() {
-        return !material().disableDiffuse();
+        return diffuseShade();
     }
 
     @Override
@@ -121,6 +124,37 @@ public class QuadViewImpl implements QuadView, ModelQuadView {
         final int index = baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_X;
         target.set(Float.intBitsToFloat(data[index]), Float.intBitsToFloat(data[index + 1]), Float.intBitsToFloat(data[index + 2]));
         return target;
+    }
+
+    @Override
+    @Nullable
+    public ChunkSectionLayer renderLayer() {
+        return EncodingFormat.renderLayer(data[baseIndex + HEADER_BITS]);
+    }
+
+    @Override
+    public boolean emissive() {
+        return EncodingFormat.emissive(data[baseIndex + HEADER_BITS]);
+    }
+
+    @Override
+    public boolean diffuseShade() {
+        return EncodingFormat.diffuseShade(data[baseIndex + HEADER_BITS]);
+    }
+
+    @Override
+    public TriState ambientOcclusion() {
+        return EncodingFormat.ambientOcclusion(data[baseIndex + HEADER_BITS]);
+    }
+
+    @Override
+    public ItemStackRenderState.@Nullable FoilType glint() {
+        return EncodingFormat.glint(data[baseIndex + HEADER_BITS]);
+    }
+
+    @Override
+    public ShadeMode shadeMode() {
+        return EncodingFormat.shadeMode(data[baseIndex + HEADER_BITS]);
     }
 
     @Override
@@ -248,11 +282,6 @@ public class QuadViewImpl implements QuadView, ModelQuadView {
     public final Vector3f faceNormal() {
         computeGeometry();
         return faceNormal;
-    }
-
-    @Override
-    public final RenderMaterialImpl material() {
-        return EncodingFormat.material(data[baseIndex + HEADER_BITS]);
     }
 
     @Override

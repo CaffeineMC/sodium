@@ -18,8 +18,6 @@ package net.caffeinemc.mods.sodium.client.render.frapi;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.caffeinemc.mods.sodium.client.render.frapi.material.MaterialFinderImpl;
-import net.caffeinemc.mods.sodium.client.render.frapi.material.RenderMaterialImpl;
 import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableMeshImpl;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.AbstractBlockRenderContext;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.AccessLayerRenderState;
@@ -28,12 +26,11 @@ import net.caffeinemc.mods.sodium.client.render.frapi.render.SimpleBlockRenderCo
 import net.caffeinemc.mods.sodium.mixin.features.render.frapi.BlockRenderDispatcherAccessor;
 import net.caffeinemc.mods.sodium.mixin.features.render.frapi.ModelBlockRendererAccessor;
 import net.fabricmc.fabric.api.renderer.v1.Renderer;
-import net.fabricmc.fabric.api.renderer.v1.material.MaterialFinder;
-import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
 import net.fabricmc.fabric.api.renderer.v1.mesh.MutableMesh;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockModelPart;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
+import net.fabricmc.fabric.api.renderer.v1.render.BlockVertexConsumerProvider;
 import net.fabricmc.fabric.api.renderer.v1.render.FabricBlockModelRenderer;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderLayerHelper;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -63,14 +60,6 @@ import java.util.function.Predicate;
 public class SodiumRenderer implements Renderer {
     public static final SodiumRenderer INSTANCE = new SodiumRenderer();
 
-    public static final RenderMaterial STANDARD_MATERIAL = INSTANCE.materialFinder().find();
-
-    static {
-        INSTANCE.registerMaterial(RenderMaterial.STANDARD_ID, STANDARD_MATERIAL);
-    }
-
-    private final HashMap<ResourceLocation, RenderMaterial> materialMap = new HashMap<>();
-
     private SodiumRenderer() { }
 
     @Override
@@ -78,32 +67,14 @@ public class SodiumRenderer implements Renderer {
         return new MutableMeshImpl();
     }
 
-    @Override
-    public MaterialFinder materialFinder() {
-        return new MaterialFinderImpl();
-    }
 
     @Override
-    public RenderMaterial materialById(ResourceLocation id) {
-        return materialMap.get(id);
-    }
-
-    @Override
-    public boolean registerMaterial(ResourceLocation id, RenderMaterial material) {
-        if (materialMap.containsKey(id)) return false;
-
-        // cast to prevent acceptance of impostor implementations
-        materialMap.put(id, (RenderMaterialImpl) material);
-        return true;
-    }
-
-    @Override
-    public void render(ModelBlockRenderer modelBlockRenderer, BlockAndTintGetter blockView, BlockStateModel model, BlockState state, BlockPos pos, PoseStack poseStack, MultiBufferSource multiBufferSource, boolean cull, long seed, int overlay) {
+    public void render(ModelBlockRenderer modelBlockRenderer, BlockAndTintGetter blockView, BlockStateModel model, BlockState state, BlockPos pos, PoseStack poseStack, BlockVertexConsumerProvider multiBufferSource, boolean cull, long seed, int overlay) {
         NonTerrainBlockRenderContext.POOL.get().renderModel(blockView, ((ModelBlockRendererAccessor) modelBlockRenderer).getBlockColors(), model, state, pos, poseStack, multiBufferSource, cull, seed, overlay);
     }
 
     @Override
-    public void render(PoseStack.Pose entry, MultiBufferSource vertexConsumers, BlockStateModel model, float red, float green, float blue, int light, int overlay, BlockAndTintGetter blockView, BlockPos pos, BlockState state) {
+    public void render(PoseStack.Pose entry, BlockVertexConsumerProvider vertexConsumers, BlockStateModel model, float red, float green, float blue, int light, int overlay, BlockAndTintGetter blockView, BlockPos pos, BlockState state) {
         SimpleBlockRenderContext.POOL.get().bufferModel(entry, vertexConsumers, model, red, green, blue, light, overlay, blockView, pos, state);
     }
 
@@ -120,15 +91,6 @@ public class SodiumRenderer implements Renderer {
             // TODO: seems wrong
             FabricBlockModelRenderer.render(poseStack.last(), layer -> multiBufferSource.getBuffer(RenderLayerHelper.getEntityBlockLayer(layer)), model, red, green, blue, light, overlay, blockView, pos, state);
             ((BlockRenderDispatcherAccessor) renderManager).getSpecialRenderers().get().renderByBlock(state.getBlock(), ItemDisplayContext.NONE, poseStack, multiBufferSource, light, overlay);
-        }
-    }
-
-    @Override
-    public void emitBlockModelPartQuads(BlockModelPart modelPart, QuadEmitter emitter, Predicate<@Nullable Direction> cullTest) {
-        if (emitter instanceof AbstractBlockRenderContext.BlockEmitter be) {
-            be.emitPart(modelPart, cullTest);
-        } else {
-            Renderer.super.emitBlockModelPartQuads(modelPart, emitter, cullTest);
         }
     }
 

@@ -20,20 +20,25 @@ import com.google.common.base.Preconditions;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
-import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFlags;
-import net.caffeinemc.mods.sodium.client.render.frapi.SodiumRenderer;
-import net.caffeinemc.mods.sodium.client.render.frapi.material.RenderMaterialImpl;
-import net.fabricmc.fabric.api.renderer.v1.mesh.QuadView;
-import net.fabricmc.fabric.api.renderer.v1.model.ModelHelper;
+import net.caffeinemc.mods.sodium.client.render.frapi.helper.GeometryHelper;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import org.apache.commons.lang3.ArrayUtils;
+import org.jetbrains.annotations.Nullable;
+
+import net.fabricmc.fabric.api.renderer.v1.mesh.QuadView;
+import net.fabricmc.fabric.api.renderer.v1.mesh.ShadeMode;
+import net.fabricmc.fabric.api.renderer.v1.model.ModelHelper;
+import net.fabricmc.fabric.api.util.TriState;
 
 /**
  * Holds all the array offsets and bit-wise encoders/decoders for
  * packing/unpacking quad data in an array of integers.
  * All of this is implementation-specific - that's why it isn't a "helper" class.
  */
-public abstract class EncodingFormat {
+public final class EncodingFormat {
     private EncodingFormat() { }
 
     static final int HEADER_BITS = 0;
@@ -71,86 +76,164 @@ public abstract class EncodingFormat {
         QUAD_STRIDE_BYTES = QUAD_STRIDE * 4;
         TOTAL_STRIDE = HEADER_STRIDE + QUAD_STRIDE;
 
-        Preconditions.checkState(VERTEX_STRIDE == QuadView.VANILLA_VERTEX_STRIDE, "Sodium FRAPI vertex stride (%s) mismatched with rendering API (%s)", VERTEX_STRIDE, QuadView.VANILLA_VERTEX_STRIDE);
-        Preconditions.checkState(QUAD_STRIDE == QuadView.VANILLA_QUAD_STRIDE, "Sodium FRAPI quad stride (%s) mismatched with rendering API (%s)", QUAD_STRIDE, QuadView.VANILLA_QUAD_STRIDE);
+        Preconditions.checkState(VERTEX_STRIDE == QuadView.VANILLA_VERTEX_STRIDE, "Indigo vertex stride (%s) mismatched with rendering API (%s)", VERTEX_STRIDE, QuadView.VANILLA_VERTEX_STRIDE);
+        Preconditions.checkState(QUAD_STRIDE == QuadView.VANILLA_QUAD_STRIDE, "Indigo quad stride (%s) mismatched with rendering API (%s)", QUAD_STRIDE, QuadView.VANILLA_QUAD_STRIDE);
     }
 
     /** used for quick clearing of quad buffers. */
     static final int[] EMPTY = new int[TOTAL_STRIDE];
 
-    private static final int DIRECTION_MASK = Mth.smallestEncompassingPowerOfTwo(ModelHelper.NULL_FACE_ID + 1) - 1;
-    private static final int DIRECTION_BIT_COUNT = Integer.bitCount(DIRECTION_MASK);
-    private static final int FACING_MASK = Mth.smallestEncompassingPowerOfTwo(ModelQuadFacing.COUNT) - 1;
-    private static final int FACING_BIT_COUNT = Integer.bitCount(FACING_MASK);
-    private static final int MATERIAL_MASK = Mth.smallestEncompassingPowerOfTwo(RenderMaterialImpl.VALUE_COUNT) - 1;
-    private static final int MATERIAL_BIT_COUNT = Integer.bitCount(MATERIAL_MASK);
+    private static final int DIRECTION_COUNT = Direction.values().length;
+    private static final int NULLABLE_DIRECTION_COUNT = DIRECTION_COUNT + 1;
 
-    private static final int CULL_SHIFT = 0;
-    private static final int CULL_INVERSE_MASK = ~(DIRECTION_MASK << CULL_SHIFT);
-    private static final int LIGHT_SHIFT = CULL_SHIFT + DIRECTION_BIT_COUNT;
-    private static final int LIGHT_INVERSE_MASK = ~(DIRECTION_MASK << LIGHT_SHIFT);
-    private static final int NORMAL_FACE_SHIFT = LIGHT_SHIFT + DIRECTION_BIT_COUNT;
-    private static final int NORMAL_FACE_INVERSE_MASK = ~(FACING_MASK << NORMAL_FACE_SHIFT);
-    private static final int NORMALS_SHIFT = NORMAL_FACE_SHIFT + FACING_BIT_COUNT;
-    private static final int NORMALS_COUNT = 4;
-    private static final int NORMALS_MASK = (1 << NORMALS_COUNT) - 1;
-    private static final int NORMALS_INVERSE_MASK = ~(NORMALS_MASK << NORMALS_SHIFT);
-    private static final int GEOMETRY_SHIFT = NORMALS_SHIFT + NORMALS_COUNT;
-    private static final int GEOMETRY_MASK = (1 << ModelQuadFlags.FLAG_BIT_COUNT) - 1;
-    private static final int GEOMETRY_INVERSE_MASK = ~(GEOMETRY_MASK << GEOMETRY_SHIFT);
-    private static final int MATERIAL_SHIFT = GEOMETRY_SHIFT + ModelQuadFlags.FLAG_BIT_COUNT;
-    private static final int MATERIAL_INVERSE_MASK = ~(MATERIAL_MASK << MATERIAL_SHIFT);
+    private static final @Nullable ChunkSectionLayer[] NULLABLE_BLOCK_RENDER_LAYERS = ArrayUtils.add(ChunkSectionLayer.values(), null);
+    private static final int NULLABLE_BLOCK_RENDER_LAYER_COUNT = NULLABLE_BLOCK_RENDER_LAYERS.length;
+    private static final TriState[] TRI_STATES = TriState.values();
+    private static final int TRI_STATE_COUNT = TRI_STATES.length;
+    private static final @Nullable ItemStackRenderState.FoilType[] NULLABLE_GLINTS = ArrayUtils.add(ItemStackRenderState.FoilType.values(), null);
+    private static final int NULLABLE_GLINT_COUNT = NULLABLE_GLINTS.length;
+    private static final ShadeMode[] SHADE_MODES = ShadeMode.values();
+    private static final int SHADE_MODE_COUNT = SHADE_MODES.length;
+
+    private static final int NULL_RENDER_LAYER_INDEX = NULLABLE_BLOCK_RENDER_LAYER_COUNT - 1;
+    private static final int NULL_GLINT_INDEX = NULLABLE_GLINT_COUNT - 1;
+
+    private static final int CULL_BIT_LENGTH = Mth.ceillog2(NULLABLE_DIRECTION_COUNT);
+    private static final int LIGHT_BIT_LENGTH = Mth.ceillog2(DIRECTION_COUNT);
+    private static final int NORMALS_BIT_LENGTH = 4;
+    private static final int NORMAL_FACE_BIT_LENGTH = 3;
+    private static final int GEOMETRY_BIT_LENGTH = GeometryHelper.FLAG_BIT_COUNT;
+    private static final int RENDER_LAYER_BIT_LENGTH = Mth.ceillog2(NULLABLE_BLOCK_RENDER_LAYER_COUNT);
+    private static final int EMISSIVE_BIT_LENGTH = 1;
+    private static final int DIFFUSE_BIT_LENGTH = 1;
+    private static final int AO_BIT_LENGTH = Mth.ceillog2(TRI_STATE_COUNT);
+    private static final int GLINT_BIT_LENGTH = Mth.ceillog2(NULLABLE_GLINT_COUNT);
+    private static final int SHADE_MODE_BIT_LENGTH = Mth.ceillog2(SHADE_MODE_COUNT);
+
+    private static final int CULL_BIT_OFFSET = 0;
+    private static final int LIGHT_BIT_OFFSET = CULL_BIT_OFFSET + CULL_BIT_LENGTH;
+    private static final int NORMAL_FACE_BIT_OFFSET = LIGHT_BIT_OFFSET + LIGHT_BIT_LENGTH;
+    private static final int NORMALS_BIT_OFFSET = NORMAL_FACE_BIT_OFFSET + NORMAL_FACE_BIT_LENGTH;
+    private static final int GEOMETRY_BIT_OFFSET = NORMALS_BIT_OFFSET + NORMALS_BIT_LENGTH;
+    private static final int RENDER_LAYER_BIT_OFFSET = GEOMETRY_BIT_OFFSET + GEOMETRY_BIT_LENGTH;
+    private static final int EMISSIVE_BIT_OFFSET = RENDER_LAYER_BIT_OFFSET + RENDER_LAYER_BIT_LENGTH;
+    private static final int DIFFUSE_BIT_OFFSET = EMISSIVE_BIT_OFFSET + EMISSIVE_BIT_LENGTH;
+    private static final int AO_BIT_OFFSET = DIFFUSE_BIT_OFFSET + DIFFUSE_BIT_LENGTH;
+    private static final int GLINT_BIT_OFFSET = AO_BIT_OFFSET + AO_BIT_LENGTH;
+    private static final int SHADE_MODE_BIT_OFFSET = GLINT_BIT_OFFSET + GLINT_BIT_LENGTH;
+    private static final int TOTAL_BIT_LENGTH = SHADE_MODE_BIT_OFFSET + SHADE_MODE_BIT_LENGTH;
+
+    private static final int CULL_MASK = bitMask(CULL_BIT_LENGTH, CULL_BIT_OFFSET);
+    private static final int LIGHT_MASK = bitMask(LIGHT_BIT_LENGTH, LIGHT_BIT_OFFSET);
+    private static final int NORMAL_FACE_MASK = bitMask(NORMAL_FACE_BIT_LENGTH, NORMAL_FACE_BIT_OFFSET);
+    private static final int NORMALS_MASK = bitMask(NORMALS_BIT_LENGTH, NORMALS_BIT_OFFSET);
+    private static final int GEOMETRY_MASK = bitMask(GEOMETRY_BIT_LENGTH, GEOMETRY_BIT_OFFSET);
+    private static final int RENDER_LAYER_MASK = bitMask(RENDER_LAYER_BIT_LENGTH, RENDER_LAYER_BIT_OFFSET);
+    private static final int EMISSIVE_MASK = bitMask(EMISSIVE_BIT_LENGTH, EMISSIVE_BIT_OFFSET);
+    private static final int DIFFUSE_MASK = bitMask(DIFFUSE_BIT_LENGTH, DIFFUSE_BIT_OFFSET);
+    private static final int AO_MASK = bitMask(AO_BIT_LENGTH, AO_BIT_OFFSET);
+    private static final int GLINT_MASK = bitMask(GLINT_BIT_LENGTH, GLINT_BIT_OFFSET);
+    private static final int SHADE_MODE_MASK = bitMask(SHADE_MODE_BIT_LENGTH, SHADE_MODE_BIT_OFFSET);
 
     static {
-        Preconditions.checkArgument(MATERIAL_SHIFT + MATERIAL_BIT_COUNT <= 32, "Sodium FRAPI header encoding bit count (%s) exceeds integer bit length)", TOTAL_STRIDE);
+        Preconditions.checkArgument(TOTAL_BIT_LENGTH <= 32, "Indigo header encoding bit count (%s) exceeds integer bit length)", TOTAL_STRIDE);
     }
 
+    private static int bitMask(int bitLength, int bitOffset) {
+        return ((1 << bitLength) - 1) << bitOffset;
+    }
+
+    @Nullable
     static Direction cullFace(int bits) {
-        return ModelHelper.faceFromIndex((bits >>> CULL_SHIFT) & DIRECTION_MASK);
+        return ModelHelper.faceFromIndex((bits & CULL_MASK) >>> CULL_BIT_OFFSET);
     }
 
-    static int cullFace(int bits, Direction face) {
-        return (bits & CULL_INVERSE_MASK) | (ModelHelper.toFaceIndex(face) << CULL_SHIFT);
+    static int cullFace(int bits, @Nullable Direction face) {
+        return (bits & ~CULL_MASK) | (ModelHelper.toFaceIndex(face) << CULL_BIT_OFFSET);
     }
 
     static Direction lightFace(int bits) {
-        return ModelHelper.faceFromIndex((bits >>> LIGHT_SHIFT) & DIRECTION_MASK);
+        return ModelHelper.faceFromIndex((bits & LIGHT_MASK) >>> LIGHT_BIT_OFFSET);
     }
 
     static int lightFace(int bits, Direction face) {
-        return (bits & LIGHT_INVERSE_MASK) | (ModelHelper.toFaceIndex(face) << LIGHT_SHIFT);
-    }
-
-    static ModelQuadFacing normalFace(int bits) {
-        return ModelQuadFacing.VALUES[(bits >>> NORMAL_FACE_SHIFT) & FACING_MASK];
-    }
-
-    static int normalFace(int bits, ModelQuadFacing face) {
-        return (bits & NORMAL_FACE_INVERSE_MASK) | (face.ordinal() << NORMAL_FACE_SHIFT);
+        return (bits & ~LIGHT_MASK) | (ModelHelper.toFaceIndex(face) << LIGHT_BIT_OFFSET);
     }
 
     /** indicate if vertex normal has been set - bits correspond to vertex ordinals. */
     static int normalFlags(int bits) {
-        return (bits >>> NORMALS_SHIFT) & NORMALS_MASK;
+        return (bits & NORMALS_MASK) >>> NORMALS_BIT_OFFSET;
     }
 
     static int normalFlags(int bits, int normalFlags) {
-        return (bits & NORMALS_INVERSE_MASK) | ((normalFlags & NORMALS_MASK) << NORMALS_SHIFT);
+        return (bits & ~NORMALS_MASK) | ((normalFlags << NORMALS_BIT_OFFSET) & NORMALS_MASK);
     }
 
     static int geometryFlags(int bits) {
-        return (bits >>> GEOMETRY_SHIFT) & GEOMETRY_MASK;
+        return (bits & GEOMETRY_MASK) >>> GEOMETRY_BIT_OFFSET;
     }
 
     static int geometryFlags(int bits, int geometryFlags) {
-        return (bits & GEOMETRY_INVERSE_MASK) | ((geometryFlags & GEOMETRY_MASK) << GEOMETRY_SHIFT);
+        return (bits & ~GEOMETRY_MASK) | ((geometryFlags << GEOMETRY_BIT_OFFSET) & GEOMETRY_MASK);
     }
 
-    static RenderMaterialImpl material(int bits) {
-        return RenderMaterialImpl.byIndex((bits >>> MATERIAL_SHIFT) & MATERIAL_MASK);
+    static ModelQuadFacing normalFace(int bits) {
+        return ModelQuadFacing.values()[(bits & NORMAL_FACE_MASK) >>> NORMAL_FACE_BIT_OFFSET];
     }
 
-    static int material(int bits, RenderMaterialImpl material) {
-        return (bits & MATERIAL_INVERSE_MASK) | (material.index() << MATERIAL_SHIFT);
+    static int normalFace(int bits, ModelQuadFacing face) {
+        return (bits & ~NORMAL_FACE_MASK) | ((face.ordinal() << NORMAL_FACE_BIT_OFFSET) & NORMAL_FACE_MASK);
+    }
+
+    @Nullable
+    static ChunkSectionLayer renderLayer(int bits) {
+        return NULLABLE_BLOCK_RENDER_LAYERS[(bits & RENDER_LAYER_MASK) >>> RENDER_LAYER_BIT_OFFSET];
+    }
+
+    static int renderLayer(int bits, @Nullable ChunkSectionLayer renderLayer) {
+        int index = renderLayer == null ? NULL_RENDER_LAYER_INDEX : renderLayer.ordinal();
+        return (bits & ~RENDER_LAYER_MASK) | (index << RENDER_LAYER_BIT_OFFSET);
+    }
+
+    static boolean emissive(int bits) {
+        return (bits & EMISSIVE_MASK) != 0;
+    }
+
+    static int emissive(int bits, boolean emissive) {
+        return emissive ? (bits | EMISSIVE_MASK) : (bits & ~EMISSIVE_MASK);
+    }
+
+    static boolean diffuseShade(int bits) {
+        return (bits & DIFFUSE_MASK) != 0;
+    }
+
+    static int diffuseShade(int bits, boolean shade) {
+        return shade ? (bits | DIFFUSE_MASK) : (bits & ~DIFFUSE_MASK);
+    }
+
+    static TriState ambientOcclusion(int bits) {
+        return TRI_STATES[(bits & AO_MASK) >>> AO_BIT_OFFSET];
+    }
+
+    static int ambientOcclusion(int bits, TriState ao) {
+        return (bits & ~AO_MASK) | (ao.ordinal() << AO_BIT_OFFSET);
+    }
+
+    @Nullable
+    static ItemStackRenderState.FoilType glint(int bits) {
+        return NULLABLE_GLINTS[(bits & GLINT_MASK) >>> GLINT_BIT_OFFSET];
+    }
+
+    static int glint(int bits, @Nullable ItemStackRenderState.FoilType glint) {
+        int index = glint == null ? NULL_GLINT_INDEX : glint.ordinal();
+        return (bits & ~GLINT_MASK) | (index << GLINT_BIT_OFFSET);
+    }
+
+    static ShadeMode shadeMode(int bits) {
+        return SHADE_MODES[(bits & SHADE_MODE_MASK) >>> SHADE_MODE_BIT_OFFSET];
+    }
+
+    static int shadeMode(int bits, ShadeMode mode) {
+        return (bits & ~SHADE_MODE_MASK) | (mode.ordinal() << SHADE_MODE_BIT_OFFSET);
     }
 }

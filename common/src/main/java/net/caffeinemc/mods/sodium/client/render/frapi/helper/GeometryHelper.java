@@ -31,6 +31,9 @@ import org.joml.Vector3fc;
 public abstract class GeometryHelper {
     private GeometryHelper() { }
 
+    /** how many bits quad header encoding should reserve for encoding geometry flags. */
+    public static final int FLAG_BIT_COUNT = 3;
+
     /**
      * Returns true if quad is parallel to the given face.
      * Does not validate quad winding order.

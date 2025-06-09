@@ -66,7 +66,7 @@ dependencies {
 
     addDependentFabricModule("fabric-api-base")
     addDependentFabricModule("fabric-block-view-api-v2")
-    modCompileOnly("net.fabricmc.fabric-api:fabric-renderer-api-v1:6.0.5+local")
+    addDependentFabricModule("fabric-renderer-api-v1")
 
     // We need to be careful during pre-launch that we don't touch any Minecraft classes, since other mods
     // will not yet have an opportunity to apply transformations.

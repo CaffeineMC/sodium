@@ -27,11 +27,9 @@ import net.caffeinemc.mods.sodium.client.model.light.data.SingleBlockLightDataCa
 import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
 import net.caffeinemc.mods.sodium.client.services.SodiumModelData;
-import net.fabricmc.fabric.api.renderer.v1.material.BlendMode;
-import net.fabricmc.fabric.api.renderer.v1.material.GlintMode;
-import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
-import net.fabricmc.fabric.api.renderer.v1.material.ShadeMode;
+import net.fabricmc.fabric.api.renderer.v1.mesh.ShadeMode;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
+import net.fabricmc.fabric.api.renderer.v1.render.BlockVertexConsumerProvider;
 import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -53,7 +51,7 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
     private BlockColors colorMap;
     private final SingleBlockLightDataCache lightDataCache = new SingleBlockLightDataCache();
 
-    private MultiBufferSource vertexConsumer;
+    private BlockVertexConsumerProvider vertexConsumer;
     private Matrix4f matPosition;
     private boolean trustedNormals;
     private Matrix3f matNormal;
@@ -64,7 +62,7 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
         this.random = new SingleThreadedRandomSource(42L);
     }
 
-    public void renderModel(BlockAndTintGetter blockView, BlockColors blockColors, BlockStateModel model, BlockState state, BlockPos pos, PoseStack poseStack, MultiBufferSource buffer, boolean cull, long seed, int overlay) {
+    public void renderModel(BlockAndTintGetter blockView, BlockColors blockColors, BlockStateModel model, BlockState state, BlockPos pos, PoseStack poseStack, BlockVertexConsumerProvider buffer, boolean cull, long seed, int overlay) {
         this.level = blockView;
         this.state = state;
         this.pos = pos;
@@ -92,26 +90,25 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
 
     @Override
     protected void processQuad(MutableQuadViewImpl quad) {
-        final RenderMaterial mat = quad.material();
-        final TriState aoMode = mat.ambientOcclusion();
-        final ShadeMode shadeMode = mat.shadeMode();
+        final TriState aoMode = quad.ambientOcclusion();
+        final ShadeMode shadeMode = quad.shadeMode();
         final LightMode lightMode;
         if (aoMode == TriState.DEFAULT) {
             lightMode = this.defaultLightMode;
         } else {
             lightMode = this.useAmbientOcclusion && aoMode.get() ? LightMode.SMOOTH : LightMode.FLAT;
         }
-        final boolean emissive = mat.emissive();
+        final boolean emissive = quad.emissive();
 
-        VertexConsumer vertexConsumer = getVertexConsumer(mat.blendMode());
+        VertexConsumer vertexConsumer = getVertexConsumer(quad.renderLayer());
 
         tintQuad(quad);
         shadeQuad(quad, lightMode, emissive, shadeMode);
         bufferQuad(quad, vertexConsumer);
     }
 
-    private VertexConsumer getVertexConsumer(BlendMode blendMode) {
-        return vertexConsumer.getBuffer(blendMode == BlendMode.DEFAULT ? toRenderLayer(defaultRenderType) : blendMode.itemRenderLayer);
+    private VertexConsumer getVertexConsumer(ChunkSectionLayer blendMode) {
+        return vertexConsumer.getBuffer(blendMode == null ? defaultRenderType : blendMode);
     }
 
     private RenderType toRenderLayer(ChunkSectionLayer defaultRenderType) {

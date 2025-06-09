@@ -27,14 +27,13 @@ import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
 import net.caffeinemc.mods.sodium.client.services.SodiumModelData;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
-import net.fabricmc.fabric.api.renderer.v1.material.BlendMode;
-import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
-import net.fabricmc.fabric.api.renderer.v1.material.ShadeMode;
+import net.fabricmc.fabric.api.renderer.v1.mesh.ShadeMode;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
 import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
@@ -111,19 +110,18 @@ public class BlockRenderer extends AbstractBlockRenderContext {
      */
     @Override
     protected void processQuad(MutableQuadViewImpl quad) {
-        final RenderMaterial mat = quad.material();
-        final TriState aoMode = mat.ambientOcclusion();
-        final ShadeMode shadeMode = mat.shadeMode();
+        final TriState aoMode = quad.ambientOcclusion();
+        final ShadeMode shadeMode = quad.shadeMode();
         final LightMode lightMode;
         if (aoMode == TriState.DEFAULT) {
             lightMode = this.defaultLightMode;
         } else {
             lightMode = this.useAmbientOcclusion && aoMode.get() ? LightMode.SMOOTH : LightMode.FLAT;
         }
-        final boolean emissive = mat.emissive();
+        final boolean emissive = quad.emissive();
 
-        final BlendMode blendMode = mat.blendMode();
-        final Material material = DefaultMaterials.forChunkLayer(blendMode.blockRenderLayer == null ? defaultRenderType : blendMode.blockRenderLayer);
+        final ChunkSectionLayer blendMode = quad.renderLayer();
+        final Material material = DefaultMaterials.forChunkLayer(blendMode == null ? defaultRenderType : blendMode);
 
         this.tintQuad(quad);
         this.shadeQuad(quad, lightMode, emissive, shadeMode);

@@ -57,7 +57,7 @@ dependencies {
     // Fabric API modules
     addEmbeddedFabricModule("fabric-api-base")
     addEmbeddedFabricModule("fabric-block-view-api-v2")
-    modImplementation("net.fabricmc.fabric-api:fabric-renderer-api-v1:6.0.5+local")
+    addEmbeddedFabricModule("fabric-renderer-api-v1")
     addEmbeddedFabricModule("fabric-rendering-fluids-v1")
     addEmbeddedFabricModule("fabric-resource-loader-v0")
 }

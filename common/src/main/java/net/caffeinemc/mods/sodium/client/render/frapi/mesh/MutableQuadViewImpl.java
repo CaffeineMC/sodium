@@ -22,18 +22,21 @@ import net.caffeinemc.mods.sodium.client.model.quad.BakedQuadView;
 import net.caffeinemc.mods.sodium.client.render.frapi.SodiumRenderer;
 import net.caffeinemc.mods.sodium.client.render.frapi.helper.ColorHelper;
 import net.caffeinemc.mods.sodium.client.render.frapi.helper.TextureHelper;
-import net.caffeinemc.mods.sodium.client.render.frapi.material.RenderMaterialImpl;
-import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadTransform;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadView;
+import net.fabricmc.fabric.api.renderer.v1.mesh.ShadeMode;
 import net.fabricmc.fabric.api.renderer.v1.model.SpriteFinder;
 import net.minecraft.client.renderer.LightTexture;
 import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 import static net.caffeinemc.mods.sodium.client.render.frapi.mesh.EncodingFormat.*;
 
@@ -83,7 +86,10 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
         // Apply non-zero defaults
         quad.color(-1, -1, -1, -1);
         quad.cullFace(null);
-        quad.material(SodiumRenderer.STANDARD_MATERIAL);
+        quad.renderLayer(null);
+        quad.diffuseShade(true);
+        quad.ambientOcclusion(TriState.DEFAULT);
+        quad.glint(null);
         quad.tintIndex(-1);
     }
 
@@ -227,8 +233,40 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
     }
 
     @Override
-    public final MutableQuadViewImpl material(RenderMaterial material) {
-        data[baseIndex + HEADER_BITS] = EncodingFormat.material(data[baseIndex + HEADER_BITS], (RenderMaterialImpl) material);
+    public MutableQuadViewImpl renderLayer(@Nullable ChunkSectionLayer renderLayer) {
+        data[baseIndex + HEADER_BITS] = EncodingFormat.renderLayer(data[baseIndex + HEADER_BITS], renderLayer);
+        return this;
+    }
+
+    @Override
+    public MutableQuadViewImpl emissive(boolean emissive) {
+        data[baseIndex + HEADER_BITS] = EncodingFormat.emissive(data[baseIndex + HEADER_BITS], emissive);
+        return this;
+    }
+
+    @Override
+    public MutableQuadViewImpl diffuseShade(boolean shade) {
+        data[baseIndex + HEADER_BITS] = EncodingFormat.diffuseShade(data[baseIndex + HEADER_BITS], shade);
+        return this;
+    }
+
+    @Override
+    public MutableQuadViewImpl ambientOcclusion(TriState ao) {
+        Objects.requireNonNull(ao, "ambient occlusion TriState may not be null");
+        data[baseIndex + HEADER_BITS] = EncodingFormat.ambientOcclusion(data[baseIndex + HEADER_BITS], ao);
+        return this;
+    }
+
+    @Override
+    public MutableQuadViewImpl glint(@Nullable ItemStackRenderState.FoilType glint) {
+        data[baseIndex + HEADER_BITS] = EncodingFormat.glint(data[baseIndex + HEADER_BITS], glint);
+        return this;
+    }
+
+    @Override
+    public MutableQuadViewImpl shadeMode(ShadeMode mode) {
+        Objects.requireNonNull(mode, "ShadeMode may not be null");
+        data[baseIndex + HEADER_BITS] = EncodingFormat.shadeMode(data[baseIndex + HEADER_BITS], mode);
         return this;
     }
 
@@ -291,23 +329,12 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
     }
 
     @Override
-    public final MutableQuadViewImpl fromVanilla(BakedQuad quad, RenderMaterial material, @Nullable Direction cullFace) {
+    public final MutableQuadViewImpl fromBakedQuad(BakedQuad quad) {
         fromVanillaInternal(quad.vertices(), 0);
-        data[baseIndex + HEADER_BITS] = EncodingFormat.cullFace(0, cullFace);
         nominalFace(quad.direction());
+        diffuseShade(quad.shade());
         tintIndex(quad.tintIndex());
-
-        // TODO: Is this the same as hasShade?
-        if (!((BakedQuadView) (Object) quad).hasShade()) {
-            material = RenderMaterialImpl.setDisableDiffuse((RenderMaterialImpl) material, true);
-        }
-
-        if (material.ambientOcclusion().orElse(true) && !((BakedQuadView) (Object) quad).hasAO()) {
-            material = RenderMaterialImpl.setAmbientOcclusion((RenderMaterialImpl) material, TriState.FALSE);
-        }
-
-        material(material);
-        tag(0);
+        ambientOcclusion(TriState.of(((BakedQuadView) (Object) quad).hasAO()));
 
         // Copy geometry cached inside the quad
         BakedQuadView bakedView = (BakedQuadView) (Object) quad;
