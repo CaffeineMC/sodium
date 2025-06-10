@@ -63,8 +63,7 @@ dependencies {
     }
 
     addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")
-    compileOnly("net.caffeinemc:fabric-renderer-api-v1:6.0.0")
-    jarJar("net.caffeinemc:fabric-renderer-api-v1:6.0.0")
+    addEmbeddedFabricModule("net.caffeinemc:fabric-renderer-api-v1:7.0.0")
     //addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
 
     jarJar(project(":neoforge", "service"))

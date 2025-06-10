@@ -53,6 +53,7 @@
     "features.render.entity.cull.EntityRendererMixin",
     "features.render.entity.shadows.EntityRenderDispatcherMixin",
     "features.render.frapi.BakedModelMixin",
+    "features.render.frapi.BlockModelPartMixin",
     "features.render.frapi.BlockRenderDispatcherAccessor",
     "features.render.frapi.BlockRenderDispatcherMixin",
     "features.render.frapi.ModelBlockRendererMixin",
