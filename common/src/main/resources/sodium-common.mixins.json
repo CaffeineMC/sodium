@@ -59,6 +59,7 @@
     "features.render.frapi.ModelBlockRendererMixin",
     "features.render.frapi.ModelBlockRendererAccessor",
     "features.render.frapi.ItemRenderStateMixin",
+    "features.render.frapi.FallingBlockRendererMixin",
     "features.render.frapi.ItemLayerRenderStateMixin",
     "features.render.frapi.ItemRendererAccessor",
     "features.render.gui.font.BakedGlyphMixin",
