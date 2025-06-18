@@ -54,6 +54,10 @@ public class MathUtil {
         return newValueContribution * newValue + (1 - newValueContribution) * oldValue;
     }
 
+    public static double exponentialMovingAverage(double oldValue, double newValue, double newValueContribution) {
+        return newValueContribution * newValue + (1 - newValueContribution) * oldValue;
+    }
+
     public static long exponentialMovingAverage(long oldValue, long newValue, float newValueContribution) {
         return (long) (newValueContribution * newValue) + (long) ((1 - newValueContribution) * oldValue);
     }
