@@ -14,6 +14,8 @@ public interface RenderListProvider extends SortItemsProvider {
     ObjectArrayList<ChunkRenderList> getUnsortedRenderLists();
 
     Map<TaskQueueType, ArrayDeque<RenderSection>> getTaskLists();
+    
+    boolean needsRevisitForPendingUpdates();
 
     boolean orderIsSorted();
 

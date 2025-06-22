@@ -104,7 +104,7 @@ public class RenderSectionManager {
     private long lastFrameAtTime = System.nanoTime();
     private static final float FRAME_DURATION_UPDATE_RATIO = 0.05f;
 
-    private boolean needsGraphUpdate;
+    private boolean needsGraphUpdate = true;
     private int lastUpdatedFrame;
 
     private @Nullable Vector3dc cameraPosition;
@@ -118,7 +118,6 @@ public class RenderSectionManager {
         this.level = level;
         this.builder = new ChunkBuilder(level, ChunkMeshFormats.COMPACT);
 
-        this.needsGraphUpdate = true;
         this.renderDistance = renderDistance;
 
         this.sortTriggering = new SortTriggering();
@@ -158,12 +157,10 @@ public class RenderSectionManager {
         this.lastUpdatedFrame += 1;
         this.lastFogParameters = fogParameters;
 
-        this.createTerrainRenderList(camera, viewport, fogParameters, this.lastUpdatedFrame, spectator);
-
-        this.needsGraphUpdate = false;
+        this.needsGraphUpdate = this.createTerrainRenderList(camera, viewport, fogParameters, this.lastUpdatedFrame, spectator);
     }
 
-    private void createTerrainRenderList(Camera camera, Viewport viewport, FogParameters fogParameters, int frame, boolean spectator) {
+    private boolean createTerrainRenderList(Camera camera, Viewport viewport, FogParameters fogParameters, int frame, boolean spectator) {
         this.resetRenderLists();
 
         final var searchDistance = this.getSearchDistance(fogParameters);
@@ -186,6 +183,12 @@ public class RenderSectionManager {
 
         this.renderLists = renderListProvider.createRenderLists(viewport);
         this.taskLists = renderListProvider.getTaskLists();
+        
+        // when there were sections with pending updates that were skipped because they already had a task running,
+        // it needs to revisit them to schedule the remaining pending updates.
+        // since not all tasks necessarily change the section info to trigger a graph update,
+        // without this pending updates might be missed when the camera is stationary
+        return renderListProvider.needsRevisitForPendingUpdates();
     }
 
     private boolean isOutOfGraph(SectionPos pos) {
