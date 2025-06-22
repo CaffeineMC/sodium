@@ -16,6 +16,7 @@ public abstract class SectionCollector implements RenderListProvider, RenderSect
     private final TaskQueueType importantRebuildQueueType;
     private final ObjectArrayList<ChunkRenderList> renderLists;
     private final EnumMap<TaskQueueType, ArrayDeque<RenderSection>> sortedTaskLists;
+    private boolean needsRevisitForPendingUpdates = false;
 
     private static int[] sortItems = new int[RenderRegion.REGION_SIZE];
 
@@ -51,6 +52,14 @@ public abstract class SectionCollector implements RenderListProvider, RenderSect
         var pendingUpdate = section.getPendingUpdate();
 
         if (pendingUpdate != 0) {
+            // if the section has a pending update but a task is already running for it,
+            // don't add it to the task list again because starting a new task when there's already one running is invalid.
+            // (for example, it would become impossible to cancel the earlier task)
+            if (section.getTaskCancellationToken() != null) {
+                this.needsRevisitForPendingUpdates = true;
+                return;
+            }
+            
             var queueType = ChunkUpdateTypes.getQueueType(pendingUpdate, this.importantRebuildQueueType);
             Queue<RenderSection> queue = this.sortedTaskLists.get(queueType);
 
@@ -68,6 +77,11 @@ public abstract class SectionCollector implements RenderListProvider, RenderSect
     @Override
     public Map<TaskQueueType, ArrayDeque<RenderSection>> getTaskLists() {
         return this.sortedTaskLists;
+    }
+
+    @Override
+    public boolean needsRevisitForPendingUpdates() {
+        return this.needsRevisitForPendingUpdates;
     }
 
     @Override
