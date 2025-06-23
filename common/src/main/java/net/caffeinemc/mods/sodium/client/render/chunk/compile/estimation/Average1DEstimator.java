@@ -43,7 +43,7 @@ public abstract class Average1DEstimator<C> extends Estimator<C, Average1DEstima
         return new ValueBatch<>();
     }
 
-    protected static class Average<C> implements Estimator.Model<Void, Long, ValueBatch<C>, Average<C>> {
+    protected static class Average<C> implements Estimator.Model<Void, Long, ValueBatch<C>> {
         private final float newDataRatio;
         private boolean hasRealData = false;
         private float average;
@@ -54,7 +54,7 @@ public abstract class Average1DEstimator<C> extends Estimator<C, Average1DEstima
         }
 
         @Override
-        public Average<C> update(ValueBatch<C> batch) {
+        public void update(ValueBatch<C> batch) {
             if (batch.count > 0) {
                 if (this.hasRealData) {
                     this.average = MathUtil.exponentialMovingAverage(this.average, batch.getAverage(), this.newDataRatio);
@@ -63,8 +63,6 @@ public abstract class Average1DEstimator<C> extends Estimator<C, Average1DEstima
                     this.hasRealData = true;
                 }
             }
-
-            return this;
         }
 
         @Override

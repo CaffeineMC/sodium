@@ -6,7 +6,7 @@ public enum TaskQueueType {
     ALWAYS_DEFER,
     INITIAL_BUILD;
 
-    public boolean allowsUnlimitedUploadSize() {
+    public boolean allowsUnlimitedUploadDuration() {
         return this == ZERO_FRAME_DEFER;
     }
 

@@ -18,7 +18,7 @@ public abstract class Estimator<
         TBatch extends Estimator.DataBatch<TPoint>,
         TInput,
         TOutput,
-        TModel extends Estimator.Model<TInput, TOutput, TBatch, TModel>> {
+        TModel extends Estimator.Model<TInput, TOutput, TBatch>> {
     protected final Map<TCategory, TModel> models = createMap();
     protected final Map<TCategory, TBatch> batches = createMap();
 
@@ -32,8 +32,8 @@ public abstract class Estimator<
         TPointCategory category();
     }
 
-    protected interface Model<TModelInput, TModelOutput, TModelBatch, TModelSelf extends Model<TModelInput, TModelOutput, TModelBatch, TModelSelf>> {
-        TModelSelf update(TModelBatch batch);
+    protected interface Model<TModelInput, TModelOutput, TModelBatch> {
+        void update(TModelBatch batch);
 
         TModelOutput predict(TModelInput input);
     }
@@ -65,14 +65,7 @@ public abstract class Estimator<
 
     public void updateModels() {
         this.batches.forEach((category, aggregator) -> {
-            var oldModel = this.ensureModel(category);
-
-            // update the model and store it back if it returned a new model
-            var newModel = oldModel.update(aggregator);
-            if (newModel != oldModel) {
-                this.models.put(category, newModel);
-            }
-
+            this.ensureModel(category).update(aggregator);
             aggregator.reset();
         });
     }

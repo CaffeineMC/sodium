@@ -11,4 +11,6 @@ public interface ChunkJob extends CancellationToken {
     long getEstimatedSize();
 
     long getEstimatedDuration();
+    
+    long getEstimatedUploadDuration();
 }
