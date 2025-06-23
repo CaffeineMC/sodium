@@ -1,75 +1,70 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-
-import java.util.Locale;
-
-public abstract class Linear2DEstimator<C> extends Estimator<
+public abstract class ExpDecayLinear2DEstimator<C> extends Abstract2DLinearEstimator<
         C,
-        Linear2DEstimator.DataPair<C>,
-        Linear2DEstimator.LinearRegressionBatch<C>,
-        Long,
-        Long,
-        Linear2DEstimator.LinearFunction<C>> {
+        ExpDecayLinear2DEstimator.ClearingLinearRegressionBatch<C>,
+        ExpDecayLinear2DEstimator.ExpDecayLinearFunction<C>> {
     private final float newDataRatio;
     private final int initialSampleTarget;
-    private final long initialOutput;
+    private final int minBatchSize;
 
-    public Linear2DEstimator(float newDataRatio, int initialSampleTarget, long initialOutput) {
+    public ExpDecayLinear2DEstimator(float newDataRatio, int initialSampleTarget, int minBatchSize, long initialOutput) {
+        super(initialOutput);
         this.newDataRatio = newDataRatio;
         this.initialSampleTarget = initialSampleTarget;
-        this.initialOutput = initialOutput;
+        this.minBatchSize = minBatchSize;
     }
 
-    public interface DataPair<C> extends DataPoint<C> {
-        long x();
-
-        long y();
-    }
-
-    protected static class LinearRegressionBatch<C> extends ObjectArrayList<DataPair<C>> implements Estimator.DataBatch<DataPair<C>> {
-        @Override
-        public void addDataPoint(DataPair<C> input) {
-            this.add(input);
-        }
+    protected static class ClearingLinearRegressionBatch<C> extends Abstract2DLinearEstimator.LinearRegressionBatch<C> {
+        boolean deferredClear = false;
 
         @Override
         public void reset() {
-            this.clear();
+            if (!this.deferredClear) {
+                this.clear();
+            }
+            this.deferredClear = false;
+        }
+        
+        private boolean checkUpdateDefer(int minBatchSize) {
+            if (this.size() < minBatchSize) {
+                this.deferredClear = true;
+                return true;
+            }
+            return false;
         }
     }
 
     @Override
-    protected LinearRegressionBatch<C> createNewDataBatch() {
-        return new LinearRegressionBatch<>();
+    protected ClearingLinearRegressionBatch<C> createNewDataBatch() {
+        return new ClearingLinearRegressionBatch<>();
     }
 
-    protected static class LinearFunction<C> implements Model<Long, Long, LinearRegressionBatch<C>, LinearFunction<C>> {
+    protected static class ExpDecayLinearFunction<C> extends Abstract2DLinearEstimator.LinearFunction<
+            C,
+            ExpDecayLinear2DEstimator.ClearingLinearRegressionBatch<C>> {
         // the maximum fraction of the total weight that new data can have
         private final float newDataRatioInv;
         // how many samples we want to have at least before we start diminishing the new data's weight
         private final int initialSampleTarget;
-        private final long initialOutput;
+        private final int minBatchSize;
 
-        private float yIntercept;
-        private float slope;
-
-        private int gatheredSamples = 0;
         private float xMeanOld = 0;
         private float yMeanOld = 0;
         private float covarianceOld = 0;
         private float varianceOld = 0;
 
-        public LinearFunction(float newDataRatio, int initialSampleTarget, long initialOutput) {
+        public ExpDecayLinearFunction(float newDataRatio, int initialSampleTarget, int minBatchSize, long initialOutput) {
+            super(initialOutput);
             this.newDataRatioInv = 1.0f / newDataRatio;
             this.initialSampleTarget = initialSampleTarget;
-            this.initialOutput = initialOutput;
+            this.minBatchSize = minBatchSize;
         }
 
         @Override
-        public LinearFunction<C> update(LinearRegressionBatch<C> batch) {
-            if (batch.isEmpty()) {
-                return this;
+        public void update(ClearingLinearRegressionBatch<C> batch) {
+            if (batch.isEmpty() || batch.checkUpdateDefer(this.minBatchSize)) {
+                return;
             }
 
             // condition the weight to gather at least the initial sample target, and then weight the new data with a ratio
@@ -109,7 +104,7 @@ public abstract class Linear2DEstimator<C> extends Estimator<
             }
 
             if (varianceSum == 0) {
-                return this;
+                return;
             }
 
             covarianceSum += this.covarianceOld * oldDataWeight;
@@ -118,32 +113,16 @@ public abstract class Linear2DEstimator<C> extends Estimator<
             // negative slopes are clamped to produce a flat line if necessary
             this.slope = Math.max(0, covarianceSum / varianceSum);
             this.yIntercept = yMean - this.slope * xMean;
-            
+
             this.xMeanOld = xMean;
             this.yMeanOld = yMean;
             this.covarianceOld = covarianceSum * totalWeightInv;
             this.varianceOld = varianceSum * totalWeightInv;
-
-            return this;
-        }
-
-        @Override
-        public Long predict(Long input) {
-            if (this.gatheredSamples == 0) {
-                return this.initialOutput;
-            }
-
-            return (long) (this.yIntercept + this.slope * input);
-        }
-
-        @Override
-        public String toString() {
-            return String.format(Locale.US, "s=%.2f,y=%.0f", this.slope, this.yIntercept);
         }
     }
 
     @Override
-    protected LinearFunction<C> createNewModel() {
-        return new LinearFunction<>(this.newDataRatio, this.initialSampleTarget, this.initialOutput);
+    protected ExpDecayLinearFunction<C> createNewModel() {
+        return new ExpDecayLinearFunction<>(this.newDataRatio, this.initialSampleTarget, this.minBatchSize, this.initialOutput);
     }
 }

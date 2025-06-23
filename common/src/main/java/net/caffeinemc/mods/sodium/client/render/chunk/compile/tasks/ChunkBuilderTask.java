@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.JobDurationEstimator;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.MeshTaskSizeEstimator;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.UploadDurationEstimator;
 import org.joml.Vector3dc;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
@@ -30,6 +31,7 @@ public abstract class ChunkBuilderTask<OUTPUT extends BuilderTaskOutput> impleme
 
     private long estimatedSize;
     private long estimatedDuration;
+    private long estimatedUploadDuration;
 
     /**
      * Constructs a new build task for the given chunk and converts the absolute camera position to a relative position. While the absolute position is stored as a double vector, the relative position is stored as a float vector.
@@ -61,9 +63,10 @@ public abstract class ChunkBuilderTask<OUTPUT extends BuilderTaskOutput> impleme
 
     public abstract long estimateTaskSizeWith(MeshTaskSizeEstimator estimator);
 
-    public void calculateEstimations(JobDurationEstimator jobEstimator, MeshTaskSizeEstimator sizeEstimator) {
+    public void calculateEstimations(JobDurationEstimator jobEstimator, MeshTaskSizeEstimator sizeEstimator, UploadDurationEstimator uploadEstimator) {
         this.estimatedSize = this.estimateTaskSizeWith(sizeEstimator);
         this.estimatedDuration = jobEstimator.estimateJobDuration(this.getClass(), this.estimatedSize);
+        this.estimatedUploadDuration = uploadEstimator.estimateUploadDuration(this.estimatedSize);
     }
 
     public long getEstimatedSize() {
@@ -72,6 +75,10 @@ public abstract class ChunkBuilderTask<OUTPUT extends BuilderTaskOutput> impleme
 
     public long getEstimatedDuration() {
         return this.estimatedDuration;
+    }
+    
+    public long getEstimatedUploadDuration() {
+        return this.estimatedUploadDuration;
     }
 
     @Override

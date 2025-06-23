@@ -78,4 +78,9 @@ public class ChunkJobTyped<TASK extends ChunkBuilderTask<OUTPUT>, OUTPUT extends
     public long getEstimatedDuration() {
         return this.task.getEstimatedDuration();
     }
+    
+    @Override
+    public long getEstimatedUploadDuration() {
+        return this.task.getEstimatedUploadDuration();
+    }
 }
