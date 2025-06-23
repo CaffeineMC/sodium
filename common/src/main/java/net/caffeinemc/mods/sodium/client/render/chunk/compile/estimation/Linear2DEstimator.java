@@ -4,7 +4,13 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import java.util.Locale;
 
-public abstract class Linear2DEstimator<C> extends Estimator<C, Linear2DEstimator.DataPair<C>, Linear2DEstimator.LinearRegressionBatch<C>, Long, Long, Linear2DEstimator.LinearFunction<C>> {
+public abstract class Linear2DEstimator<C> extends Estimator<
+        C,
+        Linear2DEstimator.DataPair<C>,
+        Linear2DEstimator.LinearRegressionBatch<C>,
+        Long,
+        Long,
+        Linear2DEstimator.LinearFunction<C>> {
     private final float newDataRatio;
     private final int initialSampleTarget;
     private final long initialOutput;
