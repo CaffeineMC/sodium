@@ -111,7 +111,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     protected final QuadLightData quadLightData = new QuadLightData();
     protected boolean useAmbientOcclusion;
     // Default AO mode for model (can be overridden by material property)
-    protected LightMode defaultLightMode;
+    protected LightMode defaultLightMode = LightMode.FLAT;
 
     @Override
     public QuadEmitter getEmitter() {

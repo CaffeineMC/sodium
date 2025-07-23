@@ -81,7 +81,7 @@ public class ModelBlockRendererMixin {
 
         list.clear();
 
-        bakedModel.collectParts(random, list);
+        bakedModel.collectParts(level, pos, state, random, list);
 
         for (BlockModelPart part : list) {
             var writer = VertexBufferWriter.of(bufferSource.getBuffer(RenderTypeHelper.getEntityRenderType(part.getRenderType(state))));

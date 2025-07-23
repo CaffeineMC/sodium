@@ -17,15 +17,6 @@ repositories {
         }
     }
 
-    maven {
-        name = "Maven for PR #2297" // https://github.com/neoforged/NeoForge/pull/2297
-        url = uri("https://prmaven.neoforged.net/NeoForge/pr2297")
-        content {
-            includeModule("net.neoforged", "neoforge")
-            includeModule("net.neoforged", "testframework")
-        }
-    }
-
     maven("https://maven.su5ed.dev/releases")
     maven("https://maven.neoforged.net/releases/")
 }
