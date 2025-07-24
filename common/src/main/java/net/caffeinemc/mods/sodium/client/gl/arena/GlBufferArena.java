@@ -118,7 +118,7 @@ public class GlBufferArena {
     }
 
     private void transferSegments(CommandList commandList, Collection<PendingBufferCopyCommand> list, long capacity) {
-        long bufferSize = this.capacity * this.stride;
+        long bufferSize = capacity * this.stride;
         if (bufferSize >= (1L << 32)) {
             throw new IllegalArgumentException("Maximum arena buffer size is 4 GiB");
         }
