@@ -37,7 +37,7 @@ public class GlFence {
 
     public void sync(long timeout) {
         this.checkDisposed();
-        GL32C.glWaitSync(this.id, GL32C.GL_SYNC_FLUSH_COMMANDS_BIT, timeout);
+        GL32C.glClientWaitSync(this.id, GL32C.GL_SYNC_FLUSH_COMMANDS_BIT, timeout);
     }
 
     public void delete() {
