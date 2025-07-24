@@ -118,14 +118,15 @@ public class GlBufferArena {
     }
 
     private void transferSegments(CommandList commandList, Collection<PendingBufferCopyCommand> list, long capacity) {
-        if (capacity >= (1L << 32)) {
+        long bufferSize = this.capacity * this.stride;
+        if (bufferSize >= (1L << 32)) {
             throw new IllegalArgumentException("Maximum arena buffer size is 4 GiB");
         }
 
         GlMutableBuffer srcBufferObj = this.arenaBuffer;
         GlMutableBuffer dstBufferObj = commandList.createMutableBuffer();
 
-        commandList.allocateStorage(dstBufferObj, capacity * this.stride, BUFFER_USAGE);
+        commandList.allocateStorage(dstBufferObj, bufferSize, BUFFER_USAGE);
 
         for (PendingBufferCopyCommand cmd : list) {
             commandList.copyBufferSubData(srcBufferObj, dstBufferObj,
@@ -271,9 +272,13 @@ public class GlBufferArena {
         // If we weren't able to upload some buffers, they will have been left behind in the queue
         if (!queue.isEmpty()) {
             // Calculate the amount of memory needed for the remaining uploads
-            int remainingElements = queue.stream()
+            int remainingUploadSize = queue.stream()
                     .mapToInt(upload -> upload.getDataBuffer().getLength())
                     .sum();
+            
+            // Convert size to elements by dividing by the stride.
+            // This doesn't need a ceil since the upload buffers will be at least as big as required and have the same stride.
+            long remainingElements = remainingUploadSize / this.stride;
 
             // Ask the arena to grow to accommodate the remaining uploads
             // This will force a re-allocation and compaction, which will leave us a continuous free segment
