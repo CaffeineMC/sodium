@@ -36,7 +36,7 @@ public class CyclingControl<T extends Enum<T>> implements Control<T> {
         Validate.notEmpty(allowedValues, "The allowedValues array must contain at least one item");
         Validate.isTrue(Arrays.stream(allowedValues).allMatch(Objects::nonNull), "The allowedValues array must not contain null");
         Validate.isTrue(Arrays.stream(allowedValues).distinct().count() == allowedValues.length, "The allowedValues array must not contain duplicates");
-        Validate.isTrue(Arrays.stream(allowedValues).map(Enum::getDeclaringClass).distinct().count() == 1, "The allowedValues array must contain items of the same type");
+        Validate.isTrue(Arrays.stream(allowedValues).map(Enum::getDeclaringClass).allMatch(enumType::equals), "The allowedValues array must contain items of the given type");
 
         T[] universe = enumType.getEnumConstants();
 
