@@ -9,6 +9,9 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.Validate;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 public class CyclingControl<T extends Enum<T>> implements Control<T> {
     private final Option<T> option;
     private final T[] allowedValues;
@@ -30,6 +33,11 @@ public class CyclingControl<T extends Enum<T>> implements Control<T> {
     }
 
     public CyclingControl(Option<T> option, Class<T> enumType, T[] allowedValues) {
+        Validate.notEmpty(allowedValues, "The allowedValues array must contain at least one item");
+        Validate.isTrue(Arrays.stream(allowedValues).allMatch(Objects::nonNull), "The allowedValues array must not contain null");
+        Validate.isTrue(Arrays.stream(allowedValues).distinct().count() == allowedValues.length, "The allowedValues array must not contain duplicates");
+        Validate.isTrue(Arrays.stream(allowedValues).map(Enum::getDeclaringClass).distinct().count() == 1, "The allowedValues array must contain items of the same type");
+
         T[] universe = enumType.getEnumConstants();
 
         this.option = option;
@@ -51,6 +59,15 @@ public class CyclingControl<T extends Enum<T>> implements Control<T> {
     }
 
     public CyclingControl(Option<T> option, T[] allowedValues, Component[] names) {
+        Validate.notEmpty(allowedValues, "The allowedValues array must contain at least one item");
+        Validate.isTrue(Arrays.stream(allowedValues).allMatch(Objects::nonNull), "The allowedValues array must not contain null");
+        Validate.isTrue(Arrays.stream(allowedValues).distinct().count() == allowedValues.length, "The allowedValues array must not contain duplicates");
+        Validate.isTrue(Arrays.stream(allowedValues).map(Enum::getDeclaringClass).distinct().count() == 1, "The allowedValues array must contain items of the same type");
+
+        T[] universe = allowedValues[0].getDeclaringClass().getEnumConstants();
+
+        Validate.isTrue(universe.length == names.length, "Mismatch between universe length and names array length");
+
         this.option = option;
         this.allowedValues = allowedValues;
         this.names = names;
