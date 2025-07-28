@@ -28,14 +28,28 @@ public class MultiBufferSourceMixin {
     )
     private MeshData.SortState redirectSortQuads(MeshData meshData, ByteBufferBuilder bufferBuilder, VertexSorting sorting, Operation<MeshData.SortState> original) {
         if (sorting instanceof VertexSortingExtended sortingExtended) {
-            var sortedPrimitiveIds = VertexSorters.sort(meshData.vertexBuffer(), meshData.drawState().vertexCount(), meshData.drawState().format().getVertexSize(), sortingExtended);
-            var sortedIndexBuffer = buildSortedIndexBuffer(meshData, bufferBuilder, sortedPrimitiveIds);
-            ((MeshDataAccessor) meshData).setIndexBuffer(sortedIndexBuffer);
+            // Replace the vertex sorting algorithm when it implements our accelerated sort.
+            acceleratedSort(meshData, bufferBuilder, sortingExtended);
         } else {
-            original.call(meshData, bufferBuilder, sorting);
+            return original.call(meshData, bufferBuilder, sorting);
         }
 
+        // The caller never uses the return value.
         return null;
+    }
+
+    @Unique
+    private static void acceleratedSort(MeshData meshData, ByteBufferBuilder bufferBuilder, VertexSortingExtended sorting) {
+        final var drawState = meshData.drawState();
+
+        if (drawState.mode() != VertexFormat.Mode.QUADS) {
+            // Only quad lists can be sorted.
+            return;
+        }
+
+        var sortedPrimitiveIds = VertexSorters.sort(meshData.vertexBuffer(), drawState.vertexCount(), drawState.format().getVertexSize(), sorting);
+        var sortedIndexBuffer = buildSortedIndexBuffer(meshData, bufferBuilder, sortedPrimitiveIds);
+        ((MeshDataAccessor) meshData).setIndexBuffer(sortedIndexBuffer);
     }
 
     @Unique
@@ -44,16 +58,18 @@ public class MultiBufferSourceMixin {
         final var ptr = bufferBuilder.reserve((primitiveIds.length * VERTICES_PER_QUAD) * indexType.bytes);
 
         if (indexType == VertexFormat.IndexType.SHORT) {
-            writeShortIndexBuffer(ptr, primitiveIds);
+            writeIndexBufferShort(ptr, primitiveIds);
         } else if (indexType == VertexFormat.IndexType.INT) {
-            writeIntIndexBuffer(ptr, primitiveIds);
+            writeIndexBufferInt(ptr, primitiveIds);
+        } else {
+            throw new UnsupportedOperationException();
         }
 
         return bufferBuilder.build();
     }
 
     @Unique
-    private static void writeIntIndexBuffer(long ptr, int[] primitiveIds) {
+    private static void writeIndexBufferInt(long ptr, int[] primitiveIds) {
         for (int primitiveId : primitiveIds) {
             MemoryUtil.memPutInt(ptr +  0L, (primitiveId * 4) + 0);
             MemoryUtil.memPutInt(ptr +  4L, (primitiveId * 4) + 1);
@@ -66,7 +82,7 @@ public class MultiBufferSourceMixin {
     }
 
     @Unique
-    private static void writeShortIndexBuffer(long ptr, int[] primitiveIds) {
+    private static void writeIndexBufferShort(long ptr, int[] primitiveIds) {
         for (int primitiveId : primitiveIds) {
             MemoryUtil.memPutShort(ptr +  0L, (short) ((primitiveId * 4) + 0));
             MemoryUtil.memPutShort(ptr +  2L, (short) ((primitiveId * 4) + 1));
