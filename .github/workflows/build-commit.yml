@@ -1,5 +1,4 @@
-# Used when a commit is pushed to the repository
-# This makes use of caching for faster builds and uploads the resulting artifacts
+
 name: build-commit
 
 on: [ push ]
