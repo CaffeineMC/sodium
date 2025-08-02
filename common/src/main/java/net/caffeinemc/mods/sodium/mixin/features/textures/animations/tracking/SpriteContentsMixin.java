@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.mixin.features.textures.animations.tracking;
 
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteContentsExtension;
+import net.caffeinemc.mods.sodium.client.render.texture.TextureAtlasSpriteTickerExtension;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -17,10 +18,15 @@ public abstract class SpriteContentsMixin implements SpriteContentsExtension {
 
     @Unique
     private boolean active;
+    @Unique
+    private TextureAtlasSpriteTickerExtension ticker;
 
     @Override
     public void sodium$setActive(boolean value) {
         this.active = value;
+        if (this.ticker != null && value) {
+            this.ticker.sodium$ensureUpload();
+        }
     }
 
     @Override
@@ -31,5 +37,10 @@ public abstract class SpriteContentsMixin implements SpriteContentsExtension {
     @Override
     public boolean sodium$isActive() {
         return this.active;
+    }
+
+    @Override
+    public void sodium$setTicker(TextureAtlasSpriteTickerExtension ticker) {
+        this.ticker = ticker;
     }
 }

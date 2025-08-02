@@ -2,7 +2,11 @@ package net.caffeinemc.mods.sodium.mixin.features.textures.animations.tracking;
 
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteContentsExtension;
+import net.caffeinemc.mods.sodium.client.render.texture.SpriteContentsTickerExtension;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.SpriteContents;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -14,17 +18,26 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(SpriteContents.Ticker.class)
-public class SpriteContentsTickerMixin {
+public abstract class SpriteContentsTickerMixin implements SpriteContentsTickerExtension {
+    @Shadow
+    int frame;
     @Shadow
     int subFrame;
     @Shadow
     @Final
     SpriteContents.AnimatedTexture animationInfo;
     @Shadow
-    int frame;
+    @Final
+    @Nullable
+    private SpriteContents.InterpolationData interpolationData;
 
     @Unique
     private SpriteContents parent;
+
+    @Unique
+    private boolean skippedUpload;
+    @Unique
+    private int uploadedFrame;
 
     /**
      * @author IMS
@@ -36,14 +49,18 @@ public class SpriteContentsTickerMixin {
     }
 
     @Inject(method = "tickAndUpload", at = @At("HEAD"), cancellable = true)
-    private void preTick(CallbackInfo ci) {
+    private void preTick(int x, int y, CallbackInfo ci) {
         SpriteContentsExtension parent = (SpriteContentsExtension) this.parent;
 
         boolean onDemand = SodiumClientMod.options().performance.animateOnlyVisibleTextures;
 
         if (onDemand && !parent.sodium$isActive()) {
+            if (!this.skippedUpload) {
+                this.uploadedFrame = this.frame;
+                this.skippedUpload = true;
+            }
             this.subFrame++;
-            List<SpriteContents.FrameInfo> frames = ((AnimatedTextureAccessor)this.animationInfo).getFrames();
+            List<SpriteContents.FrameInfo> frames = ((AnimatedTextureAccessor) this.animationInfo).sodium$getFrames();
             if (this.subFrame >= ((SpriteContentsFrameInfoAccessor) (Object) frames.get(this.frame)).getTime()) {
                 this.frame = (this.frame + 1) % frames.size();
                 this.subFrame = 0;
@@ -56,5 +73,29 @@ public class SpriteContentsTickerMixin {
     private void postTick(CallbackInfo ci) {
         SpriteContentsExtension parent = (SpriteContentsExtension) this.parent;
         parent.sodium$setActive(false);
+    }
+
+    @Override
+    public void sodium$ensureUpload(ResourceLocation atlas, int x, int y) {
+        if (!this.skippedUpload) {
+            return;
+        }
+
+        Minecraft.getInstance().getTextureManager().getTexture(atlas).bind();
+        List<SpriteContents.FrameInfo> frames = ((AnimatedTextureAccessor) this.animationInfo).sodium$getFrames();
+        int index = frames.get(this.frame).index();
+        if (this.interpolationData != null) {
+            if (this.subFrame == 0) {
+                ((AnimatedTextureAccessor) this.animationInfo).sodium$uploadFrame(x, y, index);
+            } else {
+                ((InterpolationDataAccessor) (Object) this.interpolationData).sodium$uploadInterpolatedFrame(x, y, (SpriteContents.Ticker) (Object) this);
+            }
+        } else {
+            int uploadedIndex = frames.get(this.uploadedFrame).index();
+            if (index != uploadedIndex) {
+                ((AnimatedTextureAccessor) this.animationInfo).sodium$uploadFrame(x, y, index);
+            }
+        }
+        this.skippedUpload = false;
     }
 }

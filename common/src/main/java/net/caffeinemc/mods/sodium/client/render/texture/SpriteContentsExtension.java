@@ -5,4 +5,6 @@ public interface SpriteContentsExtension {
     boolean sodium$isActive();
 
     boolean sodium$hasAnimation();
+
+    void sodium$setTicker(TextureAtlasSpriteTickerExtension ticker);
 }
