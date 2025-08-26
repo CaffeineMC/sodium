@@ -6,7 +6,6 @@ import com.google.gson.GsonBuilder;
 import net.caffeinemc.mods.sodium.client.gui.options.TextProvider;
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.client.util.FileUtil;
 import net.minecraft.client.GraphicsStatus;
@@ -61,16 +60,6 @@ public class SodiumGameOptions {
 
     public static class DebugSettings {
         public boolean terrainSortingEnabled = true;
-
-        @Deprecated(forRemoval = true)
-        public SortBehavior getSortBehavior() {
-            // TODO: This logic should not exist here, we need to move it into renderer initialization
-            if (PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
-                return this.terrainSortingEnabled ? SortBehavior.DYNAMIC_DEFER_NEARBY_ZERO_FRAMES : SortBehavior.OFF;
-            }
-
-            return SortBehavior.DYNAMIC_DEFER_NEARBY_ZERO_FRAMES;
-        }
     }
 
     public static class QualitySettings {

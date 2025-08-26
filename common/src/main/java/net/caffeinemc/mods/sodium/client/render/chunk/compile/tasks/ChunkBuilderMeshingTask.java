@@ -1,7 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks;
 
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
-import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.render.chunk.DefaultChunkRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.ExtendedBlockEntityType;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
@@ -50,11 +49,13 @@ import java.util.Map;
  */
 public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> {
     private final ChunkRenderContext renderContext;
+    private final SortBehavior sortBehavior;
     private final boolean forceSort;
 
-    public ChunkBuilderMeshingTask(RenderSection render, int buildTime, Vector3dc absoluteCameraPos, ChunkRenderContext renderContext, boolean forceSort) {
+    public ChunkBuilderMeshingTask(RenderSection render, int buildTime, Vector3dc absoluteCameraPos, ChunkRenderContext renderContext, SortBehavior sortBehavior, boolean forceSort) {
         super(render, buildTime, absoluteCameraPos);
         this.renderContext = renderContext;
+        this.sortBehavior = sortBehavior;
         this.forceSort = forceSort;
     }
 
@@ -83,9 +84,10 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
         BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(minX, minY, minZ);
         BlockPos.MutableBlockPos modelOffset = new BlockPos.MutableBlockPos();
 
+        boolean sortEnabled = this.sortBehavior != SortBehavior.OFF;
         TranslucentGeometryCollector collector;
-        if (SodiumClientMod.options().debug.getSortBehavior() != SortBehavior.OFF) {
-            collector = new TranslucentGeometryCollector(this.render.getPosition());
+        if (sortEnabled) {
+            collector = new TranslucentGeometryCollector(this.render.getPosition(), this.sortBehavior);
         } else {
             collector = null;
         }
@@ -153,7 +155,7 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
         blockRenderer.release();
 
         SortType sortType = SortType.NONE;
-        if (collector != null) {
+        if (sortEnabled) {
             sortType = collector.finishRendering();
         }
 
@@ -164,10 +166,10 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
 
         boolean reuseUploadedData = false;
         TranslucentData translucentData = null;
-        if (collector != null) {
+        if (sortEnabled) {
             var oldData = this.render.getTranslucentData();
             translucentData = collector.getTranslucentData(oldData, this);
-            reuseUploadedData =  !this.forceSort && translucentData == oldData;
+            reuseUploadedData = !this.forceSort && translucentData == oldData;
         }
 
         Map<TerrainRenderPass, BuiltSectionMeshParts> meshes = new Reference2ReferenceOpenHashMap<>();
@@ -187,7 +189,7 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
 
             // if the translucent geometry needs to share an index buffer between the directions,
             // consolidate all translucent geometry into UNASSIGNED
-            boolean translucentBehavior = collector != null && pass.isTranslucent();
+            boolean translucentBehavior = sortEnabled && pass.isTranslucent();
             boolean forceUnassigned = translucentBehavior && sortType.needsDirectionMixing;
             boolean sliceReordering = !translucentBehavior || sortType.allowSliceReordering;
             BuiltSectionMeshParts mesh = buffers.createMesh(pass, visibleSlices, forceUnassigned, sliceReordering);
@@ -200,7 +202,7 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
 
         renderData.setOcclusionData(occluder.resolve());
         var output = new ChunkBuildOutput(this.render, this.submitTime, translucentData, renderData.build(), meshes);
-        if (collector != null) {
+        if (sortEnabled) {
             if (reuseUploadedData) {
                 output.markAsReusingUploadedData();
             } else if (translucentData instanceof PresentTranslucentData present) {

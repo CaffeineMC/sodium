@@ -222,25 +222,20 @@ public class SortTriggering {
         }
     }
 
-    public void addDebugStrings(List<String> list) {
-        var sortBehavior = SodiumClientMod.options().debug.getSortBehavior();
-        if (sortBehavior.getSortMode() == SortBehavior.SortMode.NONE) {
-            list.add("TS OFF");
-        } else {
-            var splittingMode = SodiumClientMod.options().performance.quadSplittingMode;
-            list.add("TS (%s,%s) NL=%02d TrN=%02d TrS=G%03d/D%03d".formatted(
-                    sortBehavior.getShortName(),
-                    splittingMode.getShortName(),
-                    this.gfni.getUniqueNormalCount(),
-                    this.triggeredNormalCount,
-                    this.gfniTriggerCount,
-                    this.directTriggerCount));
-            list.add("N=%05d SNR=%05d STA=%05d DYN=%05d (DIR=%02d)".formatted(
-                    this.sortTypeCounters[SortType.NONE.ordinal()],
-                    this.sortTypeCounters[SortType.STATIC_NORMAL_RELATIVE.ordinal()],
-                    this.sortTypeCounters[SortType.STATIC_TOPO.ordinal()],
-                    this.sortTypeCounters[SortType.DYNAMIC.ordinal()],
-                    this.direct.getDirectTriggerCount()));
-        }
+    public void addDebugStrings(List<String> list, SortBehavior sortBehavior) {
+        var splittingMode = SodiumClientMod.options().performance.quadSplittingMode;
+        list.add("TS (%s,%s) NL=%02d TrN=%02d TrS=G%03d/D%03d".formatted(
+                sortBehavior.getShortName(),
+                splittingMode.getShortName(),
+                this.gfni.getUniqueNormalCount(),
+                this.triggeredNormalCount,
+                this.gfniTriggerCount,
+                this.directTriggerCount));
+        list.add("N=%05d SNR=%05d STA=%05d DYN=%05d (DIR=%02d)".formatted(
+                this.sortTypeCounters[SortType.NONE.ordinal()],
+                this.sortTypeCounters[SortType.STATIC_NORMAL_RELATIVE.ordinal()],
+                this.sortTypeCounters[SortType.STATIC_TOPO.ordinal()],
+                this.sortTypeCounters[SortType.DYNAMIC.ordinal()],
+                this.direct.getDirectTriggerCount()));
     }
 }
