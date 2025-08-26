@@ -25,6 +25,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegionManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior.PriorityMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicTopoData;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.NoData;
@@ -91,6 +92,7 @@ public class RenderSectionManager {
     private final OcclusionCuller occlusionCuller;
 
     private final int renderDistance;
+    private final SortBehavior sortBehavior;
 
     private final SortTriggering sortTriggering;
 
@@ -114,15 +116,20 @@ public class RenderSectionManager {
 
     private final RemovableMultiForest renderableSectionTree;
 
-    public RenderSectionManager(ClientLevel level, int renderDistance, CommandList commandList) {
+    public RenderSectionManager(ClientLevel level, int renderDistance, SortBehavior sortBehavior, CommandList commandList) {
         this.chunkRenderer = new DefaultChunkRenderer(RenderDevice.INSTANCE, ChunkMeshFormats.COMPACT);
 
         this.level = level;
         this.builder = new ChunkBuilder(level, ChunkMeshFormats.COMPACT);
 
         this.renderDistance = renderDistance;
+        this.sortBehavior = sortBehavior;
 
-        this.sortTriggering = new SortTriggering();
+        if (this.sortBehavior != SortBehavior.OFF) {
+            this.sortTriggering = new SortTriggering();
+        } else {
+            this.sortTriggering = null;
+        }
 
         this.regions = new RenderRegionManager(commandList);
         this.sectionCache = new ClonedChunkSectionCache(this.level);
@@ -298,7 +305,7 @@ public class RenderSectionManager {
         RenderDevice device = RenderDevice.INSTANCE;
         CommandList commandList = device.createCommandList();
 
-        this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z), lastFogParameters);
+        this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z), this.lastFogParameters, this.sortBehavior != SortBehavior.OFF);
 
         commandList.flush();
     }
@@ -512,7 +519,7 @@ public class RenderSectionManager {
 
             // if zero frame delay is allowed, submit important sorts with the current frame blocking collector.
             // otherwise submit with the collector that the next frame is blocking on.
-            if (SodiumClientMod.options().debug.getSortBehavior().getDeferMode() == DeferMode.ZERO_FRAMES) {
+            if (this.sortBehavior.getDeferMode() == DeferMode.ZERO_FRAMES) {
                 this.submitSectionTasks(thisFrameBlockingCollector, nextFrameBlockingCollector, deferredCollector, uploadBudget);
             } else {
                 this.submitSectionTasks(nextFrameBlockingCollector, nextFrameBlockingCollector, deferredCollector, uploadBudget);
@@ -578,8 +585,12 @@ public class RenderSectionManager {
                 // data has since been removed. In that case simply nothing is done as the
                 // rebuild that must have happened in the meantime includes new non-dynamic
                 // index data.
+                TranslucentData translucentData = null;
+                if (this.sortBehavior != SortBehavior.OFF) {
+                    translucentData = NoData.forEmptySection(section.getPosition());
+                }
                 var result = ChunkJobResult.successfully(new ChunkBuildOutput(
-                        section, this.frame, NoData.forEmptySection(section.getPosition()),
+                        section, this.frame, translucentData,
                         BuiltSectionInfo.EMPTY, Collections.emptyMap()));
                 this.buildResults.add(result);
 
@@ -617,7 +628,7 @@ public class RenderSectionManager {
             return null;
         }
 
-        var task = new ChunkBuilderMeshingTask(render, frame, this.cameraPosition, context, ChunkUpdateTypes.isRebuildWithSort(render.getPendingUpdate()));
+        var task = new ChunkBuilderMeshingTask(render, frame, this.cameraPosition, context, this.sortBehavior, ChunkUpdateTypes.isRebuildWithSort(render.getPendingUpdate()));
         task.calculateEstimations(this.jobDurationEstimator, this.meshTaskSizeEstimator, this.jobUploadDurationEstimator);
         return task;
     }
@@ -631,7 +642,9 @@ public class RenderSectionManager {
     }
 
     public void processGFNIMovement(CameraMovement movement) {
-        this.sortTriggering.triggerSections(this::scheduleSort, movement);
+        if (this.sortTriggering != null) {
+            this.sortTriggering.triggerSections(this::scheduleSort, movement);
+        }
     }
 
     public void markGraphDirty() {
@@ -707,7 +720,7 @@ public class RenderSectionManager {
 
         if (section != null) {
             int pendingUpdate = ChunkUpdateTypes.SORT;
-            var priorityMode = SodiumClientMod.options().debug.getSortBehavior().getPriorityMode();
+            var priorityMode = this.sortBehavior.getPriorityMode();
             if (priorityMode == PriorityMode.NEARBY && this.shouldPrioritizeTask(section, NEARBY_SORT_DISTANCE) || priorityMode == PriorityMode.ALL) {
                 pendingUpdate = ChunkUpdateTypes.join(pendingUpdate, ChunkUpdateTypes.IMPORTANT);
             }
@@ -846,7 +859,11 @@ public class RenderSectionManager {
             list.add(String.format("Size: %s", String.join(", ", sizeEstimates)));
         }
 
-        this.sortTriggering.addDebugStrings(list);
+        if (this.sortBehavior != SortBehavior.OFF) {
+            this.sortTriggering.addDebugStrings(list, this.sortBehavior);
+        } else {
+            list.add("TS OFF");
+        }
 
         return list;
     }

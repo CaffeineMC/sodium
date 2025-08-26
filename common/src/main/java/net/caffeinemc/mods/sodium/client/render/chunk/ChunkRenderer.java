@@ -14,14 +14,15 @@ public interface ChunkRenderer {
     /**
      * Renders the given chunk render list to the active framebuffer.
      *
-     * @param matrices    The camera matrices to use for rendering
-     * @param commandList The command list which OpenGL commands should be serialized to
-     * @param renderLists The collection of render lists
-     * @param pass        The block render pass to execute
-     * @param camera      The camera context containing chunk offsets for the current render
-     * @param parameters  The current fog state
+     * @param matrices                The camera matrices to use for rendering
+     * @param commandList             The command list which OpenGL commands should be serialized to
+     * @param renderLists             The collection of render lists
+     * @param pass                    The block render pass to execute
+     * @param camera                  The camera context containing chunk offsets for the current render
+     * @param parameters              The current fog state
+     * @param indexedRenderingEnabled Whether indexed rendering is enabled
      */
-    void render(ChunkRenderMatrices matrices, CommandList commandList, ChunkRenderListIterable renderLists, TerrainRenderPass pass, CameraTransform camera, FogParameters parameters);
+    void render(ChunkRenderMatrices matrices, CommandList commandList, ChunkRenderListIterable renderLists, TerrainRenderPass pass, CameraTransform camera, FogParameters parameters, boolean indexedRenderingEnabled);
 
     /**
      * Deletes this render backend and any resources attached to it.

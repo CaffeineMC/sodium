@@ -47,6 +47,7 @@ import net.minecraft.util.Mth;
 public class TranslucentGeometryCollector {
     private final SectionPos sectionPos;
     private final QuadSplittingMode quadSplittingMode = SodiumClientMod.options().performance.quadSplittingMode;
+    private final SortBehavior sortBehavior;
 
     // true if there are any unaligned quads
     private boolean hasUnaligned = false;
@@ -90,8 +91,9 @@ public class TranslucentGeometryCollector {
     private boolean quadHashPresent = false;
     private int quadHash = 0;
 
-    public TranslucentGeometryCollector(SectionPos sectionPos) {
+    public TranslucentGeometryCollector(SectionPos sectionPos, SortBehavior sortBehavior) {
         this.sectionPos = sectionPos;
+        this.sortBehavior = sortBehavior;
     }
 
     /**
@@ -190,8 +192,7 @@ public class TranslucentGeometryCollector {
      *
      * @param sortType the sort type to filter
      */
-    private static SortType filterSortType(SortType sortType) {
-        SortBehavior sortBehavior = SodiumClientMod.options().debug.getSortBehavior();
+    private static SortType filterSortType(SortType sortType, SortBehavior sortBehavior) {
         switch (sortBehavior) {
             case OFF:
                 return SortType.NONE;
@@ -255,8 +256,7 @@ public class TranslucentGeometryCollector {
             return SortType.NONE;
         }
 
-        SortBehavior sortBehavior = SodiumClientMod.options().debug.getSortBehavior();
-        if (sortBehavior.getSortMode() == SortBehavior.SortMode.NONE) {
+        if (this.sortBehavior.getSortMode() == SortBehavior.SortMode.NONE) {
             return SortType.NONE;
         }
 
@@ -390,7 +390,7 @@ public class TranslucentGeometryCollector {
         }
         this.quadLists = null; // they're not needed anymore
 
-        this.sortType = filterSortType(sortTypeHeuristic());
+        this.sortType = filterSortType(sortTypeHeuristic(), this.sortBehavior);
         return this.sortType;
     }
 
@@ -416,7 +416,7 @@ public class TranslucentGeometryCollector {
         }
 
         // filter the sort type with the user setting and re-evaluate
-        this.sortType = filterSortType(this.sortType);
+        this.sortType = filterSortType(this.sortType, this.sortBehavior);
 
         if (this.sortType == SortType.NONE) {
             return AnyOrderData.fromMesh(this.quads, this.sectionPos);
