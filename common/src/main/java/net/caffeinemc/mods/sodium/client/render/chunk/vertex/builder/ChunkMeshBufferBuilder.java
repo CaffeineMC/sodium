@@ -3,8 +3,8 @@ package net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
-import org.apache.commons.lang3.Validate;
 import org.lwjgl.system.MemoryUtil;
+
 import java.nio.ByteBuffer;
 
 public class ChunkMeshBufferBuilder {
@@ -43,6 +43,11 @@ public class ChunkMeshBufferBuilder {
         this.encoder.write(MemoryUtil.memAddress(this.buffer, this.vertexCount * this.stride),
                 materialBits, vertices, this.sectionIndex);
         this.vertexCount += 4;
+    }
+
+    public void writeExternal(ByteBuffer buffer, int position, ChunkVertexEncoder.Vertex[] vertices, Material material) {
+        this.encoder.write(MemoryUtil.memAddress(buffer, position * this.stride),
+                material.bits(), vertices, this.sectionIndex);
     }
 
     private void ensureCapacity(int vertexCount) {

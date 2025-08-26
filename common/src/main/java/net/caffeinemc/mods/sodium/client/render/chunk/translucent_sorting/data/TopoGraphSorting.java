@@ -2,7 +2,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.NormalList;
 import net.caffeinemc.mods.sodium.client.util.collections.BitArray;
 import org.joml.Vector3fc;
@@ -69,7 +69,7 @@ public class TopoGraphSorting {
         return planeNormal.dot(x, y, z) - HALF_SPACE_EPSILON > planeDistance;
     }
 
-    public static boolean orthogonalQuadVisibleThrough(TQuad quadA, TQuad quadB) {
+    public static boolean orthogonalQuadVisibleThrough(TQuad quadA, TQuad quadB, boolean intersectionsVisible) {
         var aDirection = quadA.getFacing().ordinal();
         var aOpposite = quadA.getFacing().getOpposite().ordinal();
         var bDirection = quadB.getFacing().ordinal();
@@ -85,8 +85,11 @@ public class TopoGraphSorting {
 
         var vis = BIntoADescent > 0 && AOutsideBAscent > 0;
 
-        // if they're visible and their bounding boxes intersect and apply a heuristic to resolve
+        // if they're visible and their bounding boxes intersect, apply a heuristic to resolve if allowed
         if (vis && TQuad.extentsIntersect(aExtents, bExtents)) {
+            if (intersectionsVisible) {
+                return true;
+            }
             return BIntoADescent + AOutsideBAscent > 1;
         }
         return vis;
@@ -157,13 +160,15 @@ public class TopoGraphSorting {
      * Checks if one quad is visible through the other quad. This accepts arbitrary
      * quads, even unaligned ones.
      *
-     * @param quad              the quad through which the other quad is being tested
-     * @param other             the quad being tested
-     * @param distancesByNormal a map of normals to sorted arrays of face plane distances for disproving that the quads are visible through each other, null to disable
+     * @param quad                 the quad through which the other quad is being tested
+     * @param other                the quad being tested
+     * @param distancesByNormal    a map of normals to sorted arrays of face plane distances for disproving that the quads are visible through each other, null to disable
+     * @param cameraPos            the camera position, or null to disable the visibility check
+     * @param intersectionsVisible if true, the method will return true if the quads intersect instead of trying to break the tie
      * @return true if the other quad is visible through the first quad
      */
     private static boolean quadVisibleThrough(TQuad quad, TQuad other,
-                                              Object2ReferenceMap<Vector3fc, float[]> distancesByNormal, Vector3fc cameraPos) {
+                                              Object2ReferenceMap<Vector3fc, float[]> distancesByNormal, Vector3fc cameraPos, boolean intersectionsVisible) {
         if (quad == other) {
             return false;
         }
@@ -186,7 +191,7 @@ public class TopoGraphSorting {
                 result = sign * quad.getExtents()[direction] > sign * other.getExtents()[direction];
             } else {
                 // orthogonal quads
-                result = orthogonalQuadVisibleThrough(quad, other);
+                result = orthogonalQuadVisibleThrough(quad, other, intersectionsVisible);
             }
         } else {
             // at least one unaligned quad
@@ -241,17 +246,18 @@ public class TopoGraphSorting {
      * doing a DFS on the implicit graph. Edges are tested as they are searched for
      * and if necessary separator planes are used to disprove visibility.
      *
-     * @param indexConsumer     the consumer to write the topo sort result to
-     * @param allQuads          the quads to sort
-     * @param distancesByNormal a map of normals to sorted arrays of face plane
-     *                          distances, null to disable
-     * @param cameraPos         the camera position, or null to disable the
-     *                          visibility check
+     * @param indexConsumer      the consumer to write the topo sort result to
+     * @param allQuads           the quads to sort
+     * @param distancesByNormal  a map of normals to sorted arrays of face plane
+     *                           distances, null to disable
+     * @param cameraPos          the camera position, or null to disable the
+     *                           visibility check
+     * @param failOnIntersection if true, intersecting orthogonal quads are treated as visible to each other
      */
     public static boolean topoGraphSort(
             IntConsumer indexConsumer, TQuad[] allQuads,
             Object2ReferenceMap<Vector3fc, float[]> distancesByNormal,
-            Vector3fc cameraPos) {
+            Vector3fc cameraPos, boolean failOnIntersection) {
         // if enabled, check for visibility and produce a mapping of indices
         TQuad[] quads;
         int[] activeToRealIndex = null;
@@ -281,10 +287,10 @@ public class TopoGraphSorting {
             quadCount = allQuads.length;
         }
 
-        return topoGraphSort(indexConsumer, quads, quadCount, activeToRealIndex, distancesByNormal, cameraPos);
+        return topoGraphSort(indexConsumer, quads, quadCount, activeToRealIndex, distancesByNormal, cameraPos, failOnIntersection);
     }
 
-    public static boolean topoGraphSort(IntConsumer indexConsumer, TQuad[] quads, int quadCount, int[] activeToRealIndex, Object2ReferenceMap<Vector3fc, float[]> distancesByNormal, Vector3fc cameraPos) {
+    public static boolean topoGraphSort(IntConsumer indexConsumer, TQuad[] quads, int quadCount, int[] activeToRealIndex, Object2ReferenceMap<Vector3fc, float[]> distancesByNormal, Vector3fc cameraPos, boolean failOnIntersection) {
         // special case for 0 to 2 quads
         if (quadCount == 0) {
             return true;
@@ -302,7 +308,12 @@ public class TopoGraphSorting {
         if (quadCount == 2) {
             var a = 0;
             var b = 1;
-            if (quadVisibleThrough(quads[a], quads[b], null, null)) {
+            if (quadVisibleThrough(quads[a], quads[b], null, null, failOnIntersection)) {
+                // fail on cycle if required by flag
+                if (failOnIntersection && quadVisibleThrough(quads[b], quads[a], null, null, true)) {
+                    return false;
+                }
+
                 a = 1;
                 b = 0;
             }
@@ -339,7 +350,7 @@ public class TopoGraphSorting {
                     if (currentQuadIndex != nextEdgeTest) {
                         var currentQuad = quads[currentQuadIndex];
                         var nextQuad = quads[nextEdgeTest];
-                        if (quadVisibleThrough(currentQuad, nextQuad, distancesByNormal, cameraPos)) {
+                        if (quadVisibleThrough(currentQuad, nextQuad, distancesByNormal, cameraPos, failOnIntersection)) {
                             // if the visible quad is on the stack, there is a cycle
                             if (onStack.getAndSet(nextEdgeTest)) {
                                 return false;

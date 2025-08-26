@@ -227,8 +227,10 @@ public class SortTriggering {
         if (sortBehavior.getSortMode() == SortBehavior.SortMode.NONE) {
             list.add("TS OFF");
         } else {
-            list.add("TS (%s) NL=%02d TrN=%02d TrS=G%03d/D%03d".formatted(
+            var splittingMode = SodiumClientMod.options().performance.quadSplittingMode;
+            list.add("TS (%s,%s) NL=%02d TrN=%02d TrS=G%03d/D%03d".formatted(
                     sortBehavior.getShortName(),
+                    splittingMode.getShortName(),
                     this.gfni.getUniqueNormalCount(),
                     this.triggeredNormalCount,
                     this.gfniTriggerCount,

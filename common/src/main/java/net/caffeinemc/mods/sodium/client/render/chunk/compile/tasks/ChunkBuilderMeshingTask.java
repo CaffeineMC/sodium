@@ -44,7 +44,7 @@ import java.util.Map;
 /**
  * Rebuilds all the meshes of a chunk for each given render pass with non-occluded blocks. The result is then uploaded
  * to graphics memory on the main thread.
- *
+ * <p>
  * This task takes a slice of the level from the thread it is created on. Since these slices require rather large
  * array allocations, they are pooled to ensure that the garbage collector doesn't become overloaded.
  */
@@ -155,12 +155,34 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
             sortType = collector.finishRendering();
         }
 
+        // cancellation opportunity right before translucent sorting
+        if (cancellationToken.isCancelled()) {
+            return null;
+        }
+
+        boolean reuseUploadedData = false;
+        TranslucentData translucentData = null;
+        if (collector != null) {
+            var oldData = this.render.getTranslucentData();
+            translucentData = collector.getTranslucentData(oldData, this);
+            reuseUploadedData = translucentData == oldData;
+        }
+
         Map<TerrainRenderPass, BuiltSectionMeshParts> meshes = new Reference2ReferenceOpenHashMap<>();
         var visibleSlices = DefaultChunkRenderer.getVisibleFaces(
                 (int) this.absoluteCameraPos.x(), (int) this.absoluteCameraPos.y(), (int) this.absoluteCameraPos.z(),
                 this.render.getChunkX(), this.render.getChunkY(), this.render.getChunkZ());
 
+        if (translucentData != null && translucentData.meshesWereModified()) {
+            meshes.put(DefaultTerrainRenderPasses.TRANSLUCENT, buffers.createModifiedTranslucentMesh(translucentData.getUpdatedQuads()));
+            renderData.addRenderPass(DefaultTerrainRenderPasses.TRANSLUCENT);
+        }
+
         for (TerrainRenderPass pass : DefaultTerrainRenderPasses.ALL) {
+            if (meshes.containsKey(pass)) {
+                continue;
+            }
+
             // if the translucent geometry needs to share an index buffer between the directions,
             // consolidate all translucent geometry into UNASSIGNED
             boolean translucentBehavior = collector != null && pass.isTranslucent();
@@ -174,23 +196,7 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
             }
         }
 
-        // cancellation opportunity right before translucent sorting
-        if (cancellationToken.isCancelled()) {
-            meshes.forEach((pass, mesh) -> mesh.getVertexData().free());
-            return null;
-        }
-
         renderData.setOcclusionData(occluder.resolve());
-
-        boolean reuseUploadedData = false;
-        TranslucentData translucentData = null;
-        if (collector != null) {
-            var oldData = this.render.getTranslucentData();
-            translucentData = collector.getTranslucentData(
-                    oldData, meshes.get(DefaultTerrainRenderPasses.TRANSLUCENT), this);
-            reuseUploadedData = translucentData == oldData;
-        }
-
         var output = new ChunkBuildOutput(this.render, this.submitTime, translucentData, renderData.build(), meshes);
         if (collector != null) {
             if (reuseUploadedData) {

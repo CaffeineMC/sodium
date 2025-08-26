@@ -22,5 +22,27 @@ public interface ChunkVertexEncoder {
 
             return vertices;
         }
+
+        public static void copyVertexTo(Vertex from, Vertex to) {
+            to.x = from.x;
+            to.y = from.y;
+            to.z = from.z;
+            to.color = from.color;
+            to.ao = from.ao;
+            to.u = from.u;
+            to.v = from.v;
+            to.light = from.light;
+        }
+
+        public static void writeVertex(ChunkVertexEncoder.Vertex targetA, float newX, float newY, float newZ, int newColor, float newAo, float newU, float newV, int newLight) {
+            targetA.x = newX;
+            targetA.y = newY;
+            targetA.z = newZ;
+            targetA.color = newColor;
+            targetA.ao = newAo;
+            targetA.u = newU;
+            targetA.v = newV;
+            targetA.light = newLight;
+        }
     }
 }
