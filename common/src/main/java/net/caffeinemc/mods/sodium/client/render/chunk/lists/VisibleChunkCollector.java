@@ -2,8 +2,10 @@ package net.caffeinemc.mods.sodium.client.render.chunk.lists;
 
 import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.caffeinemc.mods.sodium.client.render.chunk.ChunkUpdateType;
+import net.caffeinemc.mods.sodium.client.render.chunk.ChunkUpdateTypes;
+import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
+import net.caffeinemc.mods.sodium.client.render.chunk.TaskQueueType;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
@@ -14,22 +16,23 @@ import java.util.Map;
 import java.util.Queue;
 
 /**
- * The visible chunk collector is passed to the occlusion graph search culler to
- * collect the visible chunks.
+ * The visible chunk collector is passed to the occlusion graph search culler to collect the visible chunks.
  */
 public class VisibleChunkCollector implements OcclusionCuller.Visitor {
     private final ObjectArrayList<ChunkRenderList> sortedRenderLists;
-    private final EnumMap<ChunkUpdateType, ArrayDeque<RenderSection>> sortedRebuildLists;
+    private final EnumMap<TaskQueueType, ArrayDeque<RenderSection>> sortedRebuildLists;
 
     private final int frame;
+    private final TaskQueueType importantRebuildQueueType;
 
-    public VisibleChunkCollector(int frame) {
+    public VisibleChunkCollector(int frame, TaskQueueType importantRebuildQueueType) {
         this.frame = frame;
+        this.importantRebuildQueueType = importantRebuildQueueType;
 
         this.sortedRenderLists = new ObjectArrayList<>();
-        this.sortedRebuildLists = new EnumMap<>(ChunkUpdateType.class);
+        this.sortedRebuildLists = new EnumMap<>(TaskQueueType.class);
 
-        for (var type : ChunkUpdateType.values()) {
+        for (var type : TaskQueueType.values()) {
             this.sortedRebuildLists.put(type, new ArrayDeque<>());
         }
     }
@@ -55,12 +58,13 @@ public class VisibleChunkCollector implements OcclusionCuller.Visitor {
     }
 
     private void addToRebuildLists(RenderSection section) {
-        ChunkUpdateType type = section.getPendingUpdate();
+        var pendingUpdate = section.getPendingUpdate();
 
-        if (type != null && section.getTaskCancellationToken() == null) {
-            Queue<RenderSection> queue = this.sortedRebuildLists.get(type);
+        if (pendingUpdate != 0 && section.getTaskCancellationToken() == null) {
+            var queueType = ChunkUpdateTypes.getQueueType(pendingUpdate, this.importantRebuildQueueType);
+            Queue<RenderSection> queue = this.sortedRebuildLists.get(queueType);
 
-            if (queue.size() < type.getMaximumQueueSize()) {
+            if (queue.size() < queueType.queueSizeLimit()) {
                 queue.add(section);
             }
         }
@@ -105,7 +109,7 @@ public class VisibleChunkCollector implements OcclusionCuller.Visitor {
         return new SortedRenderLists(sorted);
     }
 
-    public Map<ChunkUpdateType, ArrayDeque<RenderSection>> getRebuildLists() {
+    public Map<TaskQueueType, ArrayDeque<RenderSection>> getRebuildLists() {
         return this.sortedRebuildLists;
     }
 }
