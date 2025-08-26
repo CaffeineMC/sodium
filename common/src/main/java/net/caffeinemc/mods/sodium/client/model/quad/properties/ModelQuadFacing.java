@@ -104,14 +104,22 @@ public enum ModelQuadFacing {
         return PACKED_ALIGNED_NORMALS[this.ordinal()];
     }
 
-    public static ModelQuadFacing fromNormal(float x, float y, float z) {
-        if (!(Math.isFinite(x) && Math.isFinite(y) && Math.isFinite(z))) {
-            return ModelQuadFacing.UNASSIGNED;
-        }
-
+    public static ModelQuadFacing fromNormal(Vector3fc normal) {
         for (Direction face : DirectionUtil.ALL_DIRECTIONS) {
             var step = face.step();
-            if (Mth.equal(Math.fma(x, step.x(), Math.fma(y, step.y(), z * step.z())), 1.0f)) {
+            if (step.equals(normal, Mth.EPSILON)) {
+                return ModelQuadFacing.fromDirection(face);
+            }
+        }
+
+        return ModelQuadFacing.UNASSIGNED;
+    }
+
+
+    public static ModelQuadFacing fromNormal(float x, float y, float z) {
+        for (Direction face : DirectionUtil.ALL_DIRECTIONS) {
+            var step = face.step();
+            if (Mth.equal(x, step.x()) && Mth.equal(y, step.y()) && Mth.equal(z, step.z())) {
                 return ModelQuadFacing.fromDirection(face);
             }
         }

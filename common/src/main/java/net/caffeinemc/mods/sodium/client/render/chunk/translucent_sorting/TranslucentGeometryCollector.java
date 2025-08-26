@@ -5,19 +5,17 @@ import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.DefaultFluidRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.data.BuiltSectionMeshParts;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.BSPBuildFailureException;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.*;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.FullTQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.RegularTQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.GeometryPlanes;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.SortTriggering;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
-import org.joml.Vector3f;
-import org.joml.Vector3fc;
-
-import java.util.Arrays;
 
 /**
  * The translucent geometry collector collects the data from the renderers and
@@ -47,8 +45,8 @@ import java.util.Arrays;
  * task result.
  */
 public class TranslucentGeometryCollector {
-
     private final SectionPos sectionPos;
+    private final QuadSplittingMode quadSplittingMode = SodiumClientMod.options().performance.quadSplittingMode;
 
     // true if there are any unaligned quads
     private boolean hasUnaligned = false;
@@ -84,6 +82,7 @@ public class TranslucentGeometryCollector {
 
     @SuppressWarnings("unchecked")
     private ReferenceArrayList<TQuad>[] quadLists = new ReferenceArrayList[ModelQuadFacing.COUNT];
+    private final int[] meshFacingCounts = new int[ModelQuadFacing.COUNT];
     private TQuad[] quads;
 
     private SortType sortType;
@@ -95,88 +94,24 @@ public class TranslucentGeometryCollector {
         this.sectionPos = sectionPos;
     }
 
-    private static final float INV_QUANTIZE_EPSILON = 256f;
-    private static final float QUANTIZE_EPSILON = 1f / INV_QUANTIZE_EPSILON;
-
-    static {
-        // ensure it fits with the fluid renderer epsilon and that it's a power-of-two
-        // fraction
-        var targetEpsilon = DefaultFluidRenderer.EPSILON * 2.1f;
-        if (QUANTIZE_EPSILON <= targetEpsilon && Integer.bitCount((int) INV_QUANTIZE_EPSILON) == 1) {
-            throw new RuntimeException("epsilon is invalid: " + QUANTIZE_EPSILON);
+    /**
+     * Collects a quad to be sorted. Note that if the quad's geometry and/or its vertices make it axis-aligned but it still uses the {@link ModelQuadFacing#UNASSIGNED} facing, dynamic sorting will break. Checking every quad for this would slow things down.
+     *
+     * @param vertices the vertices of the quad
+     * @param facing the facing of the quad
+     * @param packedNormal the packed normal of the quad
+     * @return true if the quad is invalid and should be discarded from the model entirely, false otherwise.
+     */
+    public boolean appendQuad(ChunkVertexEncoder.Vertex[] vertices, ModelQuadFacing facing, int packedNormal) {
+        TQuad quad;
+        if (this.isSplittingQuads()) {
+            quad = FullTQuad.fromVertices(vertices, facing, packedNormal);
+        } else {
+            quad = RegularTQuad.fromVertices(vertices, facing, packedNormal);
         }
-    }
-
-    public void appendQuad(int packedNormal, ChunkVertexEncoder.Vertex[] vertices, ModelQuadFacing facing) {
-        float xSum = 0;
-        float ySum = 0;
-        float zSum = 0;
-
-        // keep track of distinct vertices to compute the center accurately for
-        // degenerate quads
-        float lastX = vertices[3].x;
-        float lastY = vertices[3].y;
-        float lastZ = vertices[3].z;
-        int uniqueVertexes = 0;
-
-        float posXExtent = Float.NEGATIVE_INFINITY;
-        float posYExtent = Float.NEGATIVE_INFINITY;
-        float posZExtent = Float.NEGATIVE_INFINITY;
-        float negXExtent = Float.POSITIVE_INFINITY;
-        float negYExtent = Float.POSITIVE_INFINITY;
-        float negZExtent = Float.POSITIVE_INFINITY;
-
-        for (int i = 0; i < 4; i++) {
-            float x = vertices[i].x;
-            float y = vertices[i].y;
-            float z = vertices[i].z;
-
-            posXExtent = Math.max(posXExtent, x);
-            posYExtent = Math.max(posYExtent, y);
-            posZExtent = Math.max(posZExtent, z);
-            negXExtent = Math.min(negXExtent, x);
-            negYExtent = Math.min(negYExtent, y);
-            negZExtent = Math.min(negZExtent, z);
-
-            if (x != lastX || y != lastY || z != lastZ) {
-                xSum += x;
-                ySum += y;
-                zSum += z;
-                uniqueVertexes++;
-            }
-            if (i != 3) {
-                lastX = x;
-                lastY = y;
-                lastZ = z;
-            }
+        if (quad == null) {
+            return true;
         }
-
-        // shrink quad in non-normal directions to prevent intersections caused by
-        // epsilon offsets applied by FluidRenderer
-        if (facing != ModelQuadFacing.POS_X && facing != ModelQuadFacing.NEG_X) {
-            posXExtent -= QUANTIZE_EPSILON;
-            negXExtent += QUANTIZE_EPSILON;
-            if (negXExtent > posXExtent) {
-                negXExtent = posXExtent;
-            }
-        }
-        if (facing != ModelQuadFacing.POS_Y && facing != ModelQuadFacing.NEG_Y) {
-            posYExtent -= QUANTIZE_EPSILON;
-            negYExtent += QUANTIZE_EPSILON;
-            if (negYExtent > posYExtent) {
-                negYExtent = posYExtent;
-            }
-        }
-        if (facing != ModelQuadFacing.POS_Z && facing != ModelQuadFacing.NEG_Z) {
-            posZExtent -= QUANTIZE_EPSILON;
-            negZExtent += QUANTIZE_EPSILON;
-            if (negZExtent > posZExtent) {
-                negZExtent = posZExtent;
-            }
-        }
-
-        // POS_X, POS_Y, POS_Z, NEG_X, NEG_Y, NEG_Z
-        float[] extents = new float[] { posXExtent, posYExtent, posZExtent, negXExtent, negYExtent, negZExtent };
 
         int direction = facing.ordinal();
         var quadList = this.quadLists[direction];
@@ -184,54 +119,20 @@ public class TranslucentGeometryCollector {
             quadList = new ReferenceArrayList<>();
             this.quadLists[direction] = quadList;
         }
-
-        Vector3fc center = null;
-        if (!facing.isAligned() || uniqueVertexes != 4) {
-            var centerX = xSum / uniqueVertexes;
-            var centerY = ySum / uniqueVertexes;
-            var centerZ = zSum / uniqueVertexes;
-            center = new Vector3f(centerX, centerY, centerZ);
-        }
-
-        // check if we need to store vertex positions for this quad, only necessary if it's unaligned or rotated (yet aligned)
-        var needsVertexPositions = uniqueVertexes != 4 || !facing.isAligned();
-        if (!needsVertexPositions) {
-            for (int i = 0; i < 4; i++) {
-                var vertex = vertices[i];
-                if (vertex.x != posYExtent && vertex.x != negYExtent ||
-                        vertex.y != posZExtent && vertex.y != negZExtent ||
-                        vertex.z != posXExtent && vertex.z != negXExtent) {
-                    needsVertexPositions = true;
-                    break;
-                }
-            }
-        }
-
-        float[] vertexPositions = null;
-        if (needsVertexPositions) {
-            vertexPositions = new float[12];
-            for (int i = 0, itemIndex = 0; i < 4; i++) {
-                var vertex = vertices[i];
-                vertexPositions[itemIndex++] = vertex.x;
-                vertexPositions[itemIndex++] = vertex.y;
-                vertexPositions[itemIndex++] = vertex.z;
-            }
-        }
+        quadList.add(quad);
 
         if (facing.isAligned()) {
             // only update global extents if there are no unaligned quads since this is only
             // used for the convex box test which doesn't work with unaligned quads anyway
             if (!this.hasUnaligned) {
-                this.extents[0] = Math.max(this.extents[0], posXExtent);
-                this.extents[1] = Math.max(this.extents[1], posYExtent);
-                this.extents[2] = Math.max(this.extents[2], posZExtent);
-                this.extents[3] = Math.min(this.extents[3], negXExtent);
-                this.extents[4] = Math.min(this.extents[4], negYExtent);
-                this.extents[5] = Math.min(this.extents[5], negZExtent);
+                var quadExtents = quad.getExtents();
+                for (int i = 0; i < 3; i++) {
+                    this.extents[i] = Math.max(this.extents[i], quadExtents[i]);
+                }
+                for (int i = 3; i < 6; i++) {
+                    this.extents[i] = Math.min(this.extents[i], quadExtents[i]);
+                }
             }
-
-            var quad = TQuad.fromAligned(facing, extents, vertexPositions, center);
-            quadList.add(quad);
 
             var extreme = this.alignedExtremes[direction];
             var distance = quad.getAccurateDotProduct();
@@ -250,9 +151,6 @@ public class TranslucentGeometryCollector {
             }
         } else {
             this.hasUnaligned = true;
-
-            var quad = TQuad.fromUnaligned(facing, extents, vertexPositions, center, packedNormal);
-            quadList.add(quad);
 
             // update the two unaligned normals that are tracked
             var distance = quad.getAccurateDotProduct();
@@ -278,6 +176,12 @@ public class TranslucentGeometryCollector {
                 this.untrackedUnalignedNormalCount++;
             }
         }
+
+        return false;
+    }
+
+    public boolean isSplittingQuads() {
+        return this.quadSplittingMode.allowsSplitting();
     }
 
     /**
@@ -430,7 +334,6 @@ public class TranslucentGeometryCollector {
 
         // use the given set of quad count limits to determine if a static topo sort
         // should be attempted
-
         var attemptLimitIndex = Mth.clamp(normalCount, 2, STATIC_TOPO_SORT_ATTEMPT_LIMITS.length - 1);
         if (this.quads.length <= STATIC_TOPO_SORT_ATTEMPT_LIMITS[attemptLimitIndex]) {
             return SortType.STATIC_TOPO;
@@ -475,6 +378,8 @@ public class TranslucentGeometryCollector {
         for (int direction = 0; direction < ModelQuadFacing.COUNT; direction++) {
             var quadList = this.quadLists[direction];
             if (quadList != null) {
+                this.meshFacingCounts[direction] = quadList.size();
+
                 for (var quad : quadList) {
                     this.quads[quadIndex++] = quad;
                 }
@@ -489,32 +394,21 @@ public class TranslucentGeometryCollector {
         return this.sortType;
     }
 
-    private static int ensureUnassignedVertexCount(int[] vertexCounts) {
-        int vertexCount = vertexCounts[ModelQuadFacing.UNASSIGNED.ordinal()];
-
-        if (vertexCount == 0) {
-            throw new IllegalStateException("No unassigned data in mesh");
-        }
-
-        return vertexCount;
-    }
-
-    private TranslucentData makeNewTranslucentData(int[] vertexCounts, CombinedCameraPos cameraPos,
+    private TranslucentData makeNewTranslucentData(CombinedCameraPos cameraPos,
                                                    TranslucentData oldData) {
         if (this.sortType == SortType.NONE) {
-            return AnyOrderData.fromMesh(vertexCounts, this.quads, this.sectionPos);
+            return AnyOrderData.fromMesh(this.quads, this.sectionPos);
         }
 
         if (this.sortType == SortType.STATIC_NORMAL_RELATIVE) {
             var isDoubleUnaligned = this.alignedFacingBitmap == 0;
-            return StaticNormalRelativeData.fromMesh(vertexCounts, this.quads, this.sectionPos, isDoubleUnaligned);
+            return StaticNormalRelativeData.fromMesh(this.meshFacingCounts, this.quads, this.sectionPos, isDoubleUnaligned);
         }
 
         // from this point on we know the estimated sort type requires direction mixing
         // (no backface culling) and all vertices are in the UNASSIGNED direction.
         if (this.sortType == SortType.STATIC_TOPO) {
-            var vertexCount = ensureUnassignedVertexCount(vertexCounts);
-            var result = StaticTopoData.fromMesh(vertexCount, this.quads, this.sectionPos);
+            var result = StaticTopoData.fromMesh(this.quads, this.sectionPos, this.isSplittingQuads());
             if (result != null) {
                 return result;
             }
@@ -525,18 +419,16 @@ public class TranslucentGeometryCollector {
         this.sortType = filterSortType(this.sortType);
 
         if (this.sortType == SortType.NONE) {
-            return AnyOrderData.fromMesh(vertexCounts, this.quads, this.sectionPos);
+            return AnyOrderData.fromMesh(this.quads, this.sectionPos);
         }
 
         if (this.sortType == SortType.DYNAMIC) {
-            var vertexCount = ensureUnassignedVertexCount(vertexCounts);
             try {
-                return DynamicBSPData.fromMesh(
-                        vertexCount, cameraPos, this.quads, this.sectionPos, oldData);
+                return DynamicBSPData.fromMesh(cameraPos, this.quads, this.sectionPos, oldData, this.quadSplittingMode);
             } catch (BSPBuildFailureException e) {
                 var geometryPlanes = GeometryPlanes.fromQuadLists(this.sectionPos, this.quads);
                 return DynamicTopoData.fromMesh(
-                        vertexCount, cameraPos, this.quads, this.sectionPos,
+                        cameraPos, this.quads, this.sectionPos,
                         geometryPlanes);
             }
         }
@@ -544,11 +436,12 @@ public class TranslucentGeometryCollector {
         throw new IllegalStateException("Unknown sort type: " + this.sortType);
     }
 
-    private int getQuadHash(TQuad[] quads) {
+    public int getQuadHash() {
         if (this.quadHashPresent) {
             return this.quadHash;
         }
 
+        var quads = this.quads;
         for (int i = 0; i < quads.length; i++) {
             var quad = quads[i];
             this.quadHash = this.quadHash * 31 + quad.getQuadHash() + i * 3;
@@ -558,41 +451,24 @@ public class TranslucentGeometryCollector {
     }
 
     public TranslucentData getTranslucentData(
-            TranslucentData oldData, BuiltSectionMeshParts translucentMesh, CombinedCameraPos cameraPos) {
-        // means there is no translucent geometry
-        if (translucentMesh == null) {
+            TranslucentData oldData, CombinedCameraPos cameraPos) {
+        if (this.quads.length == 0) {
             return NoData.forNoTranslucent(this.sectionPos);
         }
-
-        var vertexCounts = translucentMesh.computeVertexCounts();
 
         // re-use the original translucent data if it's the same. This reduces the
         // amount of generated and uploaded index data when sections are rebuilt without
         // relevant changes to translucent geometry. Rebuilds happen when any part of
         // the section changes, including the here irrelevant cases of changes to opaque
-        // geometry or light levels.
-        if (oldData != null) {
-            // for the NONE sort type the ranges need to be the same, the actual geometry
-            // doesn't matter
-            if (this.sortType == SortType.NONE && oldData instanceof AnyOrderData oldAnyData
-                    && oldAnyData.getQuadCount() == this.quads.length
-                    && Arrays.equals(oldAnyData.getVertexCounts(), vertexCounts)) {
-                return oldAnyData;
-            }
-
-            // for the other sort types the geometry needs to be the same (checked with
-            // length and hash)
-            if (oldData instanceof PresentTranslucentData oldPresentData) {
-                if (oldPresentData.getQuadCount() == this.quads.length
-                        && oldPresentData.getQuadHash() == getQuadHash(this.quads)) {
-                    return oldPresentData;
-                }
-            }
+        // geometry or non-geometric changes to translucent geometry.
+        // (except when quad splitting, where data is never reused)
+        if (oldData != null && oldData.oldDataMatches(this, this.sortType, this.quads)) {
+            return oldData;
         }
 
-        var newData = makeNewTranslucentData(vertexCounts, cameraPos, oldData);
+        var newData = this.makeNewTranslucentData(cameraPos, oldData);
         if (newData instanceof PresentTranslucentData presentData) {
-            presentData.setQuadHash(getQuadHash(this.quads));
+            presentData.setQuadHash(this.getQuadHash());
         }
         return newData;
     }
