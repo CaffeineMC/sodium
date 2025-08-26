@@ -2,17 +2,18 @@ package net.caffeinemc.mods.sodium.client.render.chunk.compile.executor;
 
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 class ChunkJobQueue {
     private final ConcurrentLinkedDeque<ChunkJob> jobs = new ConcurrentLinkedDeque<>();
 
-    private final AtomicInteger jobEffortSum = new AtomicInteger();
+    private final AtomicLong jobDurationSum = new AtomicLong();
 
     private final Semaphore semaphore = new Semaphore(0);
 
@@ -30,7 +31,7 @@ class ChunkJobQueue {
         } else {
             this.jobs.addLast(job);
         }
-        this.jobEffortSum.addAndGet(job.getEffort());
+        this.jobDurationSum.addAndGet(job.getEstimatedDuration());
 
         this.semaphore.release(1);
     }
@@ -45,7 +46,7 @@ class ChunkJobQueue {
 
         var job = this.getNextTask();
         if (job != null) {
-            this.jobEffortSum.addAndGet(-job.getEffort());
+            this.jobDurationSum.addAndGet(-job.getEstimatedDuration());
         }
         return job;
     }
@@ -58,7 +59,7 @@ class ChunkJobQueue {
         var success = this.jobs.remove(job);
 
         if (success) {
-            this.jobEffortSum.addAndGet(-job.getEffort());
+            this.jobDurationSum.addAndGet(-job.getEstimatedDuration());
         } else {
             // If we didn't manage to actually steal the task, then we need to release the permit which we did steal
             this.semaphore.release(1);
@@ -89,7 +90,7 @@ class ChunkJobQueue {
         // force the worker threads to wake up and exit
         this.semaphore.release(Runtime.getRuntime().availableProcessors());
 
-        this.jobEffortSum.set(0);
+        this.jobDurationSum.set(0);
 
         return list;
     }
@@ -98,8 +99,8 @@ class ChunkJobQueue {
         return this.semaphore.availablePermits();
     }
 
-    public int getEffortSum() {
-        return this.jobEffortSum.get();
+    public long getJobDurationSum() {
+        return this.jobDurationSum.get();
     }
 
     public boolean isEmpty() {

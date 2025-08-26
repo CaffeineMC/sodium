@@ -1,14 +1,15 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks;
 
-import org.joml.Vector3dc;
-import org.joml.Vector3f;
-import org.joml.Vector3fc;
-
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildContext;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.JobDurationEstimator;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.MeshTaskSizeEstimator;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.CombinedCameraPos;
 import net.caffeinemc.mods.sodium.client.util.task.CancellationToken;
+import org.joml.Vector3dc;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
 /**
  * Build tasks are immutable jobs (with optional prioritization) which contain all the necessary state to perform
@@ -25,6 +26,9 @@ public abstract class ChunkBuilderTask<OUTPUT extends BuilderTaskOutput> impleme
     protected final int submitTime;
     protected final Vector3dc absoluteCameraPos;
     protected final Vector3fc cameraPos;
+
+    private long estimatedSize;
+    private long estimatedDuration;
 
     /**
      * Constructs a new build task for the given chunk and converts the absolute camera position to a relative position. While the absolute position is stored as a double vector, the relative position is stored as a float vector.
@@ -54,7 +58,20 @@ public abstract class ChunkBuilderTask<OUTPUT extends BuilderTaskOutput> impleme
      */
     public abstract OUTPUT execute(ChunkBuildContext context, CancellationToken cancellationToken);
 
-    public abstract int getEffort();
+    public abstract long estimateTaskSizeWith(MeshTaskSizeEstimator estimator);
+
+    public void calculateEstimations(JobDurationEstimator jobEstimator, MeshTaskSizeEstimator sizeEstimator) {
+        this.estimatedSize = this.estimateTaskSizeWith(sizeEstimator);
+        this.estimatedDuration = jobEstimator.estimateJobDuration(this.getClass(), this.estimatedSize);
+    }
+
+    public long getEstimatedSize() {
+        return this.estimatedSize;
+    }
+
+    public long getEstimatedDuration() {
+        return this.estimatedDuration;
+    }
 
     @Override
     public Vector3fc getRelativeCameraPos() {
