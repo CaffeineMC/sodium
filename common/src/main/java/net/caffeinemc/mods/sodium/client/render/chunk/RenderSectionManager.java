@@ -112,7 +112,6 @@ public class RenderSectionManager {
     private int lastUpdatedFrame;
 
     private @Nullable Vector3dc cameraPosition;
-    private FogParameters lastFogParameters = FogParameters.NONE;
 
     private final RemovableMultiForest renderableSectionTree;
 
@@ -164,7 +163,6 @@ public class RenderSectionManager {
 
     public void update(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
         this.lastUpdatedFrame += 1;
-        this.lastFogParameters = fogParameters;
 
         this.needsGraphUpdate = this.createTerrainRenderList(camera, viewport, fogParameters, this.lastUpdatedFrame, spectator);
     }
@@ -301,11 +299,11 @@ public class RenderSectionManager {
         this.markGraphDirty();
     }
 
-    public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z) {
+    public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters) {
         RenderDevice device = RenderDevice.INSTANCE;
         CommandList commandList = device.createCommandList();
 
-        this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z), this.lastFogParameters, this.sortBehavior != SortBehavior.OFF);
+        this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z), fogParameters, this.sortBehavior != SortBehavior.OFF);
 
         commandList.flush();
     }

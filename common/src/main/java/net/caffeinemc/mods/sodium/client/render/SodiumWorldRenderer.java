@@ -65,7 +65,7 @@ public class SodiumWorldRenderer {
 
     private Vector3d lastCameraPos;
     private double lastCameraPitch, lastCameraYaw;
-    private float lastFogDistance;
+    private FogParameters lastFogParameters = FogParameters.NONE;
     private Matrix4f lastProjectionMatrix;
 
     private boolean useEntityCulling;
@@ -192,7 +192,6 @@ public class SodiumWorldRenderer {
         Vector3d pos = new Vector3d(posRaw.x(), posRaw.y(), posRaw.z());
         float pitch = camera.getXRot();
         float yaw = camera.getYRot();
-        float fogDistance = fogParameters.renderEnd();
 
         if (this.lastCameraPos == null) {
             this.lastCameraPos = pos;
@@ -201,7 +200,8 @@ public class SodiumWorldRenderer {
             this.lastProjectionMatrix = new Matrix4f(matrices.projection());
         }
         boolean cameraLocationChanged = !pos.equals(this.lastCameraPos);
-        boolean cameraAngleChanged = pitch != this.lastCameraPitch || yaw != this.lastCameraYaw || fogDistance != this.lastFogDistance;
+        boolean fogDistanceChanged = fogParameters.renderEnd() != this.lastFogParameters.renderEnd();
+        boolean cameraAngleChanged = pitch != this.lastCameraPitch || yaw != this.lastCameraYaw;
         boolean cameraProjectionChanged = !matrices.projection().equals(this.lastProjectionMatrix, 0.0001f);
 
         this.lastProjectionMatrix.set(matrices.projection());
@@ -209,11 +209,11 @@ public class SodiumWorldRenderer {
         this.lastCameraPitch = pitch;
         this.lastCameraYaw = yaw;
 
-        if (cameraLocationChanged || cameraAngleChanged || cameraProjectionChanged) {
+        if (cameraLocationChanged || fogDistanceChanged || cameraAngleChanged || cameraProjectionChanged) {
             this.renderSectionManager.markGraphDirty();
         }
 
-        this.lastFogDistance = fogDistance;
+        this.lastFogParameters = fogParameters;
 
         this.renderSectionManager.prepareFrame(pos);
 
@@ -267,10 +267,10 @@ public class SodiumWorldRenderer {
      */
     public void drawChunkLayer(ChunkSectionLayerGroup group, ChunkRenderMatrices matrices, double x, double y, double z) {
         if (group == ChunkSectionLayerGroup.OPAQUE) {
-            this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.SOLID, x, y, z);
-            this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.CUTOUT, x, y, z);
+            this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.SOLID, x, y, z, this.lastFogParameters);
+            this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.CUTOUT, x, y, z, this.lastFogParameters);
         } else if (group == ChunkSectionLayerGroup.TRANSLUCENT) {
-            this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.TRANSLUCENT, x, y, z);
+            this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.TRANSLUCENT, x, y, z, this.lastFogParameters);
         }
     }
 
