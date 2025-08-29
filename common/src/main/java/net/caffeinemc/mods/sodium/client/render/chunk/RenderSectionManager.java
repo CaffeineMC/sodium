@@ -76,7 +76,7 @@ public class RenderSectionManager {
 
     private final ConcurrentLinkedDeque<ChunkJobResult<? extends BuilderTaskOutput>> buildResults = new ConcurrentLinkedDeque<>();
     private final JobDurationEstimator jobDurationEstimator = new JobDurationEstimator();
-    private final MeshTaskSizeEstimator meshTaskSizeEstimator = new MeshTaskSizeEstimator();
+    private final MeshTaskSizeEstimator meshTaskSizeEstimator;
     private final UploadDurationEstimator jobUploadDurationEstimator = new UploadDurationEstimator();
     private ChunkJobCollector lastBlockingCollector;
     private int thisFrameBlockingTasks;
@@ -116,6 +116,8 @@ public class RenderSectionManager {
     private final RemovableMultiForest renderableSectionTree;
 
     public RenderSectionManager(ClientLevel level, int renderDistance, SortBehavior sortBehavior, CommandList commandList) {
+        this.meshTaskSizeEstimator = new MeshTaskSizeEstimator(level);
+        
         this.chunkRenderer = new DefaultChunkRenderer(RenderDevice.INSTANCE, ChunkMeshFormats.COMPACT);
 
         this.level = level;
@@ -386,7 +388,7 @@ public class RenderSectionManager {
                 touchedSectionInfo |= this.updateSectionInfo(result.render, chunkBuildOutput.info);
 
                 result.render.setLastMeshResultSize(resultSize);
-                this.meshTaskSizeEstimator.addData(MeshResultSize.forSection(result.render, resultSize));
+                this.meshTaskSizeEstimator.addData(this.meshTaskSizeEstimator.resultForSection(result.render, resultSize));
 
                 if (chunkBuildOutput.translucentData != null) {
                     this.sortTriggering.integrateTranslucentData(oldData, chunkBuildOutput.translucentData, this.cameraPosition, this::scheduleSort);
