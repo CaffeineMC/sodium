@@ -10,7 +10,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
@@ -145,12 +145,11 @@ public class ScrollableTooltip {
         int arrowX = this.visibleDim.x() - ARROW_WIDTH;
         int arrowY = this.hoveredElement.getCenterY() - (ARROW_HEIGHT / 2);
 
-        graphics.pose().pushPose();
-        graphics.pose().translate(0.0F, 0.0F, 400.0F);
+        graphics.nextStratum();
 
         // parameters are: render type, sprite, x, y, u offset, v offset, render width, render height, u size, v size, color
-        graphics.blit(RenderType::guiTextured, ARROW_TEXTURE, arrowX, arrowY, ARROW_WIDTH, 0, ARROW_WIDTH, ARROW_HEIGHT, SPRITE_WIDTH, ARROW_HEIGHT, Colors.BACKGROUND_LIGHT);
-        graphics.blit(RenderType::guiTextured, ARROW_TEXTURE, arrowX, arrowY, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, SPRITE_WIDTH, ARROW_HEIGHT, Colors.BACKGROUND_DEFAULT);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, ARROW_TEXTURE, arrowX, arrowY, ARROW_WIDTH, 0, ARROW_WIDTH, ARROW_HEIGHT, SPRITE_WIDTH, ARROW_HEIGHT, Colors.BACKGROUND_LIGHT);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, ARROW_TEXTURE, arrowX, arrowY, 0, 0, ARROW_WIDTH, ARROW_HEIGHT, SPRITE_WIDTH, ARROW_HEIGHT, Colors.BACKGROUND_DEFAULT);
 
         int lineHeight = this.getLineHeight();
 
@@ -161,14 +160,13 @@ public class ScrollableTooltip {
 
         graphics.enableScissor(this.visibleDim.x(), this.visibleDim.y(), this.visibleDim.getLimitX(), this.visibleDim.getLimitY());
         graphics.fill(this.visibleDim.x(), this.visibleDim.y(), this.visibleDim.getLimitX(), this.visibleDim.getLimitY(), Colors.BACKGROUND_LIGHT);
-        graphics.pose().translate(0.0F, 0.0F, 400.0F);
+        graphics.nextStratum();
         for (int i = 0; i < this.content.size(); i++) {
             graphics.drawString(this.font, this.content.get(i),
                     this.visibleDim.x() + TEXT_HORIZONTAL_PADDING, this.visibleDim.y() + TEXT_VERTICAL_PADDING + (i * lineHeight) - scrollAmount,
                     Colors.FOREGROUND);
         }
         graphics.disableScissor();
-        graphics.pose().popPose();
     }
 
     public boolean mouseScrolled(double d, double e, double amount) {

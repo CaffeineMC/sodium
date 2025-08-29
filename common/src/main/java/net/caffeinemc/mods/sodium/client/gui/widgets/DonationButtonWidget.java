@@ -6,7 +6,7 @@ import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -123,7 +123,7 @@ public class DonationButtonWidget {
             }
 
             var halfSpriteSize = this.spriteSize / 2;
-            graphics.blit(RenderType::guiTextured, this.sprite, this.getCenterX() - halfSpriteSize, this.getCenterY() - halfSpriteSize, 0, 0, this.spriteSize, this.spriteSize, this.spriteSize, this.spriteSize, this.getTextColor());
+            graphics.blit(RenderPipelines.GUI_TEXTURED, this.sprite, this.getCenterX() - halfSpriteSize, this.getCenterY() - halfSpriteSize, 0, 0, this.spriteSize, this.spriteSize, this.spriteSize, this.spriteSize, this.getTextColor());
         }
     }
 }

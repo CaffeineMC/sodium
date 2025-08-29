@@ -492,6 +492,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     Minecraft.getInstance().levelRenderer.getCloudRenderer().markForRebuild();
                                 }, () -> this.vanillaOpts.cloudRange().get())
                                 .setImpact(OptionImpact.LOW)
+                                .setValueFormatter(ControlValueFormatterImpls.number())
                                 .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                 )
                 .addOption(
