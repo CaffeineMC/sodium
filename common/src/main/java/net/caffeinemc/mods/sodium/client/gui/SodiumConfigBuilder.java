@@ -280,7 +280,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
     private OptionPageBuilder buildGeneralPage(ConfigBuilder builder) {
         var generalPage = builder.createOptionPage().setName(Component.literal("General"));
         generalPage.addOptionGroup(builder.createOptionGroup()
-                .setName(Component.literal("Render Distance"))
+                .setName(Component.literal("Group Title")) // TODO: remove, this is for testing
                 .addOption(
                         builder.createIntegerOption(ResourceLocation.parse("sodium:general.render_distance"))
                                 .setStorageHandler(this.vanillaStorage)
@@ -317,7 +317,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                 )
         );
         generalPage.addOptionGroup(builder.createOptionGroup()
-                .setName(Component.translatable("options.guiScale"))
                 .addOption(
                         builder.createIntegerOption(ResourceLocation.parse("sodium:general.gui_scale"))
                                 .setStorageHandler(this.vanillaStorage)
@@ -399,7 +398,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                 )
         );
         generalPage.addOptionGroup(builder.createOptionGroup()
-                .setName(Component.literal("View Bobbing"))
                 .addOption(
                         builder.createBooleanOption(ResourceLocation.parse("sodium:general.view_bobbing"))
                                 .setStorageHandler(this.vanillaStorage)
@@ -433,7 +431,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
         var qualityPage = builder.createOptionPage().setName(Component.translatable("sodium.options.pages.quality"));
 
         qualityPage.addOptionGroup(builder.createOptionGroup()
-                .setName(Component.translatable("options.graphics"))
                 .addOption(
                         builder.createEnumOption(ResourceLocation.parse("sodium:quality.graphics"), GraphicsStatus.class)
                                 .setStorageHandler(this.vanillaStorage)
@@ -457,7 +454,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
         );
 
         qualityPage.addOptionGroup(builder.createOptionGroup()
-                .setName(Component.translatable("options.renderClouds"))
                 .addOption(
                         builder.createEnumOption(ResourceLocation.parse("sodium:quality.clouds"), CloudStatus.class)
                                 .setStorageHandler(this.vanillaStorage)
@@ -582,7 +578,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
         );
 
         qualityPage.addOptionGroup(builder.createOptionGroup()
-                .setName(Component.translatable("options.mipmapLevels"))
                 .addOption(
                         builder.createIntegerOption(ResourceLocation.parse("sodium:quality.mipmap_levels"))
                                 .setStorageHandler(this.vanillaStorage)
@@ -603,7 +598,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
         var performancePage = builder.createOptionPage().setName(Component.translatable("sodium.options.pages.performance"));
 
         performancePage.addOptionGroup(builder.createOptionGroup()
-                .setName(Component.translatable("sodium.options.chunk_update_threads.name"))
                 .addOption(
                         builder.createIntegerOption(ResourceLocation.parse("sodium:performance.chunk_update_threads"))
                                 .setStorageHandler(this.sodiumStorage)
@@ -629,7 +623,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
         );
 
         performancePage.addOptionGroup(builder.createOptionGroup()
-                .setName(Component.translatable("sodium.options.use_block_face_culling.name"))
                 .addOption(
                         builder.createBooleanOption(ResourceLocation.parse("sodium:performance.use_block_face_culling"))
                                 .setStorageHandler(this.sodiumStorage)
@@ -687,7 +680,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         if (PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
             performancePage.addOptionGroup(builder.createOptionGroup()
-                    .setName(Component.translatable("sodium.options.quad_splitting.name"))
                     .addOption(
                             builder.createEnumOption(ResourceLocation.parse("sodium:performance.quad_splitting"), QuadSplittingMode.class)
                                     .setStorageHandler(this.sodiumStorage)
@@ -726,7 +718,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
         boolean isPersistentMappingSupported = MappedStagingBuffer.isSupported(RenderDevice.INSTANCE);
 
         advancedPage.addOptionGroup(builder.createOptionGroup()
-                .setName(Component.translatable("sodium.options.use_persistent_mapping.name"))
                 .addOption(
                         builder.createBooleanOption(ResourceLocation.parse("sodium:advanced.use_persistent_mapping"))
                                 .setStorageHandler(this.sodiumStorage)
@@ -741,7 +732,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
         );
 
         advancedPage.addOptionGroup(builder.createOptionGroup()
-                .setName(Component.translatable("sodium.options.cpu_render_ahead_limit.name"))
                 .addOption(
                         builder.createIntegerOption(ResourceLocation.parse("sodium:advanced.cpu_render_ahead_limit"))
                                 .setStorageHandler(this.sodiumStorage)
