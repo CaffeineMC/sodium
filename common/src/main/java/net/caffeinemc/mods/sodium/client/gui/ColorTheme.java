@@ -6,9 +6,7 @@ public class ColorTheme {
     public final int theme;
     public final int themeLighter;
     public final int themeDarker;
-
-    public static final ColorTheme DEFAULT = new ColorTheme(Colors.THEME, Colors.THEME_LIGHTER, Colors.THEME_DARKER);
-
+    
     public static final ColorTheme[] PRESETS = Stream.of(
             0xFFE494A5, 0xFFAB94E4, 0xFFCDE494, 0xFFD394E4, 0xFFE4D394
     ).map(ColorTheme::new).toArray(ColorTheme[]::new);
