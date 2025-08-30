@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.client.config.structure;
 import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
@@ -25,6 +26,7 @@ public class Config implements ConfigState {
     private final ObjectOpenHashSet<StorageEventHandler> pendingStorageHandlers = new ObjectOpenHashSet<>();
     private final ImmutableList<ModOptions> modOptions;
     private final SearchIndex searchIndex = new BigramSearchIndex(this::registerSearchIndex);
+    private final Collection<DynamicValue<?>> globalRebuildDependents = new ObjectArrayList<>();
 
     public Config(ImmutableList<ModOptions> modOptions) {
         this.modOptions = modOptions;
@@ -68,19 +70,7 @@ public class Config implements ConfigState {
     }
 
     private void applyOverrides() {
-        // collect overrides and validate them
-        var overrides = new Object2ReferenceOpenHashMap<ResourceLocation, OptionOverride>();
-        for (var modConfig : this.modOptions) {
-            for (var override : modConfig.overrides()) {
-                if (override.target().getNamespace().equals(modConfig.namespace())) {
-                    throw new IllegalArgumentException("Override by mod '" + modConfig.namespace() + "' targets its own option '" + override.target() + "'");
-                }
-
-                if (overrides.put(override.target(), override) != null) {
-                    throw new IllegalArgumentException("Multiple overrides for option '" + override.target() + "'");
-                }
-            }
-        }
+        var overrides = getOverrides();
 
         // apply overrides
         for (var modConfig : this.modOptions) {
@@ -104,10 +94,27 @@ public class Config implements ConfigState {
         }
     }
 
+    private Object2ReferenceOpenHashMap<ResourceLocation, OptionOverride> getOverrides() {
+        // collect overrides and validate them
+        var overrides = new Object2ReferenceOpenHashMap<ResourceLocation, OptionOverride>();
+        for (var modConfig : this.modOptions) {
+            for (var override : modConfig.overrides()) {
+                if (override.target().getNamespace().equals(modConfig.namespace())) {
+                    throw new IllegalArgumentException("Override by mod '" + modConfig.namespace() + "' targets its own option '" + override.target() + "'");
+                }
+
+                if (overrides.put(override.target(), override) != null) {
+                    throw new IllegalArgumentException("Multiple overrides for option '" + override.target() + "'");
+                }
+            }
+        }
+        return overrides;
+    }
+
     private void validateDependencies() {
         for (var option : this.options.values()) {
             for (var dependency : option.dependencies) {
-                if (!this.options.containsKey(dependency)) {
+                if (!this.options.containsKey(dependency) && !dependency.equals(ConfigState.UPDATE_ON_REBUILD)) {
                     throw new IllegalArgumentException("Option " + option.id + " depends on non-existent option " + dependency);
                 }
             }
@@ -116,6 +123,11 @@ public class Config implements ConfigState {
             option.visitDependentValues(dependent -> {
                 if (dependent instanceof DynamicValue<?> dynamicValue) {
                     for (var dependency : dependent.getDependencies()) {
+                        if (dependency.equals(ConfigState.UPDATE_ON_REBUILD)) {
+                            this.globalRebuildDependents.add(dynamicValue);
+                            continue;
+                        }
+                        
                         var dependencyOption = this.options.get(dependency);
                         if (dependencyOption instanceof StatefulOption<?> statefulOption) {
                             statefulOption.registerDependent(dynamicValue);
@@ -148,7 +160,10 @@ public class Config implements ConfigState {
             if (finished.contains(dependency)) {
                 continue;
             }
-            this.checkDependencyCycles(this.options.get(dependency), stack, finished);
+            Option dependencyOption = this.options.get(dependency);
+            if (dependencyOption != null) {
+                this.checkDependencyCycles(dependencyOption, stack, finished);
+            }
         }
 
         stack.remove(option.id);
@@ -196,6 +211,10 @@ public class Config implements ConfigState {
         }
 
         return false;
+    }
+    
+    public void invalidateGlobalRebuildDependents() {
+        this.invalidateDependents(this.globalRebuildDependents);
     }
 
     void notifyStorageWrite(StorageEventHandler handler) {

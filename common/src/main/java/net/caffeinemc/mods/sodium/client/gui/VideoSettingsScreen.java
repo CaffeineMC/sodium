@@ -154,6 +154,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
     protected void init() {
         super.init();
 
+        ConfigManager.CONFIG.invalidateGlobalRebuildDependents();
         this.rebuild();
 
         if (this.prompt != null) {

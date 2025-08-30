@@ -109,7 +109,7 @@ public class ExampleConfigUser implements ConfigEntryPoint {
                 .addPage(builder.createOptionPage()
                         .setName(Component.literal("Example Page"))
                         .addOptionGroup(builder.createOptionGroup()
-                                .setName(Component.literal("Example Group"))
+                                .setName(Component.literal("Example Group")) // only if necessary for clarity
                                 .addOption(builder.createBooleanOption(ResourceLocation.parse("examplemod:example_option"))
                                         .setName(Component.literal("Example Option")) // use translation keys here
                                         .setTooltip(Component.literal("Example tooltip"))
