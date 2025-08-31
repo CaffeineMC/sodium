@@ -11,23 +11,17 @@ import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.caffeinemc.mods.sodium.client.gui.options.control.AbstractScrollable;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 public class PageListWidget extends AbstractScrollable {
-    private static final int PAGE_LIST_TOP_PADDING = 3;
-
     private final VideoSettingsScreen parent;
-    private final Runnable startSearch;
     private CenteredFlatWidget selected;
-    private FlatButtonWidget search;
 
-    public PageListWidget(VideoSettingsScreen parent, Runnable startSearch, Dim2i dim) {
-        super(dim);
+    public PageListWidget(Dim2i position, VideoSettingsScreen parent) {
+        super(position);
         this.parent = parent;
-        this.startSearch = startSearch;
         this.rebuild();
     }
 
@@ -38,13 +32,11 @@ public class PageListWidget extends AbstractScrollable {
         int height = this.getHeight();
 
         this.clearChildren();
-        this.search = this.addRenderableChild(new FlatButtonWidget(new Dim2i(x, y + Layout.INNER_MARGIN, width, Layout.BUTTON_SHORT), Component.literal("Search...").withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY), this.startSearch, true, true));
-        this.scrollbar = this.addRenderableChild(new ScrollbarWidget(new Dim2i(this.getLimitX() - Layout.SCROLLBAR_WIDTH, this.search.getLimitY(), Layout.SCROLLBAR_WIDTH, height - this.search.getLimitY())));
+        this.scrollbar = this.addRenderableChild(new ScrollbarWidget(new Dim2i(this.getLimitX() - Layout.SCROLLBAR_WIDTH, y, Layout.SCROLLBAR_WIDTH, height)));
 
         int entryHeight = this.font.lineHeight * 2;
         var headerHeight = this.font.lineHeight * 3;
-        y = this.search.getLimitY();
-        int listHeight = Layout.BUTTON_SHORT + Layout.INNER_MARGIN + PAGE_LIST_TOP_PADDING - headerHeight;
+        int listHeight = Layout.TEXT_LINE_SPACING;
         for (var modOptions : ConfigManager.CONFIG.getModOptions()) {
             if (modOptions.pages().isEmpty()) {
                 continue;
@@ -62,9 +54,6 @@ public class PageListWidget extends AbstractScrollable {
                 CenteredFlatWidget button;
                 if (page instanceof OptionPage optionPage) {
                     button = new PageEntryWidget(new Dim2i(x, y + listHeight, width, entryHeight), optionPage, modOptions, theme);
-                    if (this.parent.getPage() == page) {
-                        this.switchSelected(button);
-                    }
                 } else if (page instanceof ExternalPage externalPage) {
                     button = new ExternalPageEntryWidget(new Dim2i(x, y + listHeight, width, entryHeight), externalPage, theme);
                 } else {
@@ -83,11 +72,9 @@ public class PageListWidget extends AbstractScrollable {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         renderBackgroundGradient(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY());
-        graphics.enableScissor(this.getX(), this.search.getLimitY(), this.getLimitX(), this.getLimitY());
+        graphics.enableScissor(this.getX(), this.getY(), this.getLimitX(), this.getLimitY());
         super.render(graphics, mouseX, mouseY, delta);
         graphics.disableScissor();
-
-        this.search.render(graphics, mouseX, mouseY, delta);
     }
 
     public static void renderBackgroundGradient(GuiGraphics graphics, int x1, int y1, int x2, int y2) {
@@ -151,7 +138,7 @@ public class PageListWidget extends AbstractScrollable {
         @Override
         void onAction() {
             PageListWidget.this.switchSelected(this);
-            PageListWidget.this.parent.setPage(this.modOptions, this.page);
+            PageListWidget.this.parent.jumpToPage(this.modOptions, this.page);
         }
     }
 

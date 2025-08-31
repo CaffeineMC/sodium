@@ -46,7 +46,11 @@ public class ScrollbarWidget extends AbstractWidget {
     }
 
     public void scroll(int amount) {
-        this.scrollAmount = Math.max(0, Math.min(this.total - this.visible, this.scrollAmount + amount));
+        this.scrollTo(this.scrollAmount + amount);
+    }
+    
+    public void scrollTo(int target) {
+        this.scrollAmount = Math.max(0, Math.min(this.total - this.visible, target));
         this.lastScrollTime = System.currentTimeMillis();
     }
 

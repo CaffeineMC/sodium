@@ -4,10 +4,9 @@ import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
 import net.caffeinemc.mods.sodium.client.config.structure.ModOptions;
+import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
-import net.caffeinemc.mods.sodium.client.config.structure.Page;
 import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
-import net.caffeinemc.mods.sodium.client.gui.options.control.AbstractOptionList;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlElement;
 import net.caffeinemc.mods.sodium.client.gui.prompt.ScreenPrompt;
 import net.caffeinemc.mods.sodium.client.gui.prompt.ScreenPromptable;
@@ -32,9 +31,7 @@ import org.lwjgl.glfw.GLFW;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Stream;
 
 // TODO: wrap options within groups in two columns
 // TODO: make the mod config headers interactive: only show one mod's pages at a time, click on a mod header to open that mod's first settings page and close the previous mod's page list
@@ -46,20 +43,14 @@ import java.util.stream.Stream;
 public class VideoSettingsScreen extends Screen implements ScreenPromptable {
     private final Screen prevScreen;
 
-    private ModOptions currentMod;
-    private OptionPage currentPage;
-
     private PageListWidget pageList;
     private SearchWidget searchWidget;
     private OptionListWidget optionList;
-
-    private AbstractOptionList controlList;
 
     private FlatButtonWidget applyButton, closeButton, undoButton;
     private DonationButtonWidget donateButton;
 
     private boolean hasPendingChanges;
-    private boolean reserveBottomSpace;
 
     private final ScrollableTooltip tooltip = new ScrollableTooltip(this);
 
@@ -137,19 +128,6 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         }
     }
 
-    public OptionPage getPage() {
-        return this.currentPage;
-    }
-
-    public void setPage(ModOptions modOptions, OptionPage page) {
-        this.currentMod = modOptions;
-        if (this.currentPage != page) {
-            this.currentPage = page;
-            this.rebuildOptionList();
-        }
-        this.pageList.switchSelected(modOptions, page);
-    }
-
     @Override
     protected void init() {
         super.init();
@@ -165,35 +143,14 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
     private void rebuild() {
         this.clearWidgets();
 
-        // find the first non-external page
-        if (this.currentPage == null) {
-            var modOptionsIt = ConfigManager.CONFIG.getModOptions().iterator();
-            Iterator<Page> pagesIt = null;
-            while (this.currentPage == null) {
-                if (pagesIt == null) {
-                    if (!modOptionsIt.hasNext()) {
-                        throw new IllegalStateException("No non-external pages found to display");
-                    }
-                    this.currentMod = modOptionsIt.next();
-                    pagesIt = this.currentMod.pages().iterator();
-                }
+        int topBarHeight = Layout.BUTTON_SHORT;
+        this.searchWidget = new SearchWidget(this::onSearchResults, new Dim2i(0, 0, this.width, topBarHeight));
 
-                if (!pagesIt.hasNext()) {
-                    pagesIt = null;
-                    continue;
-                }
-
-                var page = pagesIt.next();
-                if (page instanceof OptionPage optionPage) {
-                    this.currentPage = optionPage;
-                }
-            }
-        }
-
-        this.pageList = new PageListWidget(this, this::startSearch, new Dim2i(0, 0, Layout.PAGE_LIST_WIDTH, this.height));
+        this.pageList = new PageListWidget(new Dim2i(0, topBarHeight, Layout.PAGE_LIST_WIDTH, this.height - topBarHeight), this);
+        this.addRenderableWidget(this.pageList);
 
         boolean stackVertically = false;
-        this.reserveBottomSpace = false;
+        boolean reserveBottomSpace = false;
 
         int minWidthToStack = Layout.PAGE_LIST_WIDTH + Layout.INNER_MARGIN * 2 + Layout.OPTION_WIDTH + Layout.OPTION_LIST_SCROLLBAR_OFFSET + Layout.SCROLLBAR_WIDTH + Layout.BUTTON_LONG;
         int maxWidthToStack = minWidthToStack + Layout.BUTTON_LONG * 2 + Layout.INNER_MARGIN;
@@ -201,10 +158,11 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         if (this.width > minWidthToStack && this.width < maxWidthToStack) {
             stackVertically = true;
         } else if (this.width < minWidthToStack) {
-            this.reserveBottomSpace = true;
+            reserveBottomSpace = true;
         }
 
         this.closeButton = new FlatButtonWidget(new Dim2i(this.width - Layout.BUTTON_LONG - Layout.INNER_MARGIN, this.height - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("gui.done"), this::onClose, true, false);
+        this.addRenderableWidget(this.closeButton);
 
         if (stackVertically) {
             this.applyButton = new FlatButtonWidget(new Dim2i(this.closeButton.getX(), this.closeButton.getY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.apply"), ConfigManager.CONFIG::applyAllOptions, true, false);
@@ -213,30 +171,57 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
             this.applyButton = new FlatButtonWidget(new Dim2i(this.closeButton.getX() - Layout.INNER_MARGIN - Layout.BUTTON_LONG, this.height - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.apply"), ConfigManager.CONFIG::applyAllOptions, true, false);
             this.undoButton = new FlatButtonWidget(new Dim2i(this.applyButton.getX() - Layout.INNER_MARGIN - Layout.BUTTON_LONG, this.height - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.undo"), this::undoChanges, true, false);
         }
-
-        this.donateButton = new DonationButtonWidget(this, List.of(), this.width, this::openDonationPage);
-
-        this.addRenderableWidget(this.pageList);
-
-        this.rebuildOptionList();
-
         this.addRenderableWidget(this.undoButton);
         this.addRenderableWidget(this.applyButton);
-        this.addRenderableWidget(this.closeButton);
 
-        if (this.searchWidget != null) {
-            this.startSearch(this.searchWidget);
-        }
+        this.donateButton = new DonationButtonWidget(this, this.width, this::openDonationPage, this::hideDonationButton);
+        this.addRenderableWidget(this.searchWidget);
+        this.updateSearchWidgetWidth();
+
+        this.optionList = new OptionListWidget(this, new Dim2i(
+                this.pageList.getLimitX() + Layout.INNER_MARGIN, topBarHeight + Layout.INNER_MARGIN,
+                Layout.OPTION_WIDTH + Layout.OPTION_LIST_SCROLLBAR_OFFSET + Layout.SCROLLBAR_WIDTH,
+                this.height - topBarHeight - (reserveBottomSpace ? (Layout.INNER_MARGIN * 3 + Layout.BUTTON_SHORT) : (Layout.INNER_MARGIN * 2))
+        ));
+        this.optionList.setOnSectionFocused(this::onSectionFocused);
+        this.addRenderableWidget(this.optionList);
     }
 
-    private void rebuildOptionList() {
-        this.removeWidget(this.optionList);
-        this.optionList = this.addRenderableWidget(new OptionListWidget(this, new Dim2i(
-                this.pageList.getLimitX() + Layout.INNER_MARGIN, Layout.INNER_MARGIN,
-                Layout.OPTION_WIDTH + Layout.OPTION_LIST_SCROLLBAR_OFFSET + Layout.SCROLLBAR_WIDTH, this.height - (this.reserveBottomSpace ? (Layout.INNER_MARGIN * 3 + Layout.BUTTON_SHORT) : (Layout.INNER_MARGIN))),
-                this.currentPage, this.currentMod.theme()
-        ));
-        this.controlList = this.optionList;
+    private void onSearchResults(List<Option.OptionNameSource> searchResults) {
+        if (searchResults.isEmpty()) {
+            this.optionList.clearFilter();
+        } else {
+            this.optionList.setFilteredOptions(searchResults);
+        }
+        this.optionList.rebuild(this);
+    }
+
+    private void onSectionFocused(OptionListWidget.SectionInfo sectionInfo) {
+        this.pageList.switchSelected(sectionInfo.modOptions(), sectionInfo.page());
+    }
+
+    public void jumpToPage(ModOptions modOptions, OptionPage page) {
+        if (this.optionList != null) {
+            this.optionList.jumpToPage(modOptions, page);
+        }
+    }
+    
+    private void updateSearchWidgetWidth() {
+        this.searchWidget.updateWidgetWidth(this.width - this.donateButton.getWidth());
+    }
+
+    private void hideDonationButton() {
+        SodiumOptions options = SodiumClientMod.options();
+        options.notifications.hasClearedDonationButton = true;
+
+        try {
+            SodiumOptions.writeToDisk(options);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save configuration", e);
+        }
+
+        this.donateButton.updateDisplay(this,false);
+        this.updateSearchWidgetWidth();
     }
 
     @Override
@@ -252,38 +237,31 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         }
     }
 
-    @Override
-    protected void renderMenuBackground(@NotNull GuiGraphics guiGraphics, int i, int j, int k, int l) {
-    }
-
     private void updateControls(int mouseX, int mouseY) {
-        var hovered = this.getActiveControls()
-                // using ControlElement#isHovered causes a one frame delay because it is updated in the elements render method
-                // this caused flickering when going from hovering the tooltip back to the option
-                .filter(element -> element.isMouseOver(mouseX, mouseY))
-                .findFirst()
-                .orElse(this.getActiveControls() // If there is no hovered element, use the focused element.
-                        .filter(ControlElement::isFocused)
-                        .findFirst()
-                        .orElse(null));
-
         boolean hasChanges = ConfigManager.CONFIG.anyOptionChanged();
 
         this.applyButton.setEnabled(hasChanges);
-        // This breaks the navigation order and doesn't appear to do anything
-        //this.setWidgetPresence(this.undoButton, hasChanges);
         this.undoButton.setVisible(hasChanges);
         this.closeButton.setEnabled(!hasChanges);
 
-        this.donateButton.updateDisplay();
-
         this.hasPendingChanges = hasChanges;
 
-        this.tooltip.onControlHover(hovered, mouseX, mouseY);
-    }
+        // determine the tooltip hover target
+        // this is the first item that's hovered over, or if nothing is hovered, the focused item
+        ControlElement hovered = null;
+        ControlElement focused = null;
+        for (ControlElement element : this.optionList.getControls()) {
+            if (element.isMouseOver(mouseX, mouseY)) {
+                hovered = element;
+                break;
+            }
+            if (element.isFocused()) {
+                focused = element;
+            }
+        }
+        var hoverTarget = hovered != null ? hovered : focused;
 
-    private Stream<ControlElement> getActiveControls() {
-        return this.controlList.getControls().stream();
+        this.tooltip.onControlHover(hoverTarget, mouseX, mouseY);
     }
 
     private void undoChanges() {
@@ -300,11 +278,11 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
             return true;
         }
 
-        if (this.searchWidget != null && this.searchWidget.keyPressed(keyCode, scanCode, modifiers)) {
+        if (this.searchWidget.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
 
-        if (this.prompt == null && this.searchWidget == null && keyCode == GLFW.GLFW_KEY_P && (modifiers & GLFW.GLFW_MOD_SHIFT) != 0) {
+        if (this.prompt == null && keyCode == GLFW.GLFW_KEY_P && (modifiers & GLFW.GLFW_MOD_SHIFT) != 0) {
             Minecraft.getInstance().setScreen(new net.minecraft.client.gui.screens.options.VideoSettingsScreen(this.prevScreen, Minecraft.getInstance(), Minecraft.getInstance().options));
 
             return true;
@@ -319,17 +297,14 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
             return this.prompt.mouseClicked(mouseX, mouseY, button);
         }
 
-        boolean clicked = super.mouseClicked(mouseX, mouseY, button);
-
-        if (!clicked) {
+        if (!super.mouseClicked(mouseX, mouseY, button)) {
+            // Clicking in empty space, focus the search bar
+            if (!this.searchWidget.isFocused()) {
+                this.setFocused(this.searchWidget);
+                return true;
+            }
             this.setFocused(null);
             return true;
-        }
-
-        // this ensures the right element is focused when the search bar is clicked
-        if (this.getFocused() == this.pageList && this.controlList == this.searchWidget ||
-                this.getFocused() == this.searchWidget && this.controlList == this.optionList) {
-            this.setFocused(this.controlList);
         }
 
         return true;
@@ -416,40 +391,6 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
     @Override
     public ScreenPrompt getPrompt() {
         return this.prompt;
-    }
-
-    private void startSearch() {
-        this.startSearch(null);
-    }
-
-    private void startSearch(@Nullable SearchWidget old) {
-        this.searchWidget = new SearchWidget(this, this::closeSearch, old, new Dim2i(0, 0, Layout.PAGE_LIST_WIDTH + Layout.INNER_MARGIN + Layout.OPTION_WIDTH + Layout.OPTION_LIST_SCROLLBAR_OFFSET + Layout.SCROLLBAR_WIDTH, this.height));
-        this.addRenderableWidget(this.searchWidget);
-
-        // remove focus from page list even if it doesn't get destroyed so that it isn't focused when the search is closed
-        this.pageList.setFocused(null);
-
-        this.removeWidget(this.pageList);
-        this.removeWidget(this.optionList);
-
-        // set the search widget to be the focused element in search mode
-        this.controlList = this.searchWidget;
-        this.setFocused(this.searchWidget);
-    }
-
-    private void closeSearch() {
-        // remove focus from the search widget that's getting removed
-        if (this.getFocused() == this.searchWidget) {
-            this.clearFocus();
-        }
-
-        this.removeWidget(this.searchWidget);
-        this.searchWidget = null;
-
-        this.addRenderableWidget(this.pageList);
-        this.addRenderableWidget(this.optionList);
-
-        this.controlList = this.optionList;
     }
 
     @Override
