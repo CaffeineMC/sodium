@@ -179,7 +179,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         this.updateSearchWidgetWidth();
 
         this.optionList = new OptionListWidget(this, new Dim2i(
-                this.pageList.getLimitX() + Layout.INNER_MARGIN, topBarHeight + Layout.INNER_MARGIN,
+                this.pageList.getLimitX(), topBarHeight + Layout.INNER_MARGIN,
                 Layout.OPTION_WIDTH + Layout.OPTION_LIST_SCROLLBAR_OFFSET + Layout.SCROLLBAR_WIDTH,
                 this.height - topBarHeight - (reserveBottomSpace ? (Layout.INNER_MARGIN * 3 + Layout.BUTTON_SHORT) : (Layout.INNER_MARGIN * 2))
         ));

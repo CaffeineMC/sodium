@@ -61,22 +61,22 @@ public class OptionListWidget extends AbstractOptionList {
         this.clearChildren();
         this.controls.clear();
         this.sectionInfoMap.clear();
-        this.scrollbar = this.addRenderableChild(new ScrollbarWidget(new Dim2i(x + width + Layout.OPTION_LIST_SCROLLBAR_OFFSET, y, Layout.SCROLLBAR_WIDTH, height), this::onScrollChanged));
+        this.scrollbar = this.addRenderableChild(new ScrollbarWidget(new Dim2i(x + width + Layout.OPTION_LIST_SCROLLBAR_OFFSET, y, Layout.SCROLLBAR_WIDTH, height), this::updateSectionFocus));
 
         this.entryHeight = this.font.lineHeight * 2;
-        int listHeight = 0;
+        int listHeight;
 
         if (this.filteredOptions != null) {
-            listHeight = this.renderFilteredOptions(screen, x, y, width, listHeight);
+            listHeight = this.renderFilteredOptions(screen, x, y, width);
         } else {
-            listHeight = this.renderAllPages(screen, x, y, width, listHeight);
+            listHeight = this.renderAllPages(screen, x, y, width);
         }
 
-        this.scrollbar.setScrollbarContext(listHeight - Layout.INNER_MARGIN);
+        this.scrollbar.setScrollbarContext(listHeight);
     }
 
-    private int renderFilteredOptions(Screen screen, int x, int y, int width, int startHeight) {
-        int listHeight = startHeight;
+    private int renderFilteredOptions(Screen screen, int x, int y, int width) {
+        int listHeight = -Layout.OPTION_MOD_MARGIN;
 
         Option.OptionNameSource lastSource = null;
         for (var source : this.filteredOptions) {
@@ -86,29 +86,32 @@ public class OptionListWidget extends AbstractOptionList {
             var page = source.getPage();
             var theme = modOptions.theme();
 
-            // Add mod/page headers if necessary
+            // Add mod header if mod has changed
             if (lastSource == null || lastSource.getModOptions() != modOptions) {
+                listHeight += Layout.OPTION_MOD_MARGIN;
                 var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions.name(), theme);
                 this.addRenderableChild(modHeader);
-                listHeight += this.entryHeight + Layout.INNER_MARGIN;
+                listHeight += this.entryHeight;
             }
 
+            // Add page header if page has changed
             if (lastSource == null || lastSource.getPage() != page) {
+                listHeight += Layout.OPTION_PAGE_MARGIN;
                 var pageHeader = new PageHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), page.name().getString(), theme);
                 this.addRenderableChild(pageHeader);
-                listHeight += this.entryHeight + Layout.INNER_MARGIN;
+                listHeight += this.entryHeight;
             }
 
-            // Add the option control
-            var element = control.createElement(screen, this, new Dim2i(x, y + listHeight, width, this.entryHeight), theme);
+            // Add group spacing only if this isn't the first option after a page header
+            else if (lastSource.getOptionGroup() != source.getOptionGroup()) {
+                listHeight += Layout.OPTION_GROUP_MARGIN;
+            }
+
+            // add the option control itself
+            var element = control.createElement(screen, this, new Dim2i(x, y + listHeight, width, this.entryHeight).insetLeft(Layout.OPTION_PAGE_MARGIN), theme);
             this.addRenderableChild(element);
             this.controls.add(element);
             listHeight += this.entryHeight;
-
-            // Add group spacing
-            if (lastSource != null && lastSource.getOptionGroup() != source.getOptionGroup()) {
-                listHeight += Layout.INNER_MARGIN;
-            }
 
             lastSource = source;
         }
@@ -116,8 +119,8 @@ public class OptionListWidget extends AbstractOptionList {
         return listHeight;
     }
 
-    private int renderAllPages(Screen screen, int x, int y, int width, int startHeight) {
-        int listHeight = startHeight;
+    private int renderAllPages(Screen screen, int x, int y, int width) {
+        int listHeight = -Layout.OPTION_MOD_MARGIN;
 
         for (var modOptions : ConfigManager.CONFIG.getModOptions()) {
             if (modOptions.pages().isEmpty()) {
@@ -127,26 +130,34 @@ public class OptionListWidget extends AbstractOptionList {
             var theme = modOptions.theme();
 
             // Add mod header
+            listHeight += Layout.OPTION_MOD_MARGIN;
             var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions.name(), theme);
             this.addRenderableChild(modHeader);
-            listHeight += this.entryHeight + Layout.INNER_MARGIN;
+            listHeight += this.entryHeight;
 
             for (var page : modOptions.pages()) {
                 if (!(page instanceof OptionPage optionPage)) {
-                    continue; // Skip external pages
+                    continue; // there's nothing to render for non-option pages
                 }
 
                 int pageStartY = listHeight;
 
                 // Add page header
+                listHeight += Layout.OPTION_PAGE_MARGIN;
                 var pageHeader = new PageHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), optionPage.name().getString(), theme);
                 this.addRenderableChild(pageHeader);
-                listHeight += this.entryHeight + Layout.INNER_MARGIN;
+                listHeight += this.entryHeight;
+
+                // removes the initial margin between the page header and the first group
+                listHeight -= Layout.OPTION_GROUP_MARGIN;
 
                 for (OptionGroup group : optionPage.groups()) {
+                    // Add padding beneath each option group
+                    listHeight += Layout.OPTION_GROUP_MARGIN;
+
                     // Add group header if it has a name
                     if (group.name() != null) {
-                        var groupHeader = new GroupHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), group.name().getString(), theme);
+                        var groupHeader = new GroupHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight).insetLeft(Layout.OPTION_PAGE_MARGIN), group.name().getString(), theme);
                         this.addRenderableChild(groupHeader);
                         listHeight += this.entryHeight;
                     }
@@ -154,15 +165,12 @@ public class OptionListWidget extends AbstractOptionList {
                     // Add each option's control element
                     for (Option option : group.options()) {
                         var control = option.getControl();
-                        var element = control.createElement(screen, this, new Dim2i(x, y + listHeight, width, this.entryHeight), theme);
+                        var element = control.createElement(screen, this, new Dim2i(x, y + listHeight, width, this.entryHeight).insetLeft(Layout.OPTION_PAGE_MARGIN), theme);
 
                         this.addRenderableChild(element);
                         this.controls.add(element);
                         listHeight += this.entryHeight;
                     }
-
-                    // Add padding beneath each option group
-                    listHeight += Layout.INNER_MARGIN;
                 }
 
                 // Store section info for navigation using page as key
@@ -189,19 +197,15 @@ public class OptionListWidget extends AbstractOptionList {
         super.render(graphics, mouseX, mouseY, delta);
         graphics.disableScissor();
     }
-    
-    private void onScrollChanged(int scrollAmount) {
-        this.updateSectionFocus();
-    }
 
-    private void updateSectionFocus() {
+    private void updateSectionFocus(int scrollAmount) {
         if (this.onSectionFocused == null || !this.showAllPages) {
             return;
         }
 
         // calculate which y position is considered the "viewed" option,
         // + y is needed to compensate for the initial offset that the .startY values have
-        int highlightTarget = this.getScrollAmount() + this.getY() + Math.min(this.entryHeight * 3, this.getHeight() / 2);
+        int highlightTarget = scrollAmount + this.getY() + Math.min(this.entryHeight * 3, this.getHeight() / 2);
 
         // Find which section is currently in the middle of the viewport
         SectionInfo currentSection = null;
@@ -238,7 +242,7 @@ public class OptionListWidget extends AbstractOptionList {
             this.hovered = this.isMouseOver(mouseX, mouseY);
 
             this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.backgroundColor);
-            this.drawString(graphics, this.truncateLabelToFit(this.title), this.getX() + 6, this.getCenterY() - 4, this.themeColor);
+            this.drawString(graphics, this.truncateLabelToFit(this.title), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() - 4, this.themeColor);
         }
 
         protected String truncateLabelToFit(String name) {
