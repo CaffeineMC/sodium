@@ -2,13 +2,8 @@ package net.caffeinemc.mods.sodium.client.checks;
 
 import net.caffeinemc.mods.sodium.client.console.Console;
 import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.FilePackResources;
-import net.minecraft.server.packs.PackResources;
-import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.PathPackResources;
+import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -41,7 +36,9 @@ public class ResourcePackScanner {
             "rendertype_tripwire.json",
             "rendertype_clouds.vsh",
             "rendertype_clouds.fsh",
-            "rendertype_clouds.json"
+            "rendertype_clouds.json",
+            "terrain.vsh",
+            "terrain.fsh"
     );
 
     private static final Set<String> SHADER_INCLUDE_BLACKLIST = Set.of(
@@ -181,7 +178,7 @@ public class ResourcePackScanner {
     }
 
     private static boolean isExternalResourcePack(PackResources pack) {
-        return pack instanceof PathPackResources || pack instanceof FilePackResources;
+        return pack instanceof PathPackResources || pack instanceof FilePackResources || pack instanceof CompositePackResources;
     }
 
     private static String getResourcePackName(PackResources pack) {
