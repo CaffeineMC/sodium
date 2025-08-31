@@ -9,6 +9,8 @@ import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.IntConsumer;
+
 public class ScrollbarWidget extends AbstractWidget {
     private static final int COLOR = ColorABGR.pack(50, 50, 50, 150);
     private static final int HIGHLIGHT_COLOR = ColorABGR.pack(100, 100, 100, 150);
@@ -21,20 +23,30 @@ public class ScrollbarWidget extends AbstractWidget {
     private int scrollAmount;
     private long lastScrollTime;
     private boolean dragging;
+    private final IntConsumer onScrollChange;
+
+    public ScrollbarWidget(Dim2i dim2i, IntConsumer onScrollChange) {
+        this(dim2i, false, onScrollChange);
+    }
+
+    public ScrollbarWidget(Dim2i dim2i, boolean horizontal, IntConsumer onScrollChange) {
+        super(dim2i);
+        this.horizontal = horizontal;
+        this.onScrollChange = onScrollChange;
+    }
 
     public ScrollbarWidget(Dim2i dim2i) {
-        this(dim2i, false);
+        this(dim2i, false, null);
     }
 
     public ScrollbarWidget(Dim2i dim2i, boolean horizontal) {
-        super(dim2i);
-        this.horizontal = horizontal;
+        this(dim2i, horizontal, null);
     }
 
     public void setScrollbarContext(int visible, int total) {
         this.visible = visible;
         this.total = total;
-        this.scrollAmount = Math.max(0, Math.min(total - visible, this.scrollAmount));
+        this.setScrollAndNotify(Math.max(0, Math.min(total - visible, this.scrollAmount)));
     }
 
     public void setScrollbarContext(int total) {
@@ -48,14 +60,26 @@ public class ScrollbarWidget extends AbstractWidget {
     public void scroll(int amount) {
         this.scrollTo(this.scrollAmount + amount);
     }
-    
+
     public void scrollTo(int target) {
-        this.scrollAmount = Math.max(0, Math.min(this.total - this.visible, target));
-        this.lastScrollTime = System.currentTimeMillis();
+        if (this.setScrollAndNotify(Math.max(0, Math.min(this.total - this.visible, target)))) {
+            this.lastScrollTime = System.currentTimeMillis();
+        }
     }
 
     public int getScrollAmount() {
         return this.scrollAmount;
+    }
+
+    private boolean setScrollAndNotify(int newScrollAmount) {
+        if (newScrollAmount != this.scrollAmount) {
+            this.scrollAmount = newScrollAmount;
+            if (this.onScrollChange != null) {
+                this.onScrollChange.accept(this.scrollAmount);
+            }
+            return true;
+        }
+        return false;
     }
 
     @Override
