@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.gui.options.control;
 
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
+import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
 import net.caffeinemc.mods.sodium.client.gui.widgets.AbstractWidget;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
@@ -15,10 +16,12 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class ControlElement extends AbstractWidget {
     protected final AbstractOptionList list;
+    protected final ColorTheme theme;
 
-    public ControlElement(AbstractOptionList list, Dim2i dim) {
+    public ControlElement(AbstractOptionList list, Dim2i dim, ColorTheme theme) {
         super(dim);
         this.list = list;
+        this.theme = theme;
     }
 
     public abstract Option getOption();

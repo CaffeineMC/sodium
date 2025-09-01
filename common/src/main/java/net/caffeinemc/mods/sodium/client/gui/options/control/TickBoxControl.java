@@ -35,13 +35,11 @@ public class TickBoxControl implements Control {
 
     private static class TickBoxControlElement extends ControlElement {
         private final BooleanOption option;
-        private final ColorTheme theme;
 
         public TickBoxControlElement(AbstractOptionList list, BooleanOption option, Dim2i dim, ColorTheme theme) {
-            super(list, dim);
+            super(list, dim, theme);
 
             this.option = option;
-            this.theme = theme;
         }
 
         @Override

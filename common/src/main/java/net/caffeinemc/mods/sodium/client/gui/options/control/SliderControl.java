@@ -42,17 +42,15 @@ public class SliderControl implements Control {
         private static final int THUMB_WIDTH = 2, TRACK_HEIGHT = 1;
 
         private final IntegerOption option;
-        private final ColorTheme theme;
 
         private double thumbPosition;
         private boolean sliderHeld;
         private int contentWidth;
 
         public SliderControlElement(AbstractOptionList list, IntegerOption option, Dim2i dim, ColorTheme theme) {
-            super(list, dim);
+            super(list, dim, theme);
 
             this.option = option;
-            this.theme = theme;
 
             this.thumbPosition = this.getThumbPositionForValue(option.getValidatedValue());
             this.sliderHeld = false;
