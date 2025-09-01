@@ -406,6 +406,14 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
 
         graphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0, 0, size, size, w, h, w, h, color);
     }
+    
+    public static int renderIconWithSpacing(GuiGraphics graphics, ResourceLocation icon, int color, int x, int y, int height, int margin) {
+        int iconSize = height - margin * 2;
+        
+        renderIcon(graphics, icon, color, x + margin, y + height / 2 - iconSize / 2, iconSize);
+        
+        return margin * 2 + iconSize;
+    }
 
     private static final List<FormattedText> DONATION_PROMPT_MESSAGE;
 

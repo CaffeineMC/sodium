@@ -13,6 +13,7 @@ import net.caffeinemc.mods.sodium.client.gui.options.control.AbstractScrollable;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 public class PageListWidget extends AbstractScrollable {
@@ -120,8 +121,21 @@ public class PageListWidget extends AbstractScrollable {
     }
 
     private class HeaderEntryWidget extends EntryWidget {
+        private final ResourceLocation icon;
+
         HeaderEntryWidget(Dim2i dim, ModOptions modOptions, ColorTheme theme) {
             super(dim, Component.literal(modOptions.name()), Component.literal(modOptions.version()), false, theme);
+            this.icon = modOptions.icon();
+        }
+
+        @Override
+        protected int renderIcon(GuiGraphics graphics, int textColor) {
+            if (this.icon == null) {
+                return super.renderIcon(graphics, textColor);
+            }
+            
+            return VideoSettingsScreen.renderIconWithSpacing(graphics, this.icon, textColor, 
+                this.getX(), this.getY(), this.getHeight(), Layout.ICON_MARGIN);
         }
     }
 

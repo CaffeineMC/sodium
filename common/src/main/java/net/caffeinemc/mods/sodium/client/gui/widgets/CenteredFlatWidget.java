@@ -7,13 +7,12 @@ import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.navigation.CommonInputs;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class CenteredFlatWidget extends AbstractWidget implements Renderable {
+public abstract class CenteredFlatWidget extends AbstractWidget {
     private final boolean isSelectable;
     private final ButtonTheme theme;
 
@@ -60,12 +59,15 @@ public abstract class CenteredFlatWidget extends AbstractWidget implements Rende
             this.drawRect(graphics, x2 - 3, y1, x2, y2, this.theme.themeLighter);
         }
 
+        // render icon and get offset for text
+        int textOffset = this.renderIcon(graphics, textColor);
+
         if (this.subtitle == null) {
-            this.drawString(graphics, this.truncateToFitWidth(this.label), x1 + Layout.TEXT_LEFT_PADDING, (int) Math.ceil(((y1 + (this.getTextBoxHeight() - this.font.lineHeight) * 0.5f))), textColor);
+            this.drawString(graphics, this.truncateToFitWidth(this.label, textOffset), x1 + textOffset, (int) Math.ceil(((y1 + (this.getTextBoxHeight() - this.font.lineHeight) * 0.5f))), textColor);
         } else {
             var center = y1 + this.getTextBoxHeight() * 0.5f;
-            this.drawString(graphics, this.truncateToFitWidth(this.label), x1 + Layout.TEXT_LEFT_PADDING, (int) Math.ceil(center - (this.font.lineHeight + Layout.TEXT_LINE_SPACING * 0.5f)), textColor);
-            this.drawString(graphics, this.truncateToFitWidth(this.subtitle), x1 + Layout.TEXT_LEFT_PADDING, (int) Math.ceil(center + Layout.TEXT_LINE_SPACING * 0.5f), textColor);
+            this.drawString(graphics, this.truncateToFitWidth(this.label, textOffset), x1 + textOffset, (int) Math.ceil(center - (this.font.lineHeight + Layout.TEXT_LINE_SPACING * 0.5f)), textColor);
+            this.drawString(graphics, this.truncateToFitWidth(this.subtitle, textOffset), x1 + textOffset, (int) Math.ceil(center + Layout.TEXT_LINE_SPACING * 0.5f), textColor);
         }
 
         if (this.enabled && this.isFocused()) {
@@ -77,8 +79,12 @@ public abstract class CenteredFlatWidget extends AbstractWidget implements Rende
         return this.getHeight();
     }
 
-    private String truncateToFitWidth(Component text) {
-        return this.truncateTextToFit(text.getString(), this.getWidth() - 14);
+    protected int renderIcon(GuiGraphics graphics, int textColor) {
+        return Layout.TEXT_LEFT_PADDING;
+    }
+
+    private String truncateToFitWidth(Component text, int iconOffset) {
+        return this.truncateTextToFit(text.getString(), this.getWidth() - 14 - iconOffset);
     }
 
     public void setSelected(boolean selected) {

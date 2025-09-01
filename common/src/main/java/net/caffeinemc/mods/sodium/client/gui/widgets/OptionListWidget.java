@@ -266,8 +266,6 @@ public class OptionListWidget extends AbstractOptionList {
     }
 
     private static class ModHeaderWidget extends HeaderWidget {
-        private static final int ICON_MARGIN = 4;
-
         final ResourceLocation icon;
 
         public ModHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme, ResourceLocation icon) {
@@ -281,22 +279,13 @@ public class OptionListWidget extends AbstractOptionList {
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             this.hovered = this.isMouseOver(mouseX, mouseY);
 
-            int iconSize = 0, textOffset = 0;
-            if (this.icon != null) {
-                iconSize = this.getHeight() - ICON_MARGIN * 2;
-                textOffset = ICON_MARGIN + iconSize - 1;
-            }
-
             this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.backgroundColor);
 
-            this.drawString(graphics, truncateTextToFit(this.title, this.getWidth() - 12 - textOffset), this.getX() + Layout.OPTION_PAGE_MARGIN + textOffset, this.getCenterY() - 4, this.textColor);
-
-            // render the icon if available
-            if (this.icon == null) {
-                return;
+            int textOffset = 0;
+            if (this.icon != null) {
+                textOffset = VideoSettingsScreen.renderIconWithSpacing(graphics, this.icon, this.textColor, this.getX(), this.getY(), this.getHeight(), Layout.ICON_MARGIN);
             }
-
-            VideoSettingsScreen.renderIcon(graphics, this.icon, this.textColor, this.getX() + ICON_MARGIN, this.getCenterY() - iconSize / 2, iconSize);
+            this.drawString(graphics, truncateTextToFit(this.title, this.getWidth() - 12 - textOffset), this.getX() + textOffset, this.getCenterY() - 4, this.textColor);
         }
     }
 
