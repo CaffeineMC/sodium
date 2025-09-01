@@ -9,15 +9,14 @@ import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
 import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
 import net.caffeinemc.mods.sodium.client.gui.Layout;
+import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.caffeinemc.mods.sodium.client.gui.options.control.AbstractOptionList;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -267,10 +266,10 @@ public class OptionListWidget extends AbstractOptionList {
     }
 
     private static class ModHeaderWidget extends HeaderWidget {
-        private static final int ICON_MARGIN = 3;
-        
+        private static final int ICON_MARGIN = 4;
+
         final ResourceLocation icon;
-        
+
         public ModHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme, ResourceLocation icon) {
             // super(list, dim, ChatFormatting.UNDERLINE + title, theme.themeLighter, Colors.BACKGROUND_DEFAULT);
             // super(list, dim, ChatFormatting.BOLD + title, theme.themeLighter, ColorARGB.withAlpha(theme.themeDarker, 0x60));
@@ -287,21 +286,17 @@ public class OptionListWidget extends AbstractOptionList {
                 iconSize = this.getHeight() - ICON_MARGIN * 2;
                 textOffset = ICON_MARGIN + iconSize - 1;
             }
-            
+
             this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.backgroundColor);
 
             this.drawString(graphics, truncateTextToFit(this.title, this.getWidth() - 12 - textOffset), this.getX() + Layout.OPTION_PAGE_MARGIN + textOffset, this.getCenterY() - 4, this.textColor);
-            
+
             // render the icon if available
             if (this.icon == null) {
                 return;
             }
 
-            var texture = Minecraft.getInstance().getTextureManager().getTexture(this.icon);
-            int w = texture.getTexture().getWidth(0);
-            int h = texture.getTexture().getHeight(0);
-
-            graphics.blit(RenderPipelines.GUI_TEXTURED, this.icon, this.getX() + ICON_MARGIN, this.getCenterY() - iconSize / 2, 0, 0, iconSize, iconSize, w, h, w, h);
+            VideoSettingsScreen.renderIcon(graphics, this.icon, this.textColor, this.getX() + ICON_MARGIN, this.getCenterY() - iconSize / 2, iconSize);
         }
     }
 

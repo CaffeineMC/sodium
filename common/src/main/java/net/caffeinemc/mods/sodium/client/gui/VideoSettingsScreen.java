@@ -21,6 +21,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
@@ -396,6 +397,14 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
     @Override
     public Dim2i getDimensions() {
         return new Dim2i(0, 0, this.width, this.height);
+    }
+    
+    public static void renderIcon(GuiGraphics graphics, ResourceLocation icon, int color, int x, int y, int size) {
+        var texture = Minecraft.getInstance().getTextureManager().getTexture(icon);
+        int w = texture.getTexture().getWidth(0);
+        int h = texture.getTexture().getHeight(0);
+
+        graphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0, 0, size, size, w, h, w, h, color);
     }
 
     private static final List<FormattedText> DONATION_PROMPT_MESSAGE;

@@ -42,6 +42,7 @@ import java.util.Set;
 // TODO: get initialValue from the vanilla options (it's private)
 public class SodiumConfigBuilder implements ConfigEntryPoint {
     private static final ResourceLocation SODIUM_ICON = ResourceLocation.fromNamespaceAndPath("sodium", "textures/gui/icon.png");
+    private static final ResourceLocation EXAMPLE_ICON = ResourceLocation.fromNamespaceAndPath("sodium", "textures/gui/example_icon.png");
     private static final SodiumOptions DEFAULTS = SodiumOptions.defaults();
 
     private final Options vanillaOpts;
@@ -141,6 +142,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
         // .setEnabledProvider((state) -> state.readIntOption(ResourceLocation.parse("foo:baz")) == 0, ResourceLocation.parse("foo:baz"))
 
         var options = builder.registerModOptions("foo", "Foo fadsa fdsa fdsa fdas fdsafdsa", "1.0 fdas fdas fdasfdsaf dsa")
+                .setIcon(EXAMPLE_ICON)
                 .addPage(
                         builder.createExternalPage()
                                 .setName(Component.literal("External Page"))
