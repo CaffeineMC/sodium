@@ -1,5 +1,7 @@
 package net.caffeinemc.mods.sodium.api.config.structure;
 
+import net.minecraft.resources.ResourceLocation;
+
 import java.util.function.Function;
 
 public interface ModOptionsBuilder {
@@ -10,6 +12,8 @@ public interface ModOptionsBuilder {
     ModOptionsBuilder formatVersion(Function<String, String> versionFormatter);
 
     ModOptionsBuilder setColorTheme(ColorThemeBuilder colorTheme);
+    
+    ModOptionsBuilder setIcon(ResourceLocation texture);
 
     ModOptionsBuilder addPage(PageBuilder page);
 

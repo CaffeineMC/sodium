@@ -9,6 +9,7 @@ import net.caffeinemc.mods.sodium.client.config.structure.ModOptions;
 import net.caffeinemc.mods.sodium.client.config.structure.OptionOverride;
 import net.caffeinemc.mods.sodium.client.config.structure.Page;
 import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.Validate;
 
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
     private String name;
     private String version;
     private ColorTheme theme;
+    private ResourceLocation icon;
     private final List<Page> pages = new ArrayList<>();
     private final List<OptionOverride> optionOverrides = new ArrayList<>(0);
 
@@ -42,7 +44,7 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
             this.theme = ColorTheme.PRESETS[Math.abs(this.namespace.hashCode()) % ColorTheme.PRESETS.length];
         }
 
-        return new ModOptions(this.namespace, this.name, this.version, this.theme, ImmutableList.copyOf(this.pages), ImmutableList.copyOf(this.optionOverrides));
+        return new ModOptions(this.namespace, this.name, this.version, this.theme, this.icon, ImmutableList.copyOf(this.pages), ImmutableList.copyOf(this.optionOverrides));
     }
 
     @Override
@@ -66,6 +68,12 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
     @Override
     public ModOptionsBuilder setColorTheme(ColorThemeBuilder theme) {
         this.theme = ((ColorThemeBuilderImpl) theme).build();
+        return this;
+    }
+
+    @Override
+    public ModOptionsBuilder setIcon(ResourceLocation texture) {
+        this.icon = texture;
         return this;
     }
 

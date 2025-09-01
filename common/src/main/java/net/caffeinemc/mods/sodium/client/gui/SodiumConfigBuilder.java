@@ -41,6 +41,7 @@ import java.util.Set;
 
 // TODO: get initialValue from the vanilla options (it's private)
 public class SodiumConfigBuilder implements ConfigEntryPoint {
+    private static final ResourceLocation SODIUM_ICON = ResourceLocation.fromNamespaceAndPath("sodium", "textures/gui/icon.png");
     private static final SodiumOptions DEFAULTS = SodiumOptions.defaults();
 
     private final Options vanillaOpts;
@@ -88,6 +89,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
     private static ModOptionsBuilder createModOptionsBuilder(ConfigBuilder builder) {
         return builder.registerOwnModOptions()
                 .setName("Sodium Renderer")
+                .setIcon(SODIUM_ICON)
                 .formatVersion(version -> {
                     var result = version.splitWithDelimiters("\\+", 2);
                     return result[0];

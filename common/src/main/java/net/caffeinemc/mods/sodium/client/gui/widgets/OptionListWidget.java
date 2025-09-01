@@ -12,10 +12,13 @@ import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.gui.options.control.AbstractOptionList;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -91,7 +94,7 @@ public class OptionListWidget extends AbstractOptionList {
             // Add mod header if mod has changed
             if (lastSource == null || lastSource.getModOptions() != modOptions) {
                 listHeight += Layout.OPTION_MOD_MARGIN;
-                var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions.name(), theme);
+                var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions.name(), theme, modOptions.icon());
                 this.addRenderableChild(modHeader);
                 listHeight += this.entryHeight;
             }
@@ -133,7 +136,7 @@ public class OptionListWidget extends AbstractOptionList {
 
             // Add mod header
             listHeight += Layout.OPTION_MOD_MARGIN;
-            var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions.name(), theme);
+            var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions.name(), theme, modOptions.icon());
             this.addRenderableChild(modHeader);
             listHeight += this.entryHeight;
 
@@ -227,10 +230,10 @@ public class OptionListWidget extends AbstractOptionList {
     }
 
     private abstract static class HeaderWidget extends AbstractWidget {
-        protected final AbstractOptionList list;
-        protected final String title;
-        protected final int textColor;
-        protected final int backgroundColor;
+        final AbstractOptionList list;
+        final String title;
+        final int textColor;
+        final int backgroundColor;
 
         public HeaderWidget(AbstractOptionList list, Dim2i dim, String title, int textColor, int backgroundColor) {
             super(dim);
@@ -264,18 +267,42 @@ public class OptionListWidget extends AbstractOptionList {
     }
 
     private static class ModHeaderWidget extends HeaderWidget {
-        public ModHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme) {
+        private static final int ICON_MARGIN = 3;
+        
+        final ResourceLocation icon;
+        
+        public ModHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme, ResourceLocation icon) {
             // super(list, dim, ChatFormatting.UNDERLINE + title, theme.themeLighter, Colors.BACKGROUND_DEFAULT);
             // super(list, dim, ChatFormatting.BOLD + title, theme.themeLighter, ColorARGB.withAlpha(theme.themeDarker, 0x60));
             super(list, dim, ChatFormatting.BOLD + title, theme.themeLighter, Colors.BACKGROUND_DARKER);
+            this.icon = icon;
         }
 
-//        @Override
-//        public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-//            this.hovered = this.isMouseOver(mouseX, mouseY);
-//
-//            this.drawString(graphics, this.truncateLabelToFit(this.title), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() - 4, this.textColor);
-//        }
+        @Override
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+            this.hovered = this.isMouseOver(mouseX, mouseY);
+
+            int iconSize = 0, textOffset = 0;
+            if (this.icon != null) {
+                iconSize = this.getHeight() - ICON_MARGIN * 2;
+                textOffset = ICON_MARGIN + iconSize - 1;
+            }
+            
+            this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.backgroundColor);
+
+            this.drawString(graphics, truncateTextToFit(this.title, this.getWidth() - 12 - textOffset), this.getX() + Layout.OPTION_PAGE_MARGIN + textOffset, this.getCenterY() - 4, this.textColor);
+            
+            // render the icon if available
+            if (this.icon == null) {
+                return;
+            }
+
+            var texture = Minecraft.getInstance().getTextureManager().getTexture(this.icon);
+            int w = texture.getTexture().getWidth(0);
+            int h = texture.getTexture().getHeight(0);
+
+            graphics.blit(RenderPipelines.GUI_TEXTURED, this.icon, this.getX() + ICON_MARGIN, this.getCenterY() - iconSize / 2, 0, 0, iconSize, iconSize, w, h, w, h);
+        }
     }
 
     private static class PageHeaderWidget extends HeaderWidget {
