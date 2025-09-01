@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gui.widgets;
 
+import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.config.structure.ModOptions;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
@@ -10,6 +11,7 @@ import net.caffeinemc.mods.sodium.client.gui.Colors;
 import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.gui.options.control.AbstractOptionList;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
@@ -35,7 +37,7 @@ public class OptionListWidget extends AbstractOptionList {
 
     // Constructor for showing all pages
     public OptionListWidget(Screen screen, Dim2i dim) {
-        super(dim);
+        super(dim.insetLeft(Layout.OPTION_GROUP_MARGIN));
         this.showAllPages = true;
         this.rebuild(screen);
     }
@@ -108,7 +110,7 @@ public class OptionListWidget extends AbstractOptionList {
             }
 
             // add the option control itself
-            var element = control.createElement(screen, this, new Dim2i(x, y + listHeight, width, this.entryHeight).insetLeft(Layout.OPTION_PAGE_MARGIN), theme);
+            var element = control.createElement(screen, this, new Dim2i(x, y + listHeight, width, this.entryHeight).insetLeft(Layout.OPTION_LEFT_INSET), theme);
             this.addRenderableChild(element);
             this.controls.add(element);
             listHeight += this.entryHeight;
@@ -149,7 +151,8 @@ public class OptionListWidget extends AbstractOptionList {
                 listHeight += this.entryHeight;
 
                 // removes the initial margin between the page header and the first group
-                listHeight -= Layout.OPTION_GROUP_MARGIN;
+                // listHeight -= Layout.OPTION_GROUP_MARGIN;
+                // listHeight += Layout.OPTION_PAGE_MARGIN - Layout.OPTION_GROUP_MARGIN;
 
                 for (OptionGroup group : optionPage.groups()) {
                     // Add padding beneath each option group
@@ -157,7 +160,7 @@ public class OptionListWidget extends AbstractOptionList {
 
                     // Add group header if it has a name
                     if (group.name() != null) {
-                        var groupHeader = new GroupHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight).insetLeft(Layout.OPTION_PAGE_MARGIN), group.name().getString(), theme);
+                        var groupHeader = new GroupHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight).insetLeft(Layout.OPTION_LEFT_INSET), group.name().getString(), theme);
                         this.addRenderableChild(groupHeader);
                         listHeight += this.entryHeight;
                     }
@@ -165,7 +168,7 @@ public class OptionListWidget extends AbstractOptionList {
                     // Add each option's control element
                     for (Option option : group.options()) {
                         var control = option.getControl();
-                        var element = control.createElement(screen, this, new Dim2i(x, y + listHeight, width, this.entryHeight).insetLeft(Layout.OPTION_PAGE_MARGIN), theme);
+                        var element = control.createElement(screen, this, new Dim2i(x, y + listHeight, width, this.entryHeight).insetLeft(Layout.OPTION_LEFT_INSET), theme);
 
                         this.addRenderableChild(element);
                         this.controls.add(element);
@@ -226,14 +229,14 @@ public class OptionListWidget extends AbstractOptionList {
     private abstract static class HeaderWidget extends AbstractWidget {
         protected final AbstractOptionList list;
         protected final String title;
-        protected final int themeColor;
+        protected final int textColor;
         protected final int backgroundColor;
 
-        public HeaderWidget(AbstractOptionList list, Dim2i dim, String title, int themeColor, int backgroundColor) {
+        public HeaderWidget(AbstractOptionList list, Dim2i dim, String title, int textColor, int backgroundColor) {
             super(dim);
             this.list = list;
             this.title = title;
-            this.themeColor = themeColor;
+            this.textColor = textColor;
             this.backgroundColor = backgroundColor;
         }
 
@@ -242,7 +245,7 @@ public class OptionListWidget extends AbstractOptionList {
             this.hovered = this.isMouseOver(mouseX, mouseY);
 
             this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.backgroundColor);
-            this.drawString(graphics, this.truncateLabelToFit(this.title), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() - 4, this.themeColor);
+            this.drawString(graphics, this.truncateLabelToFit(this.title), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() - 4, this.textColor);
         }
 
         protected String truncateLabelToFit(String name) {
@@ -262,19 +265,43 @@ public class OptionListWidget extends AbstractOptionList {
 
     private static class ModHeaderWidget extends HeaderWidget {
         public ModHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme) {
-            super(list, dim, title, theme.themeLighter, Colors.BACKGROUND_DEFAULT);
+            // super(list, dim, ChatFormatting.UNDERLINE + title, theme.themeLighter, Colors.BACKGROUND_DEFAULT);
+            // super(list, dim, ChatFormatting.BOLD + title, theme.themeLighter, ColorARGB.withAlpha(theme.themeDarker, 0x60));
+            super(list, dim, ChatFormatting.BOLD + title, theme.themeLighter, Colors.BACKGROUND_DARKER);
         }
+
+//        @Override
+//        public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+//            this.hovered = this.isMouseOver(mouseX, mouseY);
+//
+//            this.drawString(graphics, this.truncateLabelToFit(this.title), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() - 4, this.textColor);
+//        }
     }
 
     private static class PageHeaderWidget extends HeaderWidget {
         public PageHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme) {
-            super(list, dim, title, theme.theme, Colors.BACKGROUND_DEFAULT);
+            super(list, dim, ChatFormatting.BOLD + title, theme.theme, Colors.BACKGROUND_DEFAULT);
+//            super(list, dim, title, theme.themeLighter, ColorARGB.withAlpha(theme.themeDarker, 0x70));
+        }
+    }
+
+    private static class PageHeaderWidgetInverted extends HeaderWidget {
+        public PageHeaderWidgetInverted(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme) {
+            super(list, dim, ChatFormatting.BOLD + title, Colors.FOREGROUND_INVERTED, ColorARGB.withAlpha(theme.theme, 0x70));
+        }
+
+        @Override
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+            this.hovered = this.isMouseOver(mouseX, mouseY);
+
+            this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.backgroundColor);
+            graphics.drawString(this.font, ChatFormatting.BOLD + this.truncateLabelToFit(this.title), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() - 4, this.textColor, false);
         }
     }
 
     private static class GroupHeaderWidget extends HeaderWidget {
         public GroupHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme) {
-            super(list, dim, title, Colors.FOREGROUND, Colors.BACKGROUND_MEDIUM);
+            super(list, dim, ChatFormatting.BOLD + title, Colors.FOREGROUND, Colors.BACKGROUND_MEDIUM);
         }
     }
 }
