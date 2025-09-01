@@ -133,9 +133,9 @@ public class PageListWidget extends AbstractScrollable {
             if (this.icon == null) {
                 return super.renderIcon(graphics, textColor);
             }
-            
-            return VideoSettingsScreen.renderIconWithSpacing(graphics, this.icon, textColor, 
-                this.getX(), this.getY(), this.getHeight(), Layout.ICON_MARGIN);
+
+            return VideoSettingsScreen.renderIconWithSpacing(graphics, this.icon, textColor,
+                    this.getX(), this.getY(), this.getHeight(), Layout.ICON_MARGIN);
         }
     }
 

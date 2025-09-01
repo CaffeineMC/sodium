@@ -206,7 +206,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
             this.optionList.jumpToPage(modOptions, page);
         }
     }
-    
+
     private void updateSearchWidgetWidth() {
         this.searchWidget.updateWidgetWidth(this.width - this.donateButton.getWidth());
     }
@@ -221,7 +221,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
             throw new RuntimeException("Failed to save configuration", e);
         }
 
-        this.donateButton.updateDisplay(this,false);
+        this.donateButton.updateDisplay(this, false);
         this.updateSearchWidgetWidth();
     }
 
@@ -398,7 +398,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
     public Dim2i getDimensions() {
         return new Dim2i(0, 0, this.width, this.height);
     }
-    
+
     public static void renderIcon(GuiGraphics graphics, ResourceLocation icon, int color, int x, int y, int size) {
         var texture = Minecraft.getInstance().getTextureManager().getTexture(icon);
         int w = texture.getTexture().getWidth(0);
@@ -406,12 +406,12 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
 
         graphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0, 0, size, size, w, h, w, h, color);
     }
-    
+
     public static int renderIconWithSpacing(GuiGraphics graphics, ResourceLocation icon, int color, int x, int y, int height, int margin) {
         int iconSize = height - margin * 2;
-        
+
         renderIcon(graphics, icon, color, x + margin, y + height / 2 - iconSize / 2, iconSize);
-        
+
         return margin * 2 + iconSize;
     }
 
