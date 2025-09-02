@@ -1,5 +1,7 @@
 package net.caffeinemc.mods.sodium.client.gui.widgets;
 
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.config.structure.ExternalPage;
 import net.caffeinemc.mods.sodium.client.config.structure.ModOptions;
@@ -18,7 +20,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class PageListWidget extends AbstractScrollable {
     private final VideoSettingsScreen parent;
-    private CenteredFlatWidget selected;
+    private EntryWidget selected;
+    private final Reference2ReferenceMap<OptionPage, PageEntryWidget> pageToWidget = new Reference2ReferenceOpenHashMap<>();
 
     public PageListWidget(Dim2i position, VideoSettingsScreen parent) {
         super(position);
@@ -44,20 +47,30 @@ public class PageListWidget extends AbstractScrollable {
             }
 
             var theme = modOptions.theme();
-            
+
             // spacing above the mod title
             listHeight += Layout.TEXT_LINE_SPACING;
-            CenteredFlatWidget header = new HeaderEntryWidget(new Dim2i(x, y + listHeight, width, headerHeight), modOptions, theme);
+            var headerDim = new Dim2i(x, y + listHeight, width, headerHeight);
+            var modHeaderStart = headerDim.y();
+            CenteredFlatWidget header = new HeaderEntryWidget(headerDim, modOptions, theme);
             listHeight += headerHeight;
 
             this.addRenderableChild(header);
 
             for (Page page : modOptions.pages()) {
                 CenteredFlatWidget button;
+                Dim2i widgetDim = new Dim2i(x, y + listHeight, width, entryHeight);
                 if (page instanceof OptionPage optionPage) {
-                    button = new PageEntryWidget(new Dim2i(x, y + listHeight, width, entryHeight), optionPage, theme);
+                    var scrollTargetStart = widgetDim.y();
+                    if (modHeaderStart != -1) {
+                        scrollTargetStart = modHeaderStart; // scroll to the mod header if the page is the first in the mod
+                        modHeaderStart = -1;
+                    }
+                    var pageWidget = new PageEntryWidget(widgetDim, optionPage, theme, scrollTargetStart);
+                    button = pageWidget;
+                    this.pageToWidget.put(optionPage, pageWidget);
                 } else if (page instanceof ExternalPage externalPage) {
-                    button = new ExternalPageEntryWidget(new Dim2i(x, y + listHeight, width, entryHeight), externalPage, theme);
+                    button = new ExternalPageEntryWidget(widgetDim, externalPage, theme);
                 } else {
                     throw new IllegalStateException("Unknown page type: " + page.getClass());
                 }
@@ -83,23 +96,29 @@ public class PageListWidget extends AbstractScrollable {
         graphics.fillGradient(x1, y1, x2, y2, Colors.BACKGROUND_LIGHT, Colors.BACKGROUND_DEFAULT);
     }
 
-    private void switchSelected(CenteredFlatWidget widget) {
-        if (this.selected != null) {
-            this.selected.setSelected(false);
+    private void switchSelectedWidget(EntryWidget widget) {
+        if (widget != this.selected) {
+            if (this.selected != null) {
+                this.selected.setSelected(false);
+            }
+            this.selected = widget;
+            this.selected.setSelected(true);
         }
-        this.selected = widget;
-        this.selected.setSelected(true);
+
+        // scroll into view if not currently visible in the page list
+        int widgetTop = this.selected.getScrollTargetStart();
+        int widgetBottom = widgetTop + this.selected.getHeight();
+        int viewTop = this.getY() + this.scrollbar.getScrollAmount();
+        int viewBottom = viewTop + this.getHeight();
+        if (widgetTop < viewTop) {
+            this.scrollbar.scrollTo(widgetTop - this.getY());
+        } else if (widgetBottom > viewBottom) {
+            this.scrollbar.scrollTo(widgetBottom - this.getY() - this.getHeight());
+        }
     }
 
-    public void switchSelected(Page page) {
-        for (var child : this.children()) {
-            if (child instanceof PageEntryWidget pageEntryWidget) {
-                if (pageEntryWidget.page == page) {
-                    this.switchSelected(pageEntryWidget);
-                    return;
-                }
-            }
-        }
+    public void switchSelected(OptionPage page) {
+        this.switchSelectedWidget(this.pageToWidget.get(page));
     }
 
     private class EntryWidget extends CenteredFlatWidget {
@@ -113,6 +132,10 @@ public class PageListWidget extends AbstractScrollable {
 
         @Override
         void onAction() {
+        }
+
+        public int getScrollTargetStart() {
+            return super.getY();
         }
 
         @Override
@@ -142,15 +165,22 @@ public class PageListWidget extends AbstractScrollable {
 
     private class PageEntryWidget extends EntryWidget {
         private final OptionPage page;
+        private final int scrollTargetStart;
 
-        PageEntryWidget(Dim2i dim, OptionPage page, ColorTheme theme) {
+        PageEntryWidget(Dim2i dim, OptionPage page, ColorTheme theme, int scrollTargetStart) {
             super(dim, page.name(), true, theme);
             this.page = page;
+            this.scrollTargetStart = scrollTargetStart;
+        }
+
+        @Override
+        public int getScrollTargetStart() {
+            return this.scrollTargetStart;
         }
 
         @Override
         void onAction() {
-            PageListWidget.this.switchSelected(this);
+            PageListWidget.this.switchSelectedWidget(this);
             PageListWidget.this.parent.jumpToPage(this.page);
         }
     }

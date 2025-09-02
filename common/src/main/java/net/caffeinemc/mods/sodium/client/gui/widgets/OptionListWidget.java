@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 
 public class OptionListWidget extends AbstractOptionList {
     private List<Option.OptionNameSource> filteredOptions = null;
-    private final Reference2ReferenceMap<OptionPage, SectionInfo> sectionInfoMap = new Reference2ReferenceOpenHashMap<>();
+    private final Reference2ReferenceMap<OptionPage, SectionInfo> optionToSectionInfo = new Reference2ReferenceOpenHashMap<>();
     private final Consumer<OptionPage> onPageFocused;
     private SectionInfo lastFocusedSection;
     private boolean ignoreNextScrollUpdate = false;
@@ -59,7 +59,7 @@ public class OptionListWidget extends AbstractOptionList {
 
         this.clearChildren();
         this.controls.clear();
-        this.sectionInfoMap.clear();
+        this.optionToSectionInfo.clear();
         this.scrollbar = this.addRenderableChild(new ScrollbarWidget(new Dim2i(x + width + Layout.OPTION_LIST_SCROLLBAR_OFFSET, y, Layout.SCROLLBAR_WIDTH, height), this::updateSectionFocus));
 
         this.entryHeight = this.font.lineHeight * 2;
@@ -182,7 +182,7 @@ public class OptionListWidget extends AbstractOptionList {
                     modHeaderStart = -1;
                 }
                 var sectionInfo = new SectionInfo(modOptions, optionPage, pageStartY, listHeight, scrollJumpTarget);
-                this.sectionInfoMap.put(optionPage, sectionInfo);
+                this.optionToSectionInfo.put(optionPage, sectionInfo);
             }
         }
 
@@ -190,7 +190,7 @@ public class OptionListWidget extends AbstractOptionList {
     }
 
     public void jumpToPage(OptionPage page) {
-        var sectionInfo = this.sectionInfoMap.get(page);
+        var sectionInfo = this.optionToSectionInfo.get(page);
         if (sectionInfo != null) {
             this.ignoreNextScrollUpdate = true;
             this.scrollbar.scrollTo(sectionInfo.scrollJumpTarget);
@@ -216,7 +216,7 @@ public class OptionListWidget extends AbstractOptionList {
 
         // Find which section is currently in the middle of the viewport
         SectionInfo currentSection = null;
-        for (SectionInfo section : this.sectionInfoMap.values()) {
+        for (SectionInfo section : this.optionToSectionInfo.values()) {
             if (highlightTarget >= section.startY && highlightTarget <= section.endY) {
                 currentSection = section;
                 break;
