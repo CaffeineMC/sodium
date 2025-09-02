@@ -280,13 +280,23 @@ public class GLRenderDevice implements RenderDevice {
         @Override
         public void multiDrawElementsBaseVertex(MultiDrawBatch batch, GlIndexType indexType) {
             GlPrimitiveType primitiveType = GLRenderDevice.this.activeTessellation.getPrimitiveType();
-
+            GL11.glEnable(GL31.GL_PRIMITIVE_RESTART);
+            if (indexType == GlIndexType.UNSIGNED_INT){
+                GL31.glPrimitiveRestartIndex(0xFFFFFFFF);
+            }
+            else if (indexType == GlIndexType.UNSIGNED_SHORT){
+                GL31.glPrimitiveRestartIndex((short) 0xFFFF);
+            }
+            else{
+                GL11.glDisable(GL31.GL_PRIMITIVE_RESTART);
+            }
             GL32C.nglMultiDrawElementsBaseVertex(primitiveType.getId(),
                     batch.pElementCount,
                     indexType.getFormatId(),
                     batch.pElementPointer,
                     batch.size,
                     batch.pBaseVertex);
+            GL11.glDisable(GL31.GL_PRIMITIVE_RESTART);
         }
 
         @Override
