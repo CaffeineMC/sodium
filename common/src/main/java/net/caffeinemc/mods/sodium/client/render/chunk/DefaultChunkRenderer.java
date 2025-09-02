@@ -341,7 +341,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
     }
 
     private GlTessellation createRegionTessellation(CommandList commandList, RenderRegion.DeviceResources resources, boolean useSharedIndexBuffer) {
-        return commandList.createTessellation(GlPrimitiveType.TRIANGLES, new TessellationBinding[] {
+        return commandList.createTessellation(GlPrimitiveType.TRIANGLE_STRIP, new TessellationBinding[] {
                 TessellationBinding.forVertexBuffer(resources.getGeometryBuffer(), this.vertexFormat.getShaderBindings()),
                 TessellationBinding.forElementBuffer(useSharedIndexBuffer
                         ? this.sharedIndexBuffer.getBufferObject()
