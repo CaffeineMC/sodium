@@ -31,9 +31,10 @@ public class OptionListWidget extends AbstractOptionList {
     private final Reference2ReferenceMap<OptionPage, SectionInfo> sectionInfoMap = new Reference2ReferenceOpenHashMap<>();
     private final Consumer<SectionInfo> onSectionFocused;
     private SectionInfo lastFocusedSection;
+    private boolean ignoreNextScrollUpdate = false;
     private int entryHeight;
 
-    public record SectionInfo(ModOptions modOptions, OptionPage page, int startY, int endY) {
+    public record SectionInfo(ModOptions modOptions, OptionPage page, int startY, int endY, int scrollJumpTarget) {
     }
 
     // Constructor for showing all pages
@@ -131,6 +132,7 @@ public class OptionListWidget extends AbstractOptionList {
 
             // Add mod header
             listHeight += Layout.OPTION_MOD_MARGIN;
+            var modHeaderStart = listHeight;
             var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions.name(), theme, modOptions.icon());
             this.addRenderableChild(modHeader);
             listHeight += this.entryHeight;
@@ -174,7 +176,13 @@ public class OptionListWidget extends AbstractOptionList {
                     }
                 }
 
-                var sectionInfo = new SectionInfo(modOptions, optionPage, pageStartY, listHeight);
+                // scroll up to the start of the mod header if this is the first page of a mod
+                var scrollJumpTarget = pageStartY;
+                if (modHeaderStart != -1) {
+                    scrollJumpTarget = modHeaderStart;
+                    modHeaderStart = -1;
+                }
+                var sectionInfo = new SectionInfo(modOptions, optionPage, pageStartY, listHeight, scrollJumpTarget);
                 this.sectionInfoMap.put(optionPage, sectionInfo);
             }
         }
@@ -185,7 +193,8 @@ public class OptionListWidget extends AbstractOptionList {
     public void jumpToPage(OptionPage page) {
         var sectionInfo = this.sectionInfoMap.get(page);
         if (sectionInfo != null) {
-            this.scrollbar.scrollTo(sectionInfo.startY);
+            this.ignoreNextScrollUpdate = true;
+            this.scrollbar.scrollTo(sectionInfo.scrollJumpTarget);
         }
     }
 
@@ -197,6 +206,11 @@ public class OptionListWidget extends AbstractOptionList {
     }
 
     private void updateSectionFocus(int scrollAmount) {
+        if (this.ignoreNextScrollUpdate) {
+            this.ignoreNextScrollUpdate = false;
+            return;
+        }
+        
         // calculate which y position is considered the "viewed" option,
         // + y is needed to compensate for the initial offset that the .startY values have
         int highlightTarget = scrollAmount + this.getY() + Math.min(this.entryHeight * 3, this.getHeight() / 2);
