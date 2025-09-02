@@ -14,7 +14,7 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
 public class SharedQuadIndexBuffer {
-    private static final int ELEMENTS_PER_PRIMITIVE = 6;
+    private static final int ELEMENTS_PER_PRIMITIVE = 4;
     private static final int VERTICES_PER_PRIMITIVE = 4;
 
     private final GlMutableBuffer buffer;
@@ -86,10 +86,11 @@ public class SharedQuadIndexBuffer {
                     shortBuffer.put(indexOffset + 0, (short) (vertexOffset + 0));
                     shortBuffer.put(indexOffset + 1, (short) (vertexOffset + 1));
                     shortBuffer.put(indexOffset + 2, (short) (vertexOffset + 2));
-
-                    shortBuffer.put(indexOffset + 3, (short) (vertexOffset + 2));
-                    shortBuffer.put(indexOffset + 4, (short) (vertexOffset + 3));
-                    shortBuffer.put(indexOffset + 5, (short) (vertexOffset + 0));
+                    shortBuffer.put(indexOffset + 3, (short) (vertexOffset + 3));
+                    //shortBuffer.put(indexOffset + 4, (short) (vertexOffset + 0));
+                    if (primitiveIndex < primitiveCount - 1) {
+                        shortBuffer.put(indexOffset + 4, (short) 0xFFFF); // Or some other restart index value.
+                    }
                 }
             }
         },
@@ -106,9 +107,11 @@ public class SharedQuadIndexBuffer {
                     intBuffer.put(indexOffset + 1, vertexOffset + 1);
                     intBuffer.put(indexOffset + 2, vertexOffset + 2);
 
-                    intBuffer.put(indexOffset + 3, vertexOffset + 2);
-                    intBuffer.put(indexOffset + 4, vertexOffset + 3);
-                    intBuffer.put(indexOffset + 5, vertexOffset + 0);
+                    intBuffer.put(indexOffset + 3, vertexOffset + 3);
+                    //intBuffer.put(indexOffset + 4, vertexOffset + 0);
+                    if (primitiveIndex < primitiveCount - 1) {
+                        intBuffer.put(indexOffset + 4, 0xFFFFFFFF); // Or some other restart index value.
+                    }
                 }
             }
         };
@@ -141,4 +144,3 @@ public class SharedQuadIndexBuffer {
             return this.maxElementCount;
         }
     }
-}
