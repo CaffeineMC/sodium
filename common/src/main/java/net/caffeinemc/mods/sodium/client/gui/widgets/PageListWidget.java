@@ -37,16 +37,17 @@ public class PageListWidget extends AbstractScrollable {
 
         int entryHeight = this.font.lineHeight * 2;
         var headerHeight = this.font.lineHeight * 3;
-        int listHeight = Layout.TEXT_LINE_SPACING;
+        int listHeight = 0;
         for (var modOptions : ConfigManager.CONFIG.getModOptions()) {
             if (modOptions.pages().isEmpty()) {
                 continue;
             }
 
             var theme = modOptions.theme();
-
+            
+            // spacing above the mod title
+            listHeight += Layout.TEXT_LINE_SPACING;
             CenteredFlatWidget header = new HeaderEntryWidget(new Dim2i(x, y + listHeight, width, headerHeight), modOptions, theme);
-
             listHeight += headerHeight;
 
             this.addRenderableChild(header);
