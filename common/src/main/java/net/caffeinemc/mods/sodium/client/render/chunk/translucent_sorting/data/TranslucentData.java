@@ -13,10 +13,11 @@ import net.minecraft.core.SectionPos;
  * the geometry collector after the section is built.
  */
 public abstract class TranslucentData {
-    public static final int INDICES_PER_QUAD = 6;
+    public static final int INDICES_PER_QUAD = 4;
     public static final int VERTICES_PER_QUAD = 4;
     public static final int BYTES_PER_INDEX = 4;
     public static final int BYTES_PER_QUAD = INDICES_PER_QUAD * BYTES_PER_INDEX;
+    public static final int RESTART = 0xFFFFFFFF;
 
     public final SectionPos sectionPos;
 
@@ -50,9 +51,18 @@ public abstract class TranslucentData {
         return vertexCount / VERTICES_PER_QUAD;
     }
 
-    public static int quadCountToIndexBytes(int quadCount) {
-        return quadCount * BYTES_PER_QUAD;
+    public static int quadCountToIndexCount(int quadCount, boolean withRestartBetweenQuads) {
+        if (quadCount <= 0) return 0;
+        return quadCount * INDICES_PER_QUAD + (withRestartBetweenQuads ? (quadCount - 1) : 0);
     }
+
+    /**
+     * Compute how many bytes are required for an index buffer for quadCount quads.
+     */
+    public static int quadCountToIndexBytes(int quadCount, boolean withRestartBetweenQuads) {
+        return quadCountToIndexCount(quadCount, withRestartBetweenQuads) * BYTES_PER_INDEX;
+    }
+
 
     public static int quadCountToVertexCount(int quadCount) {
         return quadCount * VERTICES_PER_QUAD;
@@ -65,14 +75,15 @@ public abstract class TranslucentData {
         intBuffer.put(vertexOffset + 1);
         intBuffer.put(vertexOffset + 2);
 
-        intBuffer.put(vertexOffset + 2);
         intBuffer.put(vertexOffset + 3);
-        intBuffer.put(vertexOffset + 0);
     }
 
     public static void writeQuadVertexIndexes(IntBuffer intBuffer, int[] quadIndexes) {
         for (int quadIndexPos = 0; quadIndexPos < quadIndexes.length; quadIndexPos++) {
             writeQuadVertexIndexes(intBuffer, quadIndexes[quadIndexPos]);
+            if (quadIndexPos < quadIndexes.length - 1) {
+                intBuffer.put(0xFFFFFFFF); // Or some other restart index value.
+                }
         }
     }
 }
