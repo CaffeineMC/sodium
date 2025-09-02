@@ -36,7 +36,7 @@ public class PageListWidget extends AbstractScrollable {
         int height = this.getHeight();
 
         this.clearChildren();
-        this.scrollbar = this.addRenderableChild(new ScrollbarWidget(new Dim2i(this.getLimitX() - Layout.SCROLLBAR_WIDTH, y, Layout.SCROLLBAR_WIDTH, height)));
+        this.scrollbar = this.addRenderableChild(new ScrollbarWidget(new Dim2i(this.getLimitX() - Layout.SCROLLBAR_WIDTH, y, Layout.SCROLLBAR_WIDTH, height), false, false));
 
         int entryHeight = this.font.lineHeight * 2;
         var headerHeight = this.font.lineHeight * 3;

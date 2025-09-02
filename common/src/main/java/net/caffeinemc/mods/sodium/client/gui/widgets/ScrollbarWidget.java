@@ -16,6 +16,7 @@ public class ScrollbarWidget extends AbstractWidget {
     private static final int HIGHLIGHT_COLOR = ColorABGR.pack(100, 100, 100, 150);
 
     private final boolean horizontal;
+    private final boolean alwaysShow;
 
     private int visible;
     private int total;
@@ -26,21 +27,18 @@ public class ScrollbarWidget extends AbstractWidget {
     private final IntConsumer onScrollChange;
 
     public ScrollbarWidget(Dim2i dim2i, IntConsumer onScrollChange) {
-        this(dim2i, false, onScrollChange);
+        this(dim2i, false, false, onScrollChange);
     }
 
-    public ScrollbarWidget(Dim2i dim2i, boolean horizontal, IntConsumer onScrollChange) {
+    public ScrollbarWidget(Dim2i dim2i, boolean horizontal, boolean alwaysShow) {
+        this(dim2i, horizontal, alwaysShow, null);
+    }
+
+    public ScrollbarWidget(Dim2i dim2i, boolean horizontal, boolean alwaysShow, IntConsumer onScrollChange) {
         super(dim2i);
         this.horizontal = horizontal;
+        this.alwaysShow = alwaysShow;
         this.onScrollChange = onScrollChange;
-    }
-
-    public ScrollbarWidget(Dim2i dim2i) {
-        this(dim2i, false, null);
-    }
-
-    public ScrollbarWidget(Dim2i dim2i, boolean horizontal) {
-        this(dim2i, horizontal, null);
     }
 
     public void setScrollbarContext(int visible, int total) {
@@ -93,7 +91,7 @@ public class ScrollbarWidget extends AbstractWidget {
         }
         long time = System.currentTimeMillis();
         long scrollTimeDiff = time - this.lastScrollTime;
-        if (isMouseOver || this.dragging || scrollTimeDiff < 1000) {
+        if (this.alwaysShow || isMouseOver || this.dragging || scrollTimeDiff < 1000) {
             graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), COLOR);
             int x1, y1, x2, y2;
             if (this.horizontal) {

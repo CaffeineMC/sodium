@@ -63,19 +63,22 @@ public class ScrollableTooltip {
                 this.scrollbar = null;
             }
 
-            this.updateTooltip();
+            this.updateTooltip(false);
 
             if (this.needsScrolling) {
+                // re-flow the content if we need a scrollbar, which takes up some width
+                this.updateTooltip(true);
+
                 this.scrollbar = this.parent.addRenderableWidget(new ScrollbarWidget(new Dim2i(
                         this.visibleDim.getLimitX() - Layout.SCROLLBAR_WIDTH,
                         this.visibleDim.y(),
                         Layout.SCROLLBAR_WIDTH,
                         this.visibleDim.height()
-                )));
+                ), false, true));
                 this.scrollbar.setScrollbarContext(this.visibleDim.height(), this.contentSize.y());
             }
         } else {
-            this.updateTooltip();
+            this.updateTooltip(this.scrollbar != null);
 
             // handle the space between options and their tooltip
             if ((mouseX < this.hoveredElement.getLimitX() || mouseX >= this.visibleDim.x() ||
@@ -95,12 +98,15 @@ public class ScrollableTooltip {
         return this.font.lineHeight + Layout.TEXT_LINE_SPACING;
     }
 
-    private void updateTooltip() {
+    private void updateTooltip(boolean needsScrolling) {
         var option = this.hoveredElement.getOption();
 
         int boxWidth = Mth.clamp(this.parent.width - this.hoveredElement.getLimitX() - INNER_BOX_MARGIN - OUTER_BOX_MARGIN,
                 MIN_TOOLTIP_WIDTH, MAX_TOOLTIP_WIDTH);
-        var textWidth = boxWidth - TEXT_HORIZONTAL_PADDING * 2;
+        int textWidth = boxWidth - TEXT_HORIZONTAL_PADDING * 2;
+        if (needsScrolling) {
+            textWidth -= Layout.SCROLLBAR_WIDTH;
+        }
         int boxY = this.hoveredElement.getY();
         int boxX = this.hoveredElement.getLimitX() + INNER_BOX_MARGIN;
 
