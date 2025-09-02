@@ -1,5 +1,7 @@
 package net.caffeinemc.mods.sodium.client.gui.widgets;
 
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.config.structure.ModOptions;
@@ -21,16 +23,13 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 public class OptionListWidget extends AbstractOptionList {
-    private final boolean showAllPages;
     private List<Option.OptionNameSource> filteredOptions = null;
-    private final Map<String, SectionInfo> sectionInfoMap = new HashMap<>();
-    private Consumer<SectionInfo> onSectionFocused;
+    private final Reference2ReferenceMap<OptionPage, SectionInfo> sectionInfoMap = new Reference2ReferenceOpenHashMap<>();
+    private final Consumer<SectionInfo> onSectionFocused;
     private SectionInfo lastFocusedSection;
     private int entryHeight;
 
@@ -38,16 +37,12 @@ public class OptionListWidget extends AbstractOptionList {
     }
 
     // Constructor for showing all pages
-    public OptionListWidget(Screen screen, Dim2i dim) {
+    public OptionListWidget(Screen screen, Dim2i dim, Consumer<SectionInfo> onSectionFocused) {
         super(dim.insetLeft(Layout.OPTION_GROUP_MARGIN));
-        this.showAllPages = true;
+        this.onSectionFocused = onSectionFocused;
         this.rebuild(screen);
     }
-
-    public void setOnSectionFocused(Consumer<SectionInfo> onSectionFocused) {
-        this.onSectionFocused = onSectionFocused;
-    }
-
+    
     public void setFilteredOptions(List<Option.OptionNameSource> filteredOptions) {
         this.filteredOptions = filteredOptions;
     }
@@ -76,6 +71,7 @@ public class OptionListWidget extends AbstractOptionList {
             listHeight = this.renderAllPages(screen, x, y, width);
         }
 
+        this.updateSectionFocus(this.scrollbar.getScrollAmount());
         this.scrollbar.setScrollbarContext(listHeight);
     }
 
@@ -178,19 +174,16 @@ public class OptionListWidget extends AbstractOptionList {
                     }
                 }
 
-                // Store section info for navigation using page as key
-                var sectionKey = modOptions.name() + ":" + optionPage.name().getString() + ":";
                 var sectionInfo = new SectionInfo(modOptions, optionPage, pageStartY, listHeight);
-                this.sectionInfoMap.put(sectionKey, sectionInfo);
+                this.sectionInfoMap.put(optionPage, sectionInfo);
             }
         }
 
         return listHeight;
     }
 
-    public void jumpToPage(ModOptions modOptions, OptionPage page) {
-        var sectionKey = modOptions.name() + ":" + page.name().getString();
-        var sectionInfo = this.sectionInfoMap.get(sectionKey);
+    public void jumpToPage(OptionPage page) {
+        var sectionInfo = this.sectionInfoMap.get(page);
         if (sectionInfo != null) {
             this.scrollbar.scrollTo(sectionInfo.startY);
         }
@@ -204,10 +197,6 @@ public class OptionListWidget extends AbstractOptionList {
     }
 
     private void updateSectionFocus(int scrollAmount) {
-        if (this.onSectionFocused == null || !this.showAllPages) {
-            return;
-        }
-
         // calculate which y position is considered the "viewed" option,
         // + y is needed to compensate for the initial offset that the .startY values have
         int highlightTarget = scrollAmount + this.getY() + Math.min(this.entryHeight * 3, this.getHeight() / 2);

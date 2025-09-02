@@ -3,7 +3,6 @@ package net.caffeinemc.mods.sodium.client.gui;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
-import net.caffeinemc.mods.sodium.client.config.structure.ModOptions;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
 import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
@@ -179,12 +178,13 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         this.addRenderableWidget(this.searchWidget);
         this.updateSearchWidgetWidth();
 
-        this.optionList = new OptionListWidget(this, new Dim2i(
-                this.pageList.getLimitX(), topBarHeight + Layout.INNER_MARGIN,
+        var optionListDim = new Dim2i(
+                this.pageList.getLimitX(),
+                topBarHeight + Layout.INNER_MARGIN,
                 Layout.OPTION_WIDTH + Layout.OPTION_LIST_SCROLLBAR_OFFSET + Layout.SCROLLBAR_WIDTH,
                 this.height - topBarHeight - (reserveBottomSpace ? (Layout.INNER_MARGIN * 3 + Layout.BUTTON_SHORT) : (Layout.INNER_MARGIN * 2))
-        ));
-        this.optionList.setOnSectionFocused(this::onSectionFocused);
+        );
+        this.optionList = new OptionListWidget(this, optionListDim, this::onSectionFocused);
         this.addRenderableWidget(this.optionList);
     }
 
@@ -201,9 +201,9 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         this.pageList.switchSelected(sectionInfo.modOptions(), sectionInfo.page());
     }
 
-    public void jumpToPage(ModOptions modOptions, OptionPage page) {
+    public void jumpToPage(OptionPage page) {
         if (this.optionList != null) {
-            this.optionList.jumpToPage(modOptions, page);
+            this.optionList.jumpToPage(page);
         }
     }
 

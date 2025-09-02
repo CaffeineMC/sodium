@@ -153,7 +153,7 @@ public class PageListWidget extends AbstractScrollable {
         @Override
         void onAction() {
             PageListWidget.this.switchSelected(this);
-            PageListWidget.this.parent.jumpToPage(this.modOptions, this.page);
+            PageListWidget.this.parent.jumpToPage(this.page);
         }
     }
 
