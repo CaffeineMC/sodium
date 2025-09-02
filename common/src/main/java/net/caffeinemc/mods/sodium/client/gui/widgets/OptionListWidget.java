@@ -29,21 +29,20 @@ import java.util.function.Consumer;
 public class OptionListWidget extends AbstractOptionList {
     private List<Option.OptionNameSource> filteredOptions = null;
     private final Reference2ReferenceMap<OptionPage, SectionInfo> sectionInfoMap = new Reference2ReferenceOpenHashMap<>();
-    private final Consumer<SectionInfo> onSectionFocused;
+    private final Consumer<OptionPage> onPageFocused;
     private SectionInfo lastFocusedSection;
     private boolean ignoreNextScrollUpdate = false;
     private int entryHeight;
 
-    public record SectionInfo(ModOptions modOptions, OptionPage page, int startY, int endY, int scrollJumpTarget) {
+    private record SectionInfo(ModOptions modOptions, OptionPage page, int startY, int endY, int scrollJumpTarget) {
     }
 
-    // Constructor for showing all pages
-    public OptionListWidget(Screen screen, Dim2i dim, Consumer<SectionInfo> onSectionFocused) {
+    public OptionListWidget(Screen screen, Dim2i dim, Consumer<OptionPage> onPageFocused) {
         super(dim.insetLeft(Layout.OPTION_GROUP_MARGIN));
-        this.onSectionFocused = onSectionFocused;
+        this.onPageFocused = onPageFocused;
         this.rebuild(screen);
     }
-    
+
     public void setFilteredOptions(List<Option.OptionNameSource> filteredOptions) {
         this.filteredOptions = filteredOptions;
     }
@@ -210,7 +209,7 @@ public class OptionListWidget extends AbstractOptionList {
             this.ignoreNextScrollUpdate = false;
             return;
         }
-        
+
         // calculate which y position is considered the "viewed" option,
         // + y is needed to compensate for the initial offset that the .startY values have
         int highlightTarget = scrollAmount + this.getY() + Math.min(this.entryHeight * 3, this.getHeight() / 2);
@@ -227,7 +226,7 @@ public class OptionListWidget extends AbstractOptionList {
         // Only notify if the section has changed
         if (currentSection != null && currentSection != this.lastFocusedSection) {
             this.lastFocusedSection = currentSection;
-            this.onSectionFocused.accept(currentSection);
+            this.onPageFocused.accept(currentSection.page());
         }
     }
 

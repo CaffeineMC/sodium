@@ -55,7 +55,7 @@ public class PageListWidget extends AbstractScrollable {
             for (Page page : modOptions.pages()) {
                 CenteredFlatWidget button;
                 if (page instanceof OptionPage optionPage) {
-                    button = new PageEntryWidget(new Dim2i(x, y + listHeight, width, entryHeight), optionPage, modOptions, theme);
+                    button = new PageEntryWidget(new Dim2i(x, y + listHeight, width, entryHeight), optionPage, theme);
                 } else if (page instanceof ExternalPage externalPage) {
                     button = new ExternalPageEntryWidget(new Dim2i(x, y + listHeight, width, entryHeight), externalPage, theme);
                 } else {
@@ -91,10 +91,10 @@ public class PageListWidget extends AbstractScrollable {
         this.selected.setSelected(true);
     }
 
-    public void switchSelected(ModOptions modOptions, Page page) {
+    public void switchSelected(Page page) {
         for (var child : this.children()) {
             if (child instanceof PageEntryWidget pageEntryWidget) {
-                if (pageEntryWidget.page == page && pageEntryWidget.modOptions == modOptions) {
+                if (pageEntryWidget.page == page) {
                     this.switchSelected(pageEntryWidget);
                     return;
                 }
@@ -142,12 +142,10 @@ public class PageListWidget extends AbstractScrollable {
 
     private class PageEntryWidget extends EntryWidget {
         private final OptionPage page;
-        private final ModOptions modOptions;
 
-        PageEntryWidget(Dim2i dim, OptionPage page, ModOptions modOptions, ColorTheme theme) {
+        PageEntryWidget(Dim2i dim, OptionPage page, ColorTheme theme) {
             super(dim, page.name(), true, theme);
             this.page = page;
-            this.modOptions = modOptions;
         }
 
         @Override

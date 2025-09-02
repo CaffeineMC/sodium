@@ -197,8 +197,8 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         this.optionList.rebuild(this);
     }
 
-    private void onSectionFocused(OptionListWidget.SectionInfo sectionInfo) {
-        this.pageList.switchSelected(sectionInfo.modOptions(), sectionInfo.page());
+    private void onSectionFocused(OptionPage page) {
+        this.pageList.switchSelected(page);
     }
 
     public void jumpToPage(OptionPage page) {
