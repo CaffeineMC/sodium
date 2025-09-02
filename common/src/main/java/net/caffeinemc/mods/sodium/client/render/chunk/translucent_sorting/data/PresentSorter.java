@@ -11,7 +11,7 @@ public abstract class PresentSorter implements Sorter {
     }
 
     void initBufferWithQuadLength(int quadCount) {
-        this.indexBuffer = new NativeBuffer(TranslucentData.quadCountToIndexBytes(quadCount));
+        this.indexBuffer = new NativeBuffer(TranslucentData.quadCountToIndexBytes(quadCount, true));
     }
 
     @Override
