@@ -20,6 +20,6 @@ public abstract class DynamicSorter extends PresentSorter {
     }
     
     public int getResultSize() {
-        return TranslucentData.quadCountToIndexBytes(this.quadCount);
+        return TranslucentData.quadCountToIndexBytes(this.quadCount, true);
     }
 }
