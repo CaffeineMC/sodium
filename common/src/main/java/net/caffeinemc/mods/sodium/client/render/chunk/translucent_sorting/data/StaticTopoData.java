@@ -35,15 +35,27 @@ public class StaticTopoData extends PresentTranslucentData {
     }
 
     private record QuadIndexConsumerIntoBuffer(IntBuffer buffer) implements IntConsumer {
+        // Track if we have already written at least one quad into this buffer
+        private static final ThreadLocal<boolean[]> STATE = ThreadLocal.withInitial(() -> new boolean[] { false });
+
         @Override
         public void accept(int value) {
-            TranslucentData.writeQuadVertexIndexes(this.buffer, value);
+            var state = STATE.get();
+            if (state[0]) {
+                // Insert primitive-restart between successive quads
+                this.buffer.put(TranslucentData.RESTART);
+            }
+            TranslucentData.writeQuadVertexIndexes(this.buffer, value, false);
+            state[0] = true;
         }
     }
 
     public static StaticTopoData fromMesh(TQuad[] quads, SectionPos sectionPos, boolean failOnIntersection) {
         var sorter = new StaticSorter(quads.length);
         var indexWriter = new QuadIndexConsumerIntoBuffer(sorter.getIntBuffer());
+
+        // Reset "first quad" state before sorting/writing starts
+        QuadIndexConsumerIntoBuffer.STATE.get()[0] = false;
 
         if (!TopoGraphSorting.topoGraphSort(indexWriter, quads, null, null, failOnIntersection)) {
             sorter.getIndexBuffer().free();
