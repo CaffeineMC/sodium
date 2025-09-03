@@ -17,6 +17,7 @@ public class Colors {
     public static final int BACKGROUND_LIGHT = 0x40000000;
     public static final int BACKGROUND_MEDIUM = 0x60000000;
     public static final int BACKGROUND_HOVER = 0xE0000000;
+    public static final int BACKGROUND_OVERLAY = 0xEA000000;
     public static final int BACKGROUND_DEFAULT = 0x90000000;
     public static final int BACKGROUND_DARKER = 0xB0000000;
     public static final int BACKGROUND_HIGHLIGHT = 0x08FFFFFF;

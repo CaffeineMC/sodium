@@ -245,19 +245,30 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         this.undoButton.setVisible(hasChanges);
         this.closeButton.setEnabled(!hasChanges);
 
+        AbstractWidget reservedAreaBlocker;
+        if (hasChanges) {
+            reservedAreaBlocker = this.undoButton;
+        } else {
+            reservedAreaBlocker = this.applyButton;
+        }
+        this.tooltip.setReservedAreaTopLeftCorner(reservedAreaBlocker.getX(), reservedAreaBlocker.getY());
+
         this.hasPendingChanges = hasChanges;
 
         // determine the tooltip hover target
         // this is the first item that's hovered over, or if nothing is hovered, the focused item
         ControlElement hovered = null;
         ControlElement focused = null;
-        for (ControlElement element : this.optionList.getControls()) {
-            if (element.isMouseOver(mouseX, mouseY)) {
-                hovered = element;
-                break;
-            }
-            if (element.isFocused()) {
-                focused = element;
+        if (mouseX >= this.optionList.getX() && mouseX <= this.optionList.getLimitX() &&
+                mouseY >= this.optionList.getY() && mouseY <= this.optionList.getLimitY()) {
+            for (ControlElement element : this.optionList.getControls()) {
+                if (element.isMouseOver(mouseX, mouseY)) {
+                    hovered = element;
+                    break;
+                }
+                if (element.isFocused()) {
+                    focused = element;
+                }
             }
         }
         var hoverTarget = hovered != null ? hovered : focused;
