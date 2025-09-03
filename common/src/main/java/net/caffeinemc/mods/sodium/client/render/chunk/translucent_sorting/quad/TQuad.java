@@ -314,3 +314,4 @@ public abstract class TQuad {
         return extentsIntersect(a.extents, b.extents);
     }
 }
+
