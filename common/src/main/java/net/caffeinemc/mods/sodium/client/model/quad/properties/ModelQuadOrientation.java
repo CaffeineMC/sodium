@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.model.quad.properties;
 
-import net.fabricmc.fabric.api.renderer.v1.mesh.QuadView;
+import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
 
 /**
  * Defines the orientation of vertices in a model quad. This information be used to re-orient the quad's vertices to a
@@ -49,7 +49,7 @@ public enum ModelQuadOrientation {
     /**
      * Determines the orientation of the vertices in the quad.
      */
-    public static ModelQuadOrientation orientByBrightness(float[] brightnesses, QuadView quad) {
+    public static ModelQuadOrientation orientByBrightness(float[] brightnesses, ModelQuadView quad) {
         // If one side of the quad is brighter, flip the sides
         float br02 = brightnesses[0] + brightnesses[2];
         float br13 = brightnesses[1] + brightnesses[3];
@@ -60,8 +60,8 @@ public enum ModelQuadOrientation {
         }
 
         // If one side of the quad is darker, flip the sides
-        int lm02 = quad.lightmap(0) + quad.lightmap(2);
-        int lm13 = quad.lightmap(1) + quad.lightmap(3);
+        int lm02 = quad.getLight(0) + quad.getLight(2);
+        int lm13 = quad.getLight(1) + quad.getLight(3);
         if (lm02 <= lm13) {
             return NORMAL;
         } else {

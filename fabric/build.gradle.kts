@@ -19,8 +19,10 @@ dependencies {
     configurationCommonModJava(project(path = ":common", configuration = "commonMainJava"))
     configurationCommonModJava(project(path = ":common", configuration = "commonApiJava"))
     configurationCommonModJava(project(path = ":common", configuration = "commonBootJava"))
+    configurationCommonModJava(project(path = ":frapi", configuration = "frapiMainJava"))
 
     configurationCommonModResources(project(path = ":common", configuration = "commonMainResources"))
+    configurationCommonModResources(project(path = ":frapi", configuration = "frapiMainResources"))
     configurationCommonModResources(project(path = ":common", configuration = "commonApiResources"))
     configurationCommonModResources(project(path = ":common", configuration = "commonBootResources"))
 }
