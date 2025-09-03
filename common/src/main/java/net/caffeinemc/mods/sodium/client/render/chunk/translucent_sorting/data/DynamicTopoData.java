@@ -135,6 +135,7 @@ public class DynamicTopoData extends DynamicData {
         private int consecutiveTopoSortFailuresNew;
 
         private IntBuffer intBuffer;
+        private boolean wroteOne;
 
         private DynamicTopoSorter(int quadCount, DynamicTopoData parent, boolean isDirectTrigger, int consecutiveTopoSortFailures, boolean GFNITrigger, boolean directTrigger) {
             super(quadCount);
@@ -160,7 +161,11 @@ public class DynamicTopoData extends DynamicData {
 
         @Override
         public void accept(int value) {
-            TranslucentData.writeQuadVertexIndexes(this.intBuffer, value);
+            if (this.wroteOne) {
+                this.intBuffer.put(TranslucentData.RESTART);
+            }
+            TranslucentData.writeQuadVertexIndexes(this.intBuffer, value, false);
+            this.wroteOne = true;
         }
 
         @Override
@@ -170,6 +175,7 @@ public class DynamicTopoData extends DynamicData {
 
             if (this.GFNITrigger && !this.isDirectTrigger) {
                 this.intBuffer = indexBuffer;
+                this.wroteOne = false;
                 var sortStart = initial ? 0 : System.nanoTime();
                 var result = TopoGraphSorting.topoGraphSort(this, DynamicTopoData.this.quads, DynamicTopoData.this.distancesByNormal, cameraPos.getRelativeCameraPos(), false);
                 this.intBuffer = null;
@@ -221,7 +227,7 @@ public class DynamicTopoData extends DynamicData {
     static void distanceSortDirect(IntBuffer indexBuffer, TQuad[] quads, Vector3fc cameraPos) {
         if (quads.length <= 1) {
             // Avoid allocations when there is nothing to sort.
-            TranslucentData.writeQuadVertexIndexes(indexBuffer, 0);
+            TranslucentData.writeQuadVertexIndexes(indexBuffer, 0, true);
         } else {
             final var keys = new int[quads.length];
             final var perm = new int[quads.length];
@@ -234,9 +240,7 @@ public class DynamicTopoData extends DynamicData {
 
             RadixSort.sortIndirect(perm, keys, false);
 
-            for (int idx = 0; idx < quads.length; idx++) {
-                TranslucentData.writeQuadVertexIndexes(indexBuffer, perm[idx]);
-            }
+            TranslucentData.writeQuadVertexIndexes(indexBuffer, perm);
         }
     }
 
