@@ -13,7 +13,8 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(BlockEntityType.class)
 public class BlockEntityTypeMixin<T extends BlockEntity> implements ExtendedBlockEntityType<T> {
     @Unique
-    private BlockEntityRenderPredicate<T>[] sodium$renderPredicates = new BlockEntityRenderPredicate[0];
+    @SuppressWarnings("unchecked")
+    private BlockEntityRenderPredicate<T>[] sodium$renderPredicates = (BlockEntityRenderPredicate<T>[]) new BlockEntityRenderPredicate[0];
 
     @Override
     public BlockEntityRenderPredicate<T>[] sodium$getRenderPredicates() {
