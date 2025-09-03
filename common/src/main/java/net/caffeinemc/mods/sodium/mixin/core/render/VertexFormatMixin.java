@@ -15,6 +15,7 @@ import java.util.List;
 
 @Mixin(VertexFormat.class)
 public class VertexFormatMixin implements VertexFormatExtensions {
+    @Unique
     private int sodium$globalId;
 
     @Inject(method = "<init>", at = @At("RETURN"))
