@@ -6,6 +6,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortTy
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.UpdatedQuadsList;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadWinding;
 import net.minecraft.core.SectionPos;
 
 /**
@@ -18,6 +19,7 @@ public abstract class TranslucentData {
     public static final int BYTES_PER_INDEX = 4;
     public static final int BYTES_PER_QUAD = INDICES_PER_QUAD * BYTES_PER_INDEX;
     public static final int RESTART = 0xFFFFFFFF;
+    private static final int[] WINDING = ModelQuadWinding.CLOCKWISE.getIndices();
 
     public final SectionPos sectionPos;
 
@@ -68,22 +70,30 @@ public abstract class TranslucentData {
         return quadCount * VERTICES_PER_QUAD;
     }
 
-    public static void writeQuadVertexIndexes(IntBuffer intBuffer, int quadIndex) {
+    /**
+     * Write indices for a single quad (no restart). Use the array overload to automatically insert restarts.
+     */
+    public static void writeQuadVertexIndexes(IntBuffer intBuffer, int quadIndex, boolean insertRestart) {
         int vertexOffset = quadIndex * VERTICES_PER_QUAD;
-
-        intBuffer.put(vertexOffset + 0);
-        intBuffer.put(vertexOffset + 1);
-        intBuffer.put(vertexOffset + 2);
-
-        intBuffer.put(vertexOffset + 3);
+        int[] order = WINDING;
+        intBuffer.put(vertexOffset + order[0]);
+        intBuffer.put(vertexOffset + order[1]);
+        intBuffer.put(vertexOffset + order[2]);
+        intBuffer.put(vertexOffset + order[3]); // can't be bothered to work out why this works
+        if (insertRestart) {
+            intBuffer.put(RESTART);
+        }
     }
 
+    /**
+     * Write indices for multiple quads, inserting a primitive-restart between successive quads.
+     */
     public static void writeQuadVertexIndexes(IntBuffer intBuffer, int[] quadIndexes) {
-        for (int quadIndexPos = 0; quadIndexPos < quadIndexes.length; quadIndexPos++) {
-            writeQuadVertexIndexes(intBuffer, quadIndexes[quadIndexPos]);
-            if (quadIndexPos < quadIndexes.length - 1) {
-                intBuffer.put(0xFFFFFFFF); // Or some other restart index value.
-                }
+        for (int i = 0; i < quadIndexes.length; i++) {
+            writeQuadVertexIndexes(intBuffer, quadIndexes[i], false);
+            if (i < quadIndexes.length - 1) {
+                intBuffer.put(RESTART);
+            }
         }
     }
 }
