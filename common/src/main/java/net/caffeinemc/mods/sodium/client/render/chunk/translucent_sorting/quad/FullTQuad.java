@@ -176,3 +176,8 @@ public class FullTQuad extends RegularTQuad {
         return this.vertices;
     }
 }
+
+    public ChunkVertexEncoder.Vertex[] getVertices() {
+        return this.vertices;
+    }
+}
