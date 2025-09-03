@@ -14,7 +14,14 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
 public class SharedQuadIndexBuffer {
-    private static final int ELEMENTS_PER_PRIMITIVE = 4;
+    /**
+     * Index layout for triangle strips per quad using primitive restart:
+     * For each quad i, write 4 indices [4*i + 0, 4*i + 1, 4*i + 2, 4*i + 3]. Between adjacent quads,
+     * write one primitive restart index (0xFFFF for UNSIGNED_SHORT, 0xFFFFFFFF for UNSIGNED_INT).
+     * The final quad omits the trailing restart.
+     * For q quads, total index count is (4*q) + (q - 1) = 5*q - 1.
+     */
+    private static final int INDICES_PER_QUAD_WITH_RESTART_SLOT = 5;
     private static final int VERTICES_PER_PRIMITIVE = 4;
 
     private final GlMutableBuffer buffer;
@@ -29,10 +36,11 @@ public class SharedQuadIndexBuffer {
 
     public void ensureCapacity(CommandList commandList, int elementCount) {
         if (elementCount > this.indexType.getMaxElementCount()) {
-            throw new IllegalArgumentException("Tried to reserve storage for more vertices in this buffer than it can hold");
+            throw new IllegalArgumentException("Tried to reserve storage for more indices in this buffer than it can hold");
         }
 
-        int primitiveCount = elementCount / ELEMENTS_PER_PRIMITIVE;
+        // For triangle strips: elementCount = 5*q - 1  =>  q = ceil((elementCount + 1) / 5)
+        int primitiveCount = (elementCount + 1 + INDICES_PER_QUAD_WITH_RESTART_SLOT - 1) / INDICES_PER_QUAD_WITH_RESTART_SLOT;
 
         if (primitiveCount > this.maxPrimitives) {
             this.grow(commandList, this.getNextSize(primitiveCount));
@@ -44,7 +52,8 @@ public class SharedQuadIndexBuffer {
     }
 
     private void grow(CommandList commandList, int primitiveCount) {
-        var bufferSize = primitiveCount * this.indexType.getBytesPerElement() * ELEMENTS_PER_PRIMITIVE;
+        int indexCount = primitiveCount * INDICES_PER_QUAD_WITH_RESTART_SLOT - 1; // omit trailing restart
+        long bufferSize = (long) indexCount * this.indexType.getBytesPerElement();
 
         commandList.allocateStorage(this.buffer, bufferSize, GlBufferUsage.STATIC_DRAW);
 
@@ -57,7 +66,8 @@ public class SharedQuadIndexBuffer {
     }
 
     public static NativeBuffer createIndexBuffer(IndexType indexType, int primitiveCount) {
-        var bufferSize = primitiveCount * indexType.getBytesPerElement() * ELEMENTS_PER_PRIMITIVE;
+        int indexCount = primitiveCount * INDICES_PER_QUAD_WITH_RESTART_SLOT - 1; // omit trailing restart
+        int bufferSize = indexCount * indexType.getBytesPerElement();
         var buffer = new NativeBuffer(bufferSize);
 
         indexType.createIndexBuffer(buffer.getDirectBuffer(), primitiveCount);
@@ -77,19 +87,24 @@ public class SharedQuadIndexBuffer {
         SHORT(GlIndexType.UNSIGNED_SHORT, 64 * 1024) {
             @Override
             public void createIndexBuffer(ByteBuffer byteBuffer, int primitiveCount) {
+                // Guard against overflow when using UNSIGNED_SHORT
+                int maxIndex = primitiveCount * VERTICES_PER_PRIMITIVE - 1;
+                if (maxIndex > 0xFFFF) {
+                    throw new IllegalStateException("Too many vertices for UNSIGNED_SHORT index buffer; use UNSIGNED_INT instead");
+                }
+
                 ShortBuffer shortBuffer = byteBuffer.asShortBuffer();
 
                 for (int primitiveIndex = 0; primitiveIndex < primitiveCount; primitiveIndex++) {
-                    int indexOffset = primitiveIndex * ELEMENTS_PER_PRIMITIVE;
+                    int indexOffset = primitiveIndex * INDICES_PER_QUAD_WITH_RESTART_SLOT;
                     int vertexOffset = primitiveIndex * VERTICES_PER_PRIMITIVE;
 
-                    shortBuffer.put(indexOffset + 0, (short) (vertexOffset + 0));
+                    shortBuffer.put(indexOffset, (short) (vertexOffset));
                     shortBuffer.put(indexOffset + 1, (short) (vertexOffset + 1));
-                    shortBuffer.put(indexOffset + 2, (short) (vertexOffset + 2));
-                    shortBuffer.put(indexOffset + 3, (short) (vertexOffset + 3));
-                    //shortBuffer.put(indexOffset + 4, (short) (vertexOffset + 0));
+                    shortBuffer.put(indexOffset + 2, (short) (vertexOffset + 3));
+                    shortBuffer.put(indexOffset + 3, (short) (vertexOffset + 2));
                     if (primitiveIndex < primitiveCount - 1) {
-                        shortBuffer.put(indexOffset + 4, (short) 0xFFFF); // Or some other restart index value.
+                        shortBuffer.put(indexOffset + 4, (short) 0xFFFF); // Primitive restart
                     }
                 }
             }
@@ -100,17 +115,15 @@ public class SharedQuadIndexBuffer {
                 IntBuffer intBuffer = byteBuffer.asIntBuffer();
 
                 for (int primitiveIndex = 0; primitiveIndex < primitiveCount; primitiveIndex++) {
-                    int indexOffset = primitiveIndex * ELEMENTS_PER_PRIMITIVE;
+                    int indexOffset = primitiveIndex * INDICES_PER_QUAD_WITH_RESTART_SLOT;
                     int vertexOffset = primitiveIndex * VERTICES_PER_PRIMITIVE;
 
-                    intBuffer.put(indexOffset + 0, vertexOffset + 0);
+                    intBuffer.put(indexOffset, vertexOffset);
                     intBuffer.put(indexOffset + 1, vertexOffset + 1);
-                    intBuffer.put(indexOffset + 2, vertexOffset + 2);
-
-                    intBuffer.put(indexOffset + 3, vertexOffset + 3);
-                    //intBuffer.put(indexOffset + 4, vertexOffset + 0);
+                    intBuffer.put(indexOffset + 2, vertexOffset + 3);
+                    intBuffer.put(indexOffset + 3, vertexOffset + 2);
                     if (primitiveIndex < primitiveCount - 1) {
-                        intBuffer.put(indexOffset + 4, 0xFFFFFFFF); // Or some other restart index value.
+                        intBuffer.put(indexOffset + 4, 0xFFFFFFFF); // Primitive restart
                     }
                 }
             }
@@ -137,10 +150,11 @@ public class SharedQuadIndexBuffer {
         }
 
         public int getMaxPrimitiveCount() {
-            return this.maxElementCount / 4;
+            return this.maxElementCount / INDICES_PER_QUAD_WITH_RESTART_SLOT;
         }
 
         public int getMaxElementCount() {
             return this.maxElementCount;
         }
     }
+}
