@@ -55,7 +55,7 @@ public abstract class TranslucentData {
 
     public static int quadCountToIndexCount(int quadCount, boolean withRestartBetweenQuads) {
         if (quadCount <= 0) return 0;
-        return quadCount * INDICES_PER_QUAD// + (withRestartBetweenQuads ? (quadCount - 1) : 0);
+        return quadCount * INDICES_PER_QUAD;// + (withRestartBetweenQuads ? (quadCount - 1) : 0);
     }
 
     /**
