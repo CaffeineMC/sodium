@@ -27,6 +27,8 @@ import org.lwjgl.system.Pointer;
 
 import java.util.Iterator;
 
+import static java.lang.Math.max;
+
 public class DefaultChunkRenderer extends ShaderChunkRenderer {
     private final SharedQuadIndexBuffer sharedIndexBuffer;
 
@@ -179,7 +181,12 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
 
         for (int facing = 0; facing < ModelQuadFacing.COUNT; facing++) {
             final long vertexCount = SectionRenderDataUnsafe.getVertexCount(pMeshData, facing);
-            final long elementCount = (vertexCount >> 2) * 6;
+            if ((vertexCount & 3L) != 0L) {
+                throw new IllegalStateException("vertexCount not multiple of 4 for facing=" + facing + " (vertexCount=" + vertexCount + ")");
+            }
+            final long quadCount = vertexCount >> 2;
+            // Triangle strips: 4 indices per quad + (quadCount - 1) restart indices between quads
+            final long elementCount = quadCount * 4 + max(0, quadCount - 1);
 
             MemoryUtil.memPutInt(pElementCount + (size << 2), UInt32.uncheckedDowncast(elementCount));
             MemoryUtil.memPutInt(pBaseVertex + (size << 2), UInt32.uncheckedDowncast(baseVertex));
@@ -233,8 +240,13 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                     if (i < ModelQuadFacing.COUNT && vertexCount == 0) {
                         continue;
                     }
-
-                    MemoryUtil.memPutInt(pElementCount + (size << 2), UInt32.uncheckedDowncast((groupVertexCount >> 2) * 6));
+                    if ((groupVertexCount & 3L) != 0L) {
+                        throw new IllegalStateException("groupVertexCount not multiple of 4 (groupVertexCount=" + groupVertexCount + ")");
+                    }
+                    final long groupQuadCount = groupVertexCount >> 2;
+                    // Triangle strips: 4 indices per quad + (groupQuadCount - 1) restart indices between quads
+                    final long groupElementCount = groupQuadCount * 4 + max(0, groupQuadCount - 1);
+                    MemoryUtil.memPutInt(pElementCount + (size << 2), UInt32.uncheckedDowncast(groupElementCount));
                     MemoryUtil.memPutInt(pBaseVertex + (size << 2), UInt32.uncheckedDowncast(baseVertex));
                     MemoryUtil.memPutAddress(pElementPointer + (size << Pointer.POINTER_SHIFT), elementOffsetBytes);
                     size++;
