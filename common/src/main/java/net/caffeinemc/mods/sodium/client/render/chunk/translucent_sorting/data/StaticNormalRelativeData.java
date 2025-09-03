@@ -43,7 +43,7 @@ public class StaticNormalRelativeData extends PresentTranslucentData {
 
         if (quads.length <= 1) {
             // Avoid allocations when there is nothing to sort.
-            TranslucentData.writeQuadVertexIndexes(indexBuffer, 0);
+            TranslucentData.writeQuadVertexIndexes(indexBuffer, 0, true);
         } else {
             final var keys = new int[quads.length];
             final var perm = new int[quads.length];
@@ -55,9 +55,8 @@ public class StaticNormalRelativeData extends PresentTranslucentData {
 
             RadixSort.sortIndirect(perm, keys, false);
 
-            for (int i = 0; i < quads.length; i++) {
-                TranslucentData.writeQuadVertexIndexes(indexBuffer, perm[i]);
-            }
+            // Write all quad indices at once so restarts are inserted between quads
+            TranslucentData.writeQuadVertexIndexes(indexBuffer, perm);
         }
 
         return snrData;
@@ -81,9 +80,6 @@ public class StaticNormalRelativeData extends PresentTranslucentData {
             }
         }
 
-        // The quad index is used to keep track of the position in the quad array.
-        // This is necessary because the emitted quad indexes in each facing start at zero,
-        // but the quads are stored in a single continuously indexed array.
         int quadIndex = 0;
         for (var quadCount : meshFacingCounts) {
             if (quadCount == -1 || quadCount == 0) {
@@ -91,7 +87,7 @@ public class StaticNormalRelativeData extends PresentTranslucentData {
             }
 
             if (quadCount == 1) {
-                TranslucentData.writeQuadVertexIndexes(indexBuffer, 0);
+                TranslucentData.writeQuadVertexIndexes(indexBuffer, 0, true);
                 quadIndex++;
             } else {
                 final var keys = new int[quadCount];
@@ -104,9 +100,8 @@ public class StaticNormalRelativeData extends PresentTranslucentData {
 
                 RadixSort.sortIndirect(perm, keys, false);
 
-                for (int idx = 0; idx < quadCount; idx++) {
-                    TranslucentData.writeQuadVertexIndexes(indexBuffer, perm[idx]);
-                }
+                // Write all quad indices for this facing at once so restarts are inserted
+                TranslucentData.writeQuadVertexIndexes(indexBuffer, perm);
             }
         }
 
