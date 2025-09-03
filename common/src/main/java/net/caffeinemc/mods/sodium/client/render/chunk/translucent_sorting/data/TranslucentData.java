@@ -14,7 +14,7 @@ import net.minecraft.core.SectionPos;
  * the geometry collector after the section is built.
  */
 public abstract class TranslucentData {
-    public static final int INDICES_PER_QUAD = 4;
+    public static final int INDICES_PER_QUAD = 5;
     public static final int VERTICES_PER_QUAD = 4;
     public static final int BYTES_PER_INDEX = 4;
     public static final int BYTES_PER_QUAD = INDICES_PER_QUAD * BYTES_PER_INDEX;
@@ -55,7 +55,7 @@ public abstract class TranslucentData {
 
     public static int quadCountToIndexCount(int quadCount, boolean withRestartBetweenQuads) {
         if (quadCount <= 0) return 0;
-        return quadCount * INDICES_PER_QUAD + (withRestartBetweenQuads ? (quadCount - 1) : 0);
+        return quadCount * INDICES_PER_QUAD// + (withRestartBetweenQuads ? (quadCount - 1) : 0);
     }
 
     /**
