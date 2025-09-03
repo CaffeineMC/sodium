@@ -22,6 +22,8 @@ class BSPSortState {
     private int[] indexMap;
     private int fixedIndexOffset = NO_FIXED_OFFSET;
 
+    private boolean needsSeparator = false;
+
     BSPSortState(NativeBuffer nativeBuffer) {
         this.indexBuffer = nativeBuffer.getDirectBuffer().asIntBuffer();
     }
@@ -53,15 +55,23 @@ class BSPSortState {
     }
 
     void writeIndex(int index) {
+        if (this.needsSeparator) {
+            this.indexBuffer.put(TranslucentData.RESTART);
+            this.needsSeparator = false;
+        }
+
         if (this.indexMap != null) {
-            TranslucentData.writeQuadVertexIndexes(this.indexBuffer, this.indexMap[index]);
+            TranslucentData.writeQuadVertexIndexes(this.indexBuffer, this.indexMap[index], false);
             checkModificationCounter(1);
         } else if (this.fixedIndexOffset != NO_FIXED_OFFSET) {
-            TranslucentData.writeQuadVertexIndexes(this.indexBuffer, this.fixedIndexOffset + index);
+            TranslucentData.writeQuadVertexIndexes(this.indexBuffer, this.fixedIndexOffset + index, false);
             checkModificationCounter(1);
         } else {
-            TranslucentData.writeQuadVertexIndexes(this.indexBuffer, index);
+            TranslucentData.writeQuadVertexIndexes(this.indexBuffer, index, false);
         }
+
+        // We just wrote one quad; the next quad (if any) needs a separator
+        this.needsSeparator = true;
     }
 
     /**
@@ -229,7 +239,7 @@ class BSPSortState {
         // read compression header
         int header = indexes[0];
         int widthIndex = (header >> 27) & 0b1111;
-        int currentValue = header & 0b11111111111111111 + fixedIndexOffset;
+        int currentValue = (header & 0b11111111111111111) + fixedIndexOffset;
         int valueCount = ((header >> 17) & 0b1111111111) + 1;
         int baseDelta = indexes[1]; // second piece of the header
 
@@ -278,43 +288,55 @@ class BSPSortState {
         return indexes[0] < 0;
     }
 
-    private IntConsumer indexConsumer = (int index) -> TranslucentData.writeQuadVertexIndexes(
-            this.indexBuffer, index);
+    private IntConsumer indexConsumer = this::writeIndex;
 
-    private IntConsumer indexMapConsumer = (int index) -> TranslucentData.writeQuadVertexIndexes(
-            this.indexBuffer, this.indexMap[index]);
+    private IntConsumer indexMapConsumer = this::writeIndex;
 
     void writeIndexes(int[] indexes) {
         boolean useIndexMap = this.indexMap != null;
         boolean useFixedIndexOffset = this.fixedIndexOffset != NO_FIXED_OFFSET;
 
         int valueCount;
+        boolean decrementedPerWrite = false;
         if (isCompressed(indexes)) {
-            if (useFixedIndexOffset) {
-                valueCount = decompressWithOffset(indexes, this.fixedIndexOffset, this.indexConsumer);
-            } else {
-                valueCount = decompress(indexes, useIndexMap ? this.indexMapConsumer : this.indexConsumer);
+            if (this.needsSeparator) {
+                this.indexBuffer.put(TranslucentData.RESTART);
+                this.needsSeparator = false;
             }
+
+            // Route all outputs through writeIndex so separators and mapping/offset are applied per quad
+            valueCount = decompress(indexes, this::writeIndex);
+            decrementedPerWrite = (useIndexMap || useFixedIndexOffset);
+
         } else {
             // uncompressed indexes
-            if (useIndexMap) {
+            if (indexes.length > 0 && this.needsSeparator) {
+                this.indexBuffer.put(TranslucentData.RESTART);
+                this.needsSeparator = false;
+            }
+
+            if (useIndexMap || useFixedIndexOffset) {
+                // Delegate mapping/offset logic and modification counter to writeIndex per element
                 for (int i = 0; i < indexes.length; i++) {
-                    TranslucentData.writeQuadVertexIndexes(this.indexBuffer, this.indexMap[indexes[i]]);
+                    this.writeIndex(indexes[i]);
                 }
-            } else if (useFixedIndexOffset) {
-                for (int i = 0; i < indexes.length; i++) {
-                    TranslucentData.writeQuadVertexIndexes(this.indexBuffer, this.fixedIndexOffset + indexes[i]);
-                }
+
+                // Prevent double-decrement via the post-loop check
+                useIndexMap = false;
+                useFixedIndexOffset = false;
             } else {
+                // Batch write inserts restarts between quads internally
                 TranslucentData.writeQuadVertexIndexes(this.indexBuffer, indexes);
+                if (indexes.length > 0) {
+                    this.needsSeparator = true;
+                }
             }
             valueCount = indexes.length;
         }
 
-        // check if the index modification session is over. this is very important or
-        // there's an exception
-        if (useIndexMap || useFixedIndexOffset) {
+        if ((useIndexMap || useFixedIndexOffset) && !decrementedPerWrite) {
             checkModificationCounter(valueCount);
         }
     }
+
 }
