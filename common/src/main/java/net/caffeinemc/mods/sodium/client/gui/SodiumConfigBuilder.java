@@ -485,7 +485,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setStorageHandler(this.vanillaStorage)
                                 .setName(Component.translatable("options.renderCloudsDistance"))
                                 .setTooltip(Component.translatable("sodium.options.clouds_distance.tooltip"))
-                                .setRange(0, 7, 1)
+                                .setRange(2, 128, 2)
                                 .setDefaultValue(2)
                                 .setBinding((value) -> {
                                     this.vanillaOpts.cloudRange().set(value);
@@ -493,8 +493,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     Minecraft.getInstance().levelRenderer.getCloudRenderer().markForRebuild();
                                 }, () -> this.vanillaOpts.cloudRange().get())
                                 .setImpact(OptionImpact.LOW)
-                                .setValueFormatter(ControlValueFormatterImpls.number())
-                                .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
+                                .setValueFormatter(ControlValueFormatterImpls.translateVariable("options.chunks"))
                 )
                 .addOption(
                         builder.createEnumOption(ResourceLocation.parse("sodium:quality.weather"), SodiumOptions.WeatherQuality.class)
