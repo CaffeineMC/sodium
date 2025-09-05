@@ -171,4 +171,8 @@ public class SearchWidget extends AbstractParentWidget {
     public boolean charTyped(char c, int i) {
         return this.searchBox.charTyped(c, i);
     }
+    
+    public boolean isSearching() {
+        return this.searchBox.isFocused();
+    }
 }
