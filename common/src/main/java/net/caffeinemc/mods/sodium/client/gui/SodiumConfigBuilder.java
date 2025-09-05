@@ -486,7 +486,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setName(Component.translatable("options.renderCloudsDistance"))
                                 .setTooltip(Component.translatable("sodium.options.clouds_distance.tooltip"))
                                 .setRange(2, 128, 2)
-                                .setDefaultValue(2)
+                                .setDefaultValue(128)
                                 .setBinding((value) -> {
                                     this.vanillaOpts.cloudRange().set(value);
 
