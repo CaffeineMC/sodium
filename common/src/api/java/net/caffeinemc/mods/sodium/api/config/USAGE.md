@@ -8,7 +8,7 @@ The Sodium Config API lets mods add their own pages to the Video Settings screen
 
 The Sodium Config API is intended for mods that add video settings, not as a general purpose config API. For general purpose configuration, use the platform's appropriate mod list and a config library.
 
-As a presentation API, it does not handle loading, parsing, or saving configuration data to files. It is up to your mod to handle that on its own.
+As a presentation API, it does not handle loading, parsing, or saving configuration data to files. It is up to your mod to handle that on its own, or use a third-party library dedicated to that task.
 
 ## Overview
 
@@ -17,6 +17,34 @@ Sodium redirects Minecraft's "Video Settings" screen to its own screen. Historic
 With this API, these mods will not need to touch Sodium's internals anymore and should be able to operate independently of the GUI's implementation details. The API may not be able to cover all use cases where mods mixed into Sodium's options code, but it should cover most of the common ones.
 
 Registration of options happens in two stages: Early and late. Early registration happens when Sodium initializes its own early options before the window is created. Late registration happens after the game launched. Most mods will only need to use late registration. These stages are independent and only options that are registered in the late stage will show up in the GUI.
+
+### Features of the API
+
+Here's a summary of the features this config API provides:
+
+- a list of option pages per mod
+  - ID, name, and version
+  - a theme color
+  - optionally a square monochrome icon
+- a list of option groups per page
+  - optionally named option groups
+  - external pages that simply open a mod-defined `Screen`
+- a list of options per group
+- options of various types
+  - `ResourceIdentifiers` as IDs
+  - types: integer slider, enum, boolean, external (opens a new `Screen`)
+  - value bindings through callbacks
+  - dynamic values for enablement, default value, allowed values
+    - dynamic values may depend on other option's values
+    - cycle and declared dependency consistency checking
+  - value formatters for presentation
+  - value-dependent tooltips
+  - flags for renderer reload and other graphics events
+- all user facing strings are translatable
+- storage providers are flushed after changes are applied
+- early registration for mods that need to have their options available before the window is created
+- entrypoint-based config registration
+- declarative builder-based style
 
 ## Getting Started
 
@@ -30,7 +58,7 @@ Fabric:
 dependencies {
     // ... other dependencies
     
-    modImplementation "net.caffeinemc.mods:sodium-fabric:0.6.0+mc1.21.3"
+    modImplementation "net.caffeinemc.mods:sodium-fabric:0.7.1+mc1.21.8"
 }
 ```
 
@@ -40,7 +68,7 @@ NeoForge:
 dependencies {
     // ... other dependencies
     
-    implementation "net.caffeinemc.mods:sodium-neoforge:0.6.0+mc1.21.3"
+    implementation "net.caffeinemc.mods:sodium-neoforge:0.7.1+mc1.21.8"
 }
 ```
 
@@ -83,29 +111,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 public class ExampleConfigUser implements ConfigEntryPoint {
-    // Store your options in a separate class!
-    private final class OptionStorage {
-        private boolean exampleOption = true;
-        
-        public boolean getExampleOption() {
-            return this.exampleOption;
-        }
-        
-        public void setExampleOption(boolean value) {
-            this.exampleOption = value;
-        }
-        
-        public void flush() {
-            // flush options to config file
-        }
-    }
-
     private final OptionStorage storage = new OptionStorage();
-    private final Runnable handler = this.storage::flush;
+    private final Runnable handler = this.storage::flush; // typically gets referenced many times
     
     @Override
     public void registerConfigLate(ConfigBuilder builder) {
         builder.registerOwnModOptions()
+                .setIcon(ResourceLocation.parse("examplemod:textures/gui/icon.png"))
                 .addPage(builder.createOptionPage()
                         .setName(Component.literal("Example Page"))
                         .addOptionGroup(builder.createOptionGroup()
@@ -119,6 +131,23 @@ public class ExampleConfigUser implements ConfigEntryPoint {
                                 )
                         )
                 );
+    }
+}
+
+// OptionStorage.java
+class OptionStorage {
+    private boolean exampleOption = true;
+
+    public boolean getExampleOption() {
+        return this.exampleOption;
+    }
+
+    public void setExampleOption(boolean value) {
+        this.exampleOption = value;
+    }
+
+    public void flush() {
+        // flush options to config file
     }
 }
 ```
@@ -153,7 +182,7 @@ The API is largely self-explanatory and an example is provided above. Also see S
 
 The `ConfigBuilder` instance passed to the registration method allows quick and easy registration of a mod's own options using `ConfigBuilder.registerOwnModOptions`. The mod's id, name, version or a formatter for the existing version, and the color theme can be configured on the returned `ModOptionsBuilder`. It's also possible to register options for additional mods using `ConfigBuilder.registerModOptions`. Which mod is the "own" mod for `registerOwnModOptions` is determined by the mod that owns the metadata-based entrypoint or the mod id passed to the `@ConfigEntryPointForge("examplemod")` annotation.
 
-Each registered mod gets its own header in the page list. The color of the header and the corresponding entries is randomly selected from a predefined list by default, but can be customized using `ModOptionsBuilder.setColorTheme`. A color theme is created either by specifying three RGB colors or a single base color with the lighter and darker colors getting derived automatically. A mod can also specify an icon with `ModOptionsBuilder.setIcon`, which takes a `ResourceLocation` pointing to a texture, which will be tinted in the theme color and rendered in its entirety as a square,.
+Each registered mod gets its own header in the page list. The color of the header and the corresponding entries is randomly selected from a predefined list by default, but can be customized using `ModOptionsBuilder.setColorTheme`. A color theme is created either by specifying three RGB colors or a single base color with the lighter and darker colors getting derived automatically. A mod can also specify an icon with `ModOptionsBuilder.setIcon`, which takes a `ResourceLocation` pointing to a texture, which will be tinted in the theme color and rendered in its entirety as a square.
 
 To simply switch to a new `Screen` when an entry in the video settings screen's page list is clicked, use `ConfigBuilder.createExternalPage` and add the returned page normally after configuring it with a name and a `Consumer<Screen>` that receives the current screen and switches to your custom screen.
 
