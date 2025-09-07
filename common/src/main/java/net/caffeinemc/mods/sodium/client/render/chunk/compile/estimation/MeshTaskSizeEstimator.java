@@ -15,7 +15,7 @@ public class MeshTaskSizeEstimator extends Average1DEstimator<MeshResultSize.Sec
 
     public MeshTaskSizeEstimator(ClientLevel level) {
         super(NEW_DATA_RATIO, RenderRegion.SECTION_BUFFER_ESTIMATE);
-        this.seaLevelChunk = level.getSeaLevel() / 16;
+        this.seaLevelChunk = level.getSeaLevel() >> 4;
     }
 
     public long estimateSize(RenderSection section) {
