@@ -12,24 +12,27 @@ public record MeshResultSize(SectionCategory category, long resultSize) implemen
         SURFACE,
         HIGH;
 
-        public static SectionCategory forSection(RenderSection section) {
+        public static SectionCategory forSection(RenderSection section, int seaLevelChunk) {
             var sectionY = section.getChunkY();
-            if (sectionY < 0) {
-                return LOW;
-            } else if (sectionY < 3) {
-                return UNDERGROUND;
-            } else if (sectionY == 3) {
+            
+            // Roughly classify type of chunk based on Y level relative to sea level:
+            // Water level chunks are likely to have different meshes from those below and those above.
+            // Very low chunks are again different because they aren't going to include the underwater terrain (just caves).
+            // Very high chunks are (at least locally) different because they are likely to be mostly air with some terrain poking through, or just buildings/jungle tree tops.
+            if (sectionY == seaLevelChunk) {
                 return WATER_LEVEL;
-            } else if (sectionY < 7) {
-                return SURFACE;
-            } else {
-                return HIGH;
             }
+            if (sectionY < seaLevelChunk - 4) {
+                return LOW;
+            }
+            if (sectionY < seaLevelChunk) {
+                return UNDERGROUND;
+            }
+            if (sectionY < seaLevelChunk + 3) {
+                return SURFACE;
+            }
+            return HIGH;
         }
-    }
-
-    public static MeshResultSize forSection(RenderSection section, long resultSize) {
-        return new MeshResultSize(SectionCategory.forSection(section), resultSize);
     }
 
     @Override
