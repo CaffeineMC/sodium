@@ -1,49 +1,3 @@
-package net.caffeinemc.mods.sodium.client.render.chunk;
-
-import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
-import it.unimi.dsi.fastutil.longs.Long2ReferenceMaps;
-import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
-import it.unimi.dsi.fastutil.objects.*;
-import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
-import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
-import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkSortOutput;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.*;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.executor.ChunkBuilder;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.executor.ChunkJobCollector;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.executor.ChunkJobResult;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilderMeshingTask;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilderSortingTask;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilderTask;
-import net.caffeinemc.mods.sodium.client.render.chunk.data.BuiltSectionInfo;
-import net.caffeinemc.mods.sodium.client.render.chunk.lists.*;
-import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.GraphDirection;
-import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
-import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
-import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegionManager;
-import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior.PriorityMode;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicTopoData;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.NoData;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.CameraMovement;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.SortTriggering;
-import net.caffeinemc.mods.sodium.client.render.chunk.tree.RemovableMultiForest;
-import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
-import net.caffeinemc.mods.sodium.client.render.util.RenderAsserts;
-import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
-import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
-import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
-import net.caffeinemc.mods.sodium.client.util.FogParameters;
-import net.caffeinemc.mods.sodium.client.util.MathUtil;
-import net.caffeinemc.mods.sodium.client.world.LevelSlice;
-import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
-import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -54,8 +8,14 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.opengl.*;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3dc;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -82,7 +42,8 @@ public class RenderSectionManager {
     private int thisFrameBlockingTasks;
     private int nextFrameBlockingTasks;
     private int deferredTasks;
-
+    public long transferFence;
+    public long renderFence;
     private final ChunkRenderer chunkRenderer;
 
     private final ClientLevel level;
@@ -114,6 +75,19 @@ public class RenderSectionManager {
     private @Nullable Vector3dc cameraPosition;
 
     private final RemovableMultiForest renderableSectionTree;
+
+    public boolean isTransferring(){
+        if (transferFence == 0) return false;
+        int [] stat = new int[1];
+        GL32C.glGetSynciv(transferFence, GL32C.GL_SYNC_STATUS, null, stat);
+        return stat[0] != GL32C.GL_SIGNALED;
+    }
+    public boolean isRendering(){
+        if (renderFence == 0) return false;
+        int [] stat = new int[1];
+        GL32C.glGetSynciv(renderFence, GL32C.GL_SYNC_STATUS, null, stat);
+        return stat[0] != GL32C.GL_SIGNALED;
+    }
 
     public RenderSectionManager(ClientLevel level, int renderDistance, SortBehavior sortBehavior, CommandList commandList) {
         this.chunkRenderer = new DefaultChunkRenderer(RenderDevice.INSTANCE, ChunkMeshFormats.COMPACT);
@@ -304,7 +278,7 @@ public class RenderSectionManager {
         CommandList commandList = device.createCommandList();
 
         this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z), fogParameters, this.sortBehavior != SortBehavior.OFF);
-
+        renderFence = GL32C.glFenceSync(GL32C.GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
         commandList.flush();
     }
 
@@ -534,6 +508,7 @@ public class RenderSectionManager {
             // store the semi-important collector to wait on it in the next frame
             this.lastBlockingCollector = nextFrameBlockingCollector;
         }
+        transferFence = GL32.glFenceSync(GL32.GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     }
 
     private void submitSectionTasks(
