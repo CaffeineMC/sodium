@@ -22,6 +22,7 @@ import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.util.BitwiseMath;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.client.util.UInt32;
+import org.lwjgl.opengl.GL32C;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.Pointer;
 
@@ -29,6 +30,21 @@ import java.util.Iterator;
 
 public class DefaultChunkRenderer extends ShaderChunkRenderer {
     private final SharedQuadIndexBuffer sharedIndexBuffer;
+    private boolean renderNewModels = true;
+    private long fence;
+    private ChunkShaderInterface oldShader;
+    private CameraTransform oldCamera;
+    private RenderRegion oldRegion;
+    private CommandList oldCommandList;
+    private GlTessellation oldTessellation;
+    private MultiDrawBatch oldBatch;
+
+    public boolean hasfinishedmesh(){
+        if (fence == 0) return false;
+        int [] stat = new int[1];
+        GL32C.glGetSynciv(fence, GL32C.GL_SYNC_STATUS, null, stat);
+        return stat[0] != GL32C.GL_SIGNALED;
+    }
 
     public DefaultChunkRenderer(RenderDevice device, ChunkVertexType vertexType) {
         super(device, vertexType);
@@ -92,9 +108,25 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
             } else {
                 tessellation = this.prepareTessellation(commandList, region);
             }
-
-            setModelMatrixUniforms(shader, region, camera);
-            executeDrawBatch(commandList, tessellation, batch);
+            fence = GL32C.glFenceSync(GL32C.GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+            if (hasfinishedmesh()) {
+                renderNewModels = !renderNewModels;
+            }
+            if (renderNewModels) {
+                setModelMatrixUniforms(shader, region, camera);
+                executeDrawBatch(commandList, tessellation, batch);
+            }else{
+                setModelMatrixUniforms(oldShader, oldRegion, oldCamera);
+                executeDrawBatch(oldCommandList, oldTessellation, oldBatch);
+            }
+            GL32C.glDeleteSync(fence);
+            fence = 0;
+            oldShader = shader;
+            oldCamera = camera;
+            oldRegion = region;
+            oldCommandList = commandList;
+            oldTessellation = tessellation;
+            oldBatch = batch;
         }
 
         super.end(renderPass);
@@ -305,11 +337,15 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
     }
 
     private static void setModelMatrixUniforms(ChunkShaderInterface shader, RenderRegion region, CameraTransform camera) {
-        float x = getCameraTranslation(region.getOriginX(), camera.intX, camera.fracX);
-        float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
-        float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
+        try {
+            float x = getCameraTranslation(region.getOriginX(), camera.intX, camera.fracX);
+            float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
+            float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
 
-        shader.setRegionOffset(x, y, z);
+            shader.setRegionOffset(x, y, z);
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static float getCameraTranslation(int chunkBlockPos, int cameraBlockPos, float cameraPos) {
