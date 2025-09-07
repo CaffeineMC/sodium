@@ -234,7 +234,9 @@ public class SodiumWorldRenderer {
             }
 
             profiler.popPush("chunk_update");
-
+            if (this.renderSectionManager.isRendering() || this.renderSectionManager.isTransferring()){
+                continue;
+            }
             this.renderSectionManager.cleanupAndFlip();
             this.renderSectionManager.updateChunks(updateChunksImmediately);
 
