@@ -353,6 +353,10 @@ public final class LevelSlice implements BlockAndTintGetter {
         return this.biomeColors.getColor(resolver, pos.getX(), pos.getY(), pos.getZ());
     }
 
+    public boolean hasBiomeBlend() {
+        return this.biomeColors.getBlendRadius() > 0;
+    }
+
     @Override
     public int getHeight() {
         return this.level.getHeight();

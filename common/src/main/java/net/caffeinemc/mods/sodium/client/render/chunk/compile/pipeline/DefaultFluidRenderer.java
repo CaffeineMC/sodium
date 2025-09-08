@@ -377,7 +377,7 @@ public class DefaultFluidRenderer {
 
         lighter.calculate(quad, pos, light, null, dir, false, false);
 
-        colorProvider.getColors(level, pos, scratchPos, fluidState, quad, this.quadColors);
+        colorProvider.getColors(level, pos, scratchPos, fluidState, quad, this.quadColors, level.hasBiomeBlend());
 
         // multiply the per-vertex color against the combined brightness
         // the combined brightness is the per-vertex brightness multiplied by the block's brightness

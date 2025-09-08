@@ -136,7 +136,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
 
             if (colorProvider != null) {
                 int[] vertexColors = this.vertexColors;
-                colorProvider.getColors(this.slice, this.pos, this.scratchPos, this.state, quad, vertexColors);
+                colorProvider.getColors(this.slice, this.pos, this.scratchPos, this.state, quad, vertexColors, slice.hasBiomeBlend());
 
                 for (int i = 0; i < 4; i++) {
                     quad.color(i, ColorMixer.mulComponentWise(vertexColors[i], quad.color(i)));
