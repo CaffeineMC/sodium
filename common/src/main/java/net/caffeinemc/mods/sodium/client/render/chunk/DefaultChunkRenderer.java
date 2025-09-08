@@ -337,15 +337,11 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
     }
 
     private static void setModelMatrixUniforms(ChunkShaderInterface shader, RenderRegion region, CameraTransform camera) {
-        try {
-            float x = getCameraTranslation(region.getOriginX(), camera.intX, camera.fracX);
-            float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
-            float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
+        float x = getCameraTranslation(region.getOriginX(), camera.intX, camera.fracX);
+        float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
+        float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
 
-            shader.setRegionOffset(x, y, z);
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
+        shader.setRegionOffset(x, y, z);
     }
 
     private static float getCameraTranslation(int chunkBlockPos, int cameraBlockPos, float cameraPos) {
