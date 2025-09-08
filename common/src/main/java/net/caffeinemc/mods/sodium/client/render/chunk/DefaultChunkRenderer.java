@@ -30,7 +30,7 @@ import java.util.Iterator;
 
 public class DefaultChunkRenderer extends ShaderChunkRenderer {
     private final SharedQuadIndexBuffer sharedIndexBuffer;
-    private boolean renderNewModels = true;
+    private boolean renderNewModels = false;
     private long fence;
     private ChunkShaderInterface oldShader;
     private CameraTransform oldCamera;
