@@ -58,7 +58,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
      * iterating the sections and adding the draw commands for each section.
      */
     @Override
-    public void render(ChunkRenderMatrices matrices, // todo, undo some of the changes in order to correctly implement swapping meshes to allow for smoother visuals while updating meshes, no idea how i'm going to do this
+    public void render(ChunkRenderMatrices matrices, // todo, undo some of the changes in order to correctly implement double-buffered vertex data to allow for smoother visuals while updating meshes, no idea how i'm going to do this
                        CommandList commandList,
                        ChunkRenderListIterable renderLists,
                        TerrainRenderPass renderPass,
