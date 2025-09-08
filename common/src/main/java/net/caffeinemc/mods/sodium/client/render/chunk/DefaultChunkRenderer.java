@@ -115,18 +115,18 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
             if (renderNewModels) {
                 setModelMatrixUniforms(shader, region, camera);
                 executeDrawBatch(commandList, tessellation, batch);
+                GL32C.glDeleteSync(fence);
+                fence = 0;
+                oldShader = shader;
+                oldCamera = camera;
+                oldRegion = region;
+                oldCommandList = commandList;
+                oldTessellation = tessellation;
+                oldBatch = batch;
             }else{
                 setModelMatrixUniforms(oldShader, oldRegion, oldCamera);
                 executeDrawBatch(oldCommandList, oldTessellation, oldBatch);
             }
-            GL32C.glDeleteSync(fence);
-            fence = 0;
-            oldShader = shader;
-            oldCamera = camera;
-            oldRegion = region;
-            oldCommandList = commandList;
-            oldTessellation = tessellation;
-            oldBatch = batch;
         }
 
         super.end(renderPass);
