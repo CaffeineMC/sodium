@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.MeshResultSize;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.executor.ChunkJob;
 import net.caffeinemc.mods.sodium.client.render.chunk.data.BuiltSectionInfo;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.GraphDirection;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.GraphDirectionSet;
@@ -54,7 +55,7 @@ public class RenderSection {
 
     // Pending Update State
     @Nullable
-    private CancellationToken taskCancellationToken = null;
+    private ChunkJob taskCancellationToken = null;
     private long lastMeshResultSize = MeshResultSize.NO_DATA;
 
     private int pendingUpdateType;
@@ -349,11 +350,11 @@ public class RenderSection {
         return this.globalBlockEntities;
     }
 
-    public @Nullable CancellationToken getTaskCancellationToken() {
+    public @Nullable ChunkJob getTaskCancellationToken() {
         return this.taskCancellationToken;
     }
 
-    public void setTaskCancellationToken(@Nullable CancellationToken token) {
+    public void setTaskCancellationToken(@Nullable ChunkJob token) {
         this.taskCancellationToken = token;
     }
 

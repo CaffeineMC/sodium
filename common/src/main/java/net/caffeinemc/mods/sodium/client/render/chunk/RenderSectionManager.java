@@ -98,6 +98,7 @@ public class RenderSectionManager {
 
     @NotNull
     private SortedRenderLists renderLists;
+    private SectionCollector sectionCollector;
 
     @NotNull
     private Map<TaskQueueType, ArrayDeque<RenderSection>> taskLists;
@@ -175,7 +176,6 @@ public class RenderSectionManager {
         final var searchDistance = this.getSearchDistance(fogParameters);
         final var useOcclusionCulling = this.shouldUseOcclusionCulling(camera, spectator);
 
-        RenderListProvider renderListProvider;
         var importantRebuildQueueType = SodiumClientMod.options().performance.chunkBuildDeferMode.getImportantRebuildQueueType();
         var importantSortQueueType = this.sortBehavior.getDeferMode().getImportantRebuildQueueType();
         if (this.isOutOfGraph(viewport.getChunkCoord())) {
@@ -183,22 +183,28 @@ public class RenderSectionManager {
             this.renderableSectionTree.prepareForTraversal();
             this.renderableSectionTree.traverse(visitor, viewport, searchDistance);
 
-            renderListProvider = visitor;
+            this.sectionCollector = visitor;
         } else {
             var visitor = new OcclusionSectionCollector(frame, importantRebuildQueueType, importantSortQueueType);
             this.occlusionCuller.findVisible(visitor, viewport, searchDistance, useOcclusionCulling, frame);
 
-            renderListProvider = visitor;
+            this.sectionCollector = visitor;
         }
 
-        this.renderLists = renderListProvider.createRenderLists(viewport);
-        this.taskLists = renderListProvider.getTaskLists();
+        this.taskLists = this.sectionCollector.getTaskLists();
 
         // when there were sections with pending updates that were skipped because they already had a task running,
         // it needs to revisit them to schedule the remaining pending updates.
         // since not all tasks necessarily change the section info to trigger a graph update,
         // without this pending updates might be missed when the camera is stationary
-        return renderListProvider.needsRevisitForPendingUpdates();
+        return this.sectionCollector.needsRevisitForPendingUpdates();
+    }
+
+    public void finalizeRenderLists(Viewport viewport) {
+        if (this.sectionCollector != null) {
+            this.renderLists = this.sectionCollector.createRenderLists(viewport);
+            this.sectionCollector = null;
+        }
     }
 
     private boolean isOutOfGraph(SectionPos pos) {
@@ -383,10 +389,18 @@ public class RenderSectionManager {
         long totalUploadSize = 0;
         for (var result : filtered) {
             var resultSize = result.getResultSize();
+            var job = result.render.getTaskCancellationToken();
 
             TranslucentData oldData = result.render.getTranslucentData();
             if (result instanceof ChunkBuildOutput chunkBuildOutput) {
+                var prevFlags = result.render.getFlags();
+
                 touchedSectionInfo |= this.updateSectionInfo(result.render, chunkBuildOutput.info);
+                
+                // if result was blocking and section is now newly renderable, force render it since it's probably a newly uncovered chunk
+                if (job != null && job.isBlocking() && !RenderSectionFlags.needsRender(prevFlags) && RenderSectionFlags.needsRender(chunkBuildOutput.info.flags)) {
+                    this.sectionCollector.visit(result.render);
+                }
 
                 result.render.setLastMeshResultSize(resultSize);
                 this.meshTaskSizeEstimator.addData(this.meshTaskSizeEstimator.resultForSection(result.render, resultSize));
@@ -402,8 +416,6 @@ public class RenderSectionManager {
                     && result.render.getTranslucentData() instanceof DynamicTopoData data) {
                 this.sortTriggering.applyTriggerChanges(data, sortOutput.getDynamicSorter(), result.render.getPosition(), this.cameraPosition);
             }
-
-            var job = result.render.getTaskCancellationToken();
 
             // clear the cancellation token (thereby marking the section as not having an
             // active task) if this job is the most recent submitted job for this section
@@ -557,12 +569,12 @@ public class RenderSectionManager {
             // sections for which there's a currently running task.
             var pendingUpdate = section.getPendingUpdate();
             if (pendingUpdate != 0) {
-                submitSectionTask(collector, section, pendingUpdate, uploadBudget);
+                submitSectionTask(collector, section, pendingUpdate, uploadBudget, queueType == TaskQueueType.ZERO_FRAME_DEFER);
             }
         }
     }
 
-    private void submitSectionTask(ChunkJobCollector collector, @NotNull RenderSection section, int type, UploadResourceBudget uploadBudget) {
+    private void submitSectionTask(ChunkJobCollector collector, @NotNull RenderSection section, int type, UploadResourceBudget uploadBudget, boolean blocking) {
         if (section.isDisposed()) {
             return;
         }
@@ -604,7 +616,7 @@ public class RenderSectionManager {
         }
 
         if (task != null) {
-            var job = this.builder.scheduleTask(task, ChunkUpdateTypes.isImportant(type), collector::onJobFinished);
+            var job = this.builder.scheduleTask(task, ChunkUpdateTypes.isImportant(type), collector::onJobFinished, blocking);
             collector.addSubmittedJob(job);
 
             // consume upload budget in size and duration using estimates
