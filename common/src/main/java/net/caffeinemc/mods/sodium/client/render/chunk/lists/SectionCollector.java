@@ -14,15 +14,17 @@ import java.util.Queue;
 public abstract class SectionCollector implements RenderListProvider, RenderSectionVisitor {
     private final int frame;
     private final TaskQueueType importantRebuildQueueType;
+    private final TaskQueueType importantSortQueueType;
     private final ObjectArrayList<ChunkRenderList> renderLists;
     private final EnumMap<TaskQueueType, ArrayDeque<RenderSection>> sortedTaskLists;
     private boolean needsRevisitForPendingUpdates = false;
 
     private static int[] sortItems = new int[RenderRegion.REGION_SIZE];
 
-    public SectionCollector(int frame, TaskQueueType importantRebuildQueueType) {
+    public SectionCollector(int frame, TaskQueueType importantRebuildQueueType, TaskQueueType importantSortQueueType) {
         this.frame = frame;
         this.importantRebuildQueueType = importantRebuildQueueType;
+        this.importantSortQueueType = importantSortQueueType;
 
         this.renderLists = new ObjectArrayList<>();
         this.sortedTaskLists = new EnumMap<>(TaskQueueType.class);
@@ -60,7 +62,7 @@ public abstract class SectionCollector implements RenderListProvider, RenderSect
                 return;
             }
             
-            var queueType = ChunkUpdateTypes.getQueueType(pendingUpdate, this.importantRebuildQueueType);
+            var queueType = ChunkUpdateTypes.getQueueType(pendingUpdate, this.importantRebuildQueueType, this.importantSortQueueType);
             Queue<RenderSection> queue = this.sortedTaskLists.get(queueType);
 
             if (queue.size() < queueType.queueSizeLimit()) {

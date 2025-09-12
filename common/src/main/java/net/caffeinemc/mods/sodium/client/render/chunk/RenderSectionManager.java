@@ -63,7 +63,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 public class RenderSectionManager {
     private static final float NEARBY_REBUILD_DISTANCE = Mth.square(16.0f);
     private static final float NEARBY_SORT_DISTANCE = Mth.square(25.0f);
-    
+
     private static final float FRAME_DURATION_UPLOAD_FRACTION = 0.1f;
     private static final long MIN_UPLOAD_DURATION_BUDGET = 2_000_000L; // 2ms
 
@@ -117,7 +117,7 @@ public class RenderSectionManager {
 
     public RenderSectionManager(ClientLevel level, int renderDistance, SortBehavior sortBehavior, CommandList commandList) {
         this.meshTaskSizeEstimator = new MeshTaskSizeEstimator(level);
-        
+
         this.chunkRenderer = new DefaultChunkRenderer(RenderDevice.INSTANCE, ChunkMeshFormats.COMPACT);
 
         this.level = level;
@@ -177,14 +177,15 @@ public class RenderSectionManager {
 
         RenderListProvider renderListProvider;
         var importantRebuildQueueType = SodiumClientMod.options().performance.chunkBuildDeferMode.getImportantRebuildQueueType();
+        var importantSortQueueType = this.sortBehavior.getDeferMode().getImportantRebuildQueueType();
         if (this.isOutOfGraph(viewport.getChunkCoord())) {
-            var visitor = new TreeSectionCollector(frame, importantRebuildQueueType, this.sectionByPosition);
+            var visitor = new TreeSectionCollector(frame, importantRebuildQueueType, importantSortQueueType, this.sectionByPosition);
             this.renderableSectionTree.prepareForTraversal();
             this.renderableSectionTree.traverse(visitor, viewport, searchDistance);
 
             renderListProvider = visitor;
         } else {
-            var visitor = new OcclusionSectionCollector(frame, importantRebuildQueueType);
+            var visitor = new OcclusionSectionCollector(frame, importantRebuildQueueType, importantSortQueueType);
             this.occlusionCuller.findVisible(visitor, viewport, searchDistance, useOcclusionCulling, frame);
 
             renderListProvider = visitor;
@@ -511,19 +512,13 @@ public class RenderSectionManager {
             // an estimator is used estimate task duration and limit the execution time to the available worker capacity.
             // separately, tasks are limited by their estimated upload size and duration.
             var uploadBudget = new LimitedResourceBudget(
-                    Math.max((long)(this.averageFrameDuration * FRAME_DURATION_UPLOAD_FRACTION), MIN_UPLOAD_DURATION_BUDGET),
+                    Math.max((long) (this.averageFrameDuration * FRAME_DURATION_UPLOAD_FRACTION), MIN_UPLOAD_DURATION_BUDGET),
                     this.regions.getStagingBuffer().getUploadSizeLimit(this.averageFrameDuration));
 
             var nextFrameBlockingCollector = new ChunkJobCollector(this.buildResults::add);
             var deferredCollector = new ChunkJobCollector(remainingDuration, this.buildResults::add);
 
-            // if zero frame delay is allowed, submit important sorts with the current frame blocking collector.
-            // otherwise submit with the collector that the next frame is blocking on.
-            if (this.sortBehavior.getDeferMode() == DeferMode.ZERO_FRAMES) {
-                this.submitSectionTasks(thisFrameBlockingCollector, nextFrameBlockingCollector, deferredCollector, uploadBudget);
-            } else {
-                this.submitSectionTasks(nextFrameBlockingCollector, nextFrameBlockingCollector, deferredCollector, uploadBudget);
-            }
+            this.submitSectionTasks(thisFrameBlockingCollector, nextFrameBlockingCollector, deferredCollector, uploadBudget);
 
             this.thisFrameBlockingTasks = thisFrameBlockingCollector.getSubmittedTaskCount();
             this.nextFrameBlockingTasks = nextFrameBlockingCollector.getSubmittedTaskCount();
