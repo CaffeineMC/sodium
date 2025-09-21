@@ -99,6 +99,7 @@ public class RenderSectionManager {
     @NotNull
     private SortedRenderLists renderLists;
     private SectionCollector sectionCollector;
+    private SectionCollector lastSectionCollector;
 
     @NotNull
     private Map<TaskQueueType, ArrayDeque<RenderSection>> taskLists;
@@ -190,6 +191,7 @@ public class RenderSectionManager {
 
             this.sectionCollector = visitor;
         }
+        this.lastSectionCollector = null;
 
         this.taskLists = this.sectionCollector.getTaskLists();
 
@@ -203,6 +205,7 @@ public class RenderSectionManager {
     public void finalizeRenderLists(Viewport viewport) {
         if (this.sectionCollector != null) {
             this.renderLists = this.sectionCollector.createRenderLists(viewport);
+            this.lastSectionCollector = this.sectionCollector;
             this.sectionCollector = null;
         }
     }
@@ -397,8 +400,15 @@ public class RenderSectionManager {
 
                 touchedSectionInfo |= this.updateSectionInfo(result.render, chunkBuildOutput.info);
                 
-                // if result was blocking and section is now newly renderable, force render it since it's probably a newly uncovered chunk
-                if (job != null && job.isBlocking() && !RenderSectionFlags.needsRender(prevFlags) && RenderSectionFlags.needsRender(chunkBuildOutput.info.flags)) {
+                // if result was blocking (or has proximity priority) and section is now newly renderable, force render it since it's probably a newly uncovered chunk
+                if (job != null
+                        && (job.isBlocking() || this.shouldPrioritizeTask(result.render, NEARBY_REBUILD_DISTANCE))
+                        && RenderSectionFlags.renderingMoreTypesNow(prevFlags, chunkBuildOutput.info.flags)) {
+                    // if there is currently no section collector since there was no graph traversal,
+                    // reuse the previous section collector and use it to generate new extended render lists
+                    if (this.sectionCollector == null) {
+                        this.sectionCollector = this.lastSectionCollector;
+                    }
                     this.sectionCollector.visit(result.render);
                 }
 
