@@ -1,7 +1,7 @@
 plugins {
     id("multiloader-platform")
 
-    id("net.neoforged.moddev") version("2.0.103")
+    id("net.neoforged.moddev") version("2.0.107")
 }
 
 base {
@@ -12,8 +12,8 @@ repositories {
     maven("https://maven.irisshaders.dev/releases")
 
     maven {
-        name = "Maven for PR #2297" // https://github.com/neoforged/NeoForge/pull/2297
-        url = uri("https://prmaven.neoforged.net/NeoForge/pr2297")
+        name = "Maven for PR #2639" // https://github.com/neoforged/NeoForge/pull/2639
+        url = uri("https://prmaven.neoforged.net/NeoForge/pr2639")
         content {
             includeModule("net.neoforged", "neoforge")
             includeModule("net.neoforged", "testframework")
@@ -57,7 +57,7 @@ dependencies {
     }
 
     addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")
-    addEmbeddedFabricModule("net.caffeinemc:fabric-renderer-api-v1:7.0.0")
+    addEmbeddedFabricModule("net.caffeinemc:fabric-renderer-api-v1-neo-test:7.0.0")
     //addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
 
     jarJar(project(":neoforge", "service"))

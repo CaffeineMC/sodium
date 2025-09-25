@@ -27,6 +27,8 @@ import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
+import net.minecraft.client.renderer.state.LevelRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.BlockDestructionProgress;
@@ -72,9 +74,6 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     private Minecraft minecraft;
 
     @Shadow
-    private Frustum cullingFrustum;
-
-    @Shadow
     private int lastCameraSectionX;
 
     @Shadow
@@ -87,6 +86,12 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     @Final
     private WorldBorderRenderer worldBorderRenderer;
 
+    @Shadow
+    @Final
+    private SubmitNodeStorage submitNodeStorage;
+    @Shadow
+    @Final
+    private LevelRenderState levelRenderState;
     @Unique
     private SodiumWorldRenderer renderer;
 
@@ -105,7 +110,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void init(Minecraft client, EntityRenderDispatcher entityRenderDispatcher, BlockEntityRenderDispatcher blockEntityRenderDispatcher, RenderBuffers bufferBuilderStorage, CallbackInfo ci) {
+    private void init(Minecraft client, EntityRenderDispatcher entityRenderDispatcher, BlockEntityRenderDispatcher blockEntityRenderDispatcher, RenderBuffers renderBuffers, LevelRenderState levelRenderState, FeatureRenderDispatcher featureRenderDispatcher, CallbackInfo ci) {
         this.renderer = new SodiumWorldRenderer(client);
     }
 
@@ -154,9 +159,9 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         return chunkSectionsToRender;
     }
 
-    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;setupRender(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;ZZ)V"))
-    private void sodium$setMatrices(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean bl, Camera camera, Matrix4f modelView, Matrix4f projection, GpuBufferSlice gpuBufferSlice, Vector4f vector4f, boolean bl2, CallbackInfo ci) {
-        matrices = new ChunkRenderMatrices(projection, modelView);
+    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;cullTerrain(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;Z)V"))
+    private void sodium$setMatrices(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean bl, Camera camera, Matrix4f matrix4f, Matrix4f matrix4f2, Matrix4f matrix4f3, GpuBufferSlice gpuBufferSlice, Vector4f vector4f, boolean bl2, CallbackInfo ci) {
+        matrices = new ChunkRenderMatrices(matrix4f2, matrix4f);
     }
 
     /**
@@ -164,7 +169,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
      * @author JellySquid
      */
     @Overwrite
-    private void setupRender(Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean spectator) {
+    private void cullTerrain(Camera camera, Frustum frustum, boolean spectator) {
         var viewport = ((ViewportProvider) frustum).sodium$createViewport();
         var updateChunksImmediately = FlawlessFrames.isActive();
 
@@ -245,9 +250,8 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     }
 
     @Overwrite
-    private void renderBlockEntities(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, MultiBufferSource.BufferSource bufferSource2, Camera camera, float f) {
-        // TODO 1.21.2: Add the NeoForge glowing patch
-        this.renderer.renderBlockEntities(new PoseStack(), this.renderBuffers, this.destructionProgress, camera, f, null);
+    private void extractVisibleBlockEntities(Camera camera, float f, LevelRenderState levelRenderState) {
+        this.renderer.extractBlockEntities(camera, f, this.destructionProgress, levelRenderState);
     }
 
     // Exclusive to NeoForge, allow to fail.

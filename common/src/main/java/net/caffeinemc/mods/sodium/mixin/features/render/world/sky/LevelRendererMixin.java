@@ -32,7 +32,7 @@ public abstract class LevelRendererMixin {
      * <p>When updating Sodium to new releases of the game, please check for new
      * ways the fog can be reduced in {@link FogRenderer#setupFog(Camera, FogRenderer.FogMode, org.joml.Vector4f, float, boolean, float)} ()}.</p>
      */
-    @Inject(method = { "method_62215", "lambda$addSkyPass$13" }, require = 1, at = @At("HEAD"), cancellable = true)
+    @Inject(method = { "method_62215", "lambda$addSkyPass$8" }, require = 1, at = @At("HEAD"), cancellable = true)
     private void preRenderSky(CallbackInfo ci) {
         // Cancels sky rendering when the camera is submersed underwater.
         // This prevents the sky from being visible through chunks culled by Sodium's fog occlusion.

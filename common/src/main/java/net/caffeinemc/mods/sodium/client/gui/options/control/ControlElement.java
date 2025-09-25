@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gui.options.control;
 
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import net.caffeinemc.mods.sodium.client.gui.options.Option;
 import net.caffeinemc.mods.sodium.client.gui.widgets.AbstractWidget;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
@@ -51,6 +52,10 @@ public class ControlElement<T> extends AbstractWidget {
         }
 
         this.hovered = this.dim.containsCursor(mouseX, mouseY);
+
+        if (hovered) {
+            graphics.requestCursor(this.option.isAvailable() ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
+        }
 
         this.drawRect(graphics, this.dim.x(), this.dim.y(), this.dim.getLimitX(), this.dim.getLimitY(), this.hovered ? 0xE0000000 : 0x90000000);
         this.drawString(graphics, label, this.dim.x() + 6, this.dim.getCenterY() - 4, 0xFFFFFFFF);

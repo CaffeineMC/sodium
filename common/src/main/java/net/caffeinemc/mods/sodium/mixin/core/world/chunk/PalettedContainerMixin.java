@@ -4,6 +4,7 @@ import net.caffeinemc.mods.sodium.client.world.BitStorageExtension;
 import net.caffeinemc.mods.sodium.client.world.PalettedContainerROExtension;
 import net.minecraft.world.level.chunk.PalettedContainer;
 import net.minecraft.world.level.chunk.PalettedContainerRO;
+import net.minecraft.world.level.chunk.Strategy;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,7 +19,7 @@ public abstract class PalettedContainerMixin<T> implements PalettedContainerROEx
 
     @Shadow
     @Final
-    private PalettedContainer.Strategy strategy;
+    private Strategy<T> strategy;
 
     @Shadow
     public abstract PalettedContainer<T> copy();
@@ -27,7 +28,7 @@ public abstract class PalettedContainerMixin<T> implements PalettedContainerROEx
     public void sodium$unpack(T[] values) {
         var strategy = Objects.requireNonNull(this.strategy);
 
-        if (values.length != strategy.size()) {
+        if (values.length != strategy.entryCount()) { // TODO: check if this is right (25w36a)
             throw new IllegalArgumentException("Array is wrong size");
         }
 
@@ -41,7 +42,7 @@ public abstract class PalettedContainerMixin<T> implements PalettedContainerROEx
     public void sodium$unpack(T[] values, int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
         var strategy = Objects.requireNonNull(this.strategy);
 
-        if (values.length != strategy.size()) {
+        if (values.length != strategy.entryCount()) { // TODO: check if this is right (25w36a)
             throw new IllegalArgumentException("Array is wrong size");
         }
 

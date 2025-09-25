@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.terrain;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.textures.GpuTextureView;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 
@@ -33,7 +34,7 @@ public class TerrainRenderPass {
     }
 
     public RenderTarget getTarget() {
-        return renderType.outputTarget();
+        return (isTranslucent && Minecraft.useShaderTransparency()) ? Minecraft.getInstance().levelRenderer.getTranslucentTarget() : Minecraft.getInstance().getMainRenderTarget();
     }
 
     public GpuTextureView getAtlas() {

@@ -5,8 +5,9 @@ import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.SingleQuadParticle;
-import net.minecraft.client.particle.TextureSheetParticle;
+import net.minecraft.client.renderer.state.QuadParticleRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -14,29 +15,23 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(TextureSheetParticle.class)
-public abstract class TextureSheetParticleMixin extends SingleQuadParticle {
+@Mixin(SingleQuadParticle.class)
+public abstract class TextureSheetParticleMixin {
     @Shadow
     protected TextureAtlasSprite sprite;
 
     @Unique
     private boolean shouldTickSprite;
 
-    protected TextureSheetParticleMixin(ClientLevel level, double x, double y, double z) {
-        super(level, x, y, z);
-    }
-
     @Inject(method = "setSprite(Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;)V", at = @At("RETURN"))
     private void afterSetSprite(TextureAtlasSprite sprite, CallbackInfo ci) {
         this.shouldTickSprite = sprite != null && SpriteUtil.INSTANCE.hasAnimation(sprite);
     }
 
-    @Override
-    public void render(VertexConsumer vertexConsumer, Camera camera, float tickDelta) {
-        if (this.shouldTickSprite) {
-            SpriteUtil.INSTANCE.markSpriteActive(this.sprite);
+    @Inject(method = "extractRotatedQuad(Lnet/minecraft/client/renderer/state/QuadParticleRenderState;Lorg/joml/Quaternionf;FFFF)V", at = @At("HEAD"))
+    private void sodium$tickSprite(QuadParticleRenderState quadParticleRenderState, Quaternionf quaternionf, float f, float g, float h, float i, CallbackInfo ci) {
+        if (shouldTickSprite) {
+            SpriteUtil.INSTANCE.markSpriteActive(sprite);
         }
-
-        super.render(vertexConsumer, camera, tickDelta);
     }
 }
