@@ -3,7 +3,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.tree;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.CoordinateSectionVisitor;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 
-public abstract class AbstractTraversableBiForest<T extends TraversableTree> extends BaseBiForest<T> implements TraversableForest {
+public abstract class AbstractTraversableBiForest<T extends TraversableTree> extends BaseBiForest<T> implements TraversableForest<T> {
     public AbstractTraversableBiForest(int baseOffsetX, int baseOffsetY, int baseOffsetZ, float buildDistance) {
         super(baseOffsetX, baseOffsetY, baseOffsetZ, buildDistance);
     }

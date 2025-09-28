@@ -35,9 +35,9 @@ public class RemovableTree extends TraversableTree {
     }
 
     @Override
-    public boolean add(int x, int y, int z) {
+    public int add(int x, int y, int z) {
         var result = super.add(x, y, z);
-        if (result) {
+        if (result != Tree.PRESENT) {
             this.reducedIsValid = false;
         }
         return result;

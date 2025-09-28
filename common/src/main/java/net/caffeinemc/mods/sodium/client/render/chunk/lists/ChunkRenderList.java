@@ -125,24 +125,27 @@ public class ChunkRenderList {
         }
     }
 
-    /*
-    In immediate presentation mode this method is called during the processing of results for immediate-mode built sections. Sometimes this means that their render flags change as a result of the build. However, when the section was already entered into the render list and the render list was full, this resulted in an exception since previously this method threw when the render list was full. It's also not good to have the section be in the render list twice. The method now accepts a flags parameter, which is set to only the new flags when updating the render lists with immediate built results, to prevent this issue.
-     */
-    public void add(int index, int flags) {
+    public void add(int localSectionIndex) {
+        if (this.size >= RenderRegion.REGION_SIZE) {
+            throw new ArrayIndexOutOfBoundsException("Render list is full");
+        }
+
         this.size++;
 
+        int flags = this.region.getSectionFlags(localSectionIndex);
+
         if (((flags >>> RenderSectionFlags.HAS_BLOCK_GEOMETRY) & 1) == 1) {
-            this.sectionsWithGeometryMap[index >> 6] |= 1L << (index & 0b111111);
+            this.sectionsWithGeometryMap[localSectionIndex >> 6] |= 1L << (localSectionIndex & 0b111111);
             if (this.addedSectionsAreSorted) {
-                this.sectionsWithGeometry[this.sectionsWithGeometryCount] = (byte) index;
+                this.sectionsWithGeometry[this.sectionsWithGeometryCount] = (byte) localSectionIndex;
             }
             this.sectionsWithGeometryCount++;
         }
 
-        this.sectionsWithSprites[this.sectionsWithSpritesCount] = (byte) index;
+        this.sectionsWithSprites[this.sectionsWithSpritesCount] = (byte) localSectionIndex;
         this.sectionsWithSpritesCount += (flags >>> RenderSectionFlags.HAS_ANIMATED_SPRITES) & 1;
 
-        this.sectionsWithEntities[this.sectionsWithEntitiesCount] = (byte) index;
+        this.sectionsWithEntities[this.sectionsWithEntitiesCount] = (byte) localSectionIndex;
         this.sectionsWithEntitiesCount += (flags >>> RenderSectionFlags.HAS_BLOCK_ENTITIES) & 1;
     }
 

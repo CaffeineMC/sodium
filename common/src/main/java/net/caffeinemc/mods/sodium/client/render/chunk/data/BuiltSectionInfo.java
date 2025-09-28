@@ -9,8 +9,8 @@ import net.minecraft.client.renderer.chunk.VisibilitySet;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.IntFunction;
@@ -23,7 +23,7 @@ public class BuiltSectionInfo {
     public static final BuiltSectionInfo EMPTY = createEmptyData();
 
     public final int flags;
-    public final long visibilityData;
+    public final long[] visibilityData;
 
     public final BlockEntity @Nullable[] globalBlockEntities;
     public final BlockEntity @Nullable[] culledBlockEntities;
@@ -33,7 +33,7 @@ public class BuiltSectionInfo {
                              @NonNull Collection<BlockEntity> globalBlockEntities,
                              @NonNull Collection<BlockEntity> culledBlockEntities,
                              @NonNull Collection<TextureAtlasSprite> animatedSprites,
-                             @NonNull VisibilitySet occlusionData) {
+                             @NonNull VisibilitySet[] occlusionData) {
         this.globalBlockEntities = toArray(globalBlockEntities, BlockEntity[]::new);
         this.culledBlockEntities = toArray(culledBlockEntities, BlockEntity[]::new);
         this.animatedSprites = toArray(animatedSprites, TextureAtlasSprite[]::new);
@@ -41,20 +41,23 @@ public class BuiltSectionInfo {
         int flags = 0;
 
         if (!blockRenderPasses.isEmpty()) {
-            flags |= 1 << RenderSectionFlags.HAS_BLOCK_GEOMETRY;
+            flags |= RenderSectionFlags.MASK_HAS_BLOCK_GEOMETRY;
         }
 
         if (!culledBlockEntities.isEmpty()) {
-            flags |= 1 << RenderSectionFlags.HAS_BLOCK_ENTITIES;
+            flags |= RenderSectionFlags.MASK_HAS_BLOCK_ENTITIES;
         }
 
         if (!animatedSprites.isEmpty()) {
-            flags |= 1 << RenderSectionFlags.HAS_ANIMATED_SPRITES;
+            flags |= RenderSectionFlags.MASK_HAS_ANIMATED_SPRITES;
         }
 
         this.flags = flags;
 
-        this.visibilityData = VisibilityEncoding.encode(occlusionData);
+        this.visibilityData = new long[occlusionData.length];
+        for (int i = 0; i < occlusionData.length; i++) {
+            this.visibilityData[i] = VisibilityEncoding.encode(occlusionData[i]);
+        }
     }
 
     public static class Builder {
@@ -63,13 +66,13 @@ public class BuiltSectionInfo {
         private final List<BlockEntity> culledBlockEntities = new ArrayList<>();
         private final Set<TextureAtlasSprite> animatedSprites = new ObjectOpenHashSet<>();
 
-        private VisibilitySet occlusionData;
+        private VisibilitySet[] occlusionData;
 
         public void addRenderPass(TerrainRenderPass pass) {
             this.blockRenderPasses.add(pass);
         }
 
-        public void setOcclusionData(VisibilitySet data) {
+        public void setOcclusionData(VisibilitySet[] data) {
             this.occlusionData = data;
         }
 
@@ -99,11 +102,11 @@ public class BuiltSectionInfo {
     }
 
     private static BuiltSectionInfo createEmptyData() {
-        VisibilitySet occlusionData = new VisibilitySet();
-        occlusionData.add(EnumSet.allOf(Direction.class));
+        VisibilitySet fullyVisible = new VisibilitySet();
+        fullyVisible.add(EnumSet.allOf(Direction.class));
 
         BuiltSectionInfo.Builder meshInfo = new BuiltSectionInfo.Builder();
-        meshInfo.setOcclusionData(occlusionData);
+        meshInfo.setOcclusionData(new VisibilitySet[] { fullyVisible });
 
         return meshInfo.build();
     }

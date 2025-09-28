@@ -12,6 +12,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRend
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.data.BuiltSectionInfo;
 import net.caffeinemc.mods.sodium.client.render.chunk.data.BuiltSectionMeshParts;
+import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.DirectionalVisGraph;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.DefaultTerrainRenderPasses;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
@@ -67,7 +68,7 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
     public ChunkBuildOutput execute(ChunkBuildContext buildContext, CancellationToken cancellationToken) {
         ProfilerFiller profiler = Profiler.get();
         BuiltSectionInfo.Builder renderData = new BuiltSectionInfo.Builder();
-        VisGraph occluder = new VisGraph();
+        DirectionalVisGraph occluder = new DirectionalVisGraph();
 
         ChunkBuildBuffers buffers = buildContext.buffers;
         buffers.init(renderData, this.render.getSectionIndex());
@@ -115,7 +116,10 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
                         }
 
                         blockPos.set(x, y, z);
-                        modelOffset.set(x & 15, y & 15, z & 15);
+                        int localX = x & 15;
+                        int localY = y & 15;
+                        int localZ = z & 15;
+                        modelOffset.set(localX, localY, localZ);
 
                         if (blockState.getRenderShape() == RenderShape.MODEL) {
                             BlockStateModel model = cache.getBlockModels()
@@ -142,7 +146,7 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
                         }
 
                         if (blockState.isSolidRender()) {
-                            occluder.setOpaque(blockPos);
+                            occluder.setOpaque(localX, localY, localZ);
                         }
                     }
                 }

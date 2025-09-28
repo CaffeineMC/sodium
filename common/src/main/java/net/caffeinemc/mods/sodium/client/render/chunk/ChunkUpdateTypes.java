@@ -37,18 +37,25 @@ public class ChunkUpdateTypes {
         return (isRebuild(type) || isInitialBuild(type)) && isSort(type);
     }
 
-    public static TaskQueueType getQueueType(int type, TaskQueueType importantRebuildQueueType, TaskQueueType importantSortQueueType) {
-        if (isInitialBuild(type)) {
-            return TaskQueueType.INITIAL_BUILD;
-        }
+    public static DeferMode getDeferMode(int type, DeferMode importantRebuildDeferMode, DeferMode importantSortDeferMode) {
         if (isImportant(type)) {
             if (isRebuild(type)) {
-                return importantRebuildQueueType;
+                return importantRebuildDeferMode;
             } else { // implies important sort task
-                return importantSortQueueType;
+                return importantSortDeferMode;
             }
         } else {
-            return TaskQueueType.ALWAYS_DEFER;
+            return DeferMode.ALWAYS;
         }
+    }
+
+    public static int getPriorityValue(int type) {
+        if (isInitialBuild(type)) {
+            return 0;
+        }
+        if (isRebuild(type)) {
+            return 1;
+        }
+        return 2; // sort
     }
 }

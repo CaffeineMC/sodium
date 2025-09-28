@@ -9,7 +9,7 @@ import net.minecraft.core.SectionPos;
 
 import java.util.Comparator;
 
-public class RemovableMultiForest implements RemovableForest {
+public class RemovableMultiForest implements RemovableForest<RemovableTree> {
     private final Long2ReferenceLinkedOpenHashMap<RemovableTree> trees;
     private final ReferenceArrayList<RemovableTree> treeSortList = new ReferenceArrayList<>();
     private RemovableTree lastTree;
@@ -76,11 +76,14 @@ public class RemovableMultiForest implements RemovableForest {
     }
 
     @Override
-    public void add(int x, int y, int z) {
+    public boolean add(int x, int y, int z, TreeAddMethod<RemovableTree> addMethod) {
         this.treesAreReady = false;
 
-        if (this.lastTree != null && this.lastTree.add(x, y, z)) {
-            return;
+        if (this.lastTree != null) {
+            var result = addMethod.add(this.lastTree, x, y, z);
+            if (result != Tree.OUT_OF_BOUNDS) {
+                return result == Tree.NOT_PRESENT;
+            }
         }
 
         // get the tree coordinate by dividing by 64
@@ -99,8 +102,10 @@ public class RemovableMultiForest implements RemovableForest {
             this.trees.put(treeKey, tree);
         }
 
-        tree.add(x, y, z);
+        var result = addMethod.add(tree, x, y, z);
         this.lastTree = tree;
+
+        return result == Tree.NOT_PRESENT;
     }
 
     public void remove(int x, int y, int z) {

@@ -36,18 +36,21 @@ public abstract class Tree {
         return n;
     }
 
-    public boolean add(int x, int y, int z) {
+    public int add(int x, int y, int z) {
         x -= this.offsetX;
         y -= this.offsetY;
         z -= this.offsetZ;
         if (Tree.isOutOfBounds(x, y, z)) {
-            return false;
+            return OUT_OF_BOUNDS;
         }
 
         var bitIndex = Tree.interleave6x3(x, y, z);
-        this.tree[bitIndex >> 6] |= 1L << (bitIndex & 0b111111);
+        var entryIndex = bitIndex >> 6;
+        var entry = this.tree[entryIndex];
+        var newEntry = entry | (1L << (bitIndex & 0b111111));
+        this.tree[entryIndex] = newEntry;
 
-        return true;
+        return (entry == newEntry) ? PRESENT : NOT_PRESENT;
     }
 
     public abstract int getPresence(int x, int y, int z);

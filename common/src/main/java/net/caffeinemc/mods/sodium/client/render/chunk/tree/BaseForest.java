@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.tree;
 
-public abstract class BaseForest<T extends Tree> implements Forest {
+public abstract class BaseForest<T extends Tree> implements Forest<T> {
     protected final int baseOffsetX, baseOffsetY, baseOffsetZ;
     final float buildDistance;
 

@@ -39,6 +39,32 @@ public class TraversableTree extends Tree {
         this.treeDoubleReduced = doubleReduced;
     }
 
+    /**
+     * Adds a section to the tree and immediately prepares it for traversal without needing to re-prepare the whole tree.
+     *
+     * @param x x coordinate
+     * @param y y coordinate
+     * @param z z coordinate
+     */
+    public int addPatch(int x, int y, int z) {
+        x -= this.offsetX;
+        y -= this.offsetY;
+        z -= this.offsetZ;
+        if (Tree.isOutOfBounds(x, y, z)) {
+            return OUT_OF_BOUNDS;
+        }
+
+        var bitIndex = Tree.interleave6x3(x, y, z);
+        int entryIndex = bitIndex >> 6;
+        var entry = this.tree[entryIndex];
+        var newEntry = entry | (1L << (bitIndex & 0b111111));
+        this.tree[entryIndex] = newEntry;
+        this.treeReduced[bitIndex >> 12] |= 1L << (entryIndex & 0b111111);
+        this.treeDoubleReduced |= 1L << (bitIndex >> 18);
+
+        return (entry == newEntry) ? PRESENT : NOT_PRESENT;
+    }
+
     @Override
     public int getPresence(int x, int y, int z) {
         x -= this.offsetX;

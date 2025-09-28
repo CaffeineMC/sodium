@@ -5,8 +5,6 @@ import net.minecraft.client.renderer.chunk.VisibilitySet;
 import org.jspecify.annotations.NonNull;
 
 public class VisibilityEncoding {
-    public static final long NULL = 0L;
-
     public static long encode(@NonNull VisibilitySet occlusionData) {
         long visibilityData = 0;
 

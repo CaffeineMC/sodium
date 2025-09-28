@@ -33,9 +33,12 @@ public abstract class BaseMultiForest<T extends Tree> extends BaseForest<T> {
     }
 
     @Override
-    public void add(int x, int y, int z) {
-        if (this.lastTree != null && this.lastTree.add(x, y, z)) {
-            return;
+    public boolean add(int x, int y, int z, TreeAddMethod<T> addMethod) {
+        if (this.lastTree != null) {
+            var result = addMethod.add(this.lastTree, x, y, z);
+            if (result != Tree.OUT_OF_BOUNDS) {
+                return result == Tree.NOT_PRESENT;
+            }
         }
 
         var localX = x - this.baseOffsetX;
@@ -44,7 +47,7 @@ public abstract class BaseMultiForest<T extends Tree> extends BaseForest<T> {
 
         var treeIndex = this.getTreeIndex(localX, localY, localZ);
         if (treeIndex == Tree.OUT_OF_BOUNDS) {
-            return;
+            return false;
         }
 
         var tree = this.trees[treeIndex];
@@ -57,8 +60,10 @@ public abstract class BaseMultiForest<T extends Tree> extends BaseForest<T> {
             this.trees[treeIndex] = tree;
         }
 
-        tree.add(x, y, z);
+        var result = addMethod.add(tree, x, y, z);
         this.lastTree = tree;
+
+        return result == Tree.NOT_PRESENT;
     }
 
     @Override
