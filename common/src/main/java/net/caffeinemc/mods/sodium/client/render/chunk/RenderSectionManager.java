@@ -549,7 +549,8 @@ public class RenderSectionManager {
     private void submitSectionTasks(ChunkJobCollector collector, UploadResourceBudget uploadBudget, TaskQueueType queueType) {
         var taskList = this.taskLists.get(queueType);
 
-        while (!taskList.isEmpty() && (uploadBudget.isAvailable() || queueType.allowsUnlimitedUploadDuration())) {
+        // submit tasks as long as there's tasks available, the collector has worker thread budget, and there's enough upload budget left 
+        while (!taskList.isEmpty() && collector.hasBudgetRemaining() && (uploadBudget.isAvailable() || queueType.allowsUnlimitedUploadDuration())) {
             RenderSection section = taskList.poll();
 
             if (section == null) {
