@@ -109,6 +109,10 @@ public class LevelColorCache {
         slice.lastPopulateStamp = this.populateStamp;
     }
 
+    public int getBlendRadius() {
+        return blendRadius;
+    }
+
     private static class Slice {
         private final ColorBuffer buffer;
         private long lastPopulateStamp;

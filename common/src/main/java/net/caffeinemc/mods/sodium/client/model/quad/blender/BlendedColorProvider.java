@@ -1,17 +1,24 @@
 package net.caffeinemc.mods.sodium.client.model.quad.blender;
 
-import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
-import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
-import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.caffeinemc.mods.sodium.api.util.ColorMixer;
+import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
+import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
+import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 
 public abstract class BlendedColorProvider<T> implements ColorProvider<T> {
     @Override
-    public void getColors(LevelSlice slice, BlockPos pos, BlockPos.MutableBlockPos scratchPos, T state, ModelQuadView quad, int[] output) {
-        for (int vertexIndex = 0; vertexIndex < 4; vertexIndex++) {
-            output[vertexIndex] = this.getVertexColor(slice, pos, scratchPos, quad, state, vertexIndex);
+    public void getColors(LevelSlice slice, BlockPos pos, BlockPos.MutableBlockPos scratchPos, T state, ModelQuadView quad, int[] output, boolean smooth) {
+        if (smooth) {
+            for (int vertexIndex = 0; vertexIndex < 4; vertexIndex++) {
+                output[vertexIndex] = this.getVertexColor(slice, pos, scratchPos, quad, state, vertexIndex);
+            }
+        } else {
+            int color = this.getColor(slice, state, pos);
+            for (int vertexIndex = 0; vertexIndex < 4; vertexIndex++) {
+                output[vertexIndex] = color;
+            }
         }
     }
 

@@ -1,9 +1,11 @@
 package net.caffeinemc.mods.sodium.client.world;
 
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
-import net.caffeinemc.mods.sodium.client.services.*;
-import net.caffeinemc.mods.sodium.client.world.biome.LevelColorCache;
+import net.caffeinemc.mods.sodium.client.services.PlatformLevelRenderHooks;
+import net.caffeinemc.mods.sodium.client.services.SodiumModelData;
+import net.caffeinemc.mods.sodium.client.services.SodiumModelDataContainer;
 import net.caffeinemc.mods.sodium.client.world.biome.LevelBiomeSlice;
+import net.caffeinemc.mods.sodium.client.world.biome.LevelColorCache;
 import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSection;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
@@ -351,6 +353,10 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
     @Override
     public int getBlockTint(BlockPos pos, ColorResolver resolver) {
         return this.biomeColors.getColor(resolver, pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    public boolean hasBiomeBlend() {
+        return this.biomeColors.getBlendRadius() > 0;
     }
 
     @Override
