@@ -50,10 +50,6 @@ public class MathUtil {
         return Float.intBitsToFloat(i ^ ((i >> 31) & 0x7FFFFFFF));
     }
 
-    public static float exponentialMovingAverage(float oldValue, float newValue, float newValueContribution) {
-        return newValueContribution * newValue + (1 - newValueContribution) * oldValue;
-    }
-
     public static double exponentialMovingAverage(double oldValue, double newValue, double newValueContribution) {
         return newValueContribution * newValue + (1 - newValueContribution) * oldValue;
     }

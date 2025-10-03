@@ -103,7 +103,7 @@ public abstract class ExpDecayLinear2DEstimator<C> extends Abstract2DLinearEstim
                 varianceSum += xDelta * xDelta;
             }
 
-            if (Math.abs(varianceSum)<=Double.MIN_NORMAL) {
+            if (Math.abs(varianceSum) <= Double.MIN_NORMAL) {
                 return;
             }
 

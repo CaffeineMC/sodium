@@ -48,7 +48,7 @@ public abstract class Average1DEstimator<C> extends Estimator<C, Average1DEstima
         private boolean hasRealData = false;
         private double average;
 
-        public Average(double newDataRatio, float initialValue) {
+        public Average(double newDataRatio, double initialValue) {
             this.average = initialValue;
             this.newDataRatio = newDataRatio;
         }
