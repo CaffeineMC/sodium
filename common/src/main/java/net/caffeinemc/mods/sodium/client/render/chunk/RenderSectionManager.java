@@ -62,6 +62,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class RenderSectionManager {
     private static final float NEARBY_REBUILD_DISTANCE = Mth.square(16.0f);
+    private static final float IMMEDIATE_PRESENT_DISTANCE = Mth.square(64.0f);
     private static final float NEARBY_SORT_DISTANCE = Mth.square(25.0f);
 
     private static final float FRAME_DURATION_UPLOAD_FRACTION = 0.1f;
@@ -381,6 +382,35 @@ public class RenderSectionManager {
         }
     }
 
+    private boolean sectionVisible(RenderSection section) {
+        return section.getLastVisibleFrame() == this.lastUpdatedFrame;
+    }
+
+    private boolean isSectionImmediatePresentationCandidate(RenderSection section) {
+        if (this.cameraPosition == null) {
+            return false;
+        }
+        var distanceSquared = section.getSquaredDistance(
+                (float) this.cameraPosition.x(),
+                (float) this.cameraPosition.y(),
+                (float) this.cameraPosition.z()
+        );
+        
+        if (distanceSquared < NEARBY_REBUILD_DISTANCE) {
+            return true;
+        }
+        
+        return distanceSquared < IMMEDIATE_PRESENT_DISTANCE &&
+                // check that visible or adjacent to a visible section
+                (this.sectionVisible(section)
+                        || this.sectionVisible(section.adjacentDown)
+                        || this.sectionVisible(section.adjacentUp)
+                        || this.sectionVisible(section.adjacentNorth)
+                        || this.sectionVisible(section.adjacentSouth)
+                        || this.sectionVisible(section.adjacentWest)
+                        || this.sectionVisible(section.adjacentEast));
+    }
+
     private boolean processChunkBuildResults(ArrayList<BuilderTaskOutput> results) {
         var filtered = filterChunkBuildResults(results);
 
@@ -399,10 +429,11 @@ public class RenderSectionManager {
                 var prevFlags = result.render.getFlags();
 
                 touchedSectionInfo |= this.updateSectionInfo(result.render, chunkBuildOutput.info);
-                
-                // if result was blocking (or has proximity priority) and section is now newly renderable, force render it since it's probably a newly uncovered chunk
+
+                // if result was blocking (or is approximately visible) and section is now newly renderable, force render it since it's probably a newly uncovered chunk.
+                // This also fixes flickering issues with pistons moving blocks and switching between being a mesh and a BE.
                 if (job != null
-                        && (job.isBlocking() || this.shouldPrioritizeTask(result.render, NEARBY_REBUILD_DISTANCE))
+                        && (job.isBlocking() || this.isSectionImmediatePresentationCandidate(result.render))
                         && RenderSectionFlags.renderingMoreTypesNow(prevFlags, chunkBuildOutput.info.flags)) {
                     // if there is currently no section collector since there was no graph traversal,
                     // reuse the previous section collector and use it to generate new extended render lists
