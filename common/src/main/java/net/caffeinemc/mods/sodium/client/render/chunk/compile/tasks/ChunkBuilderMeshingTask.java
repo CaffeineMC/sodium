@@ -18,6 +18,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMa
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicData;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.PresentTranslucentData;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
 import net.caffeinemc.mods.sodium.client.services.PlatformLevelRenderHooks;
@@ -174,7 +175,15 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
         boolean reuseUploadedData = false;
         TranslucentData translucentData = null;
         if (sortEnabled) {
-            var oldData = this.render.getTranslucentData();
+            TranslucentData oldData = this.render.getTranslucentData();
+            
+            // Reusing non-dynamic data leads to attempting to sort with it again,
+            // which throws an exception since it can only generate a sorter once.
+            // To prevent this, reusing data is prevented when forceSort is enabled and the data is not dynamic.
+            if (this.forceSort && !(oldData instanceof DynamicData)) {
+                oldData = null;
+            }
+            
             translucentData = collector.getTranslucentData(oldData, this);
             reuseUploadedData = !this.forceSort && translucentData == oldData;
         }
