@@ -8,7 +8,6 @@ import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.GraphDirectionSe
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.VisibilityEncoding;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
-import net.caffeinemc.mods.sodium.client.util.task.CancellationToken;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -55,7 +54,7 @@ public class RenderSection {
 
     // Pending Update State
     @Nullable
-    private ChunkJob taskCancellationToken = null;
+    private ChunkJob runningJob = null;
     private long lastMeshResultSize = MeshResultSize.NO_DATA;
 
     private int pendingUpdateType;
@@ -133,9 +132,9 @@ public class RenderSection {
      * be used.
      */
     public void delete() {
-        if (this.taskCancellationToken != null) {
-            this.taskCancellationToken.setCancelled();
-            this.taskCancellationToken = null;
+        if (this.runningJob != null) {
+            this.runningJob.setCancelled();
+            this.runningJob = null;
         }
 
         this.clearRenderState();
@@ -350,12 +349,12 @@ public class RenderSection {
         return this.globalBlockEntities;
     }
 
-    public @Nullable ChunkJob getTaskCancellationToken() {
-        return this.taskCancellationToken;
+    public @Nullable ChunkJob getRunningJob() {
+        return this.runningJob;
     }
 
-    public void setTaskCancellationToken(@Nullable ChunkJob token) {
-        this.taskCancellationToken = token;
+    public void setRunningJob(@Nullable ChunkJob token) {
+        this.runningJob = token;
     }
 
     public int getPendingUpdate() {

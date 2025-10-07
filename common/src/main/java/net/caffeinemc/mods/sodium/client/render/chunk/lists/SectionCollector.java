@@ -57,7 +57,7 @@ public abstract class SectionCollector implements RenderListProvider, RenderSect
             // if the section has a pending update but a task is already running for it,
             // don't add it to the task list again because starting a new task when there's already one running is invalid.
             // (for example, it would become impossible to cancel the earlier task)
-            if (section.getTaskCancellationToken() != null) {
+            if (section.getRunningJob() != null) {
                 this.needsRevisitForPendingUpdates = true;
                 return;
             }

@@ -422,7 +422,7 @@ public class RenderSectionManager {
         long totalUploadSize = 0;
         for (var result : filtered) {
             var resultSize = result.getResultSize();
-            var job = result.render.getTaskCancellationToken();
+            var job = result.render.getRunningJob();
 
             TranslucentData oldData = result.render.getTranslucentData();
             if (result instanceof ChunkBuildOutput chunkBuildOutput) {
@@ -458,10 +458,9 @@ public class RenderSectionManager {
                 this.sortTriggering.applyTriggerChanges(data, sortOutput.getDynamicSorter(), result.render.getPosition(), this.cameraPosition);
             }
 
-            // clear the cancellation token (thereby marking the section as not having an
-            // active task) if this job is the most recent submitted job for this section
+            // clear the running job if this job is the most recent submitted job for this section
             if (job != null && result.submitTime >= result.render.getLastSubmittedFrame()) {
-                result.render.setTaskCancellationToken(null);
+                result.render.setRunningJob(null);
             }
 
             result.render.setLastUploadFrame(result.submitTime);
@@ -643,7 +642,7 @@ public class RenderSectionManager {
                         BuiltSectionInfo.EMPTY, Collections.emptyMap()));
                 this.buildResults.add(result);
 
-                section.setTaskCancellationToken(null);
+                section.setRunningJob(null);
             }
         } else { // implies it's a type of sort task
             task = this.createSortTask(section, this.frame);
@@ -663,7 +662,7 @@ public class RenderSectionManager {
             // consume upload budget in size and duration using estimates
             uploadBudget.consume(job.getEstimatedUploadDuration(), job.getEstimatedSize());
 
-            section.setTaskCancellationToken(job);
+            section.setRunningJob(job);
         }
 
         section.setLastSubmittedFrame(this.frame);
