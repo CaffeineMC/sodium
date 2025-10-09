@@ -5,10 +5,10 @@ import net.caffeinemc.mods.sodium.client.util.MathUtil;
 import java.util.Locale;
 
 public abstract class Average1DEstimator<C> extends Estimator<C, Average1DEstimator.Value<C>, Average1DEstimator.ValueBatch<C>, Void, Long, Average1DEstimator.Average<C>> {
-    private final float newDataRatio;
+    private final double newDataRatio;
     private final long initialEstimate;
 
-    public Average1DEstimator(float newDataRatio, long initialEstimate) {
+    public Average1DEstimator(double newDataRatio, long initialEstimate) {
         this.newDataRatio = newDataRatio;
         this.initialEstimate = initialEstimate;
     }
@@ -33,8 +33,8 @@ public abstract class Average1DEstimator<C> extends Estimator<C, Average1DEstima
             this.count = 0;
         }
 
-        public float getAverage() {
-            return ((float) this.valueSum) / this.count;
+        public double getAverage() {
+            return ((double) this.valueSum) / this.count;
         }
     }
 
@@ -44,11 +44,11 @@ public abstract class Average1DEstimator<C> extends Estimator<C, Average1DEstima
     }
 
     protected static class Average<C> implements Estimator.Model<Void, Long, ValueBatch<C>> {
-        private final float newDataRatio;
+        private final double newDataRatio;
         private boolean hasRealData = false;
-        private float average;
+        private double average;
 
-        public Average(float newDataRatio, float initialValue) {
+        public Average(double newDataRatio, double initialValue) {
             this.average = initialValue;
             this.newDataRatio = newDataRatio;
         }

@@ -34,9 +34,6 @@ public class ResourcePackScanner {
             "rendertype_tripwire.vsh",
             "rendertype_tripwire.fsh",
             "rendertype_tripwire.json",
-            "rendertype_clouds.vsh",
-            "rendertype_clouds.fsh",
-            "rendertype_clouds.json",
             "terrain.vsh",
             "terrain.fsh"
     );

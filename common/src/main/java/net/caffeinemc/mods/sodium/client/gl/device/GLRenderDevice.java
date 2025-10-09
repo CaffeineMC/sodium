@@ -71,6 +71,11 @@ public class GLRenderDevice implements RenderDevice {
         return 8;
     }
 
+    @Override
+    public int getMaxTextureLodBias() {
+        return GL30C.glGetInteger(GL30C.GL_MAX_TEXTURE_LOD_BIAS);
+    }
+
     private void checkDeviceActive() {
         if (!this.isActive) {
             throw new IllegalStateException("Tried to access device from unmanaged context");

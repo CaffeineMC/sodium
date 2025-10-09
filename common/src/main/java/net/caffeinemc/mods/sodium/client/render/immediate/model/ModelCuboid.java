@@ -27,9 +27,9 @@ public class ModelCuboid {
     public static final int
             FACE_NEG_Y = 0, // DOWN
             FACE_POS_Y = 1, // UP
-            FACE_NEG_X = 2, // WEST
+            FACE_NEG_X = 2, // EAST
             FACE_NEG_Z = 3, // NORTH
-            FACE_POS_X = 4, // EAST
+            FACE_POS_X = 4, // WEST
             FACE_POS_Z = 5; // SOUTH
 
     public final float originX, originY, originZ;
@@ -183,8 +183,8 @@ public class ModelCuboid {
             case UP     -> FACE_POS_Y;
             case NORTH  -> FACE_NEG_Z;
             case SOUTH  -> FACE_POS_Z;
-            case WEST   -> FACE_NEG_X;
-            case EAST   -> FACE_POS_X;
+            case WEST   -> FACE_POS_X;
+            case EAST   -> FACE_NEG_X;
         };
     }
 }

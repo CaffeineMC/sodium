@@ -62,8 +62,9 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class RenderSectionManager {
     private static final float NEARBY_REBUILD_DISTANCE = Mth.square(16.0f);
+    private static final float IMMEDIATE_PRESENT_DISTANCE = Mth.square(64.0f);
     private static final float NEARBY_SORT_DISTANCE = Mth.square(25.0f);
-    
+
     private static final float FRAME_DURATION_UPLOAD_FRACTION = 0.1f;
     private static final long MIN_UPLOAD_DURATION_BUDGET = 2_000_000L; // 2ms
 
@@ -98,6 +99,8 @@ public class RenderSectionManager {
 
     @NotNull
     private SortedRenderLists renderLists;
+    private SectionCollector sectionCollector;
+    private SectionCollector lastSectionCollector;
 
     @NotNull
     private Map<TaskQueueType, ArrayDeque<RenderSection>> taskLists;
@@ -117,7 +120,7 @@ public class RenderSectionManager {
 
     public RenderSectionManager(ClientLevel level, int renderDistance, SortBehavior sortBehavior, CommandList commandList) {
         this.meshTaskSizeEstimator = new MeshTaskSizeEstimator(level);
-        
+
         this.chunkRenderer = new DefaultChunkRenderer(RenderDevice.INSTANCE, ChunkMeshFormats.COMPACT);
 
         this.level = level;
@@ -175,29 +178,37 @@ public class RenderSectionManager {
         final var searchDistance = this.getSearchDistance(fogParameters);
         final var useOcclusionCulling = this.shouldUseOcclusionCulling(camera, spectator);
 
-        RenderListProvider renderListProvider;
         var importantRebuildQueueType = SodiumClientMod.options().performance.chunkBuildDeferMode.getImportantRebuildQueueType();
+        var importantSortQueueType = this.sortBehavior.getDeferMode().getImportantRebuildQueueType();
         if (this.isOutOfGraph(viewport.getChunkCoord())) {
-            var visitor = new TreeSectionCollector(frame, importantRebuildQueueType, this.sectionByPosition);
+            var visitor = new TreeSectionCollector(frame, importantRebuildQueueType, importantSortQueueType, this.sectionByPosition);
             this.renderableSectionTree.prepareForTraversal();
             this.renderableSectionTree.traverse(visitor, viewport, searchDistance);
 
-            renderListProvider = visitor;
+            this.sectionCollector = visitor;
         } else {
-            var visitor = new OcclusionSectionCollector(frame, importantRebuildQueueType);
+            var visitor = new OcclusionSectionCollector(frame, importantRebuildQueueType, importantSortQueueType);
             this.occlusionCuller.findVisible(visitor, viewport, searchDistance, useOcclusionCulling, frame);
 
-            renderListProvider = visitor;
+            this.sectionCollector = visitor;
         }
+        this.lastSectionCollector = null;
 
-        this.renderLists = renderListProvider.createRenderLists(viewport);
-        this.taskLists = renderListProvider.getTaskLists();
+        this.taskLists = this.sectionCollector.getTaskLists();
 
         // when there were sections with pending updates that were skipped because they already had a task running,
         // it needs to revisit them to schedule the remaining pending updates.
         // since not all tasks necessarily change the section info to trigger a graph update,
         // without this pending updates might be missed when the camera is stationary
-        return renderListProvider.needsRevisitForPendingUpdates();
+        return this.sectionCollector.needsRevisitForPendingUpdates();
+    }
+
+    public void finalizeRenderLists(Viewport viewport) {
+        if (this.sectionCollector != null) {
+            this.renderLists = this.sectionCollector.createRenderLists(viewport);
+            this.lastSectionCollector = this.sectionCollector;
+            this.sectionCollector = null;
+        }
     }
 
     private boolean isOutOfGraph(SectionPos pos) {
@@ -371,6 +382,35 @@ public class RenderSectionManager {
         }
     }
 
+    private boolean sectionVisible(RenderSection section) {
+        return section.getLastVisibleFrame() == this.lastUpdatedFrame;
+    }
+
+    private boolean isSectionImmediatePresentationCandidate(RenderSection section) {
+        if (this.cameraPosition == null) {
+            return false;
+        }
+        var distanceSquared = section.getSquaredDistance(
+                (float) this.cameraPosition.x(),
+                (float) this.cameraPosition.y(),
+                (float) this.cameraPosition.z()
+        );
+        
+        if (distanceSquared < NEARBY_REBUILD_DISTANCE) {
+            return true;
+        }
+        
+        return distanceSquared < IMMEDIATE_PRESENT_DISTANCE &&
+                // check that visible or adjacent to a visible section
+                (this.sectionVisible(section)
+                        || this.sectionVisible(section.adjacentDown)
+                        || this.sectionVisible(section.adjacentUp)
+                        || this.sectionVisible(section.adjacentNorth)
+                        || this.sectionVisible(section.adjacentSouth)
+                        || this.sectionVisible(section.adjacentWest)
+                        || this.sectionVisible(section.adjacentEast));
+    }
+
     private boolean processChunkBuildResults(ArrayList<BuilderTaskOutput> results) {
         var filtered = filterChunkBuildResults(results);
 
@@ -382,10 +422,26 @@ public class RenderSectionManager {
         long totalUploadSize = 0;
         for (var result : filtered) {
             var resultSize = result.getResultSize();
+            var job = result.render.getRunningJob();
 
             TranslucentData oldData = result.render.getTranslucentData();
             if (result instanceof ChunkBuildOutput chunkBuildOutput) {
+                var prevFlags = result.render.getFlags();
+
                 touchedSectionInfo |= this.updateSectionInfo(result.render, chunkBuildOutput.info);
+
+                // if result was blocking (or is approximately visible) and section is now newly renderable, force render it since it's probably a newly uncovered chunk.
+                // This also fixes flickering issues with pistons moving blocks and switching between being a mesh and a BE.
+                if (job != null
+                        && (job.isBlocking() || this.isSectionImmediatePresentationCandidate(result.render))
+                        && RenderSectionFlags.renderingMoreTypesNow(prevFlags, chunkBuildOutput.info.flags)) {
+                    // if there is currently no section collector since there was no graph traversal,
+                    // reuse the previous section collector and use it to generate new extended render lists
+                    if (this.sectionCollector == null) {
+                        this.sectionCollector = this.lastSectionCollector;
+                    }
+                    this.sectionCollector.visit(result.render);
+                }
 
                 result.render.setLastMeshResultSize(resultSize);
                 this.meshTaskSizeEstimator.addData(this.meshTaskSizeEstimator.resultForSection(result.render, resultSize));
@@ -402,12 +458,9 @@ public class RenderSectionManager {
                 this.sortTriggering.applyTriggerChanges(data, sortOutput.getDynamicSorter(), result.render.getPosition(), this.cameraPosition);
             }
 
-            var job = result.render.getTaskCancellationToken();
-
-            // clear the cancellation token (thereby marking the section as not having an
-            // active task) if this job is the most recent submitted job for this section
+            // clear the running job if this job is the most recent submitted job for this section
             if (job != null && result.submitTime >= result.render.getLastSubmittedFrame()) {
-                result.render.setTaskCancellationToken(null);
+                result.render.setRunningJob(null);
             }
 
             result.render.setLastUploadFrame(result.submitTime);
@@ -511,19 +564,13 @@ public class RenderSectionManager {
             // an estimator is used estimate task duration and limit the execution time to the available worker capacity.
             // separately, tasks are limited by their estimated upload size and duration.
             var uploadBudget = new LimitedResourceBudget(
-                    Math.max((long)(this.averageFrameDuration * FRAME_DURATION_UPLOAD_FRACTION), MIN_UPLOAD_DURATION_BUDGET),
+                    Math.max((long) (this.averageFrameDuration * FRAME_DURATION_UPLOAD_FRACTION), MIN_UPLOAD_DURATION_BUDGET),
                     this.regions.getStagingBuffer().getUploadSizeLimit(this.averageFrameDuration));
 
             var nextFrameBlockingCollector = new ChunkJobCollector(this.buildResults::add);
             var deferredCollector = new ChunkJobCollector(remainingDuration, this.buildResults::add);
 
-            // if zero frame delay is allowed, submit important sorts with the current frame blocking collector.
-            // otherwise submit with the collector that the next frame is blocking on.
-            if (this.sortBehavior.getDeferMode() == DeferMode.ZERO_FRAMES) {
-                this.submitSectionTasks(thisFrameBlockingCollector, nextFrameBlockingCollector, deferredCollector, uploadBudget);
-            } else {
-                this.submitSectionTasks(nextFrameBlockingCollector, nextFrameBlockingCollector, deferredCollector, uploadBudget);
-            }
+            this.submitSectionTasks(thisFrameBlockingCollector, nextFrameBlockingCollector, deferredCollector, uploadBudget);
 
             this.thisFrameBlockingTasks = thisFrameBlockingCollector.getSubmittedTaskCount();
             this.nextFrameBlockingTasks = nextFrameBlockingCollector.getSubmittedTaskCount();
@@ -562,12 +609,12 @@ public class RenderSectionManager {
             // sections for which there's a currently running task.
             var pendingUpdate = section.getPendingUpdate();
             if (pendingUpdate != 0) {
-                submitSectionTask(collector, section, pendingUpdate, uploadBudget);
+                submitSectionTask(collector, section, pendingUpdate, uploadBudget, queueType == TaskQueueType.ZERO_FRAME_DEFER);
             }
         }
     }
 
-    private void submitSectionTask(ChunkJobCollector collector, @NotNull RenderSection section, int type, UploadResourceBudget uploadBudget) {
+    private void submitSectionTask(ChunkJobCollector collector, @NotNull RenderSection section, int type, UploadResourceBudget uploadBudget, boolean blocking) {
         if (section.isDisposed()) {
             return;
         }
@@ -595,7 +642,7 @@ public class RenderSectionManager {
                         BuiltSectionInfo.EMPTY, Collections.emptyMap()));
                 this.buildResults.add(result);
 
-                section.setTaskCancellationToken(null);
+                section.setRunningJob(null);
             }
         } else { // implies it's a type of sort task
             task = this.createSortTask(section, this.frame);
@@ -609,13 +656,13 @@ public class RenderSectionManager {
         }
 
         if (task != null) {
-            var job = this.builder.scheduleTask(task, ChunkUpdateTypes.isImportant(type), collector::onJobFinished);
+            var job = this.builder.scheduleTask(task, ChunkUpdateTypes.isImportant(type), collector::onJobFinished, blocking);
             collector.addSubmittedJob(job);
 
             // consume upload budget in size and duration using estimates
             uploadBudget.consume(job.getEstimatedUploadDuration(), job.getEstimatedSize());
 
-            section.setTaskCancellationToken(job);
+            section.setRunningJob(job);
         }
 
         section.setLastSubmittedFrame(this.frame);

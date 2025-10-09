@@ -24,4 +24,5 @@ public interface RenderDevice {
     DeviceFunctions getDeviceFunctions();
 
     int getSubTexelPrecisionBits();
+    int getMaxTextureLodBias();
 }

@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public class UploadDurationEstimator extends ExpDecayLinear2DEstimator<Void> {
-    public static final float NEW_DATA_RATIO = 0.05f;
+    public static final double NEW_DATA_RATIO = 0.05;
     public static final int INITIAL_SAMPLE_TARGET = 100;
     public static final int MIN_BATCH_SIZE = 100;
     private static final long INITIAL_UPLOAD_TIME_ESTIMATE = 100_000L; // 100µs

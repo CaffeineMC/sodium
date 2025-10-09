@@ -178,7 +178,7 @@ public final class EncodingFormat {
     }
 
     static ModelQuadFacing normalFace(int bits) {
-        return ModelQuadFacing.values()[(bits & NORMAL_FACE_MASK) >>> NORMAL_FACE_BIT_OFFSET];
+        return ModelQuadFacing.VALUES[(bits & NORMAL_FACE_MASK) >>> NORMAL_FACE_BIT_OFFSET];
     }
 
     static int normalFace(int bits, ModelQuadFacing face) {
