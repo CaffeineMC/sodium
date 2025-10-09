@@ -59,7 +59,7 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
         int boxY = (parentDimensions.height() / 2) - (height / 2);
 
         graphics.fill(boxX, boxY, boxX + width, boxY + height, 0xFF171717);
-        graphics.submitOutline(boxX, boxY, width, height, 0xFF121212);
+        graphics.renderOutline(boxX, boxY, width, height, 0xFF121212);
 
 
         int padding = 5;

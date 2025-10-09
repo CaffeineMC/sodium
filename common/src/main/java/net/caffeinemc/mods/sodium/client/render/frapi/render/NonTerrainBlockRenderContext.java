@@ -114,7 +114,6 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
     private RenderType toRenderLayer(ChunkSectionLayer defaultRenderType) {
         return switch (defaultRenderType) {
             case SOLID -> RenderType.solid();
-            case CUTOUT_MIPPED -> RenderType.cutoutMipped();
             case CUTOUT -> RenderType.cutout();
             case TRANSLUCENT -> RenderType.translucentMovingBlock();
             case TRIPWIRE -> RenderType.tripwire();

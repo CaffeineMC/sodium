@@ -52,6 +52,18 @@ public interface ControlValueFormatter {
         };
     }
 
+    static ControlValueFormatter weatherRadius() {
+        return (v) -> {
+            if (v < 0 || v > 10) {
+                return Component.translatable("parsing.int.invalid", v);
+            } else if (v == 0) {
+                return Component.translatable("gui.none");
+            } else {
+                return Component.translatable("sodium.options.weather_radius.value", v);
+            }
+        };
+    }
+
     Component format(int value);
 
     static ControlValueFormatter translateVariable(String key) {

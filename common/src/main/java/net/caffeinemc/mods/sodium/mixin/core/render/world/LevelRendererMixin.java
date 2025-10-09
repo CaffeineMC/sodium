@@ -173,9 +173,9 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         var viewport = ((ViewportProvider) frustum).sodium$createViewport();
         var updateChunksImmediately = FlawlessFrames.isActive();
 
-        int sectionX = SectionPos.posToSectionCoord(camera.getPosition().x());
-        int sectionY = SectionPos.posToSectionCoord(camera.getPosition().y());
-        int sectionZ = SectionPos.posToSectionCoord(camera.getPosition().z());
+        int sectionX = SectionPos.posToSectionCoord(camera.position().x());
+        int sectionY = SectionPos.posToSectionCoord(camera.position().y());
+        int sectionZ = SectionPos.posToSectionCoord(camera.position().z());
 
         if (this.lastCameraSectionX != sectionX || this.lastCameraSectionY != sectionY || this.lastCameraSectionZ != sectionZ) {
             this.lastCameraSectionX = sectionX;

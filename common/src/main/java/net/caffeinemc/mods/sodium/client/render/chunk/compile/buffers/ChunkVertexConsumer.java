@@ -115,6 +115,11 @@ public class ChunkVertexConsumer implements VertexConsumer {
         return potentiallyEndVertex();
     }
 
+    @Override
+    public VertexConsumer setLineWidth(float f) {
+        return potentiallyEndVertex();
+    }
+
     public VertexConsumer potentiallyEndVertex() {
         if (this.writtenAttributes != REQUIRED_ATTRIBUTES) {
             return this;

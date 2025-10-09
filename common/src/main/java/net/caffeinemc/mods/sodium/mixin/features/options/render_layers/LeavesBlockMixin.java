@@ -18,7 +18,7 @@ public class LeavesBlockMixin extends Block {
 
     @Override
     public boolean skipRendering(BlockState state, BlockState stateFrom, Direction direction) {
-        if (SodiumClientMod.options().quality.leavesQuality.isFancy(Minecraft.getInstance().options.graphicsMode().get())) {
+        if (Minecraft.getInstance().options.cutoutLeaves().get()) {
             return super.skipRendering(state, stateFrom, direction);
         } else {
             return stateFrom.getBlock() instanceof LeavesBlock || super.skipRendering(state, stateFrom, direction);

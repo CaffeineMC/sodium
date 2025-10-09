@@ -8,7 +8,6 @@ import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.client.util.FileUtil;
-import net.minecraft.client.GraphicsStatus;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +21,6 @@ import java.nio.file.Path;
 public class SodiumGameOptions {
     private static final String DEFAULT_FILE_NAME = "sodium-options.json";
 
-    public final QualitySettings quality = new QualitySettings();
     public final AdvancedSettings advanced = new AdvancedSettings();
     public final PerformanceSettings performance = new PerformanceSettings();
     public final NotificationSettings notifications = new NotificationSettings();
@@ -62,58 +60,9 @@ public class SodiumGameOptions {
         public boolean terrainSortingEnabled = true;
     }
 
-    public static class QualitySettings {
-        public WeatherQuality weatherQuality = WeatherQuality.DEFAULT;
-        public LeavesQuality leavesQuality = LeavesQuality.DEFAULT;
-
-        public boolean enableVignette = true;
-    }
-
     public static class NotificationSettings {
         public boolean hasClearedDonationButton = false;
         public boolean hasSeenDonationPrompt = false;
-    }
-
-    public enum WeatherQuality implements TextProvider {
-        DEFAULT("options.gamma.default"),
-        FANCY("sodium.options.weather_quality.fancy"),
-        FAST("sodium.options.weather_quality.fast");
-
-        private final Component name;
-
-        WeatherQuality(String name) {
-            this.name = Component.translatable(name);
-        }
-
-        @Override
-        public Component getLocalizedName() {
-            return this.name;
-        }
-
-        public boolean isFancy(GraphicsStatus graphicsMode) {
-            return (this == FANCY) || (this == DEFAULT && (graphicsMode == GraphicsStatus.FANCY || graphicsMode == GraphicsStatus.FABULOUS));
-        }
-    }
-
-    public enum LeavesQuality implements TextProvider {
-        DEFAULT("options.gamma.default"),
-        FANCY("sodium.options.leaves_quality.fancy"),
-        FAST("sodium.options.leaves_quality.fast");
-
-        private final Component name;
-
-        LeavesQuality(String name) {
-            this.name = Component.translatable(name);
-        }
-
-        @Override
-        public Component getLocalizedName() {
-            return this.name;
-        }
-
-        public boolean isFancy(GraphicsStatus graphicsMode) {
-            return (this == FANCY) || (this == DEFAULT && (graphicsMode == GraphicsStatus.FANCY || graphicsMode == GraphicsStatus.FABULOUS));
-        }
     }
 
     private static final Gson GSON = new GsonBuilder()

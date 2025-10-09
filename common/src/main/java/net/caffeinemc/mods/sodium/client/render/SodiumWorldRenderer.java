@@ -193,10 +193,10 @@ public class SodiumWorldRenderer {
             throw new IllegalStateException("Client instance has no active player entity");
         }
 
-        Vec3 posRaw = camera.getPosition();
+        Vec3 posRaw = camera.position();
         Vector3d pos = new Vector3d(posRaw.x(), posRaw.y(), posRaw.z());
-        float pitch = camera.getXRot();
-        float yaw = camera.getYRot();
+        float pitch = camera.xRot();
+        float yaw = camera.yRot();
 
         if (this.lastCameraPos == null) {
             this.lastCameraPos = pos;

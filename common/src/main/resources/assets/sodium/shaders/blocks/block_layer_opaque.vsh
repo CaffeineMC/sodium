@@ -8,7 +8,6 @@
 out vec4 v_Color;
 out vec2 v_TexCoord;
 
-out float v_MaterialMipBias;
 #ifdef USE_FRAGMENT_DISCARD
 out float v_MaterialAlphaCutoff;
 #endif
@@ -48,8 +47,6 @@ void main() {
     // Add the light color to the vertex color, and pass the texture coordinates to the fragment shader
     v_Color = _vert_color * texture(u_LightTex, _vert_tex_light_coord);
     v_TexCoord = (_vert_tex_diffuse_coord_bias * u_TexCoordShrink) + _vert_tex_diffuse_coord; // FMA for precision
-
-    v_MaterialMipBias = _material_mip_bias(_material_params);
 #ifdef USE_FRAGMENT_DISCARD
     v_MaterialAlphaCutoff = _material_alpha_cutoff(_material_params);
 #endif

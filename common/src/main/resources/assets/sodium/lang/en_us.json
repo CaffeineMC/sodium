@@ -31,6 +31,7 @@
   "sodium.options.particle_quality.tooltip": "Controls the maximum number of particles which can be present on screen at any one time.",
   "sodium.options.smooth_lighting.tooltip": "Enables the smooth lighting and shading of blocks in the world. This can very slightly increase the amount of time it takes to load or update a chunk, but it doesn't affect frame rates.",
   "sodium.options.biome_blend.value": "%sx%s blocks",
+  "sodium.options.weather_radius.value": "%s blocks",
   "sodium.options.biome_blend.tooltip": "The area (in blocks) where biome colors are smoothly blended across. Default is 5x5. Higher values will greatly increase the amount of time it takes to load or update chunks, for diminishing improvements in quality.",
   "sodium.options.entity_distance.tooltip": "The render distance multiplier used by entity rendering. Smaller values decrease, and larger values increase, the maximum distance at which entities will be rendered.",
   "sodium.options.entity_shadows.tooltip": "If enabled, basic shadows will be rendered beneath mobs and other entities.",

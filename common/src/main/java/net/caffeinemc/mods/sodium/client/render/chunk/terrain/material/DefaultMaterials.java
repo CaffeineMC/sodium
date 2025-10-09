@@ -10,8 +10,7 @@ import net.minecraft.world.level.material.FluidState;
 
 public class DefaultMaterials {
     public static final Material SOLID = new Material(DefaultTerrainRenderPasses.SOLID, AlphaCutoffParameter.ZERO, true);
-    public static final Material CUTOUT = new Material(DefaultTerrainRenderPasses.CUTOUT, AlphaCutoffParameter.ONE_TENTH, false);
-    public static final Material CUTOUT_MIPPED = new Material(DefaultTerrainRenderPasses.CUTOUT, AlphaCutoffParameter.HALF, true);
+    public static final Material CUTOUT = new Material(DefaultTerrainRenderPasses.CUTOUT, AlphaCutoffParameter.HALF, true);
     public static final Material TRANSLUCENT = new Material(DefaultTerrainRenderPasses.TRANSLUCENT, AlphaCutoffParameter.ZERO, true);
     public static final Material TRIPWIRE = new Material(DefaultTerrainRenderPasses.TRANSLUCENT, AlphaCutoffParameter.ONE_TENTH, true);
 
@@ -28,8 +27,6 @@ public class DefaultMaterials {
             return SOLID;
         } else if (layer == RenderType.cutout()) {
             return CUTOUT;
-        } else if (layer == RenderType.cutoutMipped()) {
-            return CUTOUT_MIPPED;
         } else if (layer == RenderType.tripwire()) {
             return TRIPWIRE;
         } else if (layer == RenderType.translucentMovingBlock()) {
@@ -42,7 +39,6 @@ public class DefaultMaterials {
     public static Material forChunkLayer(ChunkSectionLayer layer) {
         return switch (layer) {
             case SOLID -> SOLID;
-            case CUTOUT_MIPPED -> CUTOUT_MIPPED;
             case CUTOUT -> CUTOUT;
             case TRANSLUCENT -> TRANSLUCENT;
             case TRIPWIRE -> TRIPWIRE;

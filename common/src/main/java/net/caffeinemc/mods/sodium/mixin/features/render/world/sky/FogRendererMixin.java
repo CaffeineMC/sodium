@@ -16,10 +16,11 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(AirBasedFogEnvironment.class)
 public class FogRendererMixin {
-    @Redirect(method = "getBaseColor", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/CubicSampler;gaussianSampleVec3(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/util/CubicSampler$Vec3Fetcher;)Lnet/minecraft/world/phys/Vec3;"))
+    // TODO: 1.21.11/25w41a
+    /*@Redirect(method = "getBaseColor", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/CubicSampler;gaussianSampleVec3(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/util/CubicSampler$Vec3Fetcher;)Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 redirectSampleColor(Vec3 pos, CubicSampler.Vec3Fetcher vec3Fetcher, @Local BiomeManager biomeManager) {
         return FastCubicSampler.sampleColor(pos,
                 (i, j, k) -> biomeManager.getNoiseBiomeAtQuart(i, j, k).value().getFogColor(),
                 (v) -> v);
-    }
+    }*/
 }

@@ -98,6 +98,6 @@ public class SpriteContentsInterpolationMixin {
             }
         }
 
-        ((SpriteContentsInvoker) this.parent).invokeUpload(x, y, 0, 0, this.activeFrame, gpuTexture);
+        ((SpriteContentsInvoker) this.parent).invokeUpload(x, y, 0, 0, this.activeFrame, gpuTexture, 2);
     }
 }

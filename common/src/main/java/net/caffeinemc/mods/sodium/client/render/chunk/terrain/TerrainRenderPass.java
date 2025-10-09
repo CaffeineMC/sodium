@@ -14,10 +14,10 @@ public class TerrainRenderPass {
     private final boolean isTranslucent;
     private final boolean fragmentDiscard;
 
-    public TerrainRenderPass(ChunkSectionLayer renderType, boolean isTranslucent, boolean allowFragmentDiscard) {
+    public TerrainRenderPass(ChunkSectionLayer renderType, boolean allowFragmentDiscard) {
         this.renderType = renderType;
 
-        this.isTranslucent = isTranslucent;
+        this.isTranslucent = renderType.sortOnUpload();
         this.fragmentDiscard = allowFragmentDiscard;
     }
 
@@ -38,6 +38,6 @@ public class TerrainRenderPass {
     }
 
     public GpuTextureView getAtlas() {
-        return renderType.textureView();
+        return renderType.texture().getTextureView();
     }
 }

@@ -39,6 +39,22 @@ public class SodiumGameOptionPages {
         List<OptionGroup> groups = new ArrayList<>();
 
         groups.add(OptionGroup.createBuilder()
+                .add(OptionImpl.createBuilder(GraphicsPreset.class, vanillaOpts)
+                        .setName(Component.translatable("options.graphics.preset"))
+                        .setTooltip(Component.translatable("options.graphics.preset.tooltip"))
+                        .setControl(option -> {
+                            GraphicsPreset[] allowedValues = GraphicsPreset.values();
+                            return new CyclingControl<>(option, allowedValues, new Component[] { Component.translatable("options.graphics.fast"), Component.translatable("options.graphics.fancy"), Component.translatable("options.graphics.fabulous"), Component.translatable("options.graphics.custom") });
+                        })
+                        .setBinding(
+                                Options::applyGraphicsPreset,
+                                opts -> opts.graphicsPreset().get())
+                        .setImpact(OptionImpact.HIGH)
+                        .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
+                        .build())
+                .build());
+
+        groups.add(OptionGroup.createBuilder()
                 .add(OptionImpl.createBuilder(int.class, vanillaOpts)
                         .setName(Component.translatable("options.renderDistance"))
                         .setTooltip(Component.translatable("sodium.options.view_distance.tooltip"))
@@ -159,25 +175,22 @@ public class SodiumGameOptionPages {
         List<OptionGroup> groups = new ArrayList<>();
 
         groups.add(OptionGroup.createBuilder()
-                .add(OptionImpl.createBuilder(GraphicsStatus.class, vanillaOpts)
-                        .setName(Component.translatable("options.graphics"))
-                        .setTooltip(Component.translatable("sodium.options.graphics_quality.tooltip"))
-                        .setControl(option -> {
-                            GraphicsStatus[] allowedValues = GraphicsStatus.values();
-                            if (Minecraft.getInstance().isRunning() && Minecraft.getInstance().getGpuWarnlistManager().isSkippingFabulous()) {
-                                allowedValues = new GraphicsStatus[] { GraphicsStatus.FAST, GraphicsStatus.FANCY };
-                            }
-                            return new CyclingControl<>(option, allowedValues, new Component[] { Component.translatable("options.graphics.fast"), Component.translatable("options.graphics.fancy"), Component.translatable("options.graphics.fabulous") });
-                        })
-                        .setBinding(
-                                (opts, value) -> opts.graphicsMode().set(value),
-                                opts -> opts.graphicsMode().get())
-                        .setImpact(OptionImpact.HIGH)
-                        .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
-                        .build())
-                .build());
+                .add(OptionImpl.createBuilder(boolean.class, vanillaOpts)
+                        .setName(Component.translatable("options.improvedTransparency"))
+                        .setTooltip(Component.translatable("options.improvedTransparency.tooltip"))
+                        .setControl(option -> new TickBoxControl(option))
+                        .setBinding((opts, value) -> {
+                            opts.improvedTransparency().set(value);
 
-        groups.add(OptionGroup.createBuilder()
+                            if (Minecraft.useShaderTransparency()) {
+                                RenderTarget framebuffer = Minecraft.getInstance().levelRenderer.getCloudsTarget();
+                                if (framebuffer != null) {
+                                    RenderSystem.getDevice().createCommandEncoder().clearColorAndDepthTextures(framebuffer.getColorTexture(), 0xFFFFFFFF, framebuffer.getDepthTexture(), 1.0f);
+                                }
+                            }
+                        }, opts -> opts.improvedTransparency().get())
+                        .setImpact(OptionImpact.HIGH)
+                        .build())
                 .add(OptionImpl.createBuilder(CloudStatus.class, vanillaOpts)
                         .setName(Component.translatable("options.renderClouds"))
                         .setTooltip(Component.translatable("sodium.options.clouds_quality.tooltip"))
@@ -205,18 +218,18 @@ public class SodiumGameOptionPages {
                         }, opts -> opts.cloudRange().get())
                         .setImpact(OptionImpact.LOW)
                         .build())
-                .add(OptionImpl.createBuilder(SodiumGameOptions.WeatherQuality.class, sodiumOpts)
-                        .setName(Component.translatable("soundCategory.weather"))
-                        .setTooltip(Component.translatable("sodium.options.weather_quality.tooltip"))
-                        .setControl(option -> new CyclingControl<>(option, SodiumGameOptions.WeatherQuality.class))
-                        .setBinding((opts, value) -> opts.quality.weatherQuality = value, opts -> opts.quality.weatherQuality)
+                .add(OptionImpl.createBuilder(int.class, vanillaOpts)
+                        .setName(Component.translatable("options.weatherRadius"))
+                        .setTooltip(Component.translatable("options.weatherRadius.tooltip"))
+                        .setControl(option -> new SliderControl(option, 0, 10, 1, ControlValueFormatter.weatherRadius()))
+                        .setBinding((opts, value) -> opts.weatherRadius().set(value), opts -> opts.weatherRadius().get())
                         .setImpact(OptionImpact.MEDIUM)
                         .build())
-                .add(OptionImpl.createBuilder(SodiumGameOptions.LeavesQuality.class, sodiumOpts)
-                        .setName(Component.translatable("sodium.options.leaves_quality.name"))
-                        .setTooltip(Component.translatable("sodium.options.leaves_quality.tooltip"))
-                        .setControl(option -> new CyclingControl<>(option, SodiumGameOptions.LeavesQuality.class))
-                        .setBinding((opts, value) -> opts.quality.leavesQuality = value, opts -> opts.quality.leavesQuality)
+                .add(OptionImpl.createBuilder(boolean.class, vanillaOpts)
+                        .setName(Component.translatable("options.cutoutLeaves"))
+                        .setTooltip(Component.translatable("options.cutoutLeaves.tooltip"))
+                        .setControl(TickBoxControl::new)
+                        .setBinding((opts, value) -> opts.cutoutLeaves().set(value), opts -> opts.cutoutLeaves().get())
                         .setImpact(OptionImpact.MEDIUM)
                         .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                         .build())
@@ -258,11 +271,11 @@ public class SodiumGameOptionPages {
                         .setBinding((opts, value) -> opts.entityShadows().set(value), opts -> opts.entityShadows().get())
                         .setImpact(OptionImpact.MEDIUM)
                         .build())
-                .add(OptionImpl.createBuilder(boolean.class, sodiumOpts)
+                .add(OptionImpl.createBuilder(boolean.class, vanillaOpts)
                         .setName(Component.translatable("sodium.options.vignette.name"))
-                        .setTooltip(Component.translatable("sodium.options.vignette.tooltip"))
+                        .setTooltip(Component.translatable("options.vignette.tooltip"))
                         .setControl(TickBoxControl::new)
-                        .setBinding((opts, value) -> opts.quality.enableVignette = value, opts -> opts.quality.enableVignette)
+                        .setBinding((opts, value) -> opts.vignette().set(value), opts -> opts.vignette().get())
                         .build())
                 .build());
 

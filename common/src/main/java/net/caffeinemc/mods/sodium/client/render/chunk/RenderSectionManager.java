@@ -219,7 +219,7 @@ public class RenderSectionManager {
 
     private boolean shouldUseOcclusionCulling(Camera camera, boolean spectator) {
         final boolean useOcclusionCulling;
-        BlockPos origin = camera.getBlockPosition();
+        BlockPos origin = camera.blockPosition();
 
         if (spectator && this.level.getBlockState(origin)
                 .isSolidRender()) {
