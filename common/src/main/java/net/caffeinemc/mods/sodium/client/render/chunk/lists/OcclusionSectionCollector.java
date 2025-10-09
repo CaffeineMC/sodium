@@ -7,8 +7,8 @@ import net.caffeinemc.mods.sodium.client.render.chunk.TaskQueueType;
  * collect the visible chunks.
  */
 public class OcclusionSectionCollector extends SectionCollector {
-    public OcclusionSectionCollector(int frame, TaskQueueType importantRebuildQueueType) {
-        super(frame, importantRebuildQueueType);
+    public OcclusionSectionCollector(int frame, TaskQueueType importantRebuildQueueType, TaskQueueType importantSortQueueType) {
+        super(frame, importantRebuildQueueType, importantSortQueueType);
     }
 
     @Override
