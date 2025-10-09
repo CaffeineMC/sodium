@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class JobDurationEstimator extends ExpDecayLinear2DEstimator<Class<?>> {
     public static final int INITIAL_SAMPLE_TARGET = 100;
-    public static final float NEW_DATA_RATIO = 0.05f;
+    public static final double NEW_DATA_RATIO = 0.05;
     private static final int MIN_BATCH_SIZE = 40;
     private static final long INITIAL_JOB_DURATION_ESTIMATE = 5_000_000L; // 5ms
 

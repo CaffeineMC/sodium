@@ -36,8 +36,8 @@ public abstract class Abstract2DLinearEstimator<
 
     protected abstract static class LinearFunction<C, TBatch extends DataBatch<DataPair<C>>> implements Model<Long, Long, TBatch> {
         protected final long initialOutput;
-        protected float yIntercept;
-        protected float slope;
+        protected double yIntercept;
+        protected double slope;
         protected int gatheredSamples = 0;
 
         public LinearFunction(long initialOutput) {
