@@ -383,7 +383,8 @@ public class RenderSectionManager {
     }
 
     private boolean sectionVisible(RenderSection section) {
-        return section.getLastVisibleFrame() == this.lastUpdatedFrame;
+        // unloaded sections are considered visible as to not be an impossible requirement for immediate presentation
+        return section == null || section.getLastVisibleFrame() == this.lastUpdatedFrame;
     }
 
     private boolean isSectionImmediatePresentationCandidate(RenderSection section) {
