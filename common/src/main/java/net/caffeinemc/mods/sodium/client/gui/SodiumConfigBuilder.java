@@ -357,14 +357,15 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setName(Component.translatable("options.fullscreen.resolution"))
                                 .setTooltip(Component.translatable("sodium.options.fullscreen_resolution.tooltip"))
                                 .setValueFormatter(ControlValueFormatterImpls.resolution())
-                                .setRange(0, this.monitor != null ? this.monitor.getModeCount() : 0, 1)
+                                // the max value of 1 when the monitor is not available prevents an exception from being thrown
+                                .setRange(0, this.monitor != null ? this.monitor.getModeCount() : 1, 1)
                                 .setDefaultValue(0)
                                 .setBinding(value -> {
-                                    if (null != this.monitor) {
+                                    if (this.monitor != null) {
                                         this.window.setPreferredFullscreenVideoMode(0 == value ? Optional.empty() : Optional.of(this.monitor.getMode(value - 1)));
                                     }
                                 }, () -> {
-                                    if (null == this.monitor) {
+                                    if (this.monitor == null) {
                                         return 0;
                                     } else {
                                         Optional<VideoMode> optional = this.window.getPreferredFullscreenVideoMode();
