@@ -10,7 +10,7 @@ import net.caffeinemc.mods.sodium.client.world.SodiumAuxiliaryLightManager;
 import net.caffeinemc.mods.sodium.fabric.render.FluidRendererImpl;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;

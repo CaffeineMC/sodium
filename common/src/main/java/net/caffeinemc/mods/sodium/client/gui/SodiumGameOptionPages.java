@@ -277,6 +277,13 @@ public class SodiumGameOptionPages {
                         .setControl(TickBoxControl::new)
                         .setBinding((opts, value) -> opts.vignette().set(value), opts -> opts.vignette().get())
                         .build())
+                .add(OptionImpl.createBuilder(int.class, vanillaOpts)
+                        .setName(Component.translatable("options.chunkFade"))
+                        .setTooltip(Component.translatable("options.chunkFade.tooltip"))
+                        .setControl(option -> new SliderControl(option, 0, 2000, 50, ControlValueFormatter.chunkFade()))
+                        .setBinding((opts, value) -> opts.chunkSectionFadeInTime().set(value / 1000.0), opts -> Math.round(opts.chunkSectionFadeInTime().get().floatValue() * 1000.0F))
+                        .setImpact(OptionImpact.LOW)
+                        .build())
                 .build());
 
 
@@ -287,6 +294,14 @@ public class SodiumGameOptionPages {
                         .setControl(option -> new SliderControl(option, 0, 4, 1, ControlValueFormatter.multiplier()))
                         .setBinding((opts, value) -> opts.mipmapLevels().set(value), opts -> opts.mipmapLevels().get())
                         .setImpact(OptionImpact.MEDIUM)
+                        .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
+                        .build())
+                .add(OptionImpl.createBuilder(int.class, vanillaOpts)
+                        .setName(Component.translatable("options.maxAnisotropy"))
+                        .setTooltip(Component.translatable("options.maxAnisotropy.tooltip"))
+                        .setControl(option -> new SliderControl(option, 0, 3, 1, ControlValueFormatter.anisotropy()))
+                        .setBinding((opts, value) -> opts.maxAnisotropyBit().set(value), opts -> opts.maxAnisotropyBit().get())
+                        .setImpact(OptionImpact.HIGH)
                         .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                         .build())
                 .build());

@@ -3,7 +3,7 @@ package net.caffeinemc.mods.sodium.mixin.features.textures.animations.tracking;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;

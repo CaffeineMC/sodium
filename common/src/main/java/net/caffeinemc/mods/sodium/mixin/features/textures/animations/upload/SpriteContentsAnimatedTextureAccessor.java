@@ -8,9 +8,5 @@ import net.minecraft.client.renderer.texture.SpriteContents;
 
 @Mixin(SpriteContents.AnimatedTexture.class)
 public interface SpriteContentsAnimatedTextureAccessor {
-    @Accessor
-    List<SpriteContents.FrameInfo> getFrames();
 
-    @Accessor
-    int getFrameRowSize();
 }

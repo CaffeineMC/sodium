@@ -14,12 +14,20 @@ out float v_MaterialAlphaCutoff;
 
 #ifdef USE_FOG
 out vec2 v_FragDistance;
+out float fadeFactor;
 #endif
 
 uniform vec3 u_RegionOffset;
 uniform vec2 u_TexCoordShrink;
 
 uniform sampler2D u_LightTex; // The light map texture sampler
+
+uniform int u_CurrentTime;
+uniform int u_FadePeriod;
+
+layout(std140) uniform ChunkData {
+    ivec4 u_chunkFades[64]; // Packing into ivec4 is needed to avoid wasting 3KB...
+};
 
 uvec3 _get_relative_chunk_coord(uint pos) {
     // Packing scheme is defined by LocalSectionIndex
@@ -39,6 +47,11 @@ void main() {
 
 #ifdef USE_FOG
     v_FragDistance = getFragDistance(position);
+
+    int chunkId = int(_draw_id);
+    int fadeTime = u_CurrentTime - u_chunkFades[chunkId >> 2][chunkId & 3];
+    float elapsed = float(fadeTime);
+    fadeFactor = clamp(elapsed / float(u_FadePeriod), 0.0, 1.0);
 #endif
 
     // Transform the vertex position into model-view-projection space

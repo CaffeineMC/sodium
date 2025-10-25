@@ -5,8 +5,7 @@ import net.caffeinemc.mods.sodium.client.util.color.FastCubicSampler;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.fog.FogRenderer;
-import net.minecraft.client.renderer.fog.environment.AirBasedFogEnvironment;
-import net.minecraft.util.CubicSampler;
+import net.minecraft.client.renderer.fog.environment.AtmosphericFogEnvironment;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.phys.Vec3;
@@ -14,7 +13,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(AirBasedFogEnvironment.class)
+@Mixin(AtmosphericFogEnvironment.class)
 public class FogRendererMixin {
     // TODO: 1.21.11/25w41a
     /*@Redirect(method = "getBaseColor", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/CubicSampler;gaussianSampleVec3(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/util/CubicSampler$Vec3Fetcher;)Lnet/minecraft/world/phys/Vec3;"))

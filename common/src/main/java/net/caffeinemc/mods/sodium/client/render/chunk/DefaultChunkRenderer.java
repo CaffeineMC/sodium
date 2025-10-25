@@ -1,6 +1,8 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
+import com.mojang.blaze3d.textures.GpuSampler;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
+import net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.DrawCommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.MultiDrawBatch;
@@ -43,13 +45,14 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
      */
     @Override
     public void render(ChunkRenderMatrices matrices,
+                       GpuSampler sampler,
                        CommandList commandList,
                        ChunkRenderListIterable renderLists,
                        TerrainRenderPass renderPass,
                        CameraTransform camera,
                        FogParameters parameters,
                        boolean indexedRenderingEnabled) {
-        super.begin(renderPass, parameters);
+        super.begin(renderPass, sampler, parameters);
 
         final boolean useBlockFaceCulling = SodiumClientMod.options().performance.useBlockFaceCulling;
         final boolean useIndexedTessellation = renderPass.isTranslucent() && indexedRenderingEnabled;
@@ -93,7 +96,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                 tessellation = this.prepareTessellation(commandList, region);
             }
 
-            setModelMatrixUniforms(shader, region, camera);
+            setRegionUniforms(shader, region, camera, region.getResources().prepareChunkData(commandList));
             executeDrawBatch(commandList, tessellation, batch);
         }
 
@@ -304,12 +307,13 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         return planes;
     }
 
-    private static void setModelMatrixUniforms(ChunkShaderInterface shader, RenderRegion region, CameraTransform camera) {
+    private static void setRegionUniforms(ChunkShaderInterface shader, RenderRegion region, CameraTransform camera, GlBuffer data) {
         float x = getCameraTranslation(region.getOriginX(), camera.intX, camera.fracX);
         float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
         float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
 
         shader.setRegionOffset(x, y, z);
+        shader.setChunkData(data, Math.toIntExact(System.currentTimeMillis() - region.getCreationTime()));
     }
 
     private static float getCameraTranslation(int chunkBlockPos, int cameraBlockPos, float cameraPos) {

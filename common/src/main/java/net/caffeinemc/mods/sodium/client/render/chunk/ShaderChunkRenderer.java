@@ -6,6 +6,7 @@ import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTexture;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuSampler;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.caffeinemc.mods.sodium.client.gl.attribute.GlVertexFormat;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
@@ -84,7 +85,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         return builder.build();
     }
 
-    protected void begin(TerrainRenderPass pass, FogParameters parameters) {
+    protected void begin(TerrainRenderPass pass, GpuSampler sampler, FogParameters parameters) {
         RenderTarget target = pass.getTarget();
 
         GlStateManager._viewport(0, 0, target.getColorTexture().getWidth(0), target.getColorTexture().getHeight(0));
@@ -97,7 +98,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         this.activeProgram = this.compileProgram(options);
         this.activeProgram.bind();
         this.activeProgram.getInterface()
-                .setupState(pass, parameters);
+                .setupState(pass, sampler, parameters);
     }
 
     protected void end(TerrainRenderPass pass) {

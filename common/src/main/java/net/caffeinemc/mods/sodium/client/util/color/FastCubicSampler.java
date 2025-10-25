@@ -1,8 +1,11 @@
 package net.caffeinemc.mods.sodium.client.util.color;
 
 import java.util.function.Function;
+
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
 
 public class FastCubicSampler {
     private static final double[] DENSITY_CURVE = new double[] { 0.0D, 1.0D, 4.0D, 6.0D, 4.0D, 1.0D, 0.0D };
@@ -32,7 +35,7 @@ public class FastCubicSampler {
         // Fast path! Skip blending the colors if all inputs are the same
         if (isHomogenousArray(values)) {
             // Take the first color if it's homogenous (all elements are the same...)
-            return transformer.apply(Vec3.fromRGB24(values[0]));
+            return transformer.apply(vector3FromRGB24(values[0]));
         }
 
         double deltaX = pos.x() - (double)intX;
@@ -54,7 +57,7 @@ public class FastCubicSampler {
                     double factor = densityX * densityY * densityZ;
                     totalFactor += factor;
 
-                    Vec3 color = transformer.apply(Vec3.fromRGB24(values[index(x, y, z)]));
+                    Vec3 color = transformer.apply(vector3FromRGB24(values[index(x, y, z)]));
                     sum = sum.add(color.scale(factor));
                 }
             }
@@ -63,6 +66,13 @@ public class FastCubicSampler {
         sum = sum.scale(1.0D / totalFactor);
 
         return sum;
+    }
+
+    private static Vec3 vector3FromRGB24(int i) {
+        float f = (float) ARGB.red(i) / 255.0F;
+        float g = (float)ARGB.green(i) / 255.0F;
+        float h = (float)ARGB.blue(i) / 255.0F;
+        return new Vec3(f, g, h);
     }
 
     private static int index(int x, int y, int z) {

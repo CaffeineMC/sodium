@@ -8,6 +8,4 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(SpriteContents.class)
 public interface SpriteContentsInvoker {
-    @Invoker
-    void invokeUpload(int x, int y, int unpackSkipPixels, int unpackSkipRows, NativeImage[] images, GpuTexture gpuTexture, int mipLevelsToUpload);
 }

@@ -29,7 +29,7 @@ import net.fabricmc.fabric.api.renderer.v1.render.BlockVertexConsumerProvider;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
@@ -62,12 +62,13 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
     protected void processQuad(MutableQuadViewImpl quad) {
         final ChunkSectionLayer quadRenderLayer = quad.renderLayer();
         final ChunkSectionLayer renderLayer = quadRenderLayer == null ? defaultRenderType : quadRenderLayer;
-        final VertexConsumer vertexConsumer;
+        VertexConsumer vertexConsumer = null;
 
         if (renderLayer == lastRenderLayer) {
             vertexConsumer = lastVertexConsumer;
         } else {
-            lastVertexConsumer = vertexConsumer = vertexConsumers.getBuffer(renderLayer);
+            vertexConsumer = vertexConsumers.getBuffer(renderLayer);
+            lastVertexConsumer = vertexConsumer;
             lastRenderLayer = renderLayer;
         }
 
@@ -96,15 +97,6 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
         QuadEncoder.writeQuadVertices(quad, vertexConsumer, overlay, matrices.pose(), matrices.trustedNormals, matrices.normal());
 
         SpriteUtil.INSTANCE.markSpriteActive(quad.sprite(SpriteFinderCache.forBlockAtlas()));
-    }
-
-    private RenderType toRenderLayer(ChunkSectionLayer defaultRenderType) {
-        return switch (defaultRenderType) {
-            case SOLID -> RenderType.solid();
-            case CUTOUT -> RenderType.cutout();
-            case TRANSLUCENT -> RenderType.translucentMovingBlock();
-            case TRIPWIRE -> RenderType.tripwire();
-        };
     }
 
     public void bufferModel(PoseStack.Pose entry, BlockVertexConsumerProvider vertexConsumers, BlockStateModel model, float red, float green, float blue, int light, int overlay, BlockAndTintGetter blockView, BlockPos pos, BlockState state) {

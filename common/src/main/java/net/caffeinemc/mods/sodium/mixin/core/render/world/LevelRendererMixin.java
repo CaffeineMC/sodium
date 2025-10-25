@@ -154,7 +154,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
      */
     @Overwrite
     private ChunkSectionsToRender prepareChunkRenders(Matrix4fc matrix4fc, double x, double y, double z) {
-        ChunkSectionsToRender chunkSectionsToRender = new ChunkSectionsToRender(STATIC_MAP, -1, new GpuBufferSlice[0]);
+        ChunkSectionsToRender chunkSectionsToRender = new ChunkSectionsToRender(null, STATIC_MAP, -1, new GpuBufferSlice[0]);
         ((SodiumChunkSection) (Object) chunkSectionsToRender).sodium$setRendering(renderer, matrices, x, y, z);
         return chunkSectionsToRender;
     }

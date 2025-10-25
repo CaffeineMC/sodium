@@ -6,6 +6,7 @@ import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import org.joml.Math;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -23,7 +24,7 @@ public interface VertexConsumerMixin {
      * @author JellySquid
      */
     @Overwrite
-    default VertexConsumer addVertex(Matrix4f matrix, float x, float y, float z) {
+    default VertexConsumer addVertex(Matrix4fc matrix, float x, float y, float z) {
         float xt = MatrixHelper.transformPositionX(matrix, x, y, z);
         float yt = MatrixHelper.transformPositionY(matrix, x, y, z);
         float zt = MatrixHelper.transformPositionZ(matrix, x, y, z);

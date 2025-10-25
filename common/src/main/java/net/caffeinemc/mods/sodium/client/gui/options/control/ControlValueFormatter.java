@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.client.gui.options.control;
 import com.mojang.blaze3d.platform.Monitor;
 import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
 public interface ControlValueFormatter {
@@ -62,6 +63,26 @@ public interface ControlValueFormatter {
                 return Component.translatable("sodium.options.weather_radius.value", v);
             }
         };
+    }
+
+    static ControlValueFormatter anisotropy() {
+        return (v -> {
+            if (v == 0) {
+                return Component.translatable("options.off");
+            } else {
+                return Component.literal((1 << v) + "x");
+            }
+        });
+    }
+
+    static ControlValueFormatter chunkFade() {
+        return (v -> {
+            if (v == 0) {
+                return Component.translatable("gui.none");
+            } else {
+                return Component.literal((double) v / 1000.0 + " seconds");
+            }
+        });
     }
 
     Component format(int value);

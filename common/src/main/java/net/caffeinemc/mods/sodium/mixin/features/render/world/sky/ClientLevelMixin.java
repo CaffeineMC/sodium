@@ -2,7 +2,6 @@ package net.caffeinemc.mods.sodium.mixin.features.render.world.sky;
 
 import net.caffeinemc.mods.sodium.client.util.color.FastCubicSampler;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.util.CubicSampler;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;

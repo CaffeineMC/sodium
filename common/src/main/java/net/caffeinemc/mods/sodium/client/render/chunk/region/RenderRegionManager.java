@@ -84,8 +84,16 @@ public class RenderRegionManager {
 
                     BuiltSectionMeshParts mesh = chunkBuildOutput.getMesh(pass);
 
+                    // This is before new data is loaded. If this is the first build, isBuilt should be false.
+
+                    int meshTime = -1;
+
+                    if (!result.render.isBuilt()) {
+                        meshTime = Math.toIntExact(System.currentTimeMillis() - region.getCreationTime());
+                    }
+
                     if (mesh != null) {
-                        uploads.add(new PendingSectionMeshUpload(result.render, mesh, pass,
+                        uploads.add(new PendingSectionMeshUpload(result.render, meshTime, mesh, pass,
                                 new PendingUpload(mesh.getVertexData())));
                     }
                 }
@@ -154,6 +162,9 @@ public class RenderRegionManager {
             // Collect the upload results
             for (PendingSectionMeshUpload upload : uploads) {
                 var storage = region.createStorage(upload.pass);
+                if (upload.relativeBuiltTime != -1) { // We don't want the animation to happen again on chunks changing!
+                    resources.writeMeshTimes(upload.section.getSectionIndex(), upload.relativeBuiltTime);
+                }
                 storage.setVertexData(upload.section.getSectionIndex(),
                         upload.vertexUpload.getResult(), upload.meshData.getVertexSegments());
             }
@@ -231,7 +242,7 @@ public class RenderRegionManager {
         return instance;
     }
 
-    private record PendingSectionMeshUpload(RenderSection section, BuiltSectionMeshParts meshData, TerrainRenderPass pass, PendingUpload vertexUpload) {
+    private record PendingSectionMeshUpload(RenderSection section, int relativeBuiltTime, BuiltSectionMeshParts meshData, TerrainRenderPass pass, PendingUpload vertexUpload) {
     }
 
     private record PendingSectionIndexBufferUpload(RenderSection section, PendingUpload indexBufferUpload) {

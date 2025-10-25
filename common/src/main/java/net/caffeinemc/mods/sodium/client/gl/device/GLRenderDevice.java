@@ -105,6 +105,13 @@ public class GLRenderDevice implements RenderDevice {
         }
 
         @Override
+        public void uploadDataToOffset(GlMutableBuffer glBuffer, int offset, long pointer, int size) {
+            this.bindBuffer(GlBufferTarget.ARRAY_BUFFER, glBuffer);
+
+            GL20C.nglBufferSubData(GlBufferTarget.ARRAY_BUFFER.getTargetParameter(), offset, size, pointer);
+        }
+
+        @Override
         public void copyBufferSubData(GlBuffer src, GlBuffer dst, long readOffset, long writeOffset, long bytes) {
             this.bindBuffer(GlBufferTarget.COPY_READ_BUFFER, src);
             this.bindBuffer(GlBufferTarget.COPY_WRITE_BUFFER, dst);
