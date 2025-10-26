@@ -14,7 +14,6 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Vector3f;
 
 /**
  * The render state object for a chunk section. This contains all the graphics state for each render pass along with
@@ -332,9 +331,6 @@ public class RenderSection {
         int y1 = slope1 & 0xFF;
         int x2 = slope2 >> 8;
         int y2 = slope2 & 0xFF;
-
-        if (x1 == 0) return false;
-        if (x2 == 0) return true;
 
         // this algebraic rearrangement avoids a division
         return y1 * x2 < y2 * x1;
