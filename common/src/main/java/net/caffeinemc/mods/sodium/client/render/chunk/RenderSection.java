@@ -33,6 +33,9 @@ public class RenderSection {
     private int incomingDirections;
     private int lastVisibleFrame = -1;
 
+    private long curMinSlopes;
+    private long curMaxSlopes;
+
     private int adjacentMask;
     public RenderSection
             adjacentDown,
@@ -41,10 +44,6 @@ public class RenderSection {
             adjacentSouth,
             adjacentWest,
             adjacentEast;
-
-    private final static boolean DISABLE_SLOPES = false;
-    private long curMinSlopes;
-    private long curMaxSlopes;
 
     // Rendering State
     private boolean built = false; // merge with the flags?
@@ -320,28 +319,41 @@ public class RenderSection {
     private static final int SLOPE_INFINITY = 1;
 
     private static int packSlope(int rise, int run) {
-        if (run <= 0) {
-            return SLOPE_INFINITY;
-        }
-        return ((run & 0xFF) << 8) | (Math.max(0, rise) & 0xFF);
+        return ((Math.max(run, 0) & 0xFF) << 8) | (Math.max(0, rise) & 0xFF);
     }
 
-    private static boolean isSlopeLess(int slope1, int slope2) {
+    private static int packSlopeRisePos(int rise, int run) {
+        if (run < 0) {
+            return SLOPE_INFINITY;
+        }
+        return ((run & 0xFF) << 8) | (rise & 0xFF);
+    }
+
+    private static int packSlopeRunPos(int rise, int run) {
+        if (rise < 0) {
+            return SLOPE_ZERO;
+        }
+        return ((run & 0xFF) << 8) | (rise & 0xFF);
+    }
+
+    private static int isSlopeLess(int slope1, int slope2) {
         int x1 = slope1 >> 8;
         int y1 = slope1 & 0xFF;
         int x2 = slope2 >> 8;
         int y2 = slope2 & 0xFF;
 
         // this algebraic rearrangement avoids a division
-        return y1 * x2 < y2 * x1;
+        return (y1 * x2 - y2 * x1) >> 31;
     }
 
     private static int slopeMax(int slope1, int slope2) {
-        return isSlopeLess(slope1, slope2) ? slope2 : slope1;
+        int mask = isSlopeLess(slope1, slope2);
+        return (slope1 & ~mask) | (slope2 & mask);
     }
 
     private static int slopeMin(int slope1, int slope2) {
-        return isSlopeLess(slope1, slope2) ? slope1 : slope2;
+        int mask = isSlopeLess(slope1, slope2);
+        return (slope1 & mask) | (slope2 & ~mask);
     }
 
     private static long packAllSlopes(int slopeXY, int slopeXZ, int slopeYZ) {
@@ -371,62 +383,41 @@ public class RenderSection {
         // A 2D visualization of this is here: https://mod.ifies.com/f/251025_raycast_vis_v4.html
         // We perform the same thing across the XY, XZ, and YZ planes separately to avoid the more
         // complex 3D frustum tracking math. It misses some things that could be pruned, but is quite fast.
-        if (DISABLE_SLOPES)
-            return true;
+        var dx = Math.abs(origin.getX() - this.getChunkX());
+        var dy = Math.abs(origin.getY() - this.getChunkY());
+        var dz = Math.abs(origin.getZ() - this.getChunkZ());
 
-        if (this.lastVisibleFrame != frame) {
-            this.curMinSlopes = ALL_SLOPES_INFINITY;
-            this.curMaxSlopes = ALL_SLOPES_ZERO;
-        }
+        int baseMinXY = packSlopeRunPos(dy - 1, dx + 1);
+        int baseMaxXY = packSlopeRisePos(dy + 1, dx - 1);
+        int baseMinXZ = packSlopeRunPos(dz - 1, dx + 1);
+        int baseMaxXZ = packSlopeRisePos(dz + 1, dx - 1);
+        int baseMinYZ = packSlopeRunPos(dz - 1, dy + 1);
+        int baseMaxYZ = packSlopeRisePos(dz + 1, dy - 1);
 
-        var dx = Math.abs(origin.x() - this.getChunkX());
-        var dy = Math.abs(origin.y() - this.getChunkY());
-        var dz = Math.abs(origin.z() - this.getChunkZ());
+        int minXY = slopeMax(getSlopeXY(other.curMinSlopes), baseMinXY);
+        int maxXY = slopeMin(getSlopeXY(other.curMaxSlopes), baseMaxXY);
+        int minXZ = slopeMax(getSlopeXZ(other.curMinSlopes), baseMinXZ);
+        int maxXZ = slopeMin(getSlopeXZ(other.curMaxSlopes), baseMaxXZ);
+        int minYZ = slopeMax(getSlopeYZ(other.curMinSlopes), baseMinYZ);
+        int maxYZ = slopeMin(getSlopeYZ(other.curMaxSlopes), baseMaxYZ);
 
-        int thisBaseMinXY = packSlope(dy - 1, dx + 1);
-        int thisBaseMinXZ = packSlope(dz - 1, dx + 1);
-        int thisBaseMinYZ = packSlope(dz - 1, dy + 1);
-
-        int thisBaseMaxXY = packSlope(dy + 1, dx - 1);
-        int thisBaseMaxXZ = packSlope(dz + 1, dx - 1);
-        int thisBaseMaxYZ = packSlope(dz + 1, dy - 1);
-
-        int otherMinXY = getSlopeXY(other.curMinSlopes);
-        int otherMinXZ = getSlopeXZ(other.curMinSlopes);
-        int otherMinYZ = getSlopeYZ(other.curMinSlopes);
-
-        int otherMaxXY = getSlopeXY(other.curMaxSlopes);
-        int otherMaxXZ = getSlopeXZ(other.curMaxSlopes);
-        int otherMaxYZ = getSlopeYZ(other.curMaxSlopes);
-
-        int propMinXY = slopeMax(otherMinXY, thisBaseMinXY);
-        int propMaxXY = slopeMin(otherMaxXY, thisBaseMaxXY);
-        if (!isSlopeLess(propMinXY, propMaxXY)) {
+        // if max >= min for any of the planes, there is no angle left to explore from that section
+        if ((isSlopeLess(minXY, maxXY) & isSlopeLess(minXZ, maxXZ) & isSlopeLess(minYZ, maxYZ)) >>> 31 == 0) {
             return false;
         }
 
-        int propMinXZ = slopeMax(otherMinXZ, thisBaseMinXZ);
-        int propMaxXZ = slopeMin(otherMaxXZ, thisBaseMaxXZ);
-        if (!isSlopeLess(propMinXZ, propMaxXZ)) {
-            return false;
+        if (this.lastVisibleFrame == frame) {
+            minXY = slopeMin(getSlopeXY(this.curMinSlopes), minXY);
+            minXZ = slopeMin(getSlopeXZ(this.curMinSlopes), minXZ);
+            minYZ = slopeMin(getSlopeYZ(this.curMinSlopes), minYZ);
+
+            maxXY = slopeMax(getSlopeXY(this.curMaxSlopes), maxXY);
+            maxXZ = slopeMax(getSlopeXZ(this.curMaxSlopes), maxXZ);
+            maxYZ = slopeMax(getSlopeYZ(this.curMaxSlopes), maxYZ);
         }
 
-        int propMinYZ = slopeMax(otherMinYZ, thisBaseMinYZ);
-        int propMaxYZ = slopeMin(otherMaxYZ, thisBaseMaxYZ);
-        if (!isSlopeLess(propMinYZ, propMaxYZ)) {
-            return false;
-        }
-
-        int newMinXY = slopeMin(getSlopeXY(this.curMinSlopes), propMinXY);
-        int newMinXZ = slopeMin(getSlopeXZ(this.curMinSlopes), propMinXZ);
-        int newMinYZ = slopeMin(getSlopeYZ(this.curMinSlopes), propMinYZ);
-
-        int newMaxXY = slopeMax(getSlopeXY(this.curMaxSlopes), propMaxXY);
-        int newMaxXZ = slopeMax(getSlopeXZ(this.curMaxSlopes), propMaxXZ);
-        int newMaxYZ = slopeMax(getSlopeYZ(this.curMaxSlopes), propMaxYZ);
-
-        this.curMinSlopes = packAllSlopes(newMinXY, newMinXZ, newMinYZ);
-        this.curMaxSlopes = packAllSlopes(newMaxXY, newMaxXZ, newMaxYZ);
+        this.curMinSlopes = packAllSlopes(minXY, minXZ, minYZ);
+        this.curMaxSlopes = packAllSlopes(maxXY, maxXZ, maxYZ);
 
         return true;
     }
