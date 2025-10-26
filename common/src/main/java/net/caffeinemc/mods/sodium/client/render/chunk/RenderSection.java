@@ -14,6 +14,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3f;
 
 /**
  * The render state object for a chunk section. This contains all the graphics state for each render pass along with
@@ -42,6 +43,13 @@ public class RenderSection {
             adjacentWest,
             adjacentEast;
 
+    private final static boolean DISABLE_SLOPES = false;
+    private long lastOriginPos = -1;
+    final private Vector3f
+            baseMinSlope = new Vector3f(),
+            baseMaxSlope = new Vector3f(),
+            curMinSlope = new Vector3f(),
+            curMaxSlope = new Vector3f();
 
     // Rendering State
     private boolean built = false; // merge with the flags?
@@ -311,6 +319,71 @@ public class RenderSection {
 
     public void setIncomingDirections(int directions) {
         this.incomingDirections = directions;
+    }
+
+    private static float slope(float rise, float run) {
+        if (run <= 0) {
+            return Float.POSITIVE_INFINITY;
+        }
+        return Math.max(0, rise) / run;
+    }
+
+    private void updateBaseSlopes(SectionPos origin) {
+        var originPos = origin.asLong();
+        if (originPos == this.lastOriginPos) {
+            return;
+        }
+        lastOriginPos = originPos;
+        var dx = Math.abs(origin.x() - this.getChunkX());
+        var dy = Math.abs(origin.y() - this.getChunkY());
+        var dz = Math.abs(origin.z() - this.getChunkZ());
+
+        this.baseMinSlope.set(
+                slope(dy - 1, dx+1),  // xy plane
+                slope(dz - 1, dx+1),  // xz
+                slope(dz - 1, dy+1)); // yz
+        this.baseMaxSlope.set(
+                slope(dy+1, dx-1),  // xy plane
+                slope(dz+1, dx-1),  // xz
+                slope(dz+1, dy-1)); // yz
+    }
+
+    public boolean intersectSlopes(SectionPos origin, RenderSection other, int frame) {
+        // Slope refinement tracking is based on the idea that by passing through a given cell,
+        // the minimum and maximum angle of any cell that can be visited afterward is constrained.
+        // A 2D visualization of this is here: https://mod.ifies.com/f/251025_raycast_vis_v4.html
+        // We perform the same thing across the XY, XZ, and YZ planes separately to avoid the more
+        // complex 3D frustum tracking math. It misses some things that could be pruned, but is quite fast.
+        if (DISABLE_SLOPES)
+            return true;
+        if (this.lastVisibleFrame != frame) {
+            this.updateBaseSlopes(origin);
+            this.curMinSlope.set(Float.POSITIVE_INFINITY);
+            this.curMaxSlope.set(0);
+        }
+        // maybe I should have a temp object for garbage
+        float propMinX = Math.max(other.curMinSlope.x, this.baseMinSlope.x);
+        float propMaxX = Math.min(other.curMaxSlope.x, this.baseMaxSlope.x);
+        float propMinY = Math.max(other.curMinSlope.y, this.baseMinSlope.y);
+        float propMaxY = Math.min(other.curMaxSlope.y, this.baseMaxSlope.y);
+        float propMinZ = Math.max(other.curMinSlope.z, this.baseMinSlope.z);
+        float propMaxZ = Math.min(other.curMaxSlope.z, this.baseMaxSlope.z);
+        if (propMinX >= propMaxX || propMinY >= propMaxY || propMinZ >= propMaxZ) {
+            return false;
+        }
+        this.curMinSlope.x = Math.min(this.curMinSlope.x, propMinX);
+        this.curMinSlope.y = Math.min(this.curMinSlope.y, propMinY);
+        this.curMinSlope.z = Math.min(this.curMinSlope.z, propMinZ);
+
+        this.curMaxSlope.x = Math.max(this.curMaxSlope.x, propMaxX);
+        this.curMaxSlope.y = Math.max(this.curMaxSlope.y, propMaxY);
+        this.curMaxSlope.z = Math.max(this.curMaxSlope.z, propMaxZ);
+        return true;
+    }
+
+    public void setOriginSlopes() {
+        this.curMinSlope.set(0);
+        this.curMaxSlope.set(Float.POSITIVE_INFINITY);
     }
 
     /**
