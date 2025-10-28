@@ -35,8 +35,14 @@ public class OcclusionCuller {
 
         this.init(visitor, queues.write(), viewport, searchDistance, useOcclusionCulling, frame);
 
+        SectionPos origin = viewport.getChunkCoord();
+        if (this.getRenderSection(origin.getX(), origin.getY(), origin.getZ()) == null) {
+            // origin outside of world
+            origin = null;
+        }
+
         while (queues.flip()) {
-            processQueue(visitor, viewport, searchDistance, useOcclusionCulling, frame, queues.read(), queues.write());
+            processQueue(visitor, viewport, origin, searchDistance, useOcclusionCulling, frame, queues.read(), queues.write());
         }
 
         this.addNearbySections(visitor, viewport, searchDistance, frame);
@@ -44,6 +50,7 @@ public class OcclusionCuller {
 
     private static void processQueue(RenderSectionVisitor visitor,
                                      Viewport viewport,
+                                     SectionPos inBoundsOrigin,
                                      float searchDistance,
                                      boolean useOcclusionCulling,
                                      int frame,
@@ -84,7 +91,7 @@ public class OcclusionCuller {
                 connections &= getOutwardDirections(origin, section);
             }
 
-            visitNeighbors(writeQueue, origin, section, connections, frame);
+            visitNeighbors(writeQueue, inBoundsOrigin, section, connections, frame);
         }
     }
 
@@ -127,32 +134,61 @@ public class OcclusionCuller {
             return;
         }
 
+        if (origin == null) {
+            // the viewpoint is outside the world, so the angle computations relying on propagating angle information
+            // from the origin section to the others won't work.
+            if (GraphDirectionSet.contains(outgoing, GraphDirection.DOWN)) {
+                visitNode(queue, section.adjacentDown, GraphDirectionSet.of(GraphDirection.UP), frame);
+            }
+
+            if (GraphDirectionSet.contains(outgoing, GraphDirection.UP)) {
+                visitNode(queue, section.adjacentUp, GraphDirectionSet.of(GraphDirection.DOWN), frame);
+            }
+
+            if (GraphDirectionSet.contains(outgoing, GraphDirection.NORTH)) {
+                visitNode(queue, section.adjacentNorth, GraphDirectionSet.of(GraphDirection.SOUTH), frame);
+            }
+
+            if (GraphDirectionSet.contains(outgoing, GraphDirection.SOUTH)) {
+                visitNode(queue, section.adjacentSouth, GraphDirectionSet.of(GraphDirection.NORTH), frame);
+            }
+
+            if (GraphDirectionSet.contains(outgoing, GraphDirection.WEST)) {
+                visitNode(queue, section.adjacentWest, GraphDirectionSet.of(GraphDirection.EAST), frame);
+            }
+
+            if (GraphDirectionSet.contains(outgoing, GraphDirection.EAST)) {
+                visitNode(queue, section.adjacentEast, GraphDirectionSet.of(GraphDirection.WEST), frame);
+            }
+            return;
+        }
+
         if (GraphDirectionSet.contains(outgoing, GraphDirection.DOWN) && section.adjacentDown.intersectSlopes(origin, section, frame)) {
-            visitNode(queue, origin, section.adjacentDown, GraphDirectionSet.of(GraphDirection.UP), frame);
+            visitNode(queue, section.adjacentDown, GraphDirectionSet.of(GraphDirection.UP), frame);
         }
 
         if (GraphDirectionSet.contains(outgoing, GraphDirection.UP) && section.adjacentUp.intersectSlopes(origin, section, frame)) {
-            visitNode(queue, origin, section.adjacentUp, GraphDirectionSet.of(GraphDirection.DOWN), frame);
+            visitNode(queue, section.adjacentUp, GraphDirectionSet.of(GraphDirection.DOWN), frame);
         }
 
         if (GraphDirectionSet.contains(outgoing, GraphDirection.NORTH) && section.adjacentNorth.intersectSlopes(origin, section, frame)) {
-            visitNode(queue, origin, section.adjacentNorth, GraphDirectionSet.of(GraphDirection.SOUTH), frame);
+            visitNode(queue, section.adjacentNorth, GraphDirectionSet.of(GraphDirection.SOUTH), frame);
         }
 
         if (GraphDirectionSet.contains(outgoing, GraphDirection.SOUTH) && section.adjacentSouth.intersectSlopes(origin, section, frame)) {
-            visitNode(queue, origin, section.adjacentSouth, GraphDirectionSet.of(GraphDirection.NORTH), frame);
+            visitNode(queue, section.adjacentSouth, GraphDirectionSet.of(GraphDirection.NORTH), frame);
         }
 
         if (GraphDirectionSet.contains(outgoing, GraphDirection.WEST) && section.adjacentWest.intersectSlopes(origin, section, frame)) {
-            visitNode(queue, origin, section.adjacentWest, GraphDirectionSet.of(GraphDirection.EAST), frame);
+            visitNode(queue, section.adjacentWest, GraphDirectionSet.of(GraphDirection.EAST), frame);
         }
 
         if (GraphDirectionSet.contains(outgoing, GraphDirection.EAST) && section.adjacentEast.intersectSlopes(origin, section, frame)) {
-            visitNode(queue, origin, section.adjacentEast, GraphDirectionSet.of(GraphDirection.WEST), frame);
+            visitNode(queue, section.adjacentEast, GraphDirectionSet.of(GraphDirection.WEST), frame);
         }
     }
 
-    private static void visitNode(final WriteQueue<RenderSection> queue, @NotNull SectionPos origin, @NotNull RenderSection render, int incoming, int frame) {
+    private static void visitNode(final WriteQueue<RenderSection> queue, @NotNull RenderSection render, int incoming, int frame) {
         if (render.getLastVisibleFrame() != frame) {
             // This is the first time we are visiting this section during the given frame, so we must
             // reset the state.
@@ -323,18 +359,18 @@ public class OcclusionCuller {
         var radius = Mth.floor(searchDistance / 16.0f);
 
         // Layer 0
-        this.tryVisitNode(queue, origin, origin.getX(), height, origin.getZ(), direction, frame, viewport);
+        this.tryVisitNode(queue, origin.getX(), height, origin.getZ(), direction, frame, viewport);
 
         // Complete layers, excluding layer 0
         for (int layer = 1; layer <= radius; layer++) {
             for (int z = -layer; z < layer; z++) {
                 int x = Math.abs(z) - layer;
-                this.tryVisitNode(queue, origin, origin.getX() + x, height, origin.getZ() + z, direction, frame, viewport);
+                this.tryVisitNode(queue, origin.getX() + x, height, origin.getZ() + z, direction, frame, viewport);
             }
 
             for (int z = layer; z > -layer; z--) {
                 int x = layer - Math.abs(z);
-                this.tryVisitNode(queue, origin, origin.getX() + x, height, origin.getZ() + z, direction, frame, viewport);
+                this.tryVisitNode(queue, origin.getX() + x, height, origin.getZ() + z, direction, frame, viewport);
             }
         }
 
@@ -344,34 +380,34 @@ public class OcclusionCuller {
 
             for (int z = -radius; z <= -l; z++) {
                 int x = -z - layer;
-                this.tryVisitNode(queue, origin, origin.getX() + x, height, origin.getZ() + z, direction, frame, viewport);
+                this.tryVisitNode(queue, origin.getX() + x, height, origin.getZ() + z, direction, frame, viewport);
             }
 
             for (int z = l; z <= radius; z++) {
                 int x = z - layer;
-                this.tryVisitNode(queue, origin,origin.getX() + x, height, origin.getZ() + z, direction, frame, viewport);
+                this.tryVisitNode(queue, origin.getX() + x, height, origin.getZ() + z, direction, frame, viewport);
             }
 
             for (int z = radius; z >= l; z--) {
                 int x = layer - z;
-                this.tryVisitNode(queue, origin, origin.getX() + x, height, origin.getZ() + z, direction, frame, viewport);
+                this.tryVisitNode(queue, origin.getX() + x, height, origin.getZ() + z, direction, frame, viewport);
             }
 
             for (int z = -l; z >= -radius; z--) {
                 int x = layer + z;
-                this.tryVisitNode(queue, origin, origin.getX() + x, height, origin.getZ() + z, direction, frame, viewport);
+                this.tryVisitNode(queue, origin.getX() + x, height, origin.getZ() + z, direction, frame, viewport);
             }
         }
     }
 
-    private void tryVisitNode(WriteQueue<RenderSection> queue, SectionPos origin, int x, int y, int z, int direction, int frame, Viewport viewport) {
-        RenderSection section = this.getRenderSection(origin.getX(), origin.getY(), origin.getZ());
+    private void tryVisitNode(WriteQueue<RenderSection> queue, int x, int y, int z, int direction, int frame, Viewport viewport) {
+        RenderSection section = this.getRenderSection(x, y, z);
 
         if (section == null || !isWithinFrustum(viewport, section)) {
             return;
         }
 
-        visitNode(queue, origin, section, GraphDirectionSet.of(direction), frame);
+        visitNode(queue, section, GraphDirectionSet.of(direction), frame);
     }
 
     private RenderSection getRenderSection(int x, int y, int z) {
