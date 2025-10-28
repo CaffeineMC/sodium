@@ -33,8 +33,7 @@ public class RenderSection {
     private int incomingDirections;
     private int lastVisibleFrame = -1;
 
-    private long curMinSlopes;
-    private long curMaxSlopes;
+    private long allowedAngles;
 
     private int adjacentMask;
     public RenderSection
@@ -315,116 +314,109 @@ public class RenderSection {
         this.incomingDirections = directions;
     }
 
-    private static final int SLOPE_ZERO = 1 << 8;
-    private static final int SLOPE_INFINITY = 1;
+    private static final int BITS_PER_PLANE = 21;
+    private static final long PLANE_MASK = (1L << BITS_PER_PLANE) - 1L; // 0x1FFFFFL
 
-    private static int packSlope(int rise, int run) {
-        return ((Math.max(run, 0) & 0xFF) << 8) | (Math.max(0, rise) & 0xFF);
+    public void setOriginSlopes() {
+        this.allowedAngles = -1L;
     }
 
-    private static int packSlopeRisePos(int rise, int run) {
-        if (run < 0) {
-            return SLOPE_INFINITY;
+    /**
+     * Precomputed Lookup Table for base angle bitsets.
+     * This is a 32x32 LUT, indexed by [run + (rise << 5)].
+     */
+    private static final int LUT_DIM_BITS = 5; // 2^5 = 32
+    private static final int LUT_SIZE = 1 << (LUT_DIM_BITS * 2); // 32*32 = 1024
+    private static final int LUT_MAX_IDX = (1 << LUT_DIM_BITS) - 1; // 31
+    private static final int[] ANGLE_BITSET_LUT = new int[LUT_SIZE];
+
+    /**
+     * Calculates the 21-bit angle bitset for a given rise/run.
+     * This converts the min/max slope cone into a bitset.
+     *
+     * @param rise The rise (dy)
+     * @param run  The run (dx)
+     * @return A 21-bit integer bitset.
+     */
+    private static int generateAngleBits(int rise, int run) {
+        int minRise = rise - 1;
+        int minRun = run + 1;
+        int maxRise = rise + 1;
+        int maxRun = run - 1;
+
+        // Convert packed slopes to angles (in radians, 0 to PI/2)
+        double minAngle = Math.atan2(minRise, minRun);
+        double maxAngle = Math.atan2(maxRise, maxRun);
+
+        final double ANGLE_PER_BIT = (Math.PI / 2.0) / BITS_PER_PLANE; // 90 degrees / 21 bits in radians
+
+        int bits = 0;
+        for (int i = 0; i < BITS_PER_PLANE; i++) {
+            double bitStartAngle = i * ANGLE_PER_BIT;
+            double bitEndAngle = (i + 1) * ANGLE_PER_BIT;
+            if (bitEndAngle > minAngle && bitStartAngle < maxAngle) {
+                bits |= 1 << i;
+            }
         }
-        return ((run & 0xFF) << 8) | (rise & 0xFF);
+        return bits;
     }
 
-    private static int packSlopeRunPos(int rise, int run) {
-        if (rise < 0) {
-            return SLOPE_ZERO;
+
+    static {
+        for (int i = 0; i < LUT_SIZE; i++) {
+            int run = i & LUT_MAX_IDX;
+            int rise = (i >> LUT_DIM_BITS);
+            ANGLE_BITSET_LUT[i] = generateAngleBits(rise, run);
         }
-        return ((run & 0xFF) << 8) | (rise & 0xFF);
     }
 
-    private static int isSlopeLess(int slope1, int slope2) {
-        int x1 = slope1 >> 8;
-        int y1 = slope1 & 0xFF;
-        int x2 = slope2 >> 8;
-        int y2 = slope2 & 0xFF;
-
-        // this algebraic rearrangement avoids a division
-        return (y1 * x2 - y2 * x1) >> 31;
-    }
-
-    private static int slopeMax(int slope1, int slope2) {
-        int mask = isSlopeLess(slope1, slope2);
-        return (slope1 & ~mask) | (slope2 & mask);
-    }
-
-    private static int slopeMin(int slope1, int slope2) {
-        int mask = isSlopeLess(slope1, slope2);
-        return (slope1 & mask) | (slope2 & ~mask);
-    }
-
-    private static long packAllSlopes(int slopeXY, int slopeXZ, int slopeYZ) {
-        return (slopeXY & 0xFFFFL) |
-                ((slopeXZ & 0xFFFFL) << 16) |
-                ((slopeYZ & 0xFFFFL) << 32);
-    }
-
-    private static int getSlopeXY(long packedSlopes) {
-        return (int)(packedSlopes & 0xFFFFL);
-    }
-
-    private static int getSlopeXZ(long packedSlopes) {
-        return (int)((packedSlopes >> 16) & 0xFFFFL);
-    }
-
-    private static int getSlopeYZ(long packedSlopes) {
-        return (int)((packedSlopes >> 32) & 0xFFFFL);
-    }
-
-    private static final long ALL_SLOPES_ZERO = packAllSlopes(SLOPE_ZERO, SLOPE_ZERO, SLOPE_ZERO);
-    private static final long ALL_SLOPES_INFINITY = packAllSlopes(SLOPE_INFINITY, SLOPE_INFINITY, SLOPE_INFINITY);
-
+    /**
+     * Intersects the allowed angles from the 'other' section with the base angles
+     * subtended by this section.
+     *
+     * @param origin The origin of the visibility check.
+     * @param other  The parent/previous section from which visibility is being propagated.
+     * @param frame  The current frame number.
+     * @return false if this section is guaranteed not visible, true otherwise.
+     */
     public boolean intersectSlopes(SectionPos origin, RenderSection other, int frame) {
-        // Slope refinement tracking is based on the idea that by passing through a given cell,
-        // the minimum and maximum angle of any cell that can be visited afterward is constrained.
-        // A 2D visualization of this is here: https://mod.ifies.com/f/251025_raycast_vis_v4.html
-        // We perform the same thing across the XY, XZ, and YZ planes separately to avoid the more
-        // complex 3D frustum tracking math. It misses some things that could be pruned, but is quite fast.
         var dx = Math.abs(origin.getX() - this.getChunkX());
         var dy = Math.abs(origin.getY() - this.getChunkY());
         var dz = Math.abs(origin.getZ() - this.getChunkZ());
 
-        int baseMinXY = packSlopeRunPos(dy - 1, dx + 1);
-        int baseMaxXY = packSlopeRisePos(dy + 1, dx - 1);
-        int baseMinXZ = packSlopeRunPos(dz - 1, dx + 1);
-        int baseMaxXZ = packSlopeRisePos(dz + 1, dx - 1);
-        int baseMinYZ = packSlopeRunPos(dz - 1, dy + 1);
-        int baseMaxYZ = packSlopeRisePos(dz + 1, dy - 1);
+        while ((dx|dy|dz) >= 32) {
+            // This is only true for the outermost edge of sections that have a distance
+            // of 32, so we don't use more complex 32-Integer.numberOfLeadingZeros and per-plane
+            // shifting.
+            dx >>= 1; dy >>= 1; dz >>= 1;
+        }
 
-        int minXY = slopeMax(getSlopeXY(other.curMinSlopes), baseMinXY);
-        int maxXY = slopeMin(getSlopeXY(other.curMaxSlopes), baseMaxXY);
-        int minXZ = slopeMax(getSlopeXZ(other.curMinSlopes), baseMinXZ);
-        int maxXZ = slopeMin(getSlopeXZ(other.curMaxSlopes), baseMaxXZ);
-        int minYZ = slopeMax(getSlopeYZ(other.curMinSlopes), baseMinYZ);
-        int maxYZ = slopeMin(getSlopeYZ(other.curMaxSlopes), baseMaxYZ);
+        long baseAngles = ANGLE_BITSET_LUT[dx + (dy << LUT_DIM_BITS)] |
+                ((long)ANGLE_BITSET_LUT[dx + (dz << LUT_DIM_BITS)] << BITS_PER_PLANE) |
+                ((long)ANGLE_BITSET_LUT[dy + (dz << LUT_DIM_BITS)] << (BITS_PER_PLANE * 2));
 
-        // if max >= min for any of the planes, there is no angle left to explore from that section
-        if ((isSlopeLess(minXY, maxXY) & isSlopeLess(minXZ, maxXZ) & isSlopeLess(minYZ, maxYZ)) >>> 31 == 0) {
+        long pathAngles = baseAngles & other.allowedAngles;
+
+        // If the intersection is empty for *any* plane, this path is occluded.
+        if (anyPlaneHasEmptyBitset(pathAngles)) {
             return false;
         }
 
         if (this.lastVisibleFrame == frame) {
-            minXY = slopeMin(getSlopeXY(this.curMinSlopes), minXY);
-            minXZ = slopeMin(getSlopeXZ(this.curMinSlopes), minXZ);
-            minYZ = slopeMin(getSlopeYZ(this.curMinSlopes), minYZ);
-
-            maxXY = slopeMax(getSlopeXY(this.curMaxSlopes), maxXY);
-            maxXZ = slopeMax(getSlopeXZ(this.curMaxSlopes), maxXZ);
-            maxYZ = slopeMax(getSlopeYZ(this.curMaxSlopes), maxYZ);
+            // This section has been visited before *this frame* from another path.
+            // The new allowed angles are the *union* of the old paths and this new path.
+            pathAngles |= this.allowedAngles;
         }
-
-        this.curMinSlopes = packAllSlopes(minXY, minXZ, minYZ);
-        this.curMaxSlopes = packAllSlopes(maxXY, maxXZ, maxYZ);
+        this.allowedAngles = pathAngles;
 
         return true;
     }
 
-    public void setOriginSlopes() {
-        this.curMinSlopes = ALL_SLOPES_ZERO;
-        this.curMaxSlopes = ALL_SLOPES_INFINITY;
+    private static boolean anyPlaneHasEmptyBitset(long angles) {
+        final long SUB_MASK = 1L | (1L << BITS_PER_PLANE) | (1L << (BITS_PER_PLANE * 2));
+        final long MSB_MASK = (1L << (BITS_PER_PLANE - 1)) | (1L << (BITS_PER_PLANE * 2 - 1)) | (1L << (BITS_PER_PLANE * 3 - 1));
+        long borrows = (angles - SUB_MASK) & ~angles;
+        return (borrows & MSB_MASK) != 0;
     }
 
     /**
