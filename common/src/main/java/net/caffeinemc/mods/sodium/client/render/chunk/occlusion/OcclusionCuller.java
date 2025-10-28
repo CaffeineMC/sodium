@@ -292,7 +292,7 @@ public class OcclusionCuller {
             return;
         }
 
-        section.setOriginSlopes();
+        section.setOriginAngles();
         section.setLastVisibleFrame(frame);
         section.setIncomingDirections(GraphDirectionSet.NONE);
 
