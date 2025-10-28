@@ -63,6 +63,7 @@
     "features.render.immediate.buffer_builder.sorting.VertexSortingMixin",
     "features.render.immediate.matrix_stack.VertexConsumerMixin",
     "features.render.particle.QuadParticleRenderStateMixin",
+    "features.render.viewport.GlStateManagerMixin",
     "features.render.world.clouds.CloudRendererMixin",
     "features.render.world.sky.LevelRendererMixin",
     "features.textures.NativeImageAccessor",
