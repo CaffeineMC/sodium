@@ -127,9 +127,6 @@ public class OcclusionCuller {
             return;
         }
 
-        // This helps the compiler move the checks for some invariants upwards.
-        queue.ensureCapacity(6);
-
         if (GraphDirectionSet.contains(outgoing, GraphDirection.DOWN) && section.adjacentDown.intersectSlopes(origin, section, frame)) {
             visitNode(queue, origin, section.adjacentDown, GraphDirectionSet.of(GraphDirection.UP), frame);
         }
