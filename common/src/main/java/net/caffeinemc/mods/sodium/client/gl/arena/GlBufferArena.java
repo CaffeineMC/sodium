@@ -11,15 +11,21 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class GlBufferArena {
     static final boolean CHECK_ASSERTIONS = false;
 
-    private static final GlBufferUsage BUFFER_USAGE = GlBufferUsage.STATIC_DRAW;
+    // how many segments we require to be present before we calculate an average size
+    public static final int MIN_SEGMENTS_FOR_AVG = 16;
+    // growth factor to use when we have too few segments present
+    public static final float FEW_SEGMENTS_GROWTH_FACTOR = 1.5f;
+    // factor to use when we are allocating with an expected size
+    public static final float EXPECTED_SIZE_TARGET_FACTOR = 1.5f;
+    // how much bigger than requested a buffer can be to be considered for reuse
+    public static final float MAX_BUFFER_REUSE_SIZE_FACTOR = 1.4f;
 
-    private final int resizeIncrement;
+    private static final GlBufferUsage BUFFER_USAGE = GlBufferUsage.STATIC_DRAW;
 
     private final StagingBuffer stagingBuffer;
     private GlMutableBuffer arenaBuffer;
@@ -28,20 +34,23 @@ public class GlBufferArena {
 
     private long capacity;
     private long used;
+    private int segmentCount;
 
     private final int stride;
 
+    private static final GlMutableBuffer[] freeBuffers = new GlMutableBuffer[8];
+    private static int freeBufferCount = 0;
+
     public GlBufferArena(CommandList commands, int initialCapacity, int stride, StagingBuffer stagingBuffer) {
         this.capacity = initialCapacity;
-        this.resizeIncrement = initialCapacity / 16;
 
         this.stride = stride;
 
-        this.head = new GlBufferSegment(this, 0, initialCapacity);
+        this.head = new GlBufferSegment(this, 0, this.capacity);
         this.head.setFree(true);
 
-        this.arenaBuffer = commands.createMutableBuffer();
-        commands.allocateStorage(this.arenaBuffer, this.capacity * stride, BUFFER_USAGE);
+        this.arenaBuffer = getBufferOfSizeAtLeast(commands, this.capacity * stride);
+        this.capacity = this.arenaBuffer.getSize() / stride;
 
         this.stagingBuffer = stagingBuffer;
     }
@@ -117,6 +126,57 @@ public class GlBufferArena {
         return pendingCopies;
     }
 
+    private static GlMutableBuffer getBufferOfSizeAtLeast(CommandList commandList, long size) {
+        GlMutableBuffer buffer = null;
+
+        if (freeBufferCount > 0) {
+            // get any buffer of at least the requested size but at most MAX_BUFFER_REUSE_SIZE_FACTOR larger
+            long maxAcceptableSize = (long) (size * MAX_BUFFER_REUSE_SIZE_FACTOR);
+
+            // iterate buffers to get the smallest acceptable one
+            int candidateIndex = -1;
+            for (int i = 0; i < freeBuffers.length; i++) {
+                GlMutableBuffer freeBuffer = freeBuffers[i];
+                if (freeBuffer != null) {
+                    long testSize = freeBuffer.getSize();
+                    if (testSize >= size && testSize <= maxAcceptableSize &&
+                            (buffer == null || testSize < buffer.getSize())) {
+                        candidateIndex = i;
+                        buffer = freeBuffer;
+                    }
+                }
+            }
+            if (buffer != null) {
+                freeBuffers[candidateIndex] = null;
+                freeBufferCount--;
+            }
+        }
+
+        if (buffer == null) {
+            buffer = commandList.createMutableBuffer();
+            commandList.allocateStorage(buffer, size, BUFFER_USAGE);
+        }
+        return buffer;
+    }
+
+    private static void releaseBufferForReuse(CommandList commandList, GlMutableBuffer buffer) {
+        // find an empty slot if there is one
+        if (freeBufferCount < freeBuffers.length) {
+            for (int i = 0; i < freeBuffers.length; i++) {
+                if (freeBuffers[i] == null) {
+                    freeBuffers[i] = buffer;
+                    freeBufferCount++;
+                    return;
+                }
+            }
+        }
+
+        // evict randomly if no empty slot available
+        int evictIndex = (int) (Math.random() * freeBuffers.length);
+        commandList.deleteBuffer(freeBuffers[evictIndex]);
+        freeBuffers[evictIndex] = buffer;
+    }
+
     private void transferSegments(CommandList commandList, Collection<PendingBufferCopyCommand> list, long capacity) {
         long bufferSize = capacity * this.stride;
         if (bufferSize >= (1L << 32)) {
@@ -124,9 +184,7 @@ public class GlBufferArena {
         }
 
         GlMutableBuffer srcBufferObj = this.arenaBuffer;
-        GlMutableBuffer dstBufferObj = commandList.createMutableBuffer();
-
-        commandList.allocateStorage(dstBufferObj, bufferSize, BUFFER_USAGE);
+        GlMutableBuffer dstBufferObj = getBufferOfSizeAtLeast(commandList, bufferSize);
 
         for (PendingBufferCopyCommand cmd : list) {
             commandList.copyBufferSubData(srcBufferObj, dstBufferObj,
@@ -135,10 +193,12 @@ public class GlBufferArena {
                     cmd.getLength() * this.stride);
         }
 
-        commandList.deleteBuffer(srcBufferObj);
+        releaseBufferForReuse(commandList, srcBufferObj);
 
         this.arenaBuffer = dstBufferObj;
-        this.capacity = capacity;
+        
+        // set the capacity using the size of the buffer since it may be larger than the expected capacity due to buffer reuse
+        this.capacity = this.arenaBuffer.getSize() / this.stride;
     }
 
     private ArrayList<GlBufferSegment> getUsedSegments() {
@@ -164,6 +224,11 @@ public class GlBufferArena {
 
     public long getDeviceAllocatedMemory() {
         return this.capacity * this.stride;
+    }
+
+    private void updateUsed(long deltaUsed) {
+        this.used += deltaUsed;
+        this.segmentCount += Long.signum(deltaUsed);
     }
 
     private GlBufferSegment alloc(int size) {
@@ -195,7 +260,7 @@ public class GlBufferArena {
             result = b;
         }
 
-        this.used += result.getLength();
+        this.updateUsed(result.getLength());
         this.checkAssertions();
 
         return result;
@@ -229,7 +294,7 @@ public class GlBufferArena {
 
         entry.setFree(true);
 
-        this.used -= entry.getLength();
+        this.updateUsed(-entry.getLength());
 
         GlBufferSegment next = entry.getNext();
 
@@ -258,32 +323,29 @@ public class GlBufferArena {
         return this.arenaBuffer;
     }
 
-    public boolean upload(CommandList commandList, Stream<PendingUpload> stream) {
+    public boolean upload(CommandList commandList, Stream<PendingUpload> stream, float regionFillFractionInv) {
         // Record the buffer object before we start any work
         // If the arena needs to re-allocate a buffer, this will allow us to check and return an appropriate flag
         GlBuffer buffer = this.arenaBuffer;
 
         // A linked list is used as we'll be randomly removing elements and want O(1) performance
-        List<PendingUpload> queue = stream.collect(Collectors.toCollection(LinkedList::new));
+        long totalUploadSize = 0;
+        List<PendingUpload> queue = new LinkedList<>();
+        for (var upload : (Iterable<PendingUpload>) stream::iterator) {
+            totalUploadSize += upload.getDataBuffer().getLength();
+            queue.add(upload);
+        }
 
-        // Try to upload all the data into free segments first
-        this.tryUploads(commandList, queue);
+        // Try to upload all the data into free segments first,
+        // but only attempt this if there is enough free space assuming no fragmentation
+        if (totalUploadSize < (this.capacity - this.used) * this.stride) {
+            this.tryUploads(commandList, queue);
+        }
 
         // If we weren't able to upload some buffers, they will have been left behind in the queue
         if (!queue.isEmpty()) {
-            // Calculate the amount of memory needed for the remaining uploads
-            int remainingUploadSize = queue.stream()
-                    .mapToInt(upload -> upload.getDataBuffer().getLength())
-                    .sum();
-            
-            // Convert size to elements by dividing by the stride.
-            // This doesn't need a ceil since the upload buffers will be at least as big as required and have the same stride.
-            long remainingElements = remainingUploadSize / this.stride;
-
-            // Ask the arena to grow to accommodate the remaining uploads
-            // This will force a re-allocation and compaction, which will leave us a continuous free segment
-            // for the remaining uploads
-            this.ensureCapacity(commandList, remainingElements);
+            // resize to the new estimated capacity
+            this.resize(commandList, estimateNewCapacity(regionFillFractionInv, queue));
 
             // Try again to upload any buffers that failed last time
             this.tryUploads(commandList, queue);
@@ -295,6 +357,48 @@ public class GlBufferArena {
         }
 
         return this.arenaBuffer != buffer;
+    }
+
+    private long estimateNewCapacity(float regionFillFractionInv, List<PendingUpload> queue) {
+        // Calculate the amount of memory needed for the remaining uploads
+        long requiredTotalSize = getRequiredTotalSize(queue);
+
+        int newSegmentCount = this.segmentCount + queue.size();
+
+        // the base estimation is to use a growth factor applied to the new required size
+        long newCapacity;
+
+        // use average segment size if we have enough segments to make it an accurate value
+        if (newSegmentCount >= MIN_SEGMENTS_FOR_AVG) {
+            // find the average segment size after the remaining uploads are allocated
+            long averageNewSegmentSize = (requiredTotalSize / newSegmentCount) + 1; // +1 to round up
+
+            // use the average segment size to determine a new capacity, with some overshoot applied for safety
+            var expectedSegmentCount = newSegmentCount * regionFillFractionInv;
+            newCapacity = (long) (averageNewSegmentSize * expectedSegmentCount * EXPECTED_SIZE_TARGET_FACTOR);
+        } else {
+            newCapacity = (long) (requiredTotalSize * FEW_SEGMENTS_GROWTH_FACTOR);
+        }
+        return newCapacity;
+    }
+
+    private long getRequiredTotalSize(List<PendingUpload> queue) {
+        long remainingUploadSize = 0;
+        for (var upload : queue) {
+            remainingUploadSize += upload.getDataBuffer().getLength();
+        }
+
+        // Convert size to elements by dividing by the stride.
+        // This doesn't need a ceil since the upload buffers will be at least as big as required and have the same stride.
+        long remainingElements = remainingUploadSize / this.stride;
+
+        // Ask the arena to grow to accommodate the remaining uploads
+        // This will force a re-allocation and compaction, which will leave us a continuous free segment
+        // for the remaining uploads
+
+        // Re-sizing the arena results in a compaction, so any free space in the arena will be
+        // made into one contiguous segment, joined with the new segment of free space we're asking for
+        return remainingElements + this.used;
     }
 
     private void tryUploads(CommandList commandList, List<PendingUpload> queue) {
@@ -320,16 +424,6 @@ public class GlBufferArena {
         upload.setResult(dst);
 
         return true;
-    }
-
-    public void ensureCapacity(CommandList commandList, long elementCount) {
-        // Re-sizing the arena results in a compaction, so any free space in the arena will be
-        // made into one contiguous segment, joined with the new segment of free space we're asking for
-        // We calculate the number of free elements in our arena and then subtract that from the total requested
-        long elementsNeeded = elementCount - (this.capacity - this.used);
-
-        // Try to allocate some extra buffer space unless this is an unusually large allocation
-        this.resize(commandList, Math.max(this.capacity + this.resizeIncrement, this.capacity + elementsNeeded));
     }
 
     private void checkAssertions() {
