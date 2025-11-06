@@ -38,7 +38,8 @@ public class SodiumGameOptionPages {
         Monitor monitor = window.findBestMonitor();
         List<OptionGroup> groups = new ArrayList<>();
 
-        groups.add(OptionGroup.createBuilder()
+        // TODO: Add presets once we have a video settings menu capable of changing it without a reload
+        /*groups.add(OptionGroup.createBuilder()
                 .add(OptionImpl.createBuilder(GraphicsPreset.class, vanillaOpts)
                         .setName(Component.translatable("options.graphics.preset"))
                         .setTooltip(Component.translatable("options.graphics.preset.tooltip"))
@@ -52,7 +53,7 @@ public class SodiumGameOptionPages {
                         .setImpact(OptionImpact.HIGH)
                         .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                         .build())
-                .build());
+                .build());*/
 
         groups.add(OptionGroup.createBuilder()
                 .add(OptionImpl.createBuilder(int.class, vanillaOpts)
