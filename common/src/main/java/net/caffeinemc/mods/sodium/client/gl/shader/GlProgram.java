@@ -5,7 +5,7 @@ import net.caffeinemc.mods.sodium.client.gl.GlObject;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniform;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ShaderBindingContext;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +33,7 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
         return this.shaderInterface;
     }
 
-    public static Builder builder(ResourceLocation name) {
+    public static Builder builder(Identifier name) {
         return new Builder(name);
     }
 
@@ -100,10 +100,10 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
     }
 
     public static class Builder {
-        private final ResourceLocation name;
+        private final Identifier name;
         private final int program;
 
-        public Builder(ResourceLocation name) {
+        public Builder(Identifier name) {
             this.name = name;
             this.program = GL20C.glCreateProgram();
         }

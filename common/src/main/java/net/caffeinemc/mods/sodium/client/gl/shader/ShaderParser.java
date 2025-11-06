@@ -2,7 +2,7 @@ package net.caffeinemc.mods.sodium.client.gl.shader;
 
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -70,7 +70,7 @@ public class ShaderParser {
     }
 
     private void processImport(String line) {
-        ResourceLocation name = parseImport(line);
+        Identifier name = parseImport(line);
 
         // mark the start of the imported file
         var nameString = name.toString();
@@ -81,7 +81,7 @@ public class ShaderParser {
 
     private static final Pattern IMPORT_PATTERN = Pattern.compile("#import <(?<namespace>.*):(?<path>.*)>");
 
-    private ResourceLocation parseImport(String line) {
+    private Identifier parseImport(String line) {
         Matcher matcher = IMPORT_PATTERN.matcher(line);
 
         if (!matcher.matches()) {
@@ -91,7 +91,7 @@ public class ShaderParser {
         String namespace = matcher.group("namespace");
         String path = matcher.group("path");
 
-        return ResourceLocation.fromNamespaceAndPath(namespace, path);
+        return Identifier.fromNamespaceAndPath(namespace, path);
     }
 
     private void prependDefineStrings(ShaderConstants constants) {

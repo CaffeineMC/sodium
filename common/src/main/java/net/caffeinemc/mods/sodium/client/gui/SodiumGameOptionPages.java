@@ -381,7 +381,7 @@ public class SodiumGameOptionPages {
                         .build())
                 .add(OptionImpl.createBuilder(InactivityFpsLimit.class, vanillaOpts)
                         .setName(Component.translatable("options.inactivityFpsLimit"))
-                        .setTooltip(v -> Component.translatable(v.getId() == 0 ? "options.inactivityFpsLimit.minimized.tooltip" : "options.inactivityFpsLimit.afk.tooltip"))
+                        .setTooltip(v -> Component.translatable("options.inactivityFpsLimit." + v.getSerializedName() + ".tooltip"))
                         .setControl(option -> new CyclingControl<>(option, InactivityFpsLimit.class, new Component[] { Component.translatable("options.inactivityFpsLimit.minimized"), Component.translatable("options.inactivityFpsLimit.afk") }))
                         .setBinding((opts, value) -> opts.inactivityFpsLimit().set(value), opts -> opts.inactivityFpsLimit().get())
                         .build())

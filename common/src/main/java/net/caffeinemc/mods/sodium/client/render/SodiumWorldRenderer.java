@@ -522,7 +522,11 @@ public class SodiumWorldRenderer {
         return this.renderSectionManager == null ? Collections.emptyList() : this.renderSectionManager.getDebugStrings();
     }
 
-    public boolean isSectionReady(int x, int y, int z) {
+    public boolean isSectionBuilt(int x, int y, int z) {
         return this.renderSectionManager.isSectionBuilt(x, y, z);
+    }
+
+    public boolean isSectionReady(int x, int y, int z) {
+        return isSectionBuilt(x, y, z) && this.renderSectionManager.getSectionVisibility(x, y, z) > 0.3f;
     }
 }

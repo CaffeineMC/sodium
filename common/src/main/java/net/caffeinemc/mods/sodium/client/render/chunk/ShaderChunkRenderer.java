@@ -17,7 +17,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexT
 import net.caffeinemc.mods.sodium.client.gl.shader.*;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.mixin.core.GlCommandEncoderAccessor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import java.util.Map;
 
 public abstract class ShaderChunkRenderer implements ChunkRenderer {
@@ -50,13 +50,13 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         ShaderConstants constants = createShaderConstants(options);
 
         GlShader vertShader = ShaderLoader.loadShader(ShaderType.VERTEX,
-                ResourceLocation.fromNamespaceAndPath("sodium", path + ".vsh"), constants);
+                Identifier.fromNamespaceAndPath("sodium", path + ".vsh"), constants);
 
         GlShader fragShader = ShaderLoader.loadShader(ShaderType.FRAGMENT,
-                ResourceLocation.fromNamespaceAndPath("sodium", path + ".fsh"), constants);
+                Identifier.fromNamespaceAndPath("sodium", path + ".fsh"), constants);
 
         try {
-            return GlProgram.builder(ResourceLocation.fromNamespaceAndPath("sodium", "chunk_shader"))
+            return GlProgram.builder(Identifier.fromNamespaceAndPath("sodium", "chunk_shader"))
                     .attachShader(vertShader)
                     .attachShader(fragShader)
                     .bindAttribute("a_Position", ChunkShaderBindingPoints.ATTRIBUTE_POSITION)

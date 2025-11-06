@@ -2,7 +2,7 @@ package net.caffeinemc.mods.sodium.client.checks;
 
 import net.caffeinemc.mods.sodium.client.console.Console;
 import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.NotNull;
@@ -152,7 +152,7 @@ public class ResourcePackScanner {
         final var unsupportedShaderPrograms = new ArrayList<String>();
         final var unsupportedShaderIncludes = new ArrayList<String>();
 
-        resourcePack.listResources(PackType.CLIENT_RESOURCES, ResourceLocation.DEFAULT_NAMESPACE, "shaders", (identifier, supplier) -> {
+        resourcePack.listResources(PackType.CLIENT_RESOURCES, Identifier.DEFAULT_NAMESPACE, "shaders", (identifier, supplier) -> {
             // Trim full shader file path to only contain the filename
             final var path = identifier.getPath();
             final var name = path.substring(path.lastIndexOf('/') + 1);

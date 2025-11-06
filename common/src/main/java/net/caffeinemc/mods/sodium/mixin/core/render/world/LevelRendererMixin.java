@@ -234,7 +234,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
      * @author JellySquid
      */
     @Overwrite
-    public boolean isSectionCompiled(BlockPos pos) {
+    public boolean isSectionCompiledAndVisible(BlockPos pos) {
         return this.renderer.isSectionReady(pos.getX() >> 4, pos.getY() >> 4, pos.getZ() >> 4);
     }
 

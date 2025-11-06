@@ -927,6 +927,11 @@ public class RenderSectionManager {
         return section != null && section.isBuilt();
     }
 
+    public float getSectionVisibility(int x, int y, int z) {
+        var section = this.getRenderSection(x, y, z);
+        return section.getCurrentVisibility();
+    }
+
     public void onChunkAdded(int x, int z) {
         for (int y = this.level.getMinSectionY(); y <= this.level.getMaxSectionY(); y++) {
             this.onSectionAdded(x, y, z);

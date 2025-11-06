@@ -12,7 +12,7 @@ import net.caffeinemc.mods.sodium.client.compatibility.workarounds.nvidia.Nvidia
 import net.caffeinemc.mods.sodium.client.compatibility.environment.GlContextInfo;
 import net.caffeinemc.mods.sodium.client.platform.NativeWindowHandle;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.WGL;
 import org.lwjgl.system.MemoryUtil;

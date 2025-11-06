@@ -8,6 +8,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.GraphDirectionSe
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.VisibilityEncoding;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -65,6 +66,7 @@ public class RenderSection {
 
     // Lifetime state
     private boolean disposed;
+    private int fadeTime;
 
     public RenderSection(RenderRegion region, int chunkX, int chunkY, int chunkZ) {
         this.chunkX = chunkX;
@@ -394,5 +396,16 @@ public class RenderSection {
 
     public void setLastSubmittedFrame(int lastSubmittedFrame) {
         this.lastSubmittedFrame = lastSubmittedFrame;
+    }
+
+    public float getCurrentVisibility() {
+        int currentTime = Math.toIntExact(System.currentTimeMillis() - region.getCreationTime());
+        int fadeTime = currentTime - this.fadeTime;
+        float elapsed = (float) fadeTime;
+        return Math.clamp(elapsed / ((float) (Minecraft.getInstance().options.chunkSectionFadeInTime().get() * 1000)), 0.0f, 1.0f);
+    }
+
+    public void setFadeTime(int relativeBuiltTime) {
+        this.fadeTime = relativeBuiltTime;
     }
 }

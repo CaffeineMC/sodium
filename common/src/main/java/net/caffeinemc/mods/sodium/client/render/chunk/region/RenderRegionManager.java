@@ -163,6 +163,7 @@ public class RenderRegionManager {
             for (PendingSectionMeshUpload upload : uploads) {
                 var storage = region.createStorage(upload.pass);
                 if (upload.relativeBuiltTime != -1) { // We don't want the animation to happen again on chunks changing!
+                    upload.section.setFadeTime(upload.relativeBuiltTime);
                     resources.writeMeshTimes(upload.section.getSectionIndex(), upload.relativeBuiltTime);
                 }
                 storage.setVertexData(upload.section.getSectionIndex(),

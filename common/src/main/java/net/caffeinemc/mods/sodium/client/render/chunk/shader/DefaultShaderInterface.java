@@ -99,9 +99,9 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
         GlTexture tex = (GlTexture) textureView.texture();
         GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + slot.ordinal());
         GlStateManager._bindTexture(tex.glId());
+        GL33C.glBindSampler(slot.ordinal(), ((GlSampler) sampler).getId());
         GlStateManager._texParameter(GL32C.GL_TEXTURE_2D, 33084, textureView.baseMipLevel());
         GlStateManager._texParameter(GL32C.GL_TEXTURE_2D, 33085, textureView.baseMipLevel() + textureView.mipLevels() - 1);
-        GL33C.glBindSampler(slot.ordinal(), ((GlSampler) sampler).getId());
 
         var uniform = this.uniformTextures.get(slot);
         uniform.setInt(slot.ordinal());
