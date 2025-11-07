@@ -16,6 +16,7 @@
     "platform.neoforge.AuxiliaryLightManagerMixin",
     "platform.neoforge.ClientHooksMixin",
     "platform.neoforge.EntrypointMixin",
+    "platform.neoforge.LevelRendererMixin",
     "platform.neoforge.LevelSliceMixin",
     "platform.neoforge.ModelDataMixin",
     "platform.neoforge.ResourcePackLoaderMixin"

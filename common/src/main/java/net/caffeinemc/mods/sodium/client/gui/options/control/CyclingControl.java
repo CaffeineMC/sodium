@@ -3,9 +3,11 @@ package net.caffeinemc.mods.sodium.client.gui.options.control;
 import net.caffeinemc.mods.sodium.client.gui.options.Option;
 import net.caffeinemc.mods.sodium.client.gui.options.TextProvider;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.navigation.CommonInputs;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.Validate;
 
@@ -103,21 +105,23 @@ public class CyclingControl<T extends Enum<T>> implements Control<T> {
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (this.option.isAvailable() && button == 0 && this.dim.containsCursor(mouseX, mouseY)) {
-                cycleControl(Screen.hasShiftDown());
+        public boolean mouseClicked(MouseButtonEvent event, boolean repeated) {
+            if (this.option.isAvailable() && event.button() == 0 && this.dim.containsCursor(event.x(), event.y())) {
+                cycleControl(Minecraft.getInstance().hasShiftDown());
                 return true;
             }
 
             return false;
         }
 
+
+
         @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        public boolean keyPressed(KeyEvent event) {
             if (!isFocused()) return false;
 
-            if (CommonInputs.selected(keyCode)) {
-                cycleControl(Screen.hasShiftDown());
+            if (event.isSelection()) {
+                cycleControl(Minecraft.getInstance().hasShiftDown());
                 return true;
             }
 

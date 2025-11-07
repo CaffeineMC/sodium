@@ -3,8 +3,8 @@ const uint MATERIAL_ALPHA_CUTOFF_OFFSET = 1u;
 
 const float[4] ALPHA_CUTOFF = float[4](0.0, 0.1, 0.1, 1.0);
 
-float _material_mip_bias(uint material) {
-    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0 : -4.0;
+bool _material_use_mips(uint material) {
+    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u;
 }
 
 float _material_alpha_cutoff(uint material) {

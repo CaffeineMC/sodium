@@ -11,8 +11,8 @@ import net.minecraft.core.SectionPos;
 public class TreeSectionCollector extends SectionCollector implements CoordinateSectionVisitor {
     private final Long2ReferenceMap<RenderSection> sections;
 
-    public TreeSectionCollector(int frame, TaskQueueType importantRebuildQueueType, Long2ReferenceMap<RenderSection> sections) {
-        super(frame, importantRebuildQueueType);
+    public TreeSectionCollector(int frame, TaskQueueType importantRebuildQueueType, TaskQueueType importantSortQueueType, Long2ReferenceMap<RenderSection> sections) {
+        super(frame, importantRebuildQueueType, importantSortQueueType);
         this.sections = sections;
     }
 

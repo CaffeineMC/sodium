@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.client.render.texture;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.data.AtlasIds;
 
 /**
  * Caches {@link SpriteFinder}s for maximum efficiency. They must be refreshed after each resource reload.

@@ -1,12 +1,14 @@
 package net.caffeinemc.mods.sodium.client.gui.widgets;
 
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.gui.navigation.CommonInputs;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -39,6 +41,10 @@ public class FlatButtonWidget extends AbstractWidget implements Renderable {
 
         this.hovered = this.dim.containsCursor(mouseX, mouseY);
 
+        if (hovered) {
+            graphics.requestCursor(this.enabled ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
+        }
+
         int backgroundColor = this.enabled ? (this.hovered ? this.style.bgHovered : this.style.bgDefault) : this.style.bgDisabled;
         int textColor = this.enabled ? this.style.textDefault : this.style.textDisabled;
 
@@ -66,12 +72,12 @@ public class FlatButtonWidget extends AbstractWidget implements Renderable {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean repeated) {
         if (!this.enabled || !this.visible) {
             return false;
         }
 
-        if (button == 0 && this.dim.containsCursor(mouseX, mouseY)) {
+        if (event.button() == 0 && this.dim.containsCursor(event.x(), event.y())) {
             doAction();
 
             return true;
@@ -81,11 +87,11 @@ public class FlatButtonWidget extends AbstractWidget implements Renderable {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
         if (!this.isFocused())
             return false;
 
-        if (CommonInputs.selected(keyCode)) {
+        if (event.isSelection()) {
             doAction();
             return true;
         }

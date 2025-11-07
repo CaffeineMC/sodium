@@ -15,6 +15,7 @@ public interface ColorProvider<T> {
      * @param state  The state of the object being colorized
      * @param quad   The quad geometry which should be colorized
      * @param output The output array of vertex colors (in ABGR format)
+     * @param smooth Whether the colors should be blended across vertices
      */
-    void getColors(LevelSlice slice, BlockPos pos, BlockPos.MutableBlockPos scratchPos, T state, ModelQuadView quad, int[] output);
+    void getColors(LevelSlice slice, BlockPos pos, BlockPos.MutableBlockPos scratchPos, T state, ModelQuadView quad, int[] output, boolean smooth);
 }

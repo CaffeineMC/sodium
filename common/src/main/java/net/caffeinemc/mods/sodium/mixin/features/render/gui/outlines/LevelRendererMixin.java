@@ -26,8 +26,8 @@ public class LevelRendererMixin {
      * @author JellySquid
      * @reason Use intrinsics where possible to speed up vertex writing
      */
-    @Inject(method = "renderLineBox(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;DDDDDDFFFFFFF)V", at = @At("HEAD"), cancellable = true)
-    private static void drawBoxFast(PoseStack matrices, VertexConsumer vertexConsumer, double x1, double y1, double z1,
+    @Inject(method = "renderLineBox(Lcom/mojang/blaze3d/vertex/PoseStack$Pose;Lcom/mojang/blaze3d/vertex/VertexConsumer;DDDDDDFFFFFFF)V", at = @At("HEAD"), cancellable = true)
+    private static void drawBoxFast(PoseStack.Pose matrices, VertexConsumer vertexConsumer, double x1, double y1, double z1,
                                     double x2, double y2, double z2, float red, float green, float blue, float alpha,
                                     float xAxisRed, float yAxisGreen, float zAxisBlue, CallbackInfo ci) {
         var writer = VertexConsumerUtils.convertOrLog(vertexConsumer);
@@ -38,8 +38,8 @@ public class LevelRendererMixin {
 
         ci.cancel();
 
-        Matrix4f position = matrices.last().pose();
-        Matrix3f normal = matrices.last().normal();
+        Matrix4f position = matrices.pose();
+        Matrix3f normal = matrices.normal();
 
         float x1f = (float) x1;
         float y1f = (float) y1;

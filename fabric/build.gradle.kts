@@ -57,8 +57,11 @@ dependencies {
     addEmbeddedFabricModule("fabric-block-view-api-v2")
     addEmbeddedFabricModule("fabric-rendering-v1")
     addEmbeddedFabricModule("fabric-renderer-api-v1")
+    addEmbeddedFabricModule("fabric-lifecycle-events-v1")
     addEmbeddedFabricModule("fabric-rendering-fluids-v1")
     addEmbeddedFabricModule("fabric-resource-loader-v0")
+    addEmbeddedFabricModule("fabric-resource-loader-v1")
+    addEmbeddedFabricModule("fabric-transitive-access-wideners-v1")
 }
 
 loom {

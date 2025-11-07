@@ -37,7 +37,7 @@ public class ChunkUpdateTypes {
         return (isRebuild(type) || isInitialBuild(type)) && isSort(type);
     }
 
-    public static TaskQueueType getQueueType(int type, TaskQueueType importantRebuildQueueType) {
+    public static TaskQueueType getQueueType(int type, TaskQueueType importantRebuildQueueType, TaskQueueType importantSortQueueType) {
         if (isInitialBuild(type)) {
             return TaskQueueType.INITIAL_BUILD;
         }
@@ -45,7 +45,7 @@ public class ChunkUpdateTypes {
             if (isRebuild(type)) {
                 return importantRebuildQueueType;
             } else { // implies important sort task
-                return TaskQueueType.ZERO_FRAME_DEFER;
+                return importantSortQueueType;
             }
         } else {
             return TaskQueueType.ALWAYS_DEFER;

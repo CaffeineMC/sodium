@@ -29,7 +29,8 @@ import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.AbstractRenderContext;
 import net.caffeinemc.mods.sodium.client.render.model.QuadEncoder;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
-import net.caffeinemc.mods.sodium.mixin.frapi.ItemRendererAccessor;
+import net.caffeinemc.mods.sodium.mixin.features.render.frapi.ItemRendererAccessor;
+import net.fabricmc.fabric.api.renderer.v1.mesh.MeshView;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderLayerHelper;
 import net.minecraft.client.renderer.LightTexture;
@@ -56,7 +57,6 @@ import java.util.function.Supplier;
  * The render context used for item rendering.
  */
 public class ItemRenderContext extends AbstractRenderContext {
-    public static final ThreadLocal<ItemRenderContext> POOL = ThreadLocal.withInitial(ItemRenderContext::new);
     /** Value vanilla uses for item rendering.  The only sensible choice, of course.  */
     private static final long ITEM_RANDOM_SEED = 42L;
     private static final int GLINT_COUNT = ItemStackRenderState.FoilType.values().length;
@@ -93,6 +93,7 @@ public class ItemRenderContext extends AbstractRenderContext {
     private int lightmap;
     private int overlay;
     private int[] colors;
+    private boolean ignoreQuadGlint;
 
     private RenderType defaultLayer;
     private ItemStackRenderState.FoilType defaultGlint;
@@ -106,7 +107,7 @@ public class ItemRenderContext extends AbstractRenderContext {
         return editorQuad;
     }
 
-    public void renderItem(ItemDisplayContext displayContext, PoseStack poseStack, MultiBufferSource bufferSource, int lightmap, int overlay, int[] colors, List<BakedQuad> vanillaQuads, MeshViewImpl mesh, RenderType layer, ItemStackRenderState.FoilType glint) {
+    public void renderItem(ItemDisplayContext displayContext, PoseStack poseStack, MultiBufferSource bufferSource, int lightmap, int overlay, int[] colors, List<BakedQuad> vanillaQuads, MeshView mesh, RenderType layer, ItemStackRenderState.FoilType glint, boolean ignoreQuadGlint) {
         this.transformMode = displayContext;
         matPosition = poseStack.last().pose();
         this.poseStack = poseStack;
@@ -117,6 +118,8 @@ public class ItemRenderContext extends AbstractRenderContext {
         this.lightmap = lightmap;
         this.overlay = overlay;
         this.colors = colors;
+        this.ignoreQuadGlint = ignoreQuadGlint;
+
 
         defaultLayer = layer;
         defaultGlint = glint;
@@ -132,8 +135,8 @@ public class ItemRenderContext extends AbstractRenderContext {
     }
 
 
-    private void bufferQuads(List<BakedQuad> vanillaQuads, MeshViewImpl mesh) {
-        QuadEmitter emitter = ((ExtendedMutableQuadViewImpl) getForEmitting()).getWrapper();
+    private void bufferQuads(List<BakedQuad> vanillaQuads, MeshView mesh) {
+        QuadEmitter emitter = getEmitter();
 
         final int vanillaQuadCount = vanillaQuads.size();
 
@@ -204,7 +207,7 @@ public class ItemRenderContext extends AbstractRenderContext {
             type = RenderLayerHelper.getEntityBlockLayer(blendMode);
         }
 
-        if (glintMode == null) {
+        if (glintMode == null || ignoreQuadGlint) {
             glint = defaultGlint;
         } else {
             glint = glintMode;
