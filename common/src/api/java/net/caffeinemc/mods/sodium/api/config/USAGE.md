@@ -1,5 +1,3 @@
-TODO: finalize dependency declaration to only use the API package, variant declaration?
-
 # Usage of the Sodium Config API
 
 The Sodium Config API lets mods add their own pages to the Video Settings screen, which Sodium replaces with its own screen.

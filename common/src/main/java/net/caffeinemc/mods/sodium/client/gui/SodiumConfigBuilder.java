@@ -8,7 +8,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
-import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.option.Range;
@@ -23,8 +22,6 @@ import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.minecraft.client.*;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ParticleStatus;
@@ -34,15 +31,12 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 
 // TODO: get initialValue from the vanilla options (it's private)
 public class SodiumConfigBuilder implements ConfigEntryPoint {
     private static final ResourceLocation SODIUM_ICON = ResourceLocation.fromNamespaceAndPath("sodium", "textures/gui/icon.png");
-    private static final ResourceLocation EXAMPLE_ICON = ResourceLocation.fromNamespaceAndPath("sodium", "textures/gui/example_icon.png");
     private static final SodiumOptions DEFAULTS = SodiumOptions.defaults();
 
     private final Options vanillaOpts;
@@ -114,178 +108,13 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                 .addPage(this.buildQualityPage(builder))
                 .addPage(this.buildPerformancePage(builder))
                 .addPage(this.buildAdvancedPage(builder));
-
-        // TODO: this is for debugging and dev
-        buildExampleAPIUserConfig(builder);
-    }
-
-    private static void buildExampleAPIUserConfig(ConfigBuilder builder) {
-        class LocalBinding<V> implements OptionBinding<V> {
-            private V value;
-
-            public LocalBinding(V value) {
-                this.value = value;
-            }
-
-            @Override
-            public void save(V value) {
-                this.value = value;
-            }
-
-            @Override
-            public V load() {
-                return this.value;
-            }
-        }
-
-        // for testing cycle detection
-        // .setEnabledProvider((state) -> state.readIntOption(ResourceLocation.parse("foo:baz")) == 0, ResourceLocation.parse("foo:baz"))
-
-        var options = builder.registerModOptions("foo", "Foo fadsa fdsa fdsa fdas fdsafdsa", "1.0 fdas fdas fdasfdsaf dsa")
-                .setIcon(EXAMPLE_ICON)
-                .addPage(
-                        builder.createExternalPage()
-                                .setName(Component.literal("External Page"))
-                                .setScreenProvider((prevScreen) -> {
-                                    Minecraft.getInstance().setScreen(new Screen(Component.literal("External Page")) {
-                                        @Override
-                                        public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-                                            super.render(graphics, mouseX, mouseY, delta);
-                                            graphics.drawString(Minecraft.getInstance().font, Component.literal("Hello, world!"), 10, 10, 0xFFFFFF);
-                                        }
-                                    });
-                                })
-                )
-                .addPage(builder.createOptionPage()
-                        .setName(Component.literal("Foo Pagej fdjfjfl jfdskl fdjkllfffsdldfskjl j"))
-                        .addOptionGroup(builder.createOptionGroup()
-                                .addOption(
-                                        builder.createBooleanOption(ResourceLocation.parse("foo:bar"))
-                                                .setStorageHandler(() -> {
-                                                })
-                                                .setName(Component.literal("Bar"))
-                                                .setTooltip(Component.literal("Baz"))
-                                                .setDefaultValue(true)
-                                                .setBinding(new LocalBinding<>(true))
-                                                .setImpact(OptionImpact.LOW)
-                                )
-                                .addOption(
-                                        builder.createIntegerOption(ResourceLocation.parse("foo:baz"))
-                                                .setStorageHandler(() -> {
-                                                })
-                                                .setName(Component.literal("Baz"))
-                                                .setTooltip(Component.literal("Baz"))
-                                                .setValueFormatter(ControlValueFormatterImpls.number())
-                                                .setDefaultValue(5)
-                                                .setRange(0, 10, 1)
-                                                .setBinding(new LocalBinding<>(5))
-                                                .setEnabledProvider(state -> state.readBooleanOption(ResourceLocation.parse("foo:bar")), ResourceLocation.parse("foo:bar"))
-                                )
-                                .addOption(
-                                        builder.createIntegerOption(ResourceLocation.parse("foo:bla"))
-                                                .setStorageHandler(() -> {
-                                                })
-                                                .setName(Component.literal("Bla"))
-                                                .setTooltip(Component.literal("hello"))
-                                                .setValueFormatter(ControlValueFormatterImpls.number())
-                                                .setDefaultValue(5)
-                                                .setRangeProvider(
-                                                        state -> new Range(state.readBooleanOption(ResourceLocation.parse("foo:bar")) ? 0 : 1, 5, 1),
-                                                        ResourceLocation.parse("foo:bar"))
-                                                .setBinding(new LocalBinding<>(5))
-                                )
-                                .addOption(
-                                        builder.createEnumOption(ResourceLocation.parse("foo:zot"), OptionImpact.class)
-                                                .setStorageHandler(() -> {
-                                                })
-                                                .setName(Component.literal("Zot"))
-                                                .setTooltip(Component.literal("hello"))
-                                                .setDefaultValue(OptionImpact.LOW)
-                                                .setAllowedValuesProvider(
-                                                        state -> {
-                                                            var set = EnumSet.noneOf(OptionImpact.class);
-                                                            var value = state.readIntOption(ResourceLocation.parse("foo:bla"));
-                                                            var list = Arrays.asList(OptionImpact.values());
-                                                            set.addAll(list.subList(0, Math.min(value + 1, list.size())));
-                                                            return set;
-                                                        },
-                                                        ResourceLocation.parse("foo:bla"))
-                                                .setElementNameProvider(value -> Component.literal(value.name()))
-                                                .setBinding(new LocalBinding<>(OptionImpact.LOW))
-                                )
-                                .addOption(
-                                        builder.createExternalButtonOption(ResourceLocation.parse("foo:button"))
-                                                .setName(Component.literal("Other things"))
-                                                .setTooltip(Component.literal("Hello"))
-                                                .setScreenProvider((prevScreen) -> {
-                                                    Minecraft.getInstance().setScreen(new Screen(Component.literal("External Button Page")) {
-                                                        @Override
-                                                        public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-                                                            super.render(graphics, mouseX, mouseY, delta);
-                                                            graphics.drawString(Minecraft.getInstance().font, Component.literal("Hello, world 2!"), 10, 10, 0xFFFFFF);
-                                                        }
-                                                    });
-                                                })
-                                                .setEnabledProvider((state) -> state.readBooleanOption(ResourceLocation.parse("foo:bar")), ResourceLocation.parse("foo:bar"))
-                                )
-                        )
-                );
-        for (int i = 0; i < 10; i++) {
-            options.addPage(builder.createOptionPage()
-                    .setName(Component.literal("Foo " + i))
-                    .addOptionGroup(builder.createOptionGroup().addOption(
-                            builder.createBooleanOption(ResourceLocation.parse("foo:" + i))
-                                    .setStorageHandler(() -> {
-                                    })
-                                    .setName(Component.literal("Bar " + i))
-                                    .setTooltip(Component.literal("Baz " + i))
-                                    .setDefaultValue(true)
-                                    .setBinding(new LocalBinding<>(true))
-                                    .setImpact(OptionImpact.LOW)
-                    ))
-            );
-        }
-        OptionPageBuilder page = builder.createOptionPage()
-                .setName(Component.literal("Big Foo"));
-        for (int i = 0; i < 4; i++) {
-            OptionGroupBuilder group = builder.createOptionGroup();
-            for (int j = 0; j < i * 4 + 2; j++) {
-                group.addOption(builder.createBooleanOption(ResourceLocation.parse("foo:big_" + i + "_" + j))
-                        .setStorageHandler(() -> {
-                        })
-                        .setName(Component.literal("Bar " + i + "," + j))
-                        .setTooltip(Component.literal("Baz " + i + "," + j))
-                        .setDefaultValue(true)
-                        .setBinding(new LocalBinding<>(true))
-                        .setImpact(OptionImpact.LOW)
-                );
-            }
-            page.addOptionGroup(group);
-        }
-        options.addPage(page);
-
-        var other = builder.registerModOptions("bar", "Bar", "1.0 fdas fdas fdasfdsaf dsa");
-        other.registerOptionOverride(builder.createOptionOverride()
-                .setTarget(ResourceLocation.parse("foo:bar"))
-                .setReplacement(
-                        builder.createBooleanOption(ResourceLocation.parse("foo:bar"))
-                                .setStorageHandler(() -> {
-                                })
-                                .setName(Component.literal("Replaced Bar"))
-                                .setTooltip(Component.literal("Baz"))
-                                .setDefaultValue(true)
-                                .setBinding(new LocalBinding<>(true))
-                                .setImpact(OptionImpact.MEDIUM)
-
-                )
-        );
     }
 
     private OptionPageBuilder buildGeneralPage(ConfigBuilder builder) {
         var generalPage = builder.createOptionPage().setName(Component.literal("General"));
         generalPage.addOptionGroup(builder.createOptionGroup()
-                .setName(Component.literal("Group Title")) // TODO: remove, this is for testing
                 .addOption(
+                        // TODO: make RD option respect Vanilla's >16 RD only allowed if memory >1GB constraint
                         builder.createIntegerOption(ResourceLocation.parse("sodium:general.render_distance"))
                                 .setStorageHandler(this.vanillaStorage)
                                 .setName(Component.translatable("options.renderDistance"))
