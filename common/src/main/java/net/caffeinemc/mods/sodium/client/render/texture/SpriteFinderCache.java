@@ -14,7 +14,7 @@ public class SpriteFinderCache {
 
     public static SodiumSpriteFinder forBlockAtlas() {
         if (blockAtlasSpriteFinder == null) {
-            blockAtlasSpriteFinder = ((ExtendedTextureAtlas) Minecraft.getInstance().getModelManager().getAtlas(TextureAtlas.LOCATION_BLOCKS)).sodium$getSpriteFinder();
+            blockAtlasSpriteFinder = ((ExtendedTextureAtlas) Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.BLOCKS)).sodium$getSpriteFinder();
         }
 
         return blockAtlasSpriteFinder;

@@ -29,7 +29,7 @@ import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.AbstractRenderContext;
 import net.caffeinemc.mods.sodium.client.render.model.QuadEncoder;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
-import net.caffeinemc.mods.sodium.mixin.features.render.frapi.ItemRendererAccessor;
+import net.caffeinemc.mods.sodium.mixin.frapi.ItemRendererAccessor;
 import net.fabricmc.fabric.api.renderer.v1.mesh.MeshView;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderLayerHelper;
@@ -136,7 +136,7 @@ public class ItemRenderContext extends AbstractRenderContext {
 
 
     private void bufferQuads(List<BakedQuad> vanillaQuads, MeshView mesh) {
-        QuadEmitter emitter = getEmitter();
+        QuadEmitter emitter = ((ExtendedMutableQuadViewImpl) getForEmitting()).getWrapper();
 
         final int vanillaQuadCount = vanillaQuads.size();
 

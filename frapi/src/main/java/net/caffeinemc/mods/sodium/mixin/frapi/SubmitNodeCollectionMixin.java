@@ -1,4 +1,4 @@
-package net.caffeinemc.mods.sodium.mixin.features.render.frapi;
+package net.caffeinemc.mods.sodium.mixin.frapi;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.MeshItemCommand;

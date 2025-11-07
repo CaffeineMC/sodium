@@ -13,12 +13,15 @@
     "BlockModelPartMixin",
     "BlockRenderDispatcherAccessor",
     "BlockRenderDispatcherMixin",
+    "ItemFeatureRendererMixin",
     "ItemLayerRenderStateMixin",
     "ItemRendererAccessor",
     "ItemRenderStateMixin",
     "ModelBlockRendererAccessor",
     "ModelBlockRendererMixin",
     "QuadViewImplMixin",
-    "MutableQuadViewImplMixin"
+    "MutableQuadViewImplMixin",
+    "SubmitNodeCollectionMixin",
+    "SubmitNodeStorageMixin"
   ]
 }
