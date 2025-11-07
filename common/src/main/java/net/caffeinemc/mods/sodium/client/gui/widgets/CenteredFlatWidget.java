@@ -7,8 +7,9 @@ import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.navigation.CommonInputs;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
@@ -92,12 +93,12 @@ public abstract class CenteredFlatWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (!this.enabled || !this.visible) {
             return false;
         }
 
-        if (button == 0 && this.isMouseOver(mouseX, mouseY)) {
+        if (event.button() == 0 && this.isMouseOver(event.x(), event.y())) {
             doAction();
 
             return true;
@@ -107,11 +108,11 @@ public abstract class CenteredFlatWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
         if (!this.isFocused())
             return false;
 
-        if (CommonInputs.selected(keyCode)) {
+        if (event.isSelection()) {
             doAction();
             return true;
         }

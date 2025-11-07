@@ -20,6 +20,8 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
@@ -278,44 +280,44 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (this.prompt != null && this.prompt.keyPressed(keyCode, scanCode, modifiers)) {
+    public boolean keyPressed(KeyEvent event) {
+        if (this.prompt != null && this.prompt.keyPressed(event)) {
             return true;
         }
 
-        if (this.searchWidget.keyPressed(keyCode, scanCode, modifiers)) {
+        if (this.searchWidget.keyPressed(event)) {
             return true;
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
-    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+    public boolean keyReleased(KeyEvent event) {
         if (this.prompt == null && !this.searchWidget.isSearching()) {
             // shift + P opens the vanilla video settings screen
-            if (keyCode == GLFW.GLFW_KEY_P && (modifiers & GLFW.GLFW_MOD_SHIFT) != 0) {
+            if (event.key() == GLFW.GLFW_KEY_P && (event.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0) {
                 Minecraft.getInstance().setScreen(new net.minecraft.client.gui.screens.options.VideoSettingsScreen(this.prevScreen, Minecraft.getInstance(), Minecraft.getInstance().options));
                 return true;
             }
 
             // T starts search
-            if (keyCode == GLFW.GLFW_KEY_T) {
+            if (event.key() == GLFW.GLFW_KEY_T) {
                 this.setFocused(this.searchWidget);
                 return true;
             }
         }
 
-        return super.keyReleased(keyCode, scanCode, modifiers);
+        return super.keyReleased(event);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (this.prompt != null) {
-            return this.prompt.mouseClicked(mouseX, mouseY, button);
+            return this.prompt.mouseClicked(event, doubleClick);
         }
 
-        if (!super.mouseClicked(mouseX, mouseY, button)) {
+        if (!super.mouseClicked(event, doubleClick)) {
             // Clicking in empty space, focus the search bar
             if (!this.searchWidget.isFocused()) {
                 this.setFocused(this.searchWidget);
@@ -331,7 +333,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
     @Override
     public boolean mouseScrolled(double x, double y, double f, double amount) {
         // change the gui scale with scrolling if the control key is held
-        if (Screen.hasControlDown()) {
+        if (Minecraft.getInstance().hasControlDown()) {
             var location = ResourceLocation.parse("sodium:general.gui_scale");
             var option = ConfigManager.CONFIG.getOption(location);
             if (option instanceof IntegerOption guiScaleOption) {

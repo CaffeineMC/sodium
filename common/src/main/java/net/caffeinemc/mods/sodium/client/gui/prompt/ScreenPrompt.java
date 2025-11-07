@@ -10,6 +10,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import org.jetbrains.annotations.NotNull;
@@ -60,7 +62,7 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
         int boxY = (parentDimensions.height() / 2) - (this.height / 2);
 
         graphics.fill(boxX, boxY, boxX + this.width, boxY + this.height, 0xFF171717);
-        graphics.renderOutline(boxX, boxY, this.width, this.height, 0xFF121212);
+        graphics.submitOutline(boxX, boxY, this.width, this.height, 0xFF121212);
 
 
         int padding = 5;
@@ -103,9 +105,9 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         for (var widget : this.getWidgets()) {
-            if (widget.mouseClicked(mouseX, mouseY, button)) {
+            if (widget.mouseClicked(event, doubleClick)) {
                 return true;
             }
         }
@@ -114,13 +116,13 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+    public boolean keyPressed(KeyEvent event) {
+        if (event.isEscape()) {
             this.close();
             return true;
         }
 
-        return GuiEventListener.super.keyPressed(keyCode, scanCode, modifiers);
+        return GuiEventListener.super.keyPressed(event);
     }
 
     @Override

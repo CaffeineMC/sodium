@@ -9,6 +9,8 @@ import net.caffeinemc.mods.sodium.client.gui.Colors;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
 import org.apache.commons.lang3.Validate;
 
@@ -143,12 +145,12 @@ public class SliderControl implements Control {
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
             this.sliderHeld = false;
 
-            if (this.option.isEnabled() && button == 0 && this.isMouseOver(mouseX, mouseY)) {
-                if (this.isMouseOverSlider(mouseX, mouseY)) {
-                    this.setValueFromMouse(mouseX);
+            if (this.option.isEnabled() && event.button() == 0 && this.isMouseOver(event.x(), event.y())) {
+                if (this.isMouseOverSlider(event.x(), event.y())) {
+                    this.setValueFromMouse(event.x());
                     this.sliderHeld = true;
                 }
 
@@ -173,14 +175,14 @@ public class SliderControl implements Control {
         }
 
         @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        public boolean keyPressed(KeyEvent event) {
             if (!isFocused()) return false;
 
             var range = this.option.getRange();
-            if (keyCode == InputConstants.KEY_LEFT) {
+            if (event.isLeft()) {
                 this.option.modifyValue(Mth.clamp(this.option.getValidatedValue() - range.step(), range.max(), range.max()));
                 return true;
-            } else if (keyCode == InputConstants.KEY_RIGHT) {
+            } else if (event.isRight()) {
                 this.option.modifyValue(Mth.clamp(this.option.getValidatedValue() + range.step(), range.min(), range.max()));
                 return true;
             }
@@ -189,10 +191,10 @@ public class SliderControl implements Control {
         }
 
         @Override
-        public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-            if (this.option.isEnabled() && button == 0) {
+        public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
+            if (this.option.isEnabled() && event.button() == 0) {
                 if (this.sliderHeld) {
-                    this.setValueFromMouse(mouseX);
+                    this.setValueFromMouse(event.x());
                 }
 
                 return true;

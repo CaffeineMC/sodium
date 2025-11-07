@@ -6,6 +6,7 @@ import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -134,31 +135,31 @@ public class ScrollbarWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (!this.isMouseOver(mouseX, mouseY) || !this.canScroll()) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (!this.isMouseOver(event.x(), event.y()) || !this.canScroll()) {
             return false;
         }
-        if (this.isMouseOverHighlight(mouseX, mouseY)) {
+        if (this.isMouseOverHighlight(event.x(), event.y())) {
             this.dragging = true;
         } else {
             if (this.horizontal) {
-                this.scroll(mouseX > this.getHighlightStart(this.getWidth()) ? this.getWidth() : -this.getWidth());
+                this.scroll(event.x() > this.getHighlightStart(this.getWidth()) ? this.getWidth() : -this.getWidth());
             } else {
-                this.scroll(mouseY > this.getHighlightStart(this.getHeight()) ? this.getHeight() : -this.getHeight());
+                this.scroll(event.y() > this.getHighlightStart(this.getHeight()) ? this.getHeight() : -this.getHeight());
             }
         }
         return true;
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
         this.dragging = false;
         this.lastScrollTime = Math.max(this.lastScrollTime, System.currentTimeMillis() - 500);
         return false;
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
         if (this.dragging) {
             this.scroll((int) Math.round(this.horizontal ? deltaX : deltaY * ((double) this.total / this.visible)));
             return true;
