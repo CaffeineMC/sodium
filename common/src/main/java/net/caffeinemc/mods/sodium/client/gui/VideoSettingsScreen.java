@@ -294,13 +294,26 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
             return true;
         }
 
-        if (this.prompt == null && !this.searchWidget.isSearching() && keyCode == GLFW.GLFW_KEY_P && (modifiers & GLFW.GLFW_MOD_SHIFT) != 0) {
-            Minecraft.getInstance().setScreen(new net.minecraft.client.gui.screens.options.VideoSettingsScreen(this.prevScreen, Minecraft.getInstance(), Minecraft.getInstance().options));
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
 
-            return true;
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        if (this.prompt == null && !this.searchWidget.isSearching()) {
+            // shift + P opens the vanilla video settings screen
+            if (keyCode == GLFW.GLFW_KEY_P && (modifiers & GLFW.GLFW_MOD_SHIFT) != 0) {
+                Minecraft.getInstance().setScreen(new net.minecraft.client.gui.screens.options.VideoSettingsScreen(this.prevScreen, Minecraft.getInstance(), Minecraft.getInstance().options));
+                return true;
+            }
+
+            // T starts search
+            if (keyCode == GLFW.GLFW_KEY_T) {
+                this.setFocused(this.searchWidget);
+                return true;
+            }
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyReleased(keyCode, scanCode, modifiers);
     }
 
     @Override
