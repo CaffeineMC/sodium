@@ -32,7 +32,7 @@ public class SearchWidget extends AbstractParentWidget {
         this.onSearchResults = onSearchResults;
         this.searchQuerySession = ConfigManager.CONFIG.startSearchQuery();
     }
-    
+
     public void updateWidgetWidth(int width) {
         if (width != this.lastRebuildWidth) {
             this.lastRebuildWidth = width;
@@ -42,7 +42,7 @@ public class SearchWidget extends AbstractParentWidget {
 
     private void rebuildForWidth(int width) {
         this.clearChildren();
-        
+
         int x = this.getX();
         int y = this.getY();
 
@@ -171,8 +171,18 @@ public class SearchWidget extends AbstractParentWidget {
     public boolean charTyped(char c, int i) {
         return this.searchBox.charTyped(c, i);
     }
-    
+
     public boolean isSearching() {
         return this.searchBox.isFocused();
+    }
+
+    @Override
+    public void setFocused(boolean focused) {
+        super.setFocused(focused);
+
+        // on focus, focus the search box for typing
+        if (focused) {
+            this.setFocused(this.searchBox);
+        }
     }
 }
