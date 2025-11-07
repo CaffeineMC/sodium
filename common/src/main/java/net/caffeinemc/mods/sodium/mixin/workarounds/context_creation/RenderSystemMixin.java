@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.mixin.workarounds.context_creation;
 import com.mojang.blaze3d.TracyFrameCapture;
 import com.mojang.blaze3d.platform.DisplayData;
 import com.mojang.blaze3d.platform.ScreenManager;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.platform.WindowEventHandler;
 import com.mojang.blaze3d.shaders.ShaderType;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -56,7 +57,7 @@ public class RenderSystemMixin {
     }
 
     @Inject(method = "flipFrame", at = @At(value = "RETURN"))
-    private static void preSwapBuffers(long window, TracyFrameCapture tracyFrameCapture, CallbackInfo ci) {
+    private static void preSwapBuffers(Window window, TracyFrameCapture tracyFrameCapture, CallbackInfo ci) {
         if (wglPrevContext == MemoryUtil.NULL) {
             // There is no prior recorded context.
             return;
@@ -74,7 +75,7 @@ public class RenderSystemMixin {
 
         // Likely, this indicates a module was injected into the current process. We should check that
         // nothing problematic was just installed.
-        ModuleScanner.checkModules(() -> GLFWNativeWin32.glfwGetWin32Window(window));
+        ModuleScanner.checkModules(() -> GLFWNativeWin32.glfwGetWin32Window(window.handle()));
 
         // If we didn't find anything problematic (which would have thrown an exception), then let's just record
         // the new context pointer and carry on.

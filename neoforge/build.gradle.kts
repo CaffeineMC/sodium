@@ -1,7 +1,7 @@
 plugins {
     id("multiloader-platform")
 
-    id("net.neoforged.moddev") version("2.0.103")
+    id("net.neoforged.moddev") version("2.0.107")
 }
 
 base {
@@ -10,15 +10,6 @@ base {
 
 repositories {
     maven("https://maven.irisshaders.dev/releases")
-
-    maven {
-        name = "Maven for PR #2297" // https://github.com/neoforged/NeoForge/pull/2297
-        url = uri("https://prmaven.neoforged.net/NeoForge/pr2297")
-        content {
-            includeModule("net.neoforged", "neoforge")
-            includeModule("net.neoforged", "testframework")
-        }
-    }
 
     maven("https://maven.su5ed.dev/releases")
     maven("https://maven.neoforged.net/releases/")
@@ -57,44 +48,46 @@ dependencies {
     }
 
     addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")
-    addEmbeddedFabricModule("net.caffeinemc:fabric-renderer-api-v1:7.0.0")
+    addEmbeddedFabricModule("net.caffeinemc:fabric-renderer-api-v1:7.1.1")
     //addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
 
-    jarJar(project(":neoforge", "service"))
+    jarJar(project(":neoforge", "mod"))
 }
 
-val serviceJar = tasks.register<Jar>("serviceJar") {
-    from(configurationCommonServiceJava)
-    from(configurationCommonServiceResources)
+val modJar = tasks.register<Jar>("modJar") {
+    from(configurationCommonModJava)
+    from(configurationCommonModResources)
 
-    from(sourceSets["service"].output)
+    from(sourceSets["mod"].output)
 
     from(rootDir.resolve("LICENSE.md"))
 
-    manifest.attributes["FMLModType"] = "LIBRARY"
+    filesMatching(listOf("META-INF/neoforge.mods.toml")) {
+        expand(mapOf("version" to inputs.properties["version"]))
+    }
 
-    archiveClassifier = "service"
+    archiveClassifier = "mod"
 }
 
-val configurationService: Configuration = configurations.create("service") {
+val configurationMod: Configuration = configurations.create("mod") {
     isCanBeConsumed = true
     isCanBeResolved = true
 
     outgoing {
-        artifact(serviceJar)
+        artifact(modJar)
     }
 }
 
 sourceSets {
-    named("service") {
-        compileClasspath = sourceSets["main"].compileClasspath
-        runtimeClasspath = sourceSets["main"].runtimeClasspath
-
+    named("main") {
         compileClasspath += configurationCommonServiceJava
         runtimeClasspath += configurationCommonServiceJava
     }
 
-    main {
+    create("mod") {
+        compileClasspath = sourceSets["main"].compileClasspath
+        runtimeClasspath = sourceSets["main"].runtimeClasspath
+
         compileClasspath += configurationCommonModJava
         runtimeClasspath += configurationCommonModJava
     }
@@ -119,13 +112,13 @@ neoForge {
 
     mods {
         create("sodium") {
-            sourceSet(sourceSets["main"])
+            sourceSet(sourceSets["mod"])
             sourceSet(project(":common").sourceSets["main"])
             sourceSet(project(":common").sourceSets["api"])
         }
 
         create("sodium-service") {
-            sourceSet(sourceSets["service"])
+            sourceSet(sourceSets["main"])
             sourceSet(project(":common").sourceSets["boot"])
         }
     }
@@ -133,12 +126,30 @@ neoForge {
 
 tasks {
     jar {
-        from(configurationCommonModJava)
+        from(configurationCommonServiceJava)
+        manifest.attributes["FMLModType"] = "LIBRARY"
+        manifest.attributes["Automatic-Module-Name"] = "sodium_service"
+
         destinationDirectory.set(file(rootProject.layout.buildDirectory).resolve("mods"))
+
+        from(sourceSets.getByName("mod").output.resourcesDir!!.resolve("META-INF/neoforge.mods.toml")) {
+            into("META-INF")
+        }
+
+        from(project(":common").sourceSets.main.get().output.resourcesDir!!.resolve("sodium-icon.png"))
     }
 
     processResources {
-        from(configurationCommonModResources)
+        from(configurationCommonServiceResources)
+    }
+
+    getByName<ProcessResources>("processModResources") {
+        eachFile {
+            println(path)
+        }
+        filesMatching(listOf("META-INF/neoforge.mods.toml")) {
+            expand(mapOf("version" to BuildConfig.createVersionString(rootProject)))
+        }
     }
 }
 

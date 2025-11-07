@@ -32,9 +32,12 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.state.LevelRenderState;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -46,10 +49,12 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.function.Consumer;
@@ -310,41 +315,9 @@ public class SodiumWorldRenderer {
         ChunkTracker.forEachChunk(tracker.getReadyChunks(), this.renderSectionManager::onChunkAdded);
     }
 
-    public void renderBlockEntities(PoseStack matrices,
-                                    RenderBuffers bufferBuilders,
-                                    Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions,
-                                    Camera camera,
-                                    float tickDelta, LocalBooleanRef isGlowing) {
-        MultiBufferSource.BufferSource immediate = bufferBuilders.bufferSource();
+    public void extractBlockEntities(Camera camera, float tickDelta, Long2ObjectMap<SortedSet<BlockDestructionProgress>> progression, LevelRenderState levelRenderState) {
+        PoseStack stack = new PoseStack();
 
-        Vec3 cameraPos = camera.getPosition();
-        double x = cameraPos.x();
-        double y = cameraPos.y();
-        double z = cameraPos.z();
-
-        LocalPlayer player = this.client.player;
-
-        if (player == null) {
-            throw new IllegalStateException("Client instance has no active player entity");
-        }
-
-        BlockEntityRenderDispatcher blockEntityRenderer = Minecraft.getInstance().getBlockEntityRenderDispatcher();
-
-        this.renderBlockEntities(matrices, bufferBuilders, blockBreakingProgressions, tickDelta, immediate, x, y, z, blockEntityRenderer, player, isGlowing);
-        this.renderGlobalBlockEntities(matrices, bufferBuilders, blockBreakingProgressions, tickDelta, immediate, x, y, z, blockEntityRenderer, player, isGlowing);
-    }
-
-    private void renderBlockEntities(PoseStack matrices,
-                                     RenderBuffers bufferBuilders,
-                                     Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions,
-                                     float tickDelta,
-                                     MultiBufferSource.BufferSource immediate,
-                                     double x,
-                                     double y,
-                                     double z,
-                                     BlockEntityRenderDispatcher blockEntityRenderer,
-                                     LocalPlayer player,
-                                     LocalBooleanRef isGlowing) {
         SortedRenderLists renderLists = this.renderSectionManager.getRenderLists();
         Iterator<ChunkRenderList> renderListIterator = renderLists.iterator();
 
@@ -369,23 +342,11 @@ public class SodiumWorldRenderer {
                 }
 
                 for (BlockEntity blockEntity : blockEntities) {
-                    renderBlockEntity(matrices, bufferBuilders, blockBreakingProgressions, tickDelta, immediate, x, y, z, blockEntityRenderer, blockEntity, player, isGlowing);
+                    extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState);
                 }
             }
         }
-    }
 
-    private void renderGlobalBlockEntities(PoseStack matrices,
-                                           RenderBuffers bufferBuilders,
-                                           Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions,
-                                           float tickDelta,
-                                           MultiBufferSource.BufferSource immediate,
-                                           double x,
-                                           double y,
-                                           double z,
-                                           BlockEntityRenderDispatcher blockEntityRenderer,
-                                           LocalPlayer player,
-                                           LocalBooleanRef isGlowing) {
         for (var renderSection : this.renderSectionManager.getSectionsWithGlobalEntities()) {
             var blockEntities = renderSection.getGlobalBlockEntities();
 
@@ -394,55 +355,28 @@ public class SodiumWorldRenderer {
             }
 
             for (var blockEntity : blockEntities) {
-                renderBlockEntity(matrices, bufferBuilders, blockBreakingProgressions, tickDelta, immediate, x, y, z, blockEntityRenderer, blockEntity, player, isGlowing);
+                extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState);
             }
         }
     }
 
-    private static void renderBlockEntity(PoseStack matrices,
-                                          RenderBuffers bufferBuilders,
-                                          Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions,
-                                          float tickDelta,
-                                          MultiBufferSource.BufferSource immediate,
-                                          double x,
-                                          double y,
-                                          double z,
-                                          BlockEntityRenderDispatcher dispatcher,
-                                          BlockEntity entity,
-                                          LocalPlayer player,
-                                          LocalBooleanRef isGlowing) {
-        BlockPos pos = entity.getBlockPos();
-
-        matrices.pushPose();
-        matrices.translate((double) pos.getX() - x, (double) pos.getY() - y, (double) pos.getZ() - z);
-
-        MultiBufferSource consumer = immediate;
-        SortedSet<BlockDestructionProgress> breakingInfo = blockBreakingProgressions.get(pos.asLong());
-
-        if (breakingInfo != null && !breakingInfo.isEmpty()) {
-            int stage = breakingInfo.last().getProgress();
-
-            if (stage >= 0) {
-                var bufferBuilder = bufferBuilders.crumblingBufferSource()
-                        .getBuffer(ModelBakery.DESTROY_TYPES.get(stage));
-
-                PoseStack.Pose entry = matrices.last();
-                VertexConsumer transformer = new SheetedDecalTextureGenerator(bufferBuilder,
-                        entry, 1.0f);
-
-                consumer = (layer) -> layer.affectsCrumbling() ? VertexMultiConsumer.create(transformer, immediate.getBuffer(layer)) : immediate.getBuffer(layer);
-            }
+    private void extractBlockEntity(BlockEntity blockEntity, PoseStack poseStack, Camera camera, float tickDelta, Long2ObjectMap<SortedSet<BlockDestructionProgress>> progression, LevelRenderState levelRenderState) {
+        BlockPos blockPos = blockEntity.getBlockPos();
+        SortedSet<BlockDestructionProgress> sortedSet = progression.get(blockPos.asLong());
+        ModelFeatureRenderer.CrumblingOverlay crumblingOverlay;
+        if (sortedSet != null && !sortedSet.isEmpty()) {
+            poseStack.pushPose();
+            poseStack.translate(blockPos.getX() - camera.position().x, blockPos.getY() - camera.position().y, blockPos.getZ() - camera.position().z);
+            crumblingOverlay = new ModelFeatureRenderer.CrumblingOverlay(sortedSet.last().getProgress(), poseStack.last());
+            poseStack.popPose();
+        } else {
+            crumblingOverlay = null;
         }
 
-        dispatcher.render(entity, tickDelta, matrices, consumer);
-
-        if (isGlowing != null) {
-            if (PlatformBlockAccess.getInstance().shouldBlockEntityGlow(entity, player)) {
-                isGlowing.set(true);
-            }
+        BlockEntityRenderState blockEntityRenderState = Minecraft.getInstance().getBlockEntityRenderDispatcher().tryExtractRenderState(blockEntity, tickDelta, crumblingOverlay);
+        if (blockEntityRenderState != null) {
+            levelRenderState.blockEntityRenderStates.add(blockEntityRenderState);
         }
-
-        matrices.popPose();
     }
 
     public void iterateVisibleBlockEntities(Consumer<BlockEntity> blockEntityConsumer) {
@@ -545,9 +479,14 @@ public class SodiumWorldRenderer {
         return false;
     }
 
+    @Nullable
     public String getChunksDebugString() {
         // C: visible/total D: distance
         // TODO: add dirty and queued counts
+        if (renderSectionManager == null) {
+            return null;
+        }
+
         return String.format("C: %d/%d D: %d", this.renderSectionManager.getVisibleChunkCount(), this.renderSectionManager.getTotalSections(), this.renderDistance);
     }
 
@@ -579,7 +518,7 @@ public class SodiumWorldRenderer {
     }
 
     public Collection<String> getDebugStrings() {
-        return this.renderSectionManager.getDebugStrings();
+        return this.renderSectionManager == null ? Collections.emptyList() : this.renderSectionManager.getDebugStrings();
     }
 
     public boolean isSectionReady(int x, int y, int z) {

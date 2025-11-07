@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.mixin.platform.neoforge;
 
 import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
 import net.minecraft.server.packs.repository.Pack;
+import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.LoadingModList;
 import net.neoforged.neoforge.resource.ResourcePackLoader;
 import net.neoforged.neoforgespi.locating.IModFile;
@@ -23,7 +24,7 @@ import java.util.Set;
 @Mixin(ResourcePackLoader.class)
 public class ResourcePackLoaderMixin {
     @Unique
-    private static final IModFile SODIUM_FILE = LoadingModList.get().getModFileById("sodium").getFile();
+    private static final IModFile SODIUM_FILE = FMLLoader.getCurrent().getLoadingModList().getModFileById("sodium").getFile();
 
     @Redirect(remap = false, method = "packFinder", at = @At(value = "INVOKE", target = "Ljava/util/Map;entrySet()Ljava/util/Set;"))
     private static Set<Map.Entry<IModFile, Pack.ResourcesSupplier>> changeSet(Map<IModFile, Pack.ResourcesSupplier> instance) {

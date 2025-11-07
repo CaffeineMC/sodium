@@ -33,6 +33,7 @@ import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
 import net.fabricmc.fabric.api.renderer.v1.render.BlockVertexConsumerProvider;
 import net.fabricmc.fabric.api.renderer.v1.render.FabricBlockModelRenderer;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderLayerHelper;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
@@ -88,9 +89,9 @@ public class SodiumRenderer implements Renderer {
             float red = (tint >> 16 & 255) / 255.0F;
             float green = (tint >> 8 & 255) / 255.0F;
             float blue = (tint & 255) / 255.0F;
-            // TODO: seems wrong
-            FabricBlockModelRenderer.render(poseStack.last(), layer -> multiBufferSource.getBuffer(RenderLayerHelper.getEntityBlockLayer(layer)), model, red, green, blue, light, overlay, blockView, pos, state);
-            ((BlockRenderDispatcherAccessor) renderManager).getSpecialRenderers().get().renderByBlock(state.getBlock(), ItemDisplayContext.NONE, poseStack, multiBufferSource, light, overlay);
+
+            FabricBlockModelRenderer.render(poseStack.last(), RenderLayerHelper.entityDelegate(multiBufferSource), model, red, green, blue, light, overlay, blockView, pos, state);
+            ((BlockRenderDispatcherAccessor) renderManager).getSpecialRenderers().get().renderByBlock(state.getBlock(), ItemDisplayContext.NONE, poseStack, Minecraft.getInstance().gameRenderer.getSubmitNodeStorage(), light, overlay, 0);
         }
     }
 
