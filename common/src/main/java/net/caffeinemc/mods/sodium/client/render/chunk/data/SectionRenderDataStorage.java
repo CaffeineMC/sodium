@@ -145,7 +145,7 @@ public class SectionRenderDataStorage {
      * @param arena The buffer arena to allocate the new buffer from
      * @return true if the arena resized itself
      */
-    public boolean updateSharedIndexData(CommandList commandList, GlBufferArena arena) {
+    public boolean updateSharedIndexData(CommandList commandList, GlBufferArena arena, float regionFillFractionInv) {
         // assumes this.needsSharedIndexUpdate is true when this is called
         this.needsSharedIndexUpdate = false;
 
@@ -177,7 +177,7 @@ public class SectionRenderDataStorage {
         // create and upload a new shared index buffer
         var buffer = SharedQuadIndexBuffer.createIndexBuffer(SharedQuadIndexBuffer.IndexType.INTEGER, this.sharedIndexCapacity);
         var pendingUpload = new PendingUpload(buffer);
-        var bufferChanged = arena.upload(commandList, Stream.of(pendingUpload));
+        var bufferChanged = arena.upload(commandList, Stream.of(pendingUpload), regionFillFractionInv);
         this.sharedIndexAllocation = pendingUpload.getResult();
         buffer.free();
 
