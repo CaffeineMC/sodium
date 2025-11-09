@@ -107,8 +107,8 @@ public class CompactChunkVertex implements ChunkVertexType {
     }
 
     private static int encodeLight(int light) {
-        int sky = Mth.clamp((light >>> 16) & 0xFF, 8, 248);
-        int block = Mth.clamp((light >>>  0) & 0xFF, 8, 248);
+        int sky = Mth.clamp(((light >>> 16) & 0xFF) + 8, 8, 248);
+        int block = Mth.clamp(((light >>>  0) & 0xFF) + 8, 8, 248);
 
         return (block << 0) | (sky << 8);
     }
