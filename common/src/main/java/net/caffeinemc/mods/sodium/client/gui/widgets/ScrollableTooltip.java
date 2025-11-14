@@ -114,7 +114,7 @@ public class ScrollableTooltip {
     private boolean positionTooltip(boolean needsScrolling) {
         int defaultBoxWidth = Math.min(this.parent.width - this.hoveredElement.getLimitX() - LEFT_BOX_MARGIN - OUTER_BOX_MARGIN, MAX_TOOLTIP_WIDTH);
         int defaultBoxY = this.hoveredElement.getY();
-        int defaultBoxX = this.hoveredElement.getLimitX() + LEFT_BOX_MARGIN;
+        int defaultBoxX = this.hoveredElement.getLimitX() + LEFT_BOX_MARGIN + Layout.SCROLLBAR_WIDTH;
 
         int boxWidth = 0, boxX = 0, boxY = 0;
         boolean fixedBoxY = false;

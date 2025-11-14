@@ -133,6 +133,13 @@ public class BigramSearchIndex extends SourceStoringIndex {
                     // score based on bigram density in the query, log of the bigram count in the source, and inverse overall prevalence (rare bigrams are more important)
                     var score = queryBigramDensity * ((float) Math.log(sourceCount) + 1) * prevalenceInv;
 
+                    // if the query matches exactly the start or part of the source, it is probably significantly more important.
+                    if (source.getText().toLowerCase().startsWith(query.trim())) {
+                        score *= 3.0f;
+                    } else if (source.getText().toLowerCase().contains(query.trim())) {
+                        score *= 2.0f;
+                    }
+
                     // reduce score if there are more of this bigram in the query than in the source
                     if (queryCount > sourceCount) {
                         score *= (float) sourceCount / (sourceCount + 2 * (queryCount - sourceCount));
