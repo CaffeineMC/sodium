@@ -435,7 +435,10 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                         builder.createIntegerOption(ResourceLocation.parse("sodium:performance.chunk_update_threads"))
                                 .setStorageHandler(this.sodiumStorage)
                                 .setName(Component.translatable("sodium.options.chunk_update_threads.name"))
-                                .setValueFormatter(ControlValueFormatterImpls.quantityOrDisabled("threads", "Default"))
+                                .setValueFormatter(ControlValueFormatterImpls.quantityOrDisabled(
+                                        (v) -> Component.translatable("sodium.options.chunk_update_threads.value", v),
+                                        Component.translatable("sodium.options.default")
+                                ))
                                 .setTooltip(Component.translatable("sodium.options.chunk_update_threads.tooltip"))
                                 .setRange(0, Runtime.getRuntime().availableProcessors(), 1)
                                 .setDefaultValue(DEFAULTS.performance.chunkBuilderThreads)

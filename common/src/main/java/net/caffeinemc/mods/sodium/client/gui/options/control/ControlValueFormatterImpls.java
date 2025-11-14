@@ -6,6 +6,8 @@ import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
+import java.util.function.IntFunction;
+
 public class ControlValueFormatterImpls {
     private ControlValueFormatterImpls() {
     }
@@ -69,8 +71,8 @@ public class ControlValueFormatterImpls {
         return (v) -> Component.literal(v + "x");
     }
 
-    public static ControlValueFormatter quantityOrDisabled(String name, String disableText) {
-        return (v) -> Component.literal(v == 0 ? disableText : v + " " + name);
+    public static ControlValueFormatter quantityOrDisabled(IntFunction<Component> valueText, Component disableText) {
+        return (v) -> v == 0 ? disableText : valueText.apply(v);
     }
 
     public static ControlValueFormatter number() {
