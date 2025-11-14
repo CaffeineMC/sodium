@@ -112,9 +112,11 @@ public class ScrollableTooltip {
     }
 
     private boolean positionTooltip(boolean needsScrolling) {
-        int defaultBoxWidth = Math.min(this.parent.width - this.hoveredElement.getLimitX() - LEFT_BOX_MARGIN - OUTER_BOX_MARGIN, MAX_TOOLTIP_WIDTH);
+        int elementLimitX = this.hoveredElement.getLimitX() + LEFT_BOX_MARGIN + Layout.SCROLLBAR_WIDTH;
+        int defaultBoxWidth = Math.min(this.parent.width - elementLimitX - OUTER_BOX_MARGIN, MAX_TOOLTIP_WIDTH);
         int defaultBoxY = this.hoveredElement.getY();
-        int defaultBoxX = this.hoveredElement.getLimitX() + LEFT_BOX_MARGIN + Layout.SCROLLBAR_WIDTH;
+        // noinspection UnnecessaryLocalVariable
+        int defaultBoxX = elementLimitX;
 
         int boxWidth = 0, boxX = 0, boxY = 0;
         boolean fixedBoxY = false;
@@ -135,7 +137,7 @@ public class ScrollableTooltip {
 
             // Hovered element left of the area but enough space to show tooltip with reduced width
             else if (this.hoveredElement.getLimitX() < this.reservedArea.x) {
-                int availableWidth = this.reservedArea.x - this.hoveredElement.getLimitX() - LEFT_BOX_MARGIN;
+                int availableWidth = this.reservedArea.x - elementLimitX;
 
                 if (availableWidth >= MIN_TOOLTIP_WIDTH) {
                     boxWidth = Math.min(availableWidth, MAX_TOOLTIP_WIDTH);
