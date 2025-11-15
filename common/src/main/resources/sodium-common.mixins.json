@@ -102,6 +102,7 @@
     "features.textures.scan.TextureAtlasSpriteMixin",
     "workarounds.context_creation.WindowMixin",
     "workarounds.context_creation.RenderSystemMixin",
-    "workarounds.event_loop.RenderSystemMixin"
+    "workarounds.event_loop.RenderSystemMixin",
+    "workarounds.window_minimized_state.MinecraftMixin"
   ]
 }
