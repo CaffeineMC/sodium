@@ -83,7 +83,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
     private static ModOptionsBuilder createModOptionsBuilder(ConfigBuilder builder) {
         return builder.registerOwnModOptions()
-                .setName("Sodium Renderer")
+                .setName("Sodium")
                 .setIcon(SODIUM_ICON)
                 .formatVersion(version -> {
                     var result = version.splitWithDelimiters("\\+", 2);
