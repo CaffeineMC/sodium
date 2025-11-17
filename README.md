@@ -2,8 +2,7 @@
 
 # Sodium (for Fabric)
 
-Sodium is a free and open-source optimization mod for the Minecraft client which improves frame rates and reduces
-micro-stutter  while fixing many graphical issues in Minecraft.
+Vanilla Sodium is a free and open-source fork of Sodium for Minecraft aiming to improve performance for lower-end computers
 
 ### 📥 Installation
 
