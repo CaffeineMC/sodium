@@ -295,7 +295,7 @@ public class OptionListWidget extends AbstractOptionList {
 
     private static class PageHeaderWidget extends HeaderWidget {
         public PageHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme) {
-            super(list, dim, ChatFormatting.BOLD + title, theme.theme, Colors.BACKGROUND_DEFAULT);
+            super(list, dim, "◆ " + title, theme.theme, Colors.BACKGROUND_DEFAULT);
 //            super(list, dim, title, theme.themeLighter, ColorARGB.withAlpha(theme.themeDarker, 0x70));
         }
     }
