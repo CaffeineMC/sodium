@@ -2,6 +2,8 @@
 
 The Sodium Config API lets mods add their own pages to the Video Settings screen, which Sodium replaces with its own screen.
 
+If you encounter difficulties using the API, find bugs in it, or it's missing features you need, don't hesitate to contact us or make a contribution directly.
+
 ## Scope
 
 The Sodium Config API is intended for mods that add video settings, not as a general purpose config API. For general purpose configuration, use the platform's appropriate mod list and a config library.
@@ -56,7 +58,7 @@ Fabric:
 dependencies {
     // ... other dependencies
     
-    modImplementation "net.caffeinemc.mods:sodium-fabric:0.7.1+mc1.21.8"
+    modImplementation "net.caffeinemc.mods:sodium-fabric:0.8.0+mc1.21.11"
 }
 ```
 
@@ -66,7 +68,7 @@ NeoForge:
 dependencies {
     // ... other dependencies
     
-    implementation "net.caffeinemc.mods:sodium-neoforge:0.7.1+mc1.21.8"
+    implementation "net.caffeinemc.mods:sodium-neoforge:0.8.0+mc1.21.11"
 }
 ```
 
