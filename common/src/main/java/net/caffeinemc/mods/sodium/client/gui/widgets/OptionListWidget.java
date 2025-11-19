@@ -103,7 +103,7 @@ public class OptionListWidget extends AbstractOptionList {
             }
 
             // Add group spacing only if this isn't the first option after a page header
-            else if (lastSource.getOptionGroup() != source.getOptionGroup()) {
+            if (lastSource == null || lastSource.getOptionGroup() != source.getOptionGroup()) { 
                 listHeight += Layout.OPTION_GROUP_MARGIN;
             }
 
