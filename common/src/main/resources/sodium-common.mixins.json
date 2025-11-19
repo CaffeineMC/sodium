@@ -91,6 +91,7 @@
     "features.textures.animations.tracking.SpriteContentsFrameInfoAccessor",
     "features.textures.animations.tracking.SpriteContentsTickerMixin",
     "features.textures.animations.tracking.SpriteContentsMixin",
+    "features.textures.animations.tracking.AtlasGlyphProviderMixin",
     "features.textures.animations.upload.SpriteContentsAccessor",
     "features.textures.animations.upload.SpriteContentsAnimatedTextureAccessor",
     "features.textures.animations.upload.SpriteContentsFrameInfoAccessor",
