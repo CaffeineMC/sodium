@@ -249,7 +249,7 @@ public class OptionListWidget extends AbstractOptionList {
             this.hovered = this.isMouseOver(mouseX, mouseY);
 
             this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.backgroundColor);
-            this.drawString(graphics, this.truncateLabelToFit(this.title), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() - 4, this.textColor);
+            this.drawString(graphics, this.truncateLabelToFit(this.title), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, this.textColor);
         }
 
         protected String truncateLabelToFit(String name) {
@@ -284,10 +284,12 @@ public class OptionListWidget extends AbstractOptionList {
             this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.backgroundColor);
 
             int textOffset = 0;
+            int textY = this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET;
             if (this.icon != null) {
                 textOffset = VideoSettingsScreen.renderIconWithSpacing(graphics, this.icon, this.textColor, this.getX(), this.getY(), this.getHeight(), Layout.ICON_MARGIN);
+                textY = this.getCenterY() + Layout.ICON_TEXT_BASELINE_OFFSET;
             }
-            this.drawString(graphics, truncateTextToFit(this.title, this.getWidth() - 12 - textOffset), this.getX() + textOffset, this.getCenterY() - 4, this.textColor);
+            this.drawString(graphics, truncateTextToFit(this.title, this.getWidth() - 12 - textOffset), this.getX() + textOffset, textY, this.textColor);
         }
     }
 
@@ -308,7 +310,7 @@ public class OptionListWidget extends AbstractOptionList {
             this.hovered = this.isMouseOver(mouseX, mouseY);
 
             this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.backgroundColor);
-            graphics.drawString(this.font, ChatFormatting.BOLD + this.truncateLabelToFit(this.title), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() - 4, this.textColor, false);
+            graphics.drawString(this.font, ChatFormatting.BOLD + this.truncateLabelToFit(this.title), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, this.textColor, false);
         }
     }
 

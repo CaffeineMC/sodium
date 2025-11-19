@@ -80,7 +80,7 @@ public class ExternalButtonControl implements Control {
             var xEnd = this.getLimitX() - 6;
             var x = xEnd - textWidth;
 
-            this.drawString(graphics, buttonText, x, this.getCenterY() - 4, Colors.FOREGROUND);
+            this.drawString(graphics, buttonText, x, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
         }
 
         private void openScreen(Screen screen) {

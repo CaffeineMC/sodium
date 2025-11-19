@@ -4,6 +4,7 @@ import net.caffeinemc.mods.sodium.client.config.structure.EnumOption;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
+import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -63,7 +64,7 @@ public class CyclingControl<T extends Enum<T>> implements Control {
             Component name = this.option.getElementName(value);
 
             int strWidth = this.getStringWidth(name);
-            this.drawString(graphics, name, this.getLimitX() - strWidth - 6, this.getCenterY() - 4, Colors.FOREGROUND);
+            this.drawString(graphics, name, this.getLimitX() - strWidth - 6, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
         }
 
         @Override

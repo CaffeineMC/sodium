@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.client.gui.options.control;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
+import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.gui.widgets.AbstractWidget;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.ChatFormatting;
@@ -55,7 +56,7 @@ public abstract class ControlElement extends AbstractWidget {
         this.hovered = this.isMouseOver(mouseX, mouseY);
 
         this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.hovered ? Colors.BACKGROUND_HOVER : Colors.BACKGROUND_LIGHT);
-        this.drawString(graphics, label, this.getX() + 6, this.getCenterY() - 4, Colors.FOREGROUND);
+        this.drawString(graphics, label, this.getX() + 6, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
 
         if (this.isFocused()) {
             this.drawBorder(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), -1);
