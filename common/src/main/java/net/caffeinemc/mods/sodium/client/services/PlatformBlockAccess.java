@@ -1,10 +1,8 @@
 package net.caffeinemc.mods.sodium.client.services;
 
 import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
-import net.caffeinemc.mods.sodium.client.render.frapi.render.AmbientOcclusionMode;
-import net.fabricmc.fabric.api.util.TriState;
+import net.caffeinemc.mods.sodium.client.render.model.AmbientOcclusionMode;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
@@ -14,7 +12,6 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
-import org.jetbrains.annotations.Nullable;
 
 public interface PlatformBlockAccess {
     PlatformBlockAccess INSTANCE = Services.load(PlatformBlockAccess.class);

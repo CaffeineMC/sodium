@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class RenderRegion {
     public static final int SECTION_VERTEX_COUNT_ESTIMATE = 756;
-    public static final int SECTION_INDEX_COUNT_ESTIMATE = (SECTION_VERTEX_COUNT_ESTIMATE / 4) * 6;
+    public static final int SECTION_INDEX_COUNT_ESTIMATE = (SECTION_VERTEX_COUNT_ESTIMATE / DefaultTerrainRenderPasses.ALL.length / 4) * 6;
     public static final int SECTION_BUFFER_ESTIMATE = SECTION_VERTEX_COUNT_ESTIMATE * ChunkMeshFormats.COMPACT.getVertexFormat().getStride() + SECTION_INDEX_COUNT_ESTIMATE * Integer.BYTES;
 
     public static final int REGION_WIDTH = 8;
@@ -218,6 +218,10 @@ public class RenderRegion {
 
         this.sections[sectionIndex] = null;
         this.sectionCount--;
+    }
+    
+    public float getFillFractionInv() {
+        return (float) RenderRegion.REGION_SIZE / (float) this.sectionCount;
     }
 
     public RenderSection getSection(int id) {
