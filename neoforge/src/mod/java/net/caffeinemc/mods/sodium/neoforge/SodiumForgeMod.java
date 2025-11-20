@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.neoforge;
 
 import net.caffeinemc.mods.sodium.client.gui.SodiumOptionsGUI;
+import net.caffeinemc.mods.sodium.client.services.FRAPIProvider;
 import net.caffeinemc.mods.sodium.client.util.FlawlessFrames;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -34,5 +35,7 @@ public class SodiumForgeMod {
                 throw new RuntimeException("Failed to execute Flawless Frames handler for mod " + mod.getModId() + "!", e);
             }
         }
+
+        FRAPIProvider.getInstance().register();
     }
 }

@@ -23,6 +23,7 @@ import net.caffeinemc.mods.sodium.client.render.frapi.render.NonTerrainBlockRend
 import net.caffeinemc.mods.sodium.client.render.frapi.render.SimpleBlockRenderContext;
 import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.ExtendedMutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
+import net.caffeinemc.mods.sodium.client.services.FRAPIProvider;
 import net.caffeinemc.mods.sodium.mixin.frapi.BlockRenderDispatcherAccessor;
 import net.caffeinemc.mods.sodium.mixin.frapi.ModelBlockRendererAccessor;
 import net.fabricmc.fabric.api.renderer.v1.Renderer;

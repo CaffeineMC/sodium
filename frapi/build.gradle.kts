@@ -12,6 +12,7 @@ base {
 val configurationCommonModJava: Configuration = configurations.create("commonJava") {
     isCanBeResolved = true
 }
+
 val configurationCommonModResources: Configuration = configurations.create("commonResources") {
     isCanBeResolved = true
 }
