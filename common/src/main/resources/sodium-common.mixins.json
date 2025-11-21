@@ -42,7 +42,6 @@
     "features.gui.hooks.console.GameRendererMixin",
     "features.gui.hooks.debug.DebugEntryMemoryMixin",
     "features.gui.hooks.settings.OptionsScreenMixin",
-    "features.options.render_layers.LeavesBlockMixin",
     "features.render.entity.CubeMixin",
     "features.render.entity.ModelPartMixin",
     "features.render.entity.cull.EntityRendererMixin",

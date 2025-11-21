@@ -46,9 +46,10 @@ void main() {
     v_FragDistance = getFragDistance(position);
 
     int chunkId = int(_draw_id);
-    int fadeTime = u_CurrentTime - u_chunkFades[chunkId >> 2][chunkId & 3];
+    int chunkFade = u_chunkFades[chunkId >> 2][chunkId & 3];
+    int fadeTime = u_CurrentTime - chunkFade;
     float elapsed = float(fadeTime);
-    fadeFactor = clamp(elapsed / float(u_FadePeriod), 0.0, 1.0);
+    fadeFactor = mix(clamp(elapsed / float(u_FadePeriod), 0.0, 1.0), 1.0, float(chunkFade < 0));
 #endif
 
     // Transform the vertex position into model-view-projection space
