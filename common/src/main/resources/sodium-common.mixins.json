@@ -52,6 +52,7 @@
     "features.render.entity.cull.EntityRendererMixin",
     "features.render.entity.shadows.ShadowFeatureRendererMixin",
     "features.gui.hooks.debug.DebugScreenEntriesAccessor",
+    "features.gui.hooks.debug.DebugScreenEntryListMixin",
     "features.render.gui.font.BakedGlyphMixin",
     "features.render.gui.outlines.LevelRendererMixin",
     "features.render.immediate.DirectionMixin",

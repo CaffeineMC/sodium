@@ -517,8 +517,8 @@ public class SodiumWorldRenderer {
         this.renderSectionManager.scheduleRebuild(x, y, z, important);
     }
 
-    public Collection<String> getDebugStrings() {
-        return this.renderSectionManager == null ? Collections.emptyList() : this.renderSectionManager.getDebugStrings();
+    public Collection<String> getDebugStrings(boolean verbose) {
+        return this.renderSectionManager == null ? Collections.emptyList() : this.renderSectionManager.getDebugStrings(verbose);
     }
 
     public boolean isSectionReady(int x, int y, int z) {

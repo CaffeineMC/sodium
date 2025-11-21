@@ -1,10 +1,7 @@
 package net.caffeinemc.mods.sodium.client.gui;
 
-import com.google.common.collect.Lists;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
-import net.caffeinemc.mods.sodium.client.util.MathUtil;
-import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
@@ -13,11 +10,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.management.ManagementFactory;
-import java.util.ArrayList;
-
 public class SodiumDebugEntry implements DebugScreenEntry {
     private static final ResourceLocation DEBUG_GROUP = ResourceLocation.fromNamespaceAndPath("sodium", "debug_group");
+    private final boolean verbose;
+
+    public SodiumDebugEntry(boolean verbose) {
+        this.verbose = verbose;
+    }
 
     private static ChatFormatting getVersionColor() {
         String version = SodiumClientMod.getVersion();
@@ -41,7 +40,7 @@ public class SodiumDebugEntry implements DebugScreenEntry {
         var renderer = SodiumWorldRenderer.instanceNullable();
 
         if (renderer != null) {
-            debugScreenDisplayer.addToGroup(DEBUG_GROUP, renderer.getDebugStrings());
+            debugScreenDisplayer.addToGroup(DEBUG_GROUP, renderer.getDebugStrings(this.verbose));
         }
     }
 }
