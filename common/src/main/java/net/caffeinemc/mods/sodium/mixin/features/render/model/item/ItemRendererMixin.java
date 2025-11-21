@@ -58,10 +58,6 @@ public abstract class ItemRendererMixin {
         for (int i = 0; i < quads.size(); i++) {
             BakedQuad bakedQuad = quads.get(i);
 
-            if (bakedQuad.vertices().length < 32) {
-                continue; // ignore bad quads
-            }
-
             BakedQuadView quad = (BakedQuadView) (Object) bakedQuad;
 
             int color = 0xFFFFFFFF;

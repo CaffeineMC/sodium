@@ -184,19 +184,6 @@ public class DefaultFluidRenderer {
                 v4 = sprite.getV(0.5F + (-cos - sin));
             }
 
-            float uAvg = (u1 + u2 + u3 + u4) / 4.0F;
-            float vAvg = (v1 + v2 + v3 + v4) / 4.0F;
-            float s3 = sprites[0].uvShrinkRatio();
-
-            u1 = Mth.lerp(s3, u1, uAvg);
-            u2 = Mth.lerp(s3, u2, uAvg);
-            u3 = Mth.lerp(s3, u3, uAvg);
-            u4 = Mth.lerp(s3, u4, uAvg);
-            v1 = Mth.lerp(s3, v1, vAvg);
-            v2 = Mth.lerp(s3, v2, vAvg);
-            v3 = Mth.lerp(s3, v3, vAvg);
-            v4 = Mth.lerp(s3, v4, vAvg);
-
             quad.setSprite(sprite);
 
             // top surface alignedness is calculated with a more relaxed epsilon

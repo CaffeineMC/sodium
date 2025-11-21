@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.platform.windows.api;
 
 import net.caffeinemc.mods.sodium.client.platform.NativeWindowHandle;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.system.JNI;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.SharedLibrary;

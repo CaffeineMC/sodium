@@ -28,7 +28,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.util.TriState;
 import org.apache.commons.lang3.ArrayUtils;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Holds all the array offsets and bit-wise encoders/decoders for
@@ -50,41 +50,8 @@ public final class EncodingFormat {
     static final int HEADER_TAG = 3;
     public static final int HEADER_STRIDE = 4;
 
-    static final int VERTEX_X;
-    static final int VERTEX_Y;
-    static final int VERTEX_Z;
-    static final int VERTEX_COLOR;
-    static final int VERTEX_U;
-    static final int VERTEX_V;
-    static final int VERTEX_LIGHTMAP;
-    static final int VERTEX_NORMAL;
-    public static final int VERTEX_STRIDE;
-
-    public static final int QUAD_STRIDE;
-    public static final int QUAD_STRIDE_BYTES;
-    public static final int TOTAL_STRIDE;
-
     static {
-        final VertexFormat format = DefaultVertexFormat.BLOCK;
-        VERTEX_X = HEADER_STRIDE + 0;
-        VERTEX_Y = HEADER_STRIDE + 1;
-        VERTEX_Z = HEADER_STRIDE + 2;
-        VERTEX_COLOR = HEADER_STRIDE + 3;
-        VERTEX_U = HEADER_STRIDE + 4;
-        VERTEX_V = VERTEX_U + 1;
-        VERTEX_LIGHTMAP = HEADER_STRIDE + 6;
-        VERTEX_NORMAL = HEADER_STRIDE + 7;
-        VERTEX_STRIDE = format.getVertexSize() / 4;
-        QUAD_STRIDE = VERTEX_STRIDE * 4;
-        QUAD_STRIDE_BYTES = QUAD_STRIDE * 4;
-        TOTAL_STRIDE = HEADER_STRIDE + QUAD_STRIDE;
-
-        Preconditions.checkState(VERTEX_STRIDE == VANILLA_VERTEX_STRIDE, "Indigo vertex stride (%s) mismatched with rendering API (%s)", VERTEX_STRIDE, VANILLA_VERTEX_STRIDE);
-        Preconditions.checkState(QUAD_STRIDE == VANILLA_QUAD_STRIDE, "Indigo quad stride (%s) mismatched with rendering API (%s)", QUAD_STRIDE, VANILLA_QUAD_STRIDE);
     }
-
-    /** used for quick clearing of quad buffers. */
-    static final int[] EMPTY = new int[TOTAL_STRIDE];
 
     private static final int DIRECTION_COUNT = Direction.values().length;
     private static final int NULLABLE_DIRECTION_COUNT = DIRECTION_COUNT + 1;
@@ -93,7 +60,7 @@ public final class EncodingFormat {
     private static final int NULLABLE_BLOCK_RENDER_LAYER_COUNT = NULLABLE_BLOCK_RENDER_LAYERS.length;
     private static final TriState[] TRI_STATES = TriState.values();
     private static final int TRI_STATE_COUNT = TRI_STATES.length;
-    private static final @Nullable ItemStackRenderState.FoilType[] NULLABLE_GLINTS = ArrayUtils.add(ItemStackRenderState.FoilType.values(), null);
+    private static final ItemStackRenderState.@Nullable FoilType[] NULLABLE_GLINTS = ArrayUtils.add(ItemStackRenderState.FoilType.values(), null);
     private static final int NULLABLE_GLINT_COUNT = NULLABLE_GLINTS.length;
     private static final SodiumShadeMode[] SHADE_MODES = SodiumShadeMode.values();
     private static final int SHADE_MODE_COUNT = SHADE_MODES.length;
@@ -139,7 +106,6 @@ public final class EncodingFormat {
     private static final int SHADE_MODE_MASK = bitMask(SHADE_MODE_BIT_LENGTH, SHADE_MODE_BIT_OFFSET);
 
     static {
-        Preconditions.checkArgument(TOTAL_BIT_LENGTH <= 32, "Indigo header encoding bit count (%s) exceeds integer bit length)", TOTAL_STRIDE);
     }
 
     private static int bitMask(int bitLength, int bitOffset) {
@@ -222,12 +188,11 @@ public final class EncodingFormat {
         return (bits & ~AO_MASK) | (ao.ordinal() << AO_BIT_OFFSET);
     }
 
-    @Nullable
-    static ItemStackRenderState.FoilType glint(int bits) {
+    static ItemStackRenderState.@Nullable FoilType glint(int bits) {
         return NULLABLE_GLINTS[(bits & GLINT_MASK) >>> GLINT_BIT_OFFSET];
     }
 
-    static int glint(int bits, @Nullable ItemStackRenderState.FoilType glint) {
+    static int glint(int bits, ItemStackRenderState.@Nullable FoilType glint) {
         int index = glint == null ? NULL_GLINT_INDEX : glint.ordinal();
         return (bits & ~GLINT_MASK) | (index << GLINT_BIT_OFFSET);
     }

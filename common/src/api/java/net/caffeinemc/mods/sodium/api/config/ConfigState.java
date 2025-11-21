@@ -1,13 +1,13 @@
 package net.caffeinemc.mods.sodium.api.config;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public interface ConfigState {
-    ResourceLocation UPDATE_ON_REBUILD = ResourceLocation.parse("__meta__:update_on_rebuild");
+    Identifier UPDATE_ON_REBUILD = Identifier.parse("__meta__:update_on_rebuild");
     
-    boolean readBooleanOption(ResourceLocation id);
+    boolean readBooleanOption(Identifier id);
 
-    int readIntOption(ResourceLocation id);
+    int readIntOption(Identifier id);
 
-    <E extends Enum<E>> E readEnumOption(ResourceLocation id, Class<E> enumClass);
+    <E extends Enum<E>> E readEnumOption(Identifier id, Class<E> enumClass);
 }

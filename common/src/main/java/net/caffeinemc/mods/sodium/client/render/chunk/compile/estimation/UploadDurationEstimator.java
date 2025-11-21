@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
@@ -69,7 +69,7 @@ public class UploadDurationEstimator extends ExpDecayLinear2DEstimator<Void> {
         }
 
         @Override
-        public void putAll(@NotNull Map<? extends Void, ? extends T> map) {
+        public void putAll(@NonNull Map<? extends Void, ? extends T> map) {
             if (map.containsKey(null)) {
                 this.value = map.get(null);
             }
@@ -81,7 +81,7 @@ public class UploadDurationEstimator extends ExpDecayLinear2DEstimator<Void> {
         }
 
         @Override
-        public @NotNull Set<Void> keySet() {
+        public @NonNull Set<Void> keySet() {
             if (this.value != null) {
                 return Collections.singleton(null);
             }
@@ -89,7 +89,7 @@ public class UploadDurationEstimator extends ExpDecayLinear2DEstimator<Void> {
         }
 
         @Override
-        public @NotNull Collection<T> values() {
+        public @NonNull Collection<T> values() {
             if (this.value != null) {
                 return Collections.singleton(this.value);
             }
@@ -97,7 +97,7 @@ public class UploadDurationEstimator extends ExpDecayLinear2DEstimator<Void> {
         }
 
         @Override
-        public @NotNull Set<Entry<Void, T>> entrySet() {
+        public @NonNull Set<Entry<Void, T>> entrySet() {
             if (this.value != null) {
                 return Collections.singleton(new AbstractMap.SimpleEntry<>(null, this.value));
             }

@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.api.config.structure;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public interface ConfigBuilder {
     ModOptionsBuilder registerModOptions(String namespace, String name, String version);
@@ -19,11 +19,11 @@ public interface ConfigBuilder {
 
     OptionGroupBuilder createOptionGroup();
 
-    BooleanOptionBuilder createBooleanOption(ResourceLocation id);
+    BooleanOptionBuilder createBooleanOption(Identifier id);
 
-    IntegerOptionBuilder createIntegerOption(ResourceLocation id);
+    IntegerOptionBuilder createIntegerOption(Identifier id);
 
-    <E extends Enum<E>> EnumOptionBuilder<E> createEnumOption(ResourceLocation id, Class<E> enumClass);
+    <E extends Enum<E>> EnumOptionBuilder<E> createEnumOption(Identifier id, Class<E> enumClass);
 
-    ExternalButtonOptionBuilder createExternalButtonOption(ResourceLocation id);
+    ExternalButtonOptionBuilder createExternalButtonOption(Identifier id);
 }

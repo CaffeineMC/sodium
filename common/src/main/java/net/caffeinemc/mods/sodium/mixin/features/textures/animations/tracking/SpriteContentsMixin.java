@@ -2,7 +2,7 @@ package net.caffeinemc.mods.sodium.mixin.features.textures.animations.tracking;
 
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteContentsExtension;
 import net.minecraft.client.renderer.texture.SpriteContents;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.gui.prompt;
 
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public interface ScreenPromptable {
     void setPrompt(@Nullable ScreenPrompt prompt);

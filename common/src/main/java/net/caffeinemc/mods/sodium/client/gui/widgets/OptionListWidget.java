@@ -19,9 +19,9 @@ import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -198,7 +198,7 @@ public class OptionListWidget extends AbstractOptionList {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void render(@NonNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         graphics.enableScissor(this.getX(), this.getY(), this.getLimitX(), this.getLimitY());
         super.render(graphics, mouseX, mouseY, delta);
         graphics.disableScissor();
@@ -268,9 +268,9 @@ public class OptionListWidget extends AbstractOptionList {
     }
 
     private static class ModHeaderWidget extends HeaderWidget {
-        final ResourceLocation icon;
+        final Identifier icon;
 
-        public ModHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme, ResourceLocation icon) {
+        public ModHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme, Identifier icon) {
             // super(list, dim, ChatFormatting.UNDERLINE + title, theme.themeLighter, Colors.BACKGROUND_DEFAULT);
             // super(list, dim, ChatFormatting.BOLD + title, theme.themeLighter, ColorARGB.withAlpha(theme.themeDarker, 0x60));
             super(list, dim, ChatFormatting.BOLD + title, theme.themeLighter, Colors.BACKGROUND_DARKER);

@@ -62,7 +62,7 @@ public class BakedModelEncoder {
         }
     }
 
-    public static void writeQuadVertices(VertexBufferWriter writer, PoseStack.Pose matrices, ModelQuadView quad, float r, float g, float b, float a, float[] brightnessTable, boolean colorize, int[] light, int overlay) {
+    public static void writeQuadVertices(VertexBufferWriter writer, PoseStack.Pose matrices, ModelQuadView quad, float r, float g, float b, float a, float[] brightnessTable, int[] light, int overlay) {
         Matrix3f matNormal = matrices.normal();
         Matrix4f matPosition = matrices.pose();
 
@@ -90,29 +90,10 @@ public class BakedModelEncoder {
 
                 float brightness = brightnessTable[i];
 
-                if (colorize) {
-                    int color = quad.getColor(i);
-
-                    float oR = ColorU8.byteToNormalizedFloat(ColorABGR.unpackRed(color));
-                    float oG = ColorU8.byteToNormalizedFloat(ColorABGR.unpackGreen(color));
-                    float oB = ColorU8.byteToNormalizedFloat(ColorABGR.unpackBlue(color));
-
-                    fR = oR * brightness * r;
-                    fG = oG * brightness * g;
-                    fB = oB * brightness * b;
-
-                    if (MULTIPLY_ALPHA) {
-                        float oA = ColorU8.byteToNormalizedFloat(ColorABGR.unpackAlpha(color));
-                        fA = oA * a;
-                    } else {
-                        fA = a;
-                    }
-                } else {
-                    fR = brightness * r;
-                    fG = brightness * g;
-                    fB = brightness * b;
-                    fA = a;
-                }
+                fR = brightness * r;
+                fG = brightness * g;
+                fB = brightness * b;
+                fA = a;
 
                 int color = ColorABGR.pack(fR, fG, fB, fA);
 

@@ -1,9 +1,9 @@
 package net.caffeinemc.mods.sodium.api.config.structure;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public interface OptionOverrideBuilder {
-    OptionOverrideBuilder setTarget(ResourceLocation target);
+    OptionOverrideBuilder setTarget(Identifier target);
 
     OptionOverrideBuilder setReplacement(OptionBuilder option);
 }

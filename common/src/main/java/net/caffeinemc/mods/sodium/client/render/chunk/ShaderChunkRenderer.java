@@ -6,6 +6,7 @@ import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTexture;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuSampler;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.caffeinemc.mods.sodium.client.gl.attribute.GlVertexFormat;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
@@ -16,7 +17,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexT
 import net.caffeinemc.mods.sodium.client.gl.shader.*;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.mixin.core.GlCommandEncoderAccessor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import java.util.Map;
 
 public abstract class ShaderChunkRenderer implements ChunkRenderer {
@@ -49,13 +50,13 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         ShaderConstants constants = createShaderConstants(options);
 
         GlShader vertShader = ShaderLoader.loadShader(ShaderType.VERTEX,
-                ResourceLocation.fromNamespaceAndPath("sodium", path + ".vsh"), constants);
+                Identifier.fromNamespaceAndPath("sodium", path + ".vsh"), constants);
 
         GlShader fragShader = ShaderLoader.loadShader(ShaderType.FRAGMENT,
-                ResourceLocation.fromNamespaceAndPath("sodium", path + ".fsh"), constants);
+                Identifier.fromNamespaceAndPath("sodium", path + ".fsh"), constants);
 
         try {
-            return GlProgram.builder(ResourceLocation.fromNamespaceAndPath("sodium", "chunk_shader"))
+            return GlProgram.builder(Identifier.fromNamespaceAndPath("sodium", "chunk_shader"))
                     .attachShader(vertShader)
                     .attachShader(fragShader)
                     .bindAttribute("a_Position", ChunkShaderBindingPoints.ATTRIBUTE_POSITION)
@@ -84,7 +85,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         return builder.build();
     }
 
-    protected void begin(TerrainRenderPass pass, FogParameters parameters) {
+    protected void begin(TerrainRenderPass pass, FogParameters parameters, GpuSampler terrainSampler) {
         RenderTarget target = pass.getTarget();
 
         GlStateManager._viewport(0, 0, target.getColorTexture().getWidth(0), target.getColorTexture().getHeight(0));
@@ -97,7 +98,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         this.activeProgram = this.compileProgram(options);
         this.activeProgram.bind();
         this.activeProgram.getInterface()
-                .setupState(pass, parameters);
+                .setupState(pass, parameters, terrainSampler);
     }
 
     protected void end(TerrainRenderPass pass) {

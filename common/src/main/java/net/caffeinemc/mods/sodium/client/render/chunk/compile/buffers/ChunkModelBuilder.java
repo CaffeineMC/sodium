@@ -6,12 +6,12 @@ import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public interface ChunkModelBuilder {
     ChunkMeshBufferBuilder getVertexBuffer(ModelQuadFacing facing);
 
-    void addSprite(@NotNull TextureAtlasSprite sprite);
+    void addSprite(@NonNull TextureAtlasSprite sprite);
 
     /**
      * <b>This method should not be used unless absolutely necessary!</b> It exists only for compatibility purposes.

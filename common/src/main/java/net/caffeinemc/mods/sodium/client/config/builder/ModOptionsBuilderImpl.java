@@ -9,7 +9,7 @@ import net.caffeinemc.mods.sodium.client.config.structure.ModOptions;
 import net.caffeinemc.mods.sodium.client.config.structure.OptionOverride;
 import net.caffeinemc.mods.sodium.client.config.structure.Page;
 import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.lang3.Validate;
 
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
     private String name;
     private String version;
     private ColorTheme theme;
-    private ResourceLocation icon;
+    private Identifier icon;
     private final List<Page> pages = new ArrayList<>();
     private final List<OptionOverride> optionOverrides = new ArrayList<>(0);
 
@@ -72,7 +72,7 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
     }
 
     @Override
-    public ModOptionsBuilder setIcon(ResourceLocation texture) {
+    public ModOptionsBuilder setIcon(Identifier texture) {
         this.icon = texture;
         return this;
     }

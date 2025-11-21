@@ -11,7 +11,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
@@ -150,7 +150,7 @@ public class SearchWidget extends AbstractParentWidget {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void render(@NonNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         graphics.fill(this.getX(), this.getY(), this.getX() + this.lastRebuildWidth - Layout.BUTTON_SHORT, this.getLimitY(), Colors.BACKGROUND_DEFAULT);
 
         this.searchBox.render(graphics, mouseX, mouseY, delta);

@@ -15,8 +15,8 @@ import net.caffeinemc.mods.sodium.client.gui.options.control.AbstractScrollable;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.NonNull;
 
 public class PageListWidget extends AbstractScrollable {
     private final VideoSettingsScreen parent;
@@ -85,7 +85,7 @@ public class PageListWidget extends AbstractScrollable {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void render(@NonNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         renderBackgroundGradient(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY());
         graphics.enableScissor(this.getX(), this.getY(), this.getLimitX(), this.getLimitY());
         super.render(graphics, mouseX, mouseY, delta);
@@ -145,7 +145,7 @@ public class PageListWidget extends AbstractScrollable {
     }
 
     private class HeaderEntryWidget extends EntryWidget {
-        private final ResourceLocation icon;
+        private final Identifier icon;
 
         HeaderEntryWidget(Dim2i dim, ModOptions modOptions, ColorTheme theme) {
             super(dim, Component.literal(modOptions.name()), Component.literal(modOptions.version()), false, theme);

@@ -5,7 +5,7 @@ import net.caffeinemc.mods.sodium.client.platform.windows.api.Shell32;
 import net.caffeinemc.mods.sodium.client.platform.windows.api.User32;
 import net.caffeinemc.mods.sodium.client.platform.windows.api.msgbox.MsgBoxCallback;
 import net.caffeinemc.mods.sodium.client.platform.windows.api.msgbox.MsgBoxParamSw;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 

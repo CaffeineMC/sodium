@@ -2,7 +2,7 @@ plugins {
     id("multiloader-base")
     id("java-library")
 
-    id("fabric-loom") version ("1.11.4")
+    id("fabric-loom") version ("1.13.4")
 }
 
 base {
@@ -67,7 +67,7 @@ dependencies {
     configurationPreLaunch("net.java.dev.jna:jna:5.14.0")
     configurationPreLaunch("net.java.dev.jna:jna-platform:5.14.0")
     configurationPreLaunch("org.slf4j:slf4j-api:2.0.9")
-    configurationPreLaunch("org.jetbrains:annotations:25.0.0")
+    configurationPreLaunch("org.jspecify:jspecify:1.0.0")
 }
 
 loom {

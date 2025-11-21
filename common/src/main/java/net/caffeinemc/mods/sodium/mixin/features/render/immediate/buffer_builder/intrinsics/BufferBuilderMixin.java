@@ -32,10 +32,6 @@ public abstract class BufferBuilderMixin implements VertexConsumer {
             return;
         }
 
-        if (bakedQuad.vertices().length < 32) {
-            return; // we do not accept quads with less than 4 properly sized vertices
-        }
-
         VertexBufferWriter writer = VertexBufferWriter.of(this);
 
         ModelQuadView quad = (ModelQuadView) (Object) bakedQuad;
@@ -49,9 +45,9 @@ public abstract class BufferBuilderMixin implements VertexConsumer {
     }
 
     @Override
-    public void putBulkData(PoseStack.Pose matrices, BakedQuad bakedQuad, float[] brightnessTable, float r, float g, float b, float a, int[] light, int overlay, boolean colorize) {
+    public void putBulkData(PoseStack.Pose matrices, BakedQuad bakedQuad, float[] brightnessTable, float r, float g, float b, float a, int[] light, int overlay) {
         if (!this.fastFormat) {
-            VertexConsumer.super.putBulkData(matrices, bakedQuad, brightnessTable, r, g, b, a, light, overlay, colorize);
+            VertexConsumer.super.putBulkData(matrices, bakedQuad, brightnessTable, r, g, b, a, light, overlay);
 
             if (bakedQuad.sprite() != null) {
                 SpriteUtil.INSTANCE.markSpriteActive(bakedQuad.sprite());
@@ -60,15 +56,11 @@ public abstract class BufferBuilderMixin implements VertexConsumer {
             return;
         }
 
-        if (bakedQuad.vertices().length < 32) {
-            return; // we do not accept quads with less than 4 properly sized vertices
-        }
-
         VertexBufferWriter writer = VertexBufferWriter.of(this);
 
         ModelQuadView quad = (ModelQuadView) (Object) bakedQuad;
 
-        BakedModelEncoder.writeQuadVertices(writer, matrices, quad, r, g, b, a, brightnessTable, colorize, light, overlay);
+        BakedModelEncoder.writeQuadVertices(writer, matrices, quad, r, g, b, a, brightnessTable, light, overlay);
 
         if (quad.getSprite() != null) {
             SpriteUtil.INSTANCE.markSpriteActive(quad.getSprite());

@@ -25,7 +25,7 @@ import net.caffeinemc.mods.sodium.client.render.frapi.render.AccessLayerRenderSt
 import net.caffeinemc.mods.sodium.client.render.frapi.render.ItemRenderContext;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.OrderedSubmitNodeCollectorExtension;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.ItemRenderer;

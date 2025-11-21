@@ -8,8 +8,8 @@ import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.core.Direction;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
@@ -106,7 +106,7 @@ public class QuadViewWrapper implements QuadView {
     }
 
     @Override
-    public @NotNull Direction lightFace() {
+    public @NonNull Direction lightFace() {
         return quad.getLightFace();
     }
 

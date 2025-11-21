@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.platform.windows.api.d3dkmt;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.Struct;
 import org.lwjgl.system.StructBuffer;
@@ -75,12 +75,12 @@ class D3DKMTAdapterInfoStruct extends Struct<D3DKMTAdapterInfoStruct> {
         }
 
         @Override
-        protected @NotNull D3DKMTAdapterInfoStruct getElementFactory() {
+        protected @NonNull D3DKMTAdapterInfoStruct getElementFactory() {
             return ELEMENT_FACTORY;
         }
 
         @Override
-        protected @NotNull Buffer self() {
+        protected @NonNull Buffer self() {
             return this;
         }
     }

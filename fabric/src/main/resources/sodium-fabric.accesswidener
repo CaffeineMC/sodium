@@ -2,10 +2,10 @@ accessWidener v1 named
 
 accessible class net/minecraft/client/model/geom/ModelPart$Vertex
 accessible class net/minecraft/client/model/geom/ModelPart$Polygon
-accessible class net/minecraft/client/renderer/texture/SpriteContents$InterpolationData
 accessible class net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture
 accessible class net/minecraft/client/renderer/texture/SpriteContents$FrameInfo
-accessible class net/minecraft/client/renderer/texture/SpriteContents$Ticker
+accessible field net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture interpolateFrames Z
+accessible field net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture frames Ljava/util/List;
 accessible class net/minecraft/world/level/chunk/PalettedContainer$Data
 accessible class net/minecraft/client/renderer/texture/Stitcher$Holder
 accessible class net/minecraft/world/level/biome/Biome$ClimateSettings

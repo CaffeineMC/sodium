@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.platform.windows.api.msgbox;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.system.CallbackI;
 import org.lwjgl.system.NativeType;
 import org.lwjgl.system.libffi.FFICIF;
@@ -19,7 +19,7 @@ public interface MsgBoxCallbackI extends CallbackI {
     );
 
     @Override
-    default @NotNull FFICIF getCallInterface() {
+    default @NonNull FFICIF getCallInterface() {
         return CIF;
     }
 

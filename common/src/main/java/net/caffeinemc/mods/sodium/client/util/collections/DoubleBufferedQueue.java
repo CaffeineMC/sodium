@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.util.collections;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 
@@ -72,7 +72,7 @@ public final class DoubleBufferedQueue<E> {
         }
 
         @Override
-        public void enqueue(@NotNull E e) {
+        public void enqueue(@NonNull E e) {
             if (this.writeIndex >= this.elements.length) {
                 this.resize(this.writeIndex + 1);
             }

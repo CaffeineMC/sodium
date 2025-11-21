@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.compatibility.environment.probe;
 
 import net.caffeinemc.mods.sodium.client.compatibility.environment.GlContextInfo;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -32,7 +32,7 @@ public enum GraphicsAdapterVendor {
     private static final Pattern AMD_ICD_PATTERN =
             Pattern.compile("(atiglpxx|atig6pxx)\\.dll", Pattern.CASE_INSENSITIVE);
 
-    @NotNull
+    @NonNull
     static GraphicsAdapterVendor fromPciVendorId(String vendor) {
         if (vendor.contains("0x1002")) {
             return AMD;
@@ -45,7 +45,7 @@ public enum GraphicsAdapterVendor {
         return UNKNOWN;
     }
 
-    @NotNull
+    @NonNull
     public static GraphicsAdapterVendor fromIcdName(String name) {
         if (matchesPattern(INTEL_ICD_PATTERN, name)) {
             return INTEL;
@@ -58,7 +58,7 @@ public enum GraphicsAdapterVendor {
         }
     }
 
-    @NotNull
+    @NonNull
     public static GraphicsAdapterVendor fromContext(GlContextInfo context) {
         var vendor = context.vendor();
 

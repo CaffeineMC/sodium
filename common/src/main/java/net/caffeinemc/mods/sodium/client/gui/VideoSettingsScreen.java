@@ -13,7 +13,7 @@ import net.caffeinemc.mods.sodium.client.gui.screen.ConfigCorruptedScreen;
 import net.caffeinemc.mods.sodium.client.gui.widgets.*;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -25,9 +25,9 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
-import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
@@ -221,7 +221,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void render(@NonNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         this.updateControls(mouseX, mouseY);
 
         super.render(graphics, this.prompt != null ? -1 : mouseX, this.prompt != null ? -1 : mouseY, delta);
@@ -334,7 +334,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
     public boolean mouseScrolled(double x, double y, double f, double amount) {
         // change the gui scale with scrolling if the control key is held
         if (Minecraft.getInstance().hasControlDown()) {
-            var location = ResourceLocation.parse("sodium:general.gui_scale");
+            var location = Identifier.parse("sodium:general.gui_scale");
             var option = ConfigManager.CONFIG.getOption(location);
             if (option instanceof IntegerOption guiScaleOption) {
                 var value = guiScaleOption.getValidatedValue();
@@ -418,7 +418,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         return new Dim2i(0, 0, this.width, this.height);
     }
 
-    public static void renderIcon(GuiGraphics graphics, ResourceLocation icon, int color, int x, int y, int size) {
+    public static void renderIcon(GuiGraphics graphics, Identifier icon, int color, int x, int y, int size) {
         var texture = Minecraft.getInstance().getTextureManager().getTexture(icon);
         int w = texture.getTexture().getWidth(0);
         int h = texture.getTexture().getHeight(0);
@@ -426,7 +426,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         graphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0, 0, size, size, w, h, w, h, color);
     }
 
-    public static int renderIconWithSpacing(GuiGraphics graphics, ResourceLocation icon, int color, int x, int y, int height, int margin) {
+    public static int renderIconWithSpacing(GuiGraphics graphics, Identifier icon, int color, int x, int y, int height, int margin) {
         int iconSize = height - margin * 2;
 
         renderIcon(graphics, icon, color, x + margin, y + height / 2 - iconSize / 2, iconSize);

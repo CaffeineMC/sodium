@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.platform;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,9 +10,9 @@ public class PlatformHelper {
 
     public static void showCriticalErrorAndClose(
             @Nullable NativeWindowHandle window,
-            @NotNull String messageTitle,
-            @NotNull String messageBody,
-            @NotNull String helpUrl)
+            @NonNull String messageTitle,
+            @NonNull String messageBody,
+            @NonNull String helpUrl)
     {
         // Always print the information to the log file first, just in case we can't show the message box.
         LOGGER.error(""" 

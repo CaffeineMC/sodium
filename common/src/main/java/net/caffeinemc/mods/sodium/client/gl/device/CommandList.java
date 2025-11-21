@@ -21,6 +21,8 @@ public interface CommandList extends AutoCloseable {
 
     void uploadData(GlMutableBuffer glBuffer, ByteBuffer byteBuffer, GlBufferUsage usage);
 
+    void uploadDataToOffset(GlMutableBuffer buffer, int offset, long pointer, int size);
+
     void copyBufferSubData(GlBuffer src, GlBuffer dst, long readOffset, long writeOffset, long bytes);
 
     void bindBuffer(GlBufferTarget target, GlBuffer buffer);

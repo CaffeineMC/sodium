@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.platform.windows.api;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.*;
 import java.nio.ByteBuffer;

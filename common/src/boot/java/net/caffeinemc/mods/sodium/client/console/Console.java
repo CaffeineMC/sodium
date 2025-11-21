@@ -2,7 +2,7 @@ package net.caffeinemc.mods.sodium.client.console;
 
 import net.caffeinemc.mods.sodium.client.console.message.Message;
 import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -14,7 +14,7 @@ public class Console implements ConsoleSink {
     private final ArrayDeque<Message> messages = new ArrayDeque<>();
 
     @Override
-    public void logMessage(@NotNull MessageLevel level, @NotNull String text, boolean translatable, double duration) {
+    public void logMessage(@NonNull MessageLevel level, @NonNull String text, boolean translatable, double duration) {
         Objects.requireNonNull(level);
         Objects.requireNonNull(text);
 

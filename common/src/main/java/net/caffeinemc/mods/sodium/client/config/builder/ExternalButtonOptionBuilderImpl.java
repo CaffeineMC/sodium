@@ -6,7 +6,7 @@ import net.caffeinemc.mods.sodium.client.config.structure.ExternalButtonOption;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.lang3.Validate;
 
 import java.util.function.Consumer;
@@ -15,7 +15,7 @@ import java.util.function.Function;
 class ExternalButtonOptionBuilderImpl extends StaticOptionBuilderImpl implements ExternalButtonOptionBuilder {
     private Consumer<Screen> currentScreenConsumer;
 
-    ExternalButtonOptionBuilderImpl(ResourceLocation id) {
+    ExternalButtonOptionBuilderImpl(Identifier id) {
         super(id);
     }
 
@@ -52,7 +52,7 @@ class ExternalButtonOptionBuilderImpl extends StaticOptionBuilderImpl implements
     }
 
     @Override
-    public ExternalButtonOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies) {
+    public ExternalButtonOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies) {
         super.setEnabledProvider(provider, dependencies);
         return this;
     }

@@ -20,7 +20,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.SharedIndexSorter;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 
@@ -81,8 +81,16 @@ public class RenderRegionManager {
 
                     BuiltSectionMeshParts mesh = chunkBuildOutput.getMesh(pass);
 
+                    // This is before new data is loaded. If this is the first build, isBuilt should be false.
+
+                    int meshTime = -1;
+
+                    if (!result.render.isBuilt()) {
+                        meshTime = Math.toIntExact(System.currentTimeMillis() - region.getCreationTime());
+                    }
+
                     if (mesh != null) {
-                        uploads.add(new PendingSectionMeshUpload(result.render, mesh, pass,
+                        uploads.add(new PendingSectionMeshUpload(result.render, meshTime, mesh, pass,
                                 new PendingUpload(mesh.getVertexData())));
                     }
                 }
@@ -152,6 +160,10 @@ public class RenderRegionManager {
             // Collect the upload results
             for (PendingSectionMeshUpload upload : uploads) {
                 var storage = region.createStorage(upload.pass);
+                if (upload.relativeBuiltTime != -1) { // We don't want the animation to happen again on chunks changing!
+                    upload.section.setFadeTime(upload.relativeBuiltTime);
+                    resources.writeMeshTimes(upload.section.getSectionIndex(), upload.relativeBuiltTime);
+                }
                 storage.setVertexData(upload.section.getSectionIndex(),
                         upload.vertexUpload.getResult(), upload.meshData.getVertexSegments());
             }
@@ -217,7 +229,7 @@ public class RenderRegionManager {
                 chunkZ >> RenderRegion.REGION_LENGTH_SH);
     }
 
-    @NotNull
+    @NonNull
     private RenderRegion create(int x, int y, int z) {
         var key = RenderRegion.key(x, y, z);
         var instance = this.regions.get(key);
@@ -229,7 +241,7 @@ public class RenderRegionManager {
         return instance;
     }
 
-    private record PendingSectionMeshUpload(RenderSection section, BuiltSectionMeshParts meshData, TerrainRenderPass pass, PendingUpload vertexUpload) {
+    private record PendingSectionMeshUpload(RenderSection section, int relativeBuiltTime, BuiltSectionMeshParts meshData, TerrainRenderPass pass, PendingUpload vertexUpload) {
     }
 
     private record PendingSectionIndexBufferUpload(RenderSection section, PendingUpload indexBufferUpload) {

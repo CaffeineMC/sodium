@@ -8,16 +8,16 @@ import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 
 public class SodiumDebugEntry implements DebugScreenEntry {
-    private static final ResourceLocation DEBUG_GROUP = ResourceLocation.fromNamespaceAndPath("sodium", "debug_group");
+    private static final Identifier DEBUG_GROUP = Identifier.fromNamespaceAndPath("sodium", "debug_group");
 
     private static ChatFormatting getVersionColor() {
         String version = SodiumClientMod.getVersion();

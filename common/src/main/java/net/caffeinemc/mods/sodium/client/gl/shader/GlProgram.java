@@ -5,10 +5,10 @@ import net.caffeinemc.mods.sodium.client.gl.GlObject;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniform;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ShaderBindingContext;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL32C;
@@ -33,7 +33,7 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
         return this.shaderInterface;
     }
 
-    public static Builder builder(ResourceLocation name) {
+    public static Builder builder(Identifier name) {
         return new Builder(name);
     }
 
@@ -52,7 +52,7 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
     }
 
     @Override
-    public <U extends GlUniform<?>> @NotNull U bindUniform(String name, IntFunction<U> factory) {
+    public <U extends GlUniform<?>> @NonNull U bindUniform(String name, IntFunction<U> factory) {
         int index = GL20C.glGetUniformLocation(this.handle(), name);
 
         if (index < 0) {
@@ -74,7 +74,7 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
     }
 
     @Override
-    public @NotNull GlUniformBlock bindUniformBlock(String name, int bindingPoint) {
+    public @NonNull GlUniformBlock bindUniformBlock(String name, int bindingPoint) {
         int index = GL32C.glGetUniformBlockIndex(this.handle(), name);
 
         if (index < 0) {
@@ -100,10 +100,10 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
     }
 
     public static class Builder {
-        private final ResourceLocation name;
+        private final Identifier name;
         private final int program;
 
-        public Builder(ResourceLocation name) {
+        public Builder(Identifier name) {
             this.name = name;
             this.program = GL20C.glCreateProgram();
         }

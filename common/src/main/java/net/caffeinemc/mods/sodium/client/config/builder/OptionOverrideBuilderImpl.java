@@ -4,11 +4,11 @@ import net.caffeinemc.mods.sodium.api.config.structure.OptionBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.OptionOverrideBuilder;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.config.structure.OptionOverride;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.lang3.Validate;
 
 public class OptionOverrideBuilderImpl implements OptionOverrideBuilder {
-    private ResourceLocation target;
+    private Identifier target;
     private Option replacement;
 
     OptionOverride build(String source) {
@@ -19,7 +19,7 @@ public class OptionOverrideBuilderImpl implements OptionOverrideBuilder {
     }
 
     @Override
-    public OptionOverrideBuilder setTarget(ResourceLocation target) {
+    public OptionOverrideBuilder setTarget(Identifier target) {
         this.target = target;
         return this;
     }

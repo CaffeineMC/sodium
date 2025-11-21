@@ -11,7 +11,7 @@ import net.caffeinemc.mods.sodium.client.util.collections.WriteQueue;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public class OcclusionCuller {
     private final Long2ReferenceMap<RenderSection> sections;
@@ -154,7 +154,7 @@ public class OcclusionCuller {
         }
     }
 
-    private static void visitNode(final WriteQueue<RenderSection> queue, @NotNull RenderSection render, int incoming, int frame) {
+    private static void visitNode(final WriteQueue<RenderSection> queue, @NonNull RenderSection render, int incoming, int frame) {
         if (render.getLastVisibleFrame() != frame) {
             // This is the first time we are visiting this section during the given frame, so we must
             // reset the state.

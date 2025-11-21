@@ -6,15 +6,15 @@ import net.caffeinemc.mods.sodium.client.config.search.*;
 import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
 import net.caffeinemc.mods.sodium.client.gui.options.control.Control;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.function.Consumer;
 
 public abstract class Option {
-    final ResourceLocation id;
-    final Collection<ResourceLocation> dependencies;
+    final Identifier id;
+    final Collection<Identifier> dependencies;
 
     final Component name;
     final DependentValue<Boolean> enabled;
@@ -22,7 +22,7 @@ public abstract class Option {
     Config state;
     Control control;
 
-    Option(ResourceLocation id, Collection<ResourceLocation> dependencies, Component name, DependentValue<Boolean> enabled) {
+    Option(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled) {
         if (dependencies.contains(id)) {
             throw new IllegalArgumentException("Option cannot depend on itself");
         }

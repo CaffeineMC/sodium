@@ -8,19 +8,19 @@ import net.caffeinemc.mods.sodium.client.config.value.ConstantValue;
 import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
 import net.caffeinemc.mods.sodium.client.config.value.DynamicValue;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.lang3.Validate;
 
 import java.util.Collection;
 import java.util.function.Function;
 
 public abstract class OptionBuilderImpl implements OptionBuilder {
-    final ResourceLocation id;
+    final Identifier id;
 
     Component name;
     DependentValue<Boolean> enabled;
 
-    OptionBuilderImpl(ResourceLocation id) {
+    OptionBuilderImpl(Identifier id) {
         this.id = id;
     }
 
@@ -34,8 +34,8 @@ public abstract class OptionBuilderImpl implements OptionBuilder {
         }
     }
 
-    Collection<ResourceLocation> getDependencies() {
-        var dependencies = new ObjectLinkedOpenHashSet<ResourceLocation>();
+    Collection<Identifier> getDependencies() {
+        var dependencies = new ObjectLinkedOpenHashSet<Identifier>();
         dependencies.addAll(this.enabled.getDependencies());
         return dependencies;
     }
@@ -55,7 +55,7 @@ public abstract class OptionBuilderImpl implements OptionBuilder {
     }
 
     @Override
-    public OptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies) {
+    public OptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies) {
         Validate.notNull(provider, "Argument must not be null");
 
         this.enabled = new DynamicValue<>(provider, dependencies);

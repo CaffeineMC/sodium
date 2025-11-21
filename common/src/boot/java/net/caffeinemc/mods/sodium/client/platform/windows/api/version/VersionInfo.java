@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.platform.windows.api.version;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.Closeable;

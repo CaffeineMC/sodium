@@ -47,8 +47,9 @@ public class GameRendererMixin {
         }
 
         Profiler.get().push("sodium_console_overlay");
-
-        GuiGraphics drawContext = new GuiGraphics(this.minecraft, this.guiRenderState);
+        int mouseX = (int)this.minecraft.mouseHandler.getScaledXPos(this.minecraft.getWindow());
+        int mouseY = (int)this.minecraft.mouseHandler.getScaledYPos(this.minecraft.getWindow());
+        GuiGraphics drawContext = new GuiGraphics(this.minecraft, this.guiRenderState, mouseX, mouseY);
 
         ConsoleHooks.render(drawContext, GLFW.glfwGetTime());
 

@@ -1,10 +1,10 @@
 package net.caffeinemc.mods.sodium.client.platform.windows;
 
 import net.caffeinemc.mods.sodium.client.platform.windows.api.version.VersionFixedFileInfoStruct;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public record WindowsFileVersion(int x, int y, int z, int w) {
-    public static @NotNull WindowsFileVersion fromFileVersion(VersionFixedFileInfoStruct fileVersion) {
+    public static @NonNull WindowsFileVersion fromFileVersion(VersionFixedFileInfoStruct fileVersion) {
         int x = (fileVersion.getFileVersionMostSignificantBits() >>> 16) & 0xffff;
         int y = (fileVersion.getFileVersionMostSignificantBits() >>>  0) & 0xffff;
         int z = (fileVersion.getFileVersionLeastSignificantBits() >>> 16) & 0xffff;

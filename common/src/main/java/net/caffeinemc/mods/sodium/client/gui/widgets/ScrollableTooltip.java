@@ -12,9 +12,9 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.joml.Vector2i;
 
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ import java.util.List;
 
 // TODO: is narration of the tooltip already handled by the screen or is there no narration at all?
 public class ScrollableTooltip {
-    private static final ResourceLocation ARROW_TEXTURE = ResourceLocation.fromNamespaceAndPath("sodium", "textures/gui/tooltip_arrows.png");
+    private static final Identifier ARROW_TEXTURE = Identifier.fromNamespaceAndPath("sodium", "textures/gui/tooltip_arrows.png");
     private static final int ARROW_WIDTH = 5;
     private static final int SPRITE_WIDTH = 10;
     private static final int ARROW_HEIGHT = 9;
@@ -202,7 +202,7 @@ public class ScrollableTooltip {
         return contentHeight > maxVisibleHeight;
     }
 
-    public void render(@NotNull GuiGraphics graphics) {
+    public void render(@NonNull GuiGraphics graphics) {
         if (this.hoveredElement == null) {
             return;
         }

@@ -29,11 +29,12 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.state.LevelRenderState;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.BlockDestructionProgress;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector4f;
@@ -154,7 +155,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
      */
     @Overwrite
     private ChunkSectionsToRender prepareChunkRenders(Matrix4fc matrix4fc, double x, double y, double z) {
-        ChunkSectionsToRender chunkSectionsToRender = new ChunkSectionsToRender(STATIC_MAP, -1, new GpuBufferSlice[0]);
+        ChunkSectionsToRender chunkSectionsToRender = new ChunkSectionsToRender(this.minecraft.getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView(), STATIC_MAP, -1, new GpuBufferSlice[0]);
         ((SodiumChunkSection) (Object) chunkSectionsToRender).sodium$setRendering(renderer, matrices, x, y, z);
         return chunkSectionsToRender;
     }
@@ -173,9 +174,9 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         var viewport = ((ViewportProvider) frustum).sodium$createViewport();
         var updateChunksImmediately = FlawlessFrames.isActive();
 
-        int sectionX = SectionPos.posToSectionCoord(camera.getPosition().x());
-        int sectionY = SectionPos.posToSectionCoord(camera.getPosition().y());
-        int sectionZ = SectionPos.posToSectionCoord(camera.getPosition().z());
+        int sectionX = SectionPos.posToSectionCoord(camera.position().x());
+        int sectionY = SectionPos.posToSectionCoord(camera.position().y());
+        int sectionZ = SectionPos.posToSectionCoord(camera.position().z());
 
         if (this.lastCameraSectionX != sectionX || this.lastCameraSectionY != sectionY || this.lastCameraSectionZ != sectionZ) {
             this.lastCameraSectionX = sectionX;
@@ -234,7 +235,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
      * @author JellySquid
      */
     @Overwrite
-    public boolean isSectionCompiled(BlockPos pos) {
+    public boolean isSectionCompiledAndVisible(BlockPos pos) {
         return this.renderer.isSectionReady(pos.getX() >> 4, pos.getY() >> 4, pos.getZ() >> 4);
     }
 

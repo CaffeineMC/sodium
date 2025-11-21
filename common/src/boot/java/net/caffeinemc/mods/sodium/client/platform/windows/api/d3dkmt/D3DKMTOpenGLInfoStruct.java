@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.platform.windows.api.d3dkmt;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.Struct;
@@ -44,7 +44,7 @@ public class D3DKMTOpenGLInfoStruct extends Struct<D3DKMTOpenGLInfoStruct> {
     }
 
     @Override
-    protected @NotNull D3DKMTOpenGLInfoStruct create(long address, ByteBuffer container) {
+    protected @NonNull D3DKMTOpenGLInfoStruct create(long address, ByteBuffer container) {
         return new D3DKMTOpenGLInfoStruct(address, container);
     }
 

@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.platform.windows.api.version;
 
 import net.caffeinemc.mods.sodium.client.platform.windows.api.Kernel32;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.*;
 

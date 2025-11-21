@@ -7,8 +7,8 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,14 +46,14 @@ public abstract class AbstractParentWidget extends AbstractWidget implements Con
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void render(@NonNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         for (Renderable element : this.renderableChildren) {
             element.render(graphics, mouseX, mouseY, delta);
         }
     }
 
     @Override
-    public @NotNull List<? extends GuiEventListener> children() {
+    public @NonNull List<? extends GuiEventListener> children() {
         return this.children;
     }
 
@@ -87,7 +87,7 @@ public abstract class AbstractParentWidget extends AbstractWidget implements Con
     }
 
     @Override
-    public @Nullable ComponentPath nextFocusPath(@NotNull FocusNavigationEvent event) {
+    public @Nullable ComponentPath nextFocusPath(@NonNull FocusNavigationEvent event) {
         return ContainerEventHandler.super.nextFocusPath(event);
     }
 }

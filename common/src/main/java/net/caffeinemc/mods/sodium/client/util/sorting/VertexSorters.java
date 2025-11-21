@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.CompactVectorArray;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import net.caffeinemc.mods.sodium.client.util.MathUtil;
 import org.apache.commons.lang3.Validate;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
 
@@ -30,7 +30,7 @@ public class VertexSorters {
 
     private abstract static class AbstractSorter implements VertexSortingExtended {
         @Override
-        public final int @NotNull [] sort(CompactVectorArray centroids) {
+        public final int @NonNull [] sort(CompactVectorArray centroids) {
             final int length = centroids.size();
             final var keys = new int[length];
             final var perm = new int[length];
