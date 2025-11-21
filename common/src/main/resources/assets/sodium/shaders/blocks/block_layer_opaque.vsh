@@ -20,7 +20,7 @@ uniform vec2 u_TexCoordShrink;
 uniform sampler2D u_LightTex; // The light map texture sampler
 
 uniform int u_CurrentTime;
-uniform int u_FadePeriod;
+uniform float u_FadePeriodInv;
 
 layout(std140) uniform ChunkData {
     ivec4 u_chunkFades[64]; // Packing into ivec4 is needed to avoid wasting 3KB...
@@ -49,7 +49,8 @@ void main() {
     int chunkFade = u_chunkFades[chunkId >> 2][chunkId & 3];
     int fadeTime = u_CurrentTime - chunkFade;
     float elapsed = float(fadeTime);
-    fadeFactor = mix(clamp(elapsed / float(u_FadePeriod), 0.0, 1.0), 1.0, float(chunkFade < 0));
+    float fade = clamp(float(u_CurrentTime - chunkFade) * u_FadePeriodInv, 0.0, 1.0);
+    fadeFactor = (chunkFade < 0) ? 1.0 : fade;
 #endif
 
     // Transform the vertex position into model-view-projection space
