@@ -216,7 +216,7 @@ determined by the mod that owns the metadata-based entrypoint or the mod id pass
 
 Each registered mod gets its own header in the page list. The color of the header and the corresponding entries is
 randomly selected from a predefined list by default, but can be customized using `ModOptionsBuilder.setColorTheme`. A
-color theme is created either by specifying three RGB colors or a single base color with the lighter and darker colors
+color theme is created either by specifying three (A)RGB colors or a single base color with the lighter and darker colors
 getting derived automatically. A mod can also specify an icon with `ModOptionsBuilder.setIcon`, which takes a
 `ResourceLocation` pointing to a texture, which will be tinted in the theme color and rendered in its entirety as a
 square.
