@@ -146,10 +146,12 @@ public class PageListWidget extends AbstractScrollable {
 
     private class HeaderEntryWidget extends EntryWidget {
         private final ResourceLocation icon;
+        private final boolean iconMonochrome;
 
         HeaderEntryWidget(Dim2i dim, ModOptions modOptions, ColorTheme theme) {
             super(dim, Component.literal(modOptions.name()), Component.literal(modOptions.version()), false, theme);
             this.icon = modOptions.icon();
+            this.iconMonochrome = modOptions.iconMonochrome();
         }
 
         @Override
@@ -158,7 +160,7 @@ public class PageListWidget extends AbstractScrollable {
                 return super.renderIcon(graphics, textColor);
             }
 
-            return VideoSettingsScreen.renderIconWithSpacing(graphics, this.icon, textColor,
+            return VideoSettingsScreen.renderIconWithSpacing(graphics, this.icon, textColor, this.iconMonochrome,
                     this.getX(), this.getY(), this.getHeight(), Layout.ICON_MARGIN);
         }
     }
