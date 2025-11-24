@@ -38,6 +38,8 @@ public class ControlValueFormatterImpls {
         return (v) -> {
             if (v == 0) {
                 return Component.translatable("options.gamma.min");
+            } else if (v == 50) {
+                return Component.translatable("options.gamma.default");
             } else if (v == 100) {
                 return Component.translatable("options.gamma.max");
             } else {

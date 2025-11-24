@@ -271,9 +271,7 @@ public class OptionListWidget extends AbstractOptionList {
         final ResourceLocation icon;
 
         public ModHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme, ResourceLocation icon) {
-            // super(list, dim, ChatFormatting.UNDERLINE + title, theme.themeLighter, Colors.BACKGROUND_DEFAULT);
-            // super(list, dim, ChatFormatting.BOLD + title, theme.themeLighter, ColorARGB.withAlpha(theme.themeDarker, 0x60));
-            super(list, dim, ChatFormatting.BOLD + title, theme.themeLighter, Colors.BACKGROUND_DARKER);
+            super(list, dim, ChatFormatting.BOLD + title, theme.themeLighter,  Colors.BACKGROUND_DARKER);
             this.icon = icon;
         }
 

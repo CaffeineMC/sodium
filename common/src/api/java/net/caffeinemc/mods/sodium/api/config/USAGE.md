@@ -182,7 +182,7 @@ The API is largely self-explanatory and an example is provided above. Also see S
 
 The `ConfigBuilder` instance passed to the registration method allows quick and easy registration of a mod's own options using `ConfigBuilder.registerOwnModOptions`. The mod's id, name, version or a formatter for the existing version, and the color theme can be configured on the returned `ModOptionsBuilder`. It's also possible to register options for additional mods using `ConfigBuilder.registerModOptions`. Which mod is the "own" mod for `registerOwnModOptions` is determined by the mod that owns the metadata-based entrypoint or the mod id passed to the `@ConfigEntryPointForge("examplemod")` annotation.
 
-Each registered mod gets its own header in the page list. The color of the header and the corresponding entries is randomly selected from a predefined list by default, but can be customized using `ModOptionsBuilder.setColorTheme`. A color theme is created either by specifying three RGB colors or a single base color with the lighter and darker colors getting derived automatically. A mod can also specify an icon with `ModOptionsBuilder.setIcon`, which takes a `ResourceLocation` pointing to a texture, which will be tinted in the theme color and rendered in its entirety as a square.
+Each registered mod gets its own header in the page list. The color of the header and the corresponding entries is randomly selected from a predefined list by default, but can be customized using `ModOptionsBuilder.setColorTheme`. A color theme is created either by specifying three (A)RGB colors or a single base color with the lighter and darker colors getting derived automatically. A mod can also specify an icon with `ModOptionsBuilder.setIcon`, which takes a `ResourceLocation` pointing to a texture, which will be tinted in the theme color and rendered in its entirety as a square.
 
 To simply switch to a new `Screen` when an entry in the video settings screen's page list is clicked, use `ConfigBuilder.createExternalPage` and add the returned page normally after configuring it with a name and a `Consumer<Screen>` that receives the current screen and switches to your custom screen.
 
@@ -196,7 +196,7 @@ Optionally a performance impact can be specified with `OptionBuilder.setImpact` 
 
 Flags set with `OptionBuilder.setFlags` control what things are reset when this option is applied. They include reloading chunks or reloading resource packs. See `OptionFlag` for the available values.
 
-The default value set with `OptionBuilder.setDefaultValue`, or dynamically with `OptionBuilder.setDefaultProvider`, is used if the value returned by the binding does not fulfill the option's value constraint (in the case of a integer or enum option).
+The default value set with `OptionBuilder.setDefaultValue`, or dynamically with `OptionBuilder.setDefaultProvider`, is used if the value returned by the binding does not fulfill the option's value constraint (in the case of an integer or enum option).
 
 Disabling an option with `OptionBuilder.setEnabled(false)` shows the option as strikethrough and makes it non-interactive. Otherwise, especially with regard to value constraints, it will behave as usual.
 

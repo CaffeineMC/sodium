@@ -22,15 +22,15 @@ public class ColorThemeBuilderImpl implements ColorThemeBuilder {
 
     @Override
     public ColorThemeBuilder setBaseThemeRGB(int theme) {
-        this.baseTheme = theme;
+        this.baseTheme = theme | 0xFF000000;
         return this;
     }
 
     @Override
     public ColorThemeBuilder setFullThemeRGB(int theme, int themeHighlight, int themeDisabled) {
-        this.baseTheme = theme;
-        this.themeHighlight = themeHighlight;
-        this.themeDisabled = themeDisabled;
+        this.baseTheme = theme  | 0xFF000000;
+        this.themeHighlight = themeHighlight  | 0xFF000000;
+        this.themeDisabled = themeDisabled | 0xFF000000;
         return this;
     }
 }
