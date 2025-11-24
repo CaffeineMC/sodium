@@ -35,7 +35,7 @@ public class SodiumDebugEntry implements DebugScreenEntry {
 
     @Override
     public void display(DebugScreenDisplayer debugScreenDisplayer, @Nullable Level level, @Nullable LevelChunk levelChunk, @Nullable LevelChunk levelChunk2) {
-        debugScreenDisplayer.addLine("%sSodium Renderer (%s)".formatted(getVersionColor(), SodiumClientMod.getVersion()));
+        debugScreenDisplayer.addToGroup(DEBUG_GROUP, "%sSodium Renderer (%s)".formatted(getVersionColor(), SodiumClientMod.getVersion()));
 
         var renderer = SodiumWorldRenderer.instanceNullable();
 

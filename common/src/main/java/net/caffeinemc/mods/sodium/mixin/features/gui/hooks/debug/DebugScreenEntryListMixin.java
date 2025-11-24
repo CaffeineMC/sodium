@@ -23,11 +23,6 @@ public class DebugScreenEntryListMixin {
     
     @Unique
     private void setFullDebugStatuses() {
-        if (PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
-            this.allStatuses.put(SodiumClientMod.SODIUM_DEBUG_ENTRY_FULL, DebugScreenEntryStatus.IN_F3);
-        } else {
-            this.allStatuses.put(SodiumClientMod.SODIUM_DEBUG_ENTRY_REDUCED, DebugScreenEntryStatus.IN_F3);
-        }
         this.allStatuses.put(DebugScreenEntries.CHUNK_RENDER_STATS, DebugScreenEntryStatus.IN_F3);
         this.allStatuses.put(DebugScreenEntries.MEMORY, DebugScreenEntryStatus.IN_F3);
         this.allStatuses.put(DebugScreenEntries.SYSTEM_SPECS, DebugScreenEntryStatus.IN_F3);
@@ -35,7 +30,6 @@ public class DebugScreenEntryListMixin {
 
     @Unique
     private void setReducedDebugStatuses() {
-        this.allStatuses.put(SodiumClientMod.SODIUM_DEBUG_ENTRY_REDUCED, DebugScreenEntryStatus.IN_F3);
         this.allStatuses.put(DebugScreenEntries.CHUNK_RENDER_STATS, DebugScreenEntryStatus.IN_F3);
     }
 
@@ -50,6 +44,14 @@ public class DebugScreenEntryListMixin {
             this.setReducedDebugStatuses();
         } else {
             this.setFullDebugStatuses();
+        }
+    }
+
+    @Inject(method = "rebuildCurrentList", at = @At("HEAD"))
+    private void injectSodiumSettings(CallbackInfo ci) {
+        ResourceLocation setting = PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment() ? SodiumClientMod.SODIUM_DEBUG_ENTRY_FULL : SodiumClientMod.SODIUM_DEBUG_ENTRY_REDUCED;
+        if (!this.allStatuses.containsKey(setting)) {
+            this.allStatuses.put(setting, DebugScreenEntryStatus.IN_F3);
         }
     }
 }

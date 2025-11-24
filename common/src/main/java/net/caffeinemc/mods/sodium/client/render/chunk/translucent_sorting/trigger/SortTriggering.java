@@ -240,14 +240,11 @@ public class SortTriggering {
                     this.sortTypeCounters[SortType.DYNAMIC.ordinal()],
                     this.direct.getDirectTriggerCount()));
         } else {
-            list.add("TS (%s,%s) NL=%02d - N=%05d St=%05d DYN=%05d (DIR=%02d)".formatted(
+            list.add("TS (%s,%s) St=%d Dy=%d".formatted(
                     sortBehavior.getShortName(),
-                    this.gfni.getUniqueNormalCount(),
-                    this.triggeredNormalCount,
-                    this.sortTypeCounters[SortType.NONE.ordinal()],
+                    splittingMode.getShortName(),
                     this.sortTypeCounters[SortType.STATIC_NORMAL_RELATIVE.ordinal()] + this.sortTypeCounters[SortType.STATIC_TOPO.ordinal()],
-                    this.sortTypeCounters[SortType.DYNAMIC.ordinal()],
-                    this.direct.getDirectTriggerCount()
+                    this.sortTypeCounters[SortType.DYNAMIC.ordinal()]
             ));
         }
     }
