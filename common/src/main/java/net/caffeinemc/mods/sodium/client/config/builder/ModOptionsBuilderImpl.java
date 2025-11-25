@@ -22,7 +22,6 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
     private String version;
     private ColorTheme theme;
     private ResourceLocation icon;
-    private boolean iconMonochrome = true;
     private final List<Page> pages = new ArrayList<>();
     private final List<OptionOverride> optionOverrides = new ArrayList<>(0);
 
@@ -45,7 +44,7 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
             this.theme = ColorTheme.PRESETS[Math.abs(this.namespace.hashCode()) % ColorTheme.PRESETS.length];
         }
 
-        return new ModOptions(this.namespace, this.name, this.version, this.theme, this.icon, this.iconMonochrome, ImmutableList.copyOf(this.pages), ImmutableList.copyOf(this.optionOverrides));
+        return new ModOptions(this.namespace, this.name, this.version, this.theme, this.icon, ImmutableList.copyOf(this.pages), ImmutableList.copyOf(this.optionOverrides));
     }
 
     @Override
@@ -75,12 +74,6 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
     @Override
     public ModOptionsBuilder setIcon(ResourceLocation texture) {
         this.icon = texture;
-        return this;
-    }
-
-    @Override
-    public ModOptionsBuilder setIconNonMonochrome() {
-        this.iconMonochrome = false;
         return this;
     }
 

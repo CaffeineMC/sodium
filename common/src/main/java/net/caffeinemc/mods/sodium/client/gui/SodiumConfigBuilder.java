@@ -33,7 +33,7 @@ import java.util.Set;
 
 // TODO: get initialValue from the vanilla options (it's private)
 public class SodiumConfigBuilder implements ConfigEntryPoint {
-    private static final ResourceLocation SODIUM_ICON = ResourceLocation.fromNamespaceAndPath("sodium", "textures/gui/icon.png");
+    private static final ResourceLocation SODIUM_ICON = ResourceLocation.fromNamespaceAndPath("sodium", "textures/gui/config-icon.png");
     private static final SodiumOptions DEFAULTS = SodiumOptions.defaults();
 
     private final Options vanillaOpts;

@@ -416,20 +416,12 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
     }
 
     public static int renderIconWithSpacing(GuiGraphics graphics, ResourceLocation icon, int color, int x, int y, int height, int margin) {
-        return renderIconWithSpacing(graphics, icon, color, true, x, y, height, margin);
-    }
-
-    public static int renderIconWithSpacing(GuiGraphics graphics, ResourceLocation icon, int color, boolean iconMonochrome, int x, int y, int height, int margin) {
         int iconSize = height - margin * 2;
 
         // assume 16x16 icon texture
         final int blitX = x + margin;
         final int blitY = y + height / 2 - iconSize / 2;
-        if (iconMonochrome) {
-            GuiTint.withTint(color, () -> graphics.blit(icon, blitX, blitY, iconSize, iconSize, 0.0f, 0.0f, 16, 16, 16, 16));
-        } else {
-            GuiTint.withTint(Colors.FOREGROUND, () -> graphics.blit(icon, blitX, blitY, iconSize, iconSize, 0.0f, 0.0f, 16, 16, 16, 16));
-        }
+        GuiTint.withTint(color, () -> graphics.blit(icon, blitX, blitY, iconSize, iconSize, 0.0f, 0.0f, 16, 16, 16, 16));
 
         return margin * 2 + iconSize;
     }

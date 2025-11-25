@@ -90,5 +90,4 @@ public class MinecraftMixin {
     private void postResourceReload(CallbackInfoReturnable<CompletableFuture<Void>> cir) {
         ResourcePackScanner.checkIfCoreShaderLoaded(this.resourceManager);
     }
-
 }

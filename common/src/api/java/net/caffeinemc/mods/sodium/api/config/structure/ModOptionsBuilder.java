@@ -49,15 +49,6 @@ public interface ModOptionsBuilder {
     ModOptionsBuilder setIcon(ResourceLocation texture);
 
     /**
-     * Sets the icon texture for the mod to be rendered in full color (non-monochrome).
-     * 
-     * We ask for this to be only in special cases where the icon's design relies on multiple adjacent colors. Typically, the theme color is sufficient for branding.
-     *
-     * @return The current builder instance.
-     */
-    ModOptionsBuilder setIconNonMonochrome();
-
-    /**
      * Adds a configuration page to the mod options.
      *
      * @param page The page builder.
