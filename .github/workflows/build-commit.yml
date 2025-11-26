@@ -41,5 +41,5 @@ jobs:
         # uses the general "publish" task which is allowed to silently skip publishing if publish secrets are not given
         run: ./gradlew publish
         env:
-          ORG_GRADLE_caffeineMCMavenUsername: ${{ secrets.CAFFEINEMC_MAVEN_USERNAME }}
-          ORG_GRADLE_caffeineMCMavenPassword: ${{ secrets.CAFFEINEMC_MAVEN_PASSWORD }}
+          ORG_GRADLE_PROJECT_caffeineMCMavenUsername: ${{ secrets.CAFFEINEMC_MAVEN_USERNAME }}
+          ORG_GRADLE_PROJECT_caffeineMCMavenPassword: ${{ secrets.CAFFEINEMC_MAVEN_PASSWORD }}
