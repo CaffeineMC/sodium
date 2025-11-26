@@ -40,19 +40,23 @@ publishing {
             from(components["java"])
         }
     }
-    
-    repositories {
-        maven {
-            name = "CaffeineMC"
-            url = uri("https://maven.caffeinemc.net".let {
-                if (version.toString().endsWith("snapshot")) "$it/snapshot" else "$it/release"
-            })
 
-            credentials {
-                val caffeineMCMavenUsername: String? by project // reads from ORG_GRADLE_caffeineMCMavenUsername
-                val caffeineMCMavenPassword: String? by project // reads from ORG_GRADLE_caffeineMCMavenPassword
-                username = caffeineMCMavenUsername
-                password = caffeineMCMavenPassword
+    repositories {
+        val isReleaseBuild = project.hasProperty("build.release")
+        val caffeineMCMavenUsername: String? by project // reads from ORG_GRADLE_caffeineMCMavenUsername
+        val caffeineMCMavenPassword: String? by project // reads from ORG_GRADLE_caffeineMCMavenPassword
+
+        if (caffeineMCMavenUsername != null && caffeineMCMavenPassword != null) {
+            maven {
+                name = "CaffeineMC"
+                url = uri("https://maven.caffeinemc.net".let {
+                    if (isReleaseBuild) "$it/release" else "$it/snapshot"
+                })
+
+                credentials {
+                    username = caffeineMCMavenUsername
+                    password = caffeineMCMavenPassword
+                }
             }
         }
     }

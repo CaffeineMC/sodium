@@ -37,7 +37,8 @@ jobs:
           name: sodium-artifacts-${{ steps.ref.outputs.branch }}
           path: build/mods/*.jar
 
-      - name: Publish Tag to CaffeineMC Maven
+      - name: Publish Commit Snapshot to CaffeineMC Maven
+        # uses the general "publish" task which is allowed to silently skip publishing if publish secrets are not given
         run: ./gradlew publish
         env:
           ORG_GRADLE_caffeineMCMavenUsername: ${{ secrets.CAFFEINEMC_MAVEN_USERNAME }}

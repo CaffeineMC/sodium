@@ -38,8 +38,8 @@ jobs:
           name: sodium-artifacts-${{ steps.ref.outputs.branch }}
           path: build/mods/*.jar
       
-      - name: Publish Tag to CaffeineMC Maven
-        run: ./gradlew publish -Pbuild.release=true
+      - name: Publish Tag Release to CaffeineMC Maven
+        run: ./gradlew publishMavenPublicationToCaffeineMCRepository -Pbuild.release=true
         env:
           ORG_GRADLE_caffeineMCMavenUsername: ${{ secrets.CAFFEINEMC_MAVEN_USERNAME }}
           ORG_GRADLE_caffeineMCMavenPassword: ${{ secrets.CAFFEINEMC_MAVEN_PASSWORD }}
