@@ -22,6 +22,9 @@ sourceSets {
 val configurationCommonModJava: Configuration = configurations.create("commonModJava") {
     isCanBeResolved = true
 }
+val configurationCommonApiJava: Configuration = configurations.create("commonApiJava") {
+    isCanBeResolved = true
+}
 val configurationCommonModResources: Configuration = configurations.create("commonModResources") {
     isCanBeResolved = true
 }
@@ -35,7 +38,7 @@ val configurationCommonServiceResources: Configuration = configurations.create("
 
 dependencies {
     configurationCommonModJava(project(path = ":common", configuration = "commonMainJava"))
-    configurationCommonModJava(project(path = ":common", configuration = "commonApiJava"))
+    configurationCommonApiJava(project(path = ":common", configuration = "commonApiJava"))
     configurationCommonServiceJava(project(path = ":common", configuration = "commonBootJava"))
 
     configurationCommonModResources(project(path = ":common", configuration = "commonMainResources"))
@@ -54,6 +57,7 @@ dependencies {
 
 val modJar = tasks.register<Jar>("modJar") {
     from(configurationCommonModJava)
+    from(configurationCommonApiJava)
     from(configurationCommonModResources)
 
     from(sourceSets["mod"].output)
@@ -65,6 +69,20 @@ val modJar = tasks.register<Jar>("modJar") {
     }
 
     archiveClassifier = "mod"
+}
+
+val apiJar = tasks.register<Jar>("apiJar") {
+    from(configurationCommonApiJava)
+
+    from(rootDir.resolve("LICENSE.md"))
+
+    archiveClassifier = "api"
+
+    destinationDirectory.set(file(rootProject.layout.buildDirectory).resolve("api"))
+}
+
+tasks.jar {
+    dependsOn(apiJar)
 }
 
 val configurationMod: Configuration = configurations.create("mod") {
@@ -87,7 +105,9 @@ sourceSets {
         runtimeClasspath = sourceSets["main"].runtimeClasspath
 
         compileClasspath += configurationCommonModJava
+        compileClasspath += configurationCommonApiJava
         runtimeClasspath += configurationCommonModJava
+        runtimeClasspath += configurationCommonApiJava
     }
 }
 
@@ -147,6 +167,42 @@ tasks {
         }
         filesMatching(listOf("META-INF/neoforge.mods.toml")) {
             expand(mapOf("version" to BuildConfig.createVersionString(rootProject)))
+        }
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = project.group as String
+            artifactId = rootProject.name + "-" + project.name
+            version = version
+
+            from(components["java"])
+        }
+
+        create<MavenPublication>("mavenApi") {
+            groupId = project.group as String
+            artifactId = rootProject.name + "-" + project.name + "-api"
+            version = version
+
+            artifact(apiJar) {
+                classifier = null
+            }
+
+            pom.packaging = "jar"
+        }
+
+        create<MavenPublication>("mavenMod") {
+            groupId = project.group as String
+            artifactId = rootProject.name + "-" + project.name + "-mod"
+            version = version
+
+            artifact(modJar) {
+                classifier = null
+            }
+
+            pom.packaging = "jar"
         }
     }
 }

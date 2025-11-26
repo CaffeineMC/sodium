@@ -31,15 +31,7 @@ tasks {
 }
 
 publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = project.group as String
-            artifactId = rootProject.name + "-" + project.name
-            version = version
-
-            from(components["java"])
-        }
-    }
+    // Each platform is responsible for their own "publications".
 
     repositories {
         val isReleaseBuild = project.hasProperty("build.release")
