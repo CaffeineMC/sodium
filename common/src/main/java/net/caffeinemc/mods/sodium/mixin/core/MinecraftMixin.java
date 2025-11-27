@@ -1,10 +1,14 @@
 package net.caffeinemc.mods.sodium.mixin.core;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.checks.ResourcePackScanner;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
+import net.caffeinemc.mods.sodium.client.gui.SodiumConfigBuilder;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -91,4 +95,9 @@ public class MinecraftMixin {
         ResourcePackScanner.checkIfCoreShaderLoaded(this.resourceManager);
     }
 
+    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LoadingOverlay;registerTextures(Lnet/minecraft/client/renderer/texture/TextureManager;)V"))
+    private void registerSodiumIcon(TextureManager textureManager, Operation<Void> original) {
+        SodiumConfigBuilder.registerIcon(textureManager);
+        original.call(textureManager);
+    }
 }

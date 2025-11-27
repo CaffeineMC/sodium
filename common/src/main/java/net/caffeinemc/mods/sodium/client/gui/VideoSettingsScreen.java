@@ -418,18 +418,16 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         return new Dim2i(0, 0, this.width, this.height);
     }
 
-    public static void renderIcon(GuiGraphics graphics, Identifier icon, int color, int x, int y, int size) {
+    public static int renderIconWithSpacing(GuiGraphics graphics, Identifier icon, int color, int x, int y, int height, int margin) {
+        int iconSize = height - margin * 2;
+
         var texture = Minecraft.getInstance().getTextureManager().getTexture(icon);
         int w = texture.getTexture().getWidth(0);
         int h = texture.getTexture().getHeight(0);
 
-        graphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0, 0, size, size, w, h, w, h, color);
-    }
-
-    public static int renderIconWithSpacing(GuiGraphics graphics, Identifier icon, int color, int x, int y, int height, int margin) {
-        int iconSize = height - margin * 2;
-
-        renderIcon(graphics, icon, color, x + margin, y + height / 2 - iconSize / 2, iconSize);
+        x = x + margin;
+        y = y + height / 2 - iconSize / 2;
+        graphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0, 0, iconSize, iconSize, w, h, w, h, color);
 
         return margin * 2 + iconSize;
     }

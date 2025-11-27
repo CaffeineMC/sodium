@@ -14,11 +14,11 @@ public class ConfigBuilderImpl implements ConfigBuilder {
     private final List<ModOptionsBuilderImpl> pendingModConfigBuilders = new ArrayList<>(1);
 
     private final Function<String, ConfigManager.ModMetadata> modInfoFunction;
-    private final String defaultNamespace;
+    private final String defaultConfigId;
 
-    public ConfigBuilderImpl(Function<String, ConfigManager.ModMetadata> modInfoFunction, String defaultNamespace) {
+    public ConfigBuilderImpl(Function<String, ConfigManager.ModMetadata> modInfoFunction, String defaultConfigId) {
         this.modInfoFunction = modInfoFunction;
-        this.defaultNamespace = defaultNamespace;
+        this.defaultConfigId = defaultConfigId;
     }
 
     public Collection<ModOptions> build() {
@@ -30,21 +30,21 @@ public class ConfigBuilderImpl implements ConfigBuilder {
     }
 
     @Override
-    public ModOptionsBuilder registerModOptions(String namespace, String name, String version) {
-        var builder = new ModOptionsBuilderImpl(namespace, name, version);
+    public ModOptionsBuilder registerModOptions(String configId, String name, String version) {
+        var builder = new ModOptionsBuilderImpl(configId, name, version);
         this.pendingModConfigBuilders.add(builder);
         return builder;
     }
 
     @Override
-    public ModOptionsBuilder registerModOptions(String namespace) {
-        var metadata = this.modInfoFunction.apply(namespace);
-        return this.registerModOptions(namespace, metadata.modName(), metadata.modVersion());
+    public ModOptionsBuilder registerModOptions(String configId) {
+        var metadata = this.modInfoFunction.apply(configId);
+        return this.registerModOptions(configId, metadata.modName(), metadata.modVersion());
     }
 
     @Override
     public ModOptionsBuilder registerOwnModOptions() {
-        return this.registerModOptions(this.defaultNamespace);
+        return this.registerModOptions(this.defaultConfigId);
     }
 
     @Override

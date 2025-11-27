@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.client.gui;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.Monitor;
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.VideoMode;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -22,6 +23,10 @@ import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.minecraft.client.*;
+import net.minecraft.client.renderer.texture.ReloadableTexture;
+import net.minecraft.client.renderer.texture.TextureContents;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.resources.metadata.texture.TextureMetadataSection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ParticleStatus;
@@ -30,13 +35,14 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
 // TODO: get initialValue from the vanilla options (it's private)
 public class SodiumConfigBuilder implements ConfigEntryPoint {
-    private static final Identifier SODIUM_ICON = Identifier.fromNamespaceAndPath("sodium", "textures/gui/icon.png");
+    private static final Identifier SODIUM_ICON = Identifier.fromNamespaceAndPath("sodium", "textures/gui/config-icon.png");
     private static final SodiumOptions DEFAULTS = SodiumOptions.defaults();
 
     private final Options vanillaOpts;
@@ -69,6 +75,23 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
             SodiumClientMod.logger().info("Flushed changes to Sodium configuration");
         };
+    }
+
+    public static void registerIcon(TextureManager textureManager) {
+        textureManager.registerAndLoad(SODIUM_ICON, new SodiumLogo());
+    }
+
+    static class SodiumLogo extends ReloadableTexture {
+        public SodiumLogo() {
+            super(SODIUM_ICON);
+        }
+
+        @Override
+        public TextureContents loadContents(ResourceManager resourceManager) throws IOException {
+            try (InputStream inputStream = SodiumConfigBuilder.class.getResourceAsStream("/config-icon.png")) {
+                return new TextureContents(NativeImage.read(inputStream), new TextureMetadataSection(false, false));
+            }
+        }
     }
 
     @Override

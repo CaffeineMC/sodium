@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.api.config.structure;
 
-import net.caffeinemc.mods.sodium.api.config.*;
+import net.caffeinemc.mods.sodium.api.config.ConfigState;
+import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
@@ -11,6 +12,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * Builder interface for defining boolean options. Refines builder methods to return this class instead of the base interface and have a {@link Boolean} value type.
+ */
 public interface BooleanOptionBuilder extends StatefulOptionBuilder<Boolean> {
     @Override
     BooleanOptionBuilder setName(Component name);
