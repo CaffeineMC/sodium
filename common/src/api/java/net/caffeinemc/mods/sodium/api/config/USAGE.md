@@ -61,7 +61,7 @@ dependencies {
     // using a tagged API build 
     modImplementation "net.caffeinemc:sodium-fabric-api:0.8.0+mc1.21.11"
     // OR using a snapshot build
-    modImplementation "net.caffeinemc:sodium-fabric-api:0.8.0-SNAPSHOT+mc1.21.11-pre3-build.772"
+    modImplementation "net.caffeinemc:sodium-fabric-api:0.8.0-SNAPSHOT+mc1.21.11-pre3-build.773"
 }
 ```
 
@@ -74,7 +74,7 @@ dependencies {
     // using a tagged API build 
     implementation "net.caffeinemc:sodium-neoforge-api:0.8.0+mc1.21.11"
     // OR using a snapshot build
-    implementation "net.caffeinemc:sodium-neoforge-api:0.8.0-SNAPSHOT+mc1.21.11-pre3-build.772"
+    implementation "net.caffeinemc:sodium-neoforge-api:0.8.0-SNAPSHOT+mc1.21.11-pre3-build.773"
 }
 ```
 
