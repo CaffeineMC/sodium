@@ -58,7 +58,10 @@ Fabric:
 dependencies {
     // ... other dependencies
     
-    modImplementation "net.caffeinemc.mods:sodium-fabric:0.8.0+mc1.21.11"
+    // using a tagged API build 
+    modImplementation "net.caffeinemc:sodium-fabric-api:0.8.0+mc1.21.11"
+    // OR using a snapshot build
+    modImplementation "net.caffeinemc:sodium-fabric-api:0.8.0-SNAPSHOT+mc1.21.11-pre3-build.772"
 }
 ```
 
@@ -68,9 +71,30 @@ NeoForge:
 dependencies {
     // ... other dependencies
     
-    implementation "net.caffeinemc.mods:sodium-neoforge:0.8.0+mc1.21.11"
+    // using a tagged API build 
+    modImplementation "net.caffeinemc:sodium-neoforge-api:0.8.0+mc1.21.11"
+    // OR using a snapshot build
+    modImplementation "net.caffeinemc:sodium-neoforge-api:0.8.0-SNAPSHOT+mc1.21.11-pre3-build.772"
 }
 ```
+
+Make sure you have our Maven repository declared:
+
+```groovy
+maven {
+    name "CaffeineMC"
+    url "https://maven.caffeinemc.net/releases" // or /snapshots
+}
+```
+Kotlin:
+```kotlin
+maven {
+    name = "CaffeineMC"
+    url = uri("https://maven.caffeinemc.net/releases") // or /snapshots
+}
+```
+
+The Maven Repository has a web frontend that you can use to view the list of available versions: https://maven.caffeinemc.net
 
 ### Creating an Entrypoint
 
