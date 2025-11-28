@@ -7,6 +7,8 @@ on: [ push ]
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment:
+      name: staging
 
     steps:
       - name: Extract current branch name
@@ -36,3 +38,11 @@ jobs:
         with:
           name: sodium-artifacts-${{ steps.ref.outputs.branch }}
           path: build/mods/*.jar
+
+      - name: Publish Commit Snapshot to CaffeineMC Maven
+        # uses the general "publish" task which is allowed to silently skip publishing if publish secrets are not given
+        # this lets forks of this repo run CI without it failing because of missing credentials
+        run: ./gradlew publish
+        env:
+          ORG_GRADLE_PROJECT_caffeineMCMavenUsername: ${{ secrets.CAFFEINEMC_MAVEN_USERNAME }}
+          ORG_GRADLE_PROJECT_caffeineMCMavenPassword: ${{ secrets.CAFFEINEMC_MAVEN_PASSWORD }}

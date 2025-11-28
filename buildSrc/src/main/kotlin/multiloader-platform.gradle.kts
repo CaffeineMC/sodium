@@ -31,13 +31,25 @@ tasks {
 }
 
 publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = project.group as String
-            artifactId = rootProject.name + "-" + project.name
-            version = version
+    // Each platform is responsible for their own "publications".
 
-            from(components["java"])
+    repositories {
+        val isReleaseBuild = project.hasProperty("build.release")
+        val caffeineMCMavenUsername: String? by project // reads from ORG_GRADLE_caffeineMCMavenUsername
+        val caffeineMCMavenPassword: String? by project // reads from ORG_GRADLE_caffeineMCMavenPassword
+
+        if (caffeineMCMavenUsername != null && caffeineMCMavenPassword != null) {
+            maven {
+                name = "CaffeineMC"
+                url = uri("https://maven.caffeinemc.net".let {
+                    if (isReleaseBuild) "$it/releases" else "$it/snapshots"
+                })
+
+                credentials {
+                    username = caffeineMCMavenUsername
+                    password = caffeineMCMavenPassword
+                }
+            }
         }
     }
 }

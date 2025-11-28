@@ -23,7 +23,7 @@ object BuildConfig {
             builder.append(MOD_VERSION)
         } else {
             builder.append(MOD_VERSION.substringBefore('-'))
-            builder.append("-snapshot")
+            builder.append("-SNAPSHOT")
         }
 
         builder.append("+mc").append(MINECRAFT_VERSION)
