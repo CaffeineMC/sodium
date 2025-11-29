@@ -14,30 +14,66 @@ import org.apache.commons.lang3.Validate;
 import java.util.Collection;
 import java.util.function.Function;
 
-public abstract class OptionBuilderImpl implements OptionBuilder {
+public abstract class OptionBuilderImpl<O extends Option> implements OptionBuilder {
     final ResourceLocation id;
 
-    Component name;
-    DependentValue<Boolean> enabled;
+    private O baseOption;
+
+    private Component name;
+    private DependentValue<Boolean> enabled;
 
     OptionBuilderImpl(ResourceLocation id) {
         this.id = id;
     }
 
-    abstract Option build();
+    abstract O build();
+
+    abstract Class<O> getOptionClass();
+
+    public O buildWithBaseOption(Option baseOption) {
+        Validate.isTrue(this.getOptionClass().isInstance(baseOption), "Base option must be of type %s", this.getOptionClass().getSimpleName());
+
+        @SuppressWarnings("unchecked")
+        O castedBaseOption = (O) baseOption;
+        this.baseOption = castedBaseOption;
+
+        return this.build();
+    }
+
+    void validateData() {
+        Validate.notNull(this.getName(), "Name must be set");
+    }
 
     void prepareBuild() {
-        Validate.notNull(this.name, "Name must be set");
+        this.validateData();
 
-        if (this.enabled == null) {
+        if (this.getEnabled() == null) {
             this.enabled = new ConstantValue<>(true);
         }
     }
 
     Collection<ResourceLocation> getDependencies() {
         var dependencies = new ObjectLinkedOpenHashSet<ResourceLocation>();
-        dependencies.addAll(this.enabled.getDependencies());
+        dependencies.addAll(this.getEnabled().getDependencies());
         return dependencies;
+    }
+
+    public <V> V getFirstNotNull(V overlayValue,  Function<O, V> extractor) {
+        if (overlayValue != null) {
+            return overlayValue;
+        } else if (this.baseOption != null) {
+            return extractor.apply(this.baseOption);
+        } else {
+            return null;
+        }
+    }
+
+    Component getName() {
+        return getFirstNotNull(this.name, Option::getName);
+    }
+
+    DependentValue<Boolean> getEnabled() {
+        return getFirstNotNull(this.enabled, Option::getEnabled);
     }
 
     @Override

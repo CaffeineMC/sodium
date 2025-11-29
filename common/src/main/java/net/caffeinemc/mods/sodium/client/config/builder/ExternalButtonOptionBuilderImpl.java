@@ -3,7 +3,6 @@ package net.caffeinemc.mods.sodium.client.config.builder;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.structure.ExternalButtonOptionBuilder;
 import net.caffeinemc.mods.sodium.client.config.structure.ExternalButtonOption;
-import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -12,7 +11,7 @@ import org.apache.commons.lang3.Validate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-class ExternalButtonOptionBuilderImpl extends StaticOptionBuilderImpl implements ExternalButtonOptionBuilder {
+class ExternalButtonOptionBuilderImpl extends StaticOptionBuilderImpl<ExternalButtonOption> implements ExternalButtonOptionBuilder {
     private Consumer<Screen> currentScreenConsumer;
 
     ExternalButtonOptionBuilderImpl(ResourceLocation id) {
@@ -20,17 +19,26 @@ class ExternalButtonOptionBuilderImpl extends StaticOptionBuilderImpl implements
     }
 
     @Override
-    void prepareBuild() {
-        super.prepareBuild();
+    void validateData() {
+        super.validateData();
 
-        Validate.notNull(this.currentScreenConsumer, "Screen provider must be set");
+        Validate.notNull(this.getCurrentScreenConsumer(), "Screen provider must be set");
     }
 
     @Override
-    Option build() {
+    ExternalButtonOption build() {
         this.prepareBuild();
 
-        return new ExternalButtonOption(this.id, this.getDependencies(), this.name, this.enabled, this.tooltip, this.currentScreenConsumer);
+        return new ExternalButtonOption(this.id, this.getDependencies(), this.getName(), this.getEnabled(), this.getTooltip(), this.getCurrentScreenConsumer());
+    }
+
+    @Override
+    Class<ExternalButtonOption> getOptionClass() {
+        return ExternalButtonOption.class;
+    }
+
+    Consumer<Screen> getCurrentScreenConsumer() {
+        return getFirstNotNull(this.currentScreenConsumer, ExternalButtonOption::getCurrentScreenConsumer);
     }
 
     @Override

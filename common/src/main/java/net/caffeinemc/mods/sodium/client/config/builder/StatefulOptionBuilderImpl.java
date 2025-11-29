@@ -7,6 +7,7 @@ import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.structure.StatefulOptionBuilder;
 import net.caffeinemc.mods.sodium.client.config.AnonymousOptionBinding;
+import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
 import net.caffeinemc.mods.sodium.client.config.value.ConstantValue;
 import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
 import net.caffeinemc.mods.sodium.client.config.value.DynamicValue;
@@ -21,32 +22,57 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-abstract class StatefulOptionBuilderImpl<V> extends OptionBuilderImpl implements StatefulOptionBuilder<V> {
-    StorageEventHandler storage;
-    Function<V, Component> tooltipProvider;
-    OptionImpact impact;
-    EnumSet<OptionFlag> flags = EnumSet.noneOf(OptionFlag.class);
-    DependentValue<V> defaultValue;
-    OptionBinding<V> binding;
+abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends OptionBuilderImpl<O> implements StatefulOptionBuilder<V> {
+    private StorageEventHandler storage;
+    private Function<V, Component> tooltipProvider;
+    private OptionImpact impact;
+    private EnumSet<OptionFlag> flags;
+    private DependentValue<V> defaultValue;
+    private OptionBinding<V> binding;
 
     StatefulOptionBuilderImpl(ResourceLocation id) {
         super(id);
     }
 
-    void prepareBuild() {
-        super.prepareBuild();
+    @Override
+    void validateData() {
+        super.validateData();
 
-        Validate.notNull(this.storage, "Storage handler must be set");
-        Validate.notNull(this.tooltipProvider, "Tooltip provider must be set");
-        Validate.notNull(this.defaultValue, "Default value must be set");
+        Validate.notNull(this.getStorage(), "Storage handler must be set");
+        Validate.notNull(this.getTooltipProvider(), "Tooltip provider must be set");
+        Validate.notNull(this.getDefaultValue(), "Default value must be set");
 
-        Validate.notNull(this.binding, "Binding must be set");
+        Validate.notNull(this.getBinding(), "Binding must be set");
     }
 
     Collection<ResourceLocation> getDependencies() {
         var dependencies = super.getDependencies();
-        dependencies.addAll(this.defaultValue.getDependencies());
+        dependencies.addAll(this.getDefaultValue().getDependencies());
         return dependencies;
+    }
+
+    StorageEventHandler getStorage() {
+        return getFirstNotNull(this.storage, StatefulOption::getStorage);
+    }
+
+    Function<V, Component> getTooltipProvider() {
+        return getFirstNotNull(this.tooltipProvider, StatefulOption::getTooltipProvider);
+    }
+
+    OptionImpact getImpact() {
+        return getFirstNotNull(this.impact, StatefulOption::getImpact);
+    }
+
+    EnumSet<OptionFlag> getFlags() {
+        return getFirstNotNull(this.flags, StatefulOption::getFlags);
+    }
+
+    DependentValue<V> getDefaultValue() {
+        return getFirstNotNull(this.defaultValue, StatefulOption::getDefaultValue);
+    }
+
+    OptionBinding<V> getBinding() {
+        return getFirstNotNull(this.binding, StatefulOption::getBinding);
     }
 
     @Override
@@ -83,7 +109,10 @@ abstract class StatefulOptionBuilderImpl<V> extends OptionBuilderImpl implements
 
     @Override
     public StatefulOptionBuilder<V> setFlags(OptionFlag... flags) {
-        Collections.addAll(this.flags, flags);
+        if (this.getFlags() == null) {
+            this.flags = EnumSet.noneOf(OptionFlag.class);
+        }
+        Collections.addAll(this.getFlags(), flags);
         return this;
     }
 

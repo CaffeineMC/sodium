@@ -124,7 +124,23 @@ public abstract class StatefulOption<V> extends Option {
     }
 
     @Override
-    public Collection<OptionFlag> getFlags() {
+    public EnumSet<OptionFlag> getFlags() {
         return this.flags;
+    }
+
+    public StorageEventHandler getStorage() {
+        return this.storage;
+    }
+
+    public Function<V, Component> getTooltipProvider() {
+        return this.tooltipProvider;
+    }
+
+    public DependentValue<V> getDefaultValue() {
+        return this.defaultValue;
+    }
+
+    public OptionBinding<V> getBinding() {
+        return this.binding;
     }
 }

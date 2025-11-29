@@ -9,16 +9,17 @@ import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.client.config.search.BigramSearchIndex;
+import net.caffeinemc.mods.sodium.client.config.search.SearchIndex;
 import net.caffeinemc.mods.sodium.client.config.search.SearchQuerySession;
 import net.caffeinemc.mods.sodium.client.config.value.DynamicValue;
 import net.caffeinemc.mods.sodium.client.console.Console;
 import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
-import net.caffeinemc.mods.sodium.client.config.search.SearchIndex;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 public class Config implements ConfigState {
@@ -32,7 +33,7 @@ public class Config implements ConfigState {
         this.modOptions = modOptions;
 
         this.collectOptions();
-        this.applyOverrides();
+        this.applyOptionChanges();
         this.validateDependencies();
 
         // load options initially from their bindings
@@ -57,8 +58,8 @@ public class Config implements ConfigState {
             for (var page : modConfig.pages()) {
                 for (var group : page.groups()) {
                     for (var option : group.options()) {
-                        if (!option.id.getNamespace().equals(modConfig.namespace())) {
-                            throw new IllegalArgumentException("Namespace of option id '" + option.id + "' does not match the namespace '" + modConfig.namespace() + "' of the enclosing mod config");
+                        if (!option.id.getNamespace().equals(modConfig.configId())) {
+                            throw new IllegalArgumentException("Namespace of option id '" + option.id + "' does not match the configId '" + modConfig.configId() + "' of the enclosing mod config");
                         }
 
                         this.options.put(option.id, option);
@@ -69,8 +70,32 @@ public class Config implements ConfigState {
         }
     }
 
-    private void applyOverrides() {
-        var overrides = getOverrides();
+    private void applyOptionChanges() {
+        var overrides = new Object2ReferenceOpenHashMap<ResourceLocation, OptionOverride>();
+        var overlays = new Object2ReferenceOpenHashMap<ResourceLocation, OptionOverlay>();
+
+        // collect overrides and overlays and validate them, also against each other
+        for (var modConfig : this.modOptions) {
+            for (var override : modConfig.overrides()) {
+                if (override.target().getNamespace().equals(modConfig.configId())) {
+                    throw new IllegalArgumentException("Override by mod '" + modConfig.configId() + "' targets its own option '" + override.target() + "'");
+                }
+
+                if (overrides.put(override.target(), override) != null) {
+                    throw new IllegalArgumentException("Multiple overrides for option '" + override.target() + "'");
+                }
+            }
+
+            for (var overlay : modConfig.overlays()) {
+                if (overlay.target().getNamespace().equals(modConfig.configId())) {
+                    throw new IllegalArgumentException("Overlay by mod '" + modConfig.configId() + "' targets its own option '" + overlay.target() + "'");
+                }
+
+                if (overlays.put(overlay.target(), overlay) != null) {
+                    throw new IllegalArgumentException("Multiple overlays for option '" + overlay.target() + "'");
+                }
+            }
+        }
 
         // apply overrides
         for (var modConfig : this.modOptions) {
@@ -80,13 +105,31 @@ public class Config implements ConfigState {
                     for (int i = 0; i < options.size(); i++) {
                         var option = options.get(i);
                         var override = overrides.get(option.id);
+
+                        // apply override to option if it exists
                         if (override != null) {
-                            var replacement = override.replacement();
-                            options.set(i, replacement);
-                            this.options.remove(option.id);
-                            this.options.put(replacement.id, replacement);
-                            replacement.setParentConfig(this);
-                            option.setParentConfig(null);
+                            var replacement = override.change();
+                            exchangeOption(options, i, replacement, option);
+                        }
+                    }
+                }
+            }
+        }
+
+        // apply overlays
+        for (var modConfig : this.modOptions) {
+            for (var page : modConfig.pages()) {
+                for (var group : page.groups()) {
+                    var options = group.options();
+                    for (int i = 0; i < options.size(); i++) {
+                        var option = options.get(i);
+                        var overlay = overlays.get(option.id);
+
+                        // apply overlay to option if it exists
+                        if (overlay != null) {
+                            var change = overlay.change();
+                            var overlaidOption = change.buildWithBaseOption(option);
+                            exchangeOption(options, i, overlaidOption, option);
                         }
                     }
                 }
@@ -94,21 +137,12 @@ public class Config implements ConfigState {
         }
     }
 
-    private Object2ReferenceOpenHashMap<ResourceLocation, OptionOverride> getOverrides() {
-        // collect overrides and validate them
-        var overrides = new Object2ReferenceOpenHashMap<ResourceLocation, OptionOverride>();
-        for (var modConfig : this.modOptions) {
-            for (var override : modConfig.overrides()) {
-                if (override.target().getNamespace().equals(modConfig.namespace())) {
-                    throw new IllegalArgumentException("Override by mod '" + modConfig.namespace() + "' targets its own option '" + override.target() + "'");
-                }
-
-                if (overrides.put(override.target(), override) != null) {
-                    throw new IllegalArgumentException("Multiple overrides for option '" + override.target() + "'");
-                }
-            }
-        }
-        return overrides;
+    private void exchangeOption(List<Option> optionGroupList, int i, Option replacement, Option original) {
+        optionGroupList.set(i, replacement);
+        this.options.remove(original.id);
+        this.options.put(replacement.id, replacement);
+        replacement.setParentConfig(this);
+        original.setParentConfig(null);
     }
 
     private void validateDependencies() {
@@ -127,7 +161,7 @@ public class Config implements ConfigState {
                             this.globalRebuildDependents.add(dynamicValue);
                             continue;
                         }
-                        
+
                         var dependencyOption = this.options.get(dependency);
                         if (dependencyOption instanceof StatefulOption<?> statefulOption) {
                             statefulOption.registerDependent(dynamicValue);
@@ -181,7 +215,10 @@ public class Config implements ConfigState {
 
         for (var option : this.options.values()) {
             if (option.applyChanges()) {
-                flags.addAll(option.getFlags());
+                var optionFlags = option.getFlags();
+                if (optionFlags != null) {
+                    flags.addAll(optionFlags);
+                }
             }
         }
 
@@ -212,7 +249,7 @@ public class Config implements ConfigState {
 
         return false;
     }
-    
+
     public void invalidateGlobalRebuildDependents() {
         this.invalidateDependents(this.globalRebuildDependents);
     }

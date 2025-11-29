@@ -63,6 +63,10 @@ public abstract class Option {
         return this.enabled.get(this.state);
     }
 
+    public DependentValue<Boolean> getEnabled() {
+        return this.enabled;
+    }
+
     public boolean hasChanged() {
         return false;
     }
@@ -81,7 +85,7 @@ public abstract class Option {
 
     public abstract Component getTooltip();
 
-    public Collection<OptionFlag> getFlags() {
+    public EnumSet<OptionFlag> getFlags() {
         return EnumSet.noneOf(OptionFlag.class);
     }
 
