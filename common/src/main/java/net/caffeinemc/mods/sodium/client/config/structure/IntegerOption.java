@@ -47,5 +47,13 @@ public class IntegerOption extends StatefulOption<Integer> {
     public Component formatValue(int value) {
         return this.valueFormatter.format(value);
     }
+
+    public DependentValue<Range> getRangeProvider() {
+        return this.range;
+    }
+
+    public ControlValueFormatter getValueFormatter() {
+        return this.valueFormatter;
+    }
 }
 

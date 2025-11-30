@@ -21,10 +21,10 @@ public interface ConfigBuilder {
     /**
      * Registers a new mod options structure for the mod with the given configId. The mod's name and version will be looked up automatically.
      *
-     * @param namespace The configId of these mod options.
+     * @param configId The configId of these mod options.
      * @return A builder for defining the mod's configuration structure.
      */
-    ModOptionsBuilder registerModOptions(String namespace);
+    ModOptionsBuilder registerModOptions(String configId);
 
     /**
      * Registers a new mod options structure for the mod of the current entrypoint. The mod's name and version will be looked up automatically.
@@ -32,13 +32,6 @@ public interface ConfigBuilder {
      * @return A builder for defining the mod's configuration structure.
      */
     ModOptionsBuilder registerOwnModOptions();
-
-    /**
-     * Creates a new option override builder.
-     *
-     * @return A builder for defining an option override.
-     */
-    OptionOverrideBuilder createOptionOverride();
 
     /**
      * Creates a new color theme builder.

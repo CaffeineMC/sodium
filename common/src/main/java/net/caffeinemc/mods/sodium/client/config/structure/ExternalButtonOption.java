@@ -22,4 +22,8 @@ public class ExternalButtonOption extends StaticOption {
     Control createControl() {
         return new ExternalButtonControl(this, this.currentScreenConsumer);
     }
+
+    public Consumer<Screen> getCurrentScreenConsumer() {
+        return this.currentScreenConsumer;
+    }
 }
