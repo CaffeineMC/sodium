@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.config.structure;
 
 import net.caffeinemc.mods.sodium.client.config.builder.OptionBuilderImpl;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
-public record OptionOverlay(ResourceLocation target, String source, OptionBuilderImpl<?> change) {
+public record OptionOverlay(Identifier target, String source, OptionBuilderImpl<?> change) {
 }

@@ -65,7 +65,7 @@ public interface ModOptionsBuilder {
      * @param replacement The option builder that defines the replacement option.
      * @return The current builder instance.
      */
-    ModOptionsBuilder registerOptionReplacement(ResourceLocation target, OptionBuilder replacement);
+    ModOptionsBuilder registerOptionReplacement(Identifier target, OptionBuilder replacement);
 
     /**
      * Registers an option overlay provided by this mod. Overlays allow partially changing an option instead of replacing it entirely.
@@ -76,5 +76,5 @@ public interface ModOptionsBuilder {
      * @param overlay The option builder that defines the overlay changes.
      * @return The current builder instance.
      */
-    ModOptionsBuilder registerOptionOverlay(ResourceLocation target, OptionBuilder overlay);
+    ModOptionsBuilder registerOptionOverlay(Identifier target, OptionBuilder overlay);
 }

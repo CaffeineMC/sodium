@@ -83,7 +83,7 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
     }
 
     @Override
-    public ModOptionsBuilder registerOptionReplacement(ResourceLocation target, OptionBuilder replacement) {
+    public ModOptionsBuilder registerOptionReplacement(Identifier target, OptionBuilder replacement) {
         var override = new OptionOverride(target, this.configId, ((OptionBuilderImpl<?>) replacement).build());
         if (this.optionOverrides == null) {
             this.optionOverrides = new ArrayList<>();
@@ -93,7 +93,7 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
     }
 
     @Override
-    public ModOptionsBuilder registerOptionOverlay(ResourceLocation target, OptionBuilder overlay) {
+    public ModOptionsBuilder registerOptionOverlay(Identifier target, OptionBuilder overlay) {
         var optionOverlay = new OptionOverlay(target, this.configId, ((OptionBuilderImpl<?>) overlay));
         if (this.optionOverlays == null) {
             this.optionOverlays = new ArrayList<>();
