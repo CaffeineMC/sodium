@@ -17,29 +17,47 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<Integer> implements IntegerOptionBuilder {
-    DependentValue<Range> rangeProvider;
-    ControlValueFormatter valueFormatter;
+class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, Integer> implements IntegerOptionBuilder {
+    private DependentValue<Range> rangeProvider;
+    private ControlValueFormatter valueFormatter;
 
     IntegerOptionBuilderImpl(ResourceLocation id) {
         super(id);
     }
 
     @Override
+    void validateData() {
+        super.validateData();
+
+        Validate.notNull(this.getRangeProvider(), "Range provider must be set");
+        Validate.notNull(this.getValueFormatter(), "Value formatter must be set");
+    }
+
+    @Override
     IntegerOption build() {
         this.prepareBuild();
 
-        Validate.notNull(this.rangeProvider, "Range provider must be set");
-        Validate.notNull(this.valueFormatter, "Value formatter must be set");
-
-        return new IntegerOption(this.id, this.getDependencies(), this.name, this.enabled, this.storage, this.tooltipProvider, this.impact, this.flags, this.defaultValue, this.binding, this.rangeProvider, this.valueFormatter);
+        return new IntegerOption(this.id, this.getDependencies(), this.getName(), this.getEnabled(), this.getStorage(), this.getTooltipProvider(), this.getImpact(), this.getFlags(), this.getDefaultValue(), this.getBinding(), this.getRangeProvider(), this.getValueFormatter());
     }
 
     @Override
     Collection<ResourceLocation> getDependencies() {
         var deps = super.getDependencies();
-        deps.addAll(this.rangeProvider.getDependencies());
+        deps.addAll(this.getRangeProvider().getDependencies());
         return deps;
+    }
+
+    @Override
+    Class<IntegerOption> getOptionClass() {
+        return IntegerOption.class;
+    }
+
+    DependentValue<Range> getRangeProvider() {
+        return getFirstNotNull(this.rangeProvider, IntegerOption::getRangeProvider);
+    }
+
+    ControlValueFormatter getValueFormatter() {
+        return getFirstNotNull(this.valueFormatter, IntegerOption::getValueFormatter);
     }
 
     @Override

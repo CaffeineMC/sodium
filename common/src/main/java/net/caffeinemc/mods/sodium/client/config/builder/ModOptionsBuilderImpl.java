@@ -1,13 +1,8 @@
 package net.caffeinemc.mods.sodium.client.config.builder;
 
 import com.google.common.collect.ImmutableList;
-import net.caffeinemc.mods.sodium.api.config.structure.ColorThemeBuilder;
-import net.caffeinemc.mods.sodium.api.config.structure.ModOptionsBuilder;
-import net.caffeinemc.mods.sodium.api.config.structure.OptionOverrideBuilder;
-import net.caffeinemc.mods.sodium.api.config.structure.PageBuilder;
-import net.caffeinemc.mods.sodium.client.config.structure.ModOptions;
-import net.caffeinemc.mods.sodium.client.config.structure.OptionOverride;
-import net.caffeinemc.mods.sodium.client.config.structure.Page;
+import net.caffeinemc.mods.sodium.api.config.structure.*;
+import net.caffeinemc.mods.sodium.client.config.structure.*;
 import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.Validate;
@@ -17,16 +12,17 @@ import java.util.List;
 import java.util.function.Function;
 
 class ModOptionsBuilderImpl implements ModOptionsBuilder {
-    private final String namespace;
+    private final String configId;
     private String name;
     private String version;
     private ColorTheme theme;
     private ResourceLocation icon;
     private final List<Page> pages = new ArrayList<>();
-    private final List<OptionOverride> optionOverrides = new ArrayList<>(0);
+    private List<OptionOverride> optionOverrides;
+    private List<OptionOverlay> optionOverlays;
 
-    ModOptionsBuilderImpl(String namespace, String name, String version) {
-        this.namespace = namespace;
+    ModOptionsBuilderImpl(String configId, String name, String version) {
+        this.configId = configId;
         this.name = name;
         this.version = version;
     }
@@ -35,16 +31,19 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
         Validate.notEmpty(this.name, "Name must not be empty");
         Validate.notEmpty(this.version, "Version must not be empty");
 
-        if (this.optionOverrides.isEmpty() && this.pages.isEmpty()) {
-            throw new IllegalStateException("At least one page or option override must be added");
+        var overrides = this.optionOverrides == null ? List.<OptionOverride>of() : this.optionOverrides;
+        var overlays = this.optionOverlays == null ? List.<OptionOverlay>of() : this.optionOverlays;
+
+        if (this.pages.isEmpty() && overrides.isEmpty() && overlays.isEmpty()) {
+            throw new IllegalStateException("At least one page, option override, or option overlay must be added");
         }
 
-        // if no theme is specified, pick one pseudo-randomly based on the namespace
+        // if no theme is specified, pick one pseudo-randomly based on the configId
         if (this.theme == null) {
-            this.theme = ColorTheme.PRESETS[Math.abs(this.namespace.hashCode()) % ColorTheme.PRESETS.length];
+            this.theme = ColorTheme.PRESETS[Math.abs(this.configId.hashCode()) % ColorTheme.PRESETS.length];
         }
 
-        return new ModOptions(this.namespace, this.name, this.version, this.theme, this.icon, ImmutableList.copyOf(this.pages), ImmutableList.copyOf(this.optionOverrides));
+        return new ModOptions(this.configId, this.name, this.version, this.theme, this.icon, ImmutableList.copyOf(this.pages), overrides, overlays);
     }
 
     @Override
@@ -84,8 +83,22 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
     }
 
     @Override
-    public ModOptionsBuilder registerOptionOverride(OptionOverrideBuilder override) {
-        this.optionOverrides.add(((OptionOverrideBuilderImpl) override).build(this.namespace));
+    public ModOptionsBuilder registerOptionReplacement(ResourceLocation target, OptionBuilder replacement) {
+        var override = new OptionOverride(target, this.configId, ((OptionBuilderImpl<?>) replacement).build());
+        if (this.optionOverrides == null) {
+            this.optionOverrides = new ArrayList<>();
+        }
+        this.optionOverrides.add(override);
+        return this;
+    }
+
+    @Override
+    public ModOptionsBuilder registerOptionOverlay(ResourceLocation target, OptionBuilder overlay) {
+        var optionOverlay = new OptionOverlay(target, this.configId, ((OptionBuilderImpl<?>) overlay));
+        if (this.optionOverlays == null) {
+            this.optionOverlays = new ArrayList<>();
+        }
+        this.optionOverlays.add(optionOverlay);
         return this;
     }
 }

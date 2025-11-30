@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-class BooleanOptionBuilderImpl extends StatefulOptionBuilderImpl<Boolean> implements BooleanOptionBuilder {
+class BooleanOptionBuilderImpl extends StatefulOptionBuilderImpl<BooleanOption, Boolean> implements BooleanOptionBuilder {
     BooleanOptionBuilderImpl(ResourceLocation id) {
         super(id);
     }
@@ -22,7 +22,13 @@ class BooleanOptionBuilderImpl extends StatefulOptionBuilderImpl<Boolean> implem
     @Override
     BooleanOption build() {
         this.prepareBuild();
-        return new BooleanOption(this.id, this.getDependencies(), this.name, this.enabled, this.storage, this.tooltipProvider, this.impact, this.flags, this.defaultValue, this.binding);
+
+        return new BooleanOption(this.id, this.getDependencies(), this.getName(), this.getEnabled(), this.getStorage(), this.getTooltipProvider(), this.getImpact(), this.getFlags(), this.getDefaultValue(), this.getBinding());
+    }
+
+    @Override
+    Class<BooleanOption> getOptionClass() {
+        return BooleanOption.class;
     }
 
     @Override

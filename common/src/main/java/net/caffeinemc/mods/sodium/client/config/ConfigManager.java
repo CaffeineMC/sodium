@@ -78,7 +78,7 @@ public class ConfigManager {
     }
 
     private static void registerConfigs(BiConsumer<ConfigEntryPoint, ConfigBuilder> registerMethod) {
-        var namespaces = new ObjectOpenHashSet<>();
+        var configIds = new ObjectOpenHashSet<>();
         ModOptions sodiumModOptions = null;
         var modConfigs = new ObjectArrayList<ModOptions>();
 
@@ -95,14 +95,14 @@ public class ConfigManager {
                 builtConfigs = builder.build();
 
                 for (var modConfig : builtConfigs) {
-                    var namespace = modConfig.namespace();
-                    if (namespaces.contains(namespace)) {
-                        throw new IllegalArgumentException("Mod '" + configUser.modId + "' provided a duplicate mod id: " + namespace);
+                    var configId = modConfig.configId();
+                    if (configIds.contains(configId)) {
+                        throw new IllegalArgumentException("Mod '" + configUser.modId + "' provided a duplicate mod id: " + configId);
                     }
 
-                    namespaces.add(namespace);
+                    configIds.add(configId);
 
-                    if (namespace.equals("sodium")) {
+                    if (configId.equals("sodium")) {
                         sodiumModOptions = modConfig;
                     } else {
                         modConfigs.add(modConfig);

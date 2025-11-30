@@ -52,4 +52,16 @@ public class EnumOption<E extends Enum<E>> extends StatefulOption<E> {
     public Component getElementName(E element) {
         return this.elementNameProvider.apply(element);
     }
+
+    public Class<E> getEnumClass() {
+        return this.enumClass;
+    }
+
+    public DependentValue<Set<E>> getAllowedValues() {
+        return this.allowedValues;
+    }
+
+    public Function<E, Component> getElementNameProvider() {
+        return this.elementNameProvider;
+    }
 }
