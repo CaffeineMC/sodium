@@ -86,6 +86,7 @@ public class MixinConfig {
         this.addMixinRule("workarounds", true);
         this.addMixinRule("workarounds.context_creation", true);
         this.addMixinRule("workarounds.event_loop", true);
+        this.addMixinRule("workarounds.window_minimized_state", true);
     }
 
     /**

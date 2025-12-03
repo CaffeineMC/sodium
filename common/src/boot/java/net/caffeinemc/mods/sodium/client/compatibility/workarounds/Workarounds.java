@@ -86,6 +86,7 @@ public class Workarounds {
          * Intel's graphics driver for Gen8 and older seems to be faulty and causes a crash when calling
          * glFramebufferBlit after the window loses focus.
          * <a href="https://github.com/CaffeineMC/sodium/issues/2727">GitHub Issue</a>
+         * <a href="https://github.com/CaffeineMC/sodium/issues/3226">GitHub Issue</a>
          */
         INTEL_FRAMEBUFFER_BLIT_CRASH_WHEN_UNFOCUSED,
 

@@ -5,8 +5,11 @@ import net.caffeinemc.mods.sodium.client.console.Console;
 import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
 import net.caffeinemc.mods.sodium.client.data.fingerprint.FingerprintMeasure;
 import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
+import net.caffeinemc.mods.sodium.client.gui.SodiumDebugEntry;
 import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
+import net.caffeinemc.mods.sodium.mixin.features.gui.hooks.debug.DebugScreenEntriesAccessor;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,10 +18,16 @@ import java.io.IOException;
 public class SodiumClientMod {
     private static SodiumOptions OPTIONS;
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium");
+    public static final ResourceLocation SODIUM_DEBUG_ENTRY_FULL = ResourceLocation.fromNamespaceAndPath("sodium", "debug_full");
+    public static final ResourceLocation SODIUM_DEBUG_ENTRY_REDUCED = ResourceLocation.fromNamespaceAndPath("sodium", "debug_reduced");
 
     private static String MOD_VERSION;
 
     public static void onInitialization(String version) {
+        var entries = DebugScreenEntriesAccessor.getEntries();
+        entries.put(SODIUM_DEBUG_ENTRY_FULL, new SodiumDebugEntry(true));
+        entries.put(SODIUM_DEBUG_ENTRY_REDUCED, new SodiumDebugEntry(false));
+
         MOD_VERSION = version;
 
         OPTIONS = loadConfig();

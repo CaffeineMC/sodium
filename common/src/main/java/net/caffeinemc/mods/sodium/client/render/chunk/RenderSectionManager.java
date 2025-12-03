@@ -855,7 +855,7 @@ public class RenderSectionManager {
         return this.sectionByPosition.get(SectionPos.asLong(x, y, z));
     }
 
-    public Collection<String> getDebugStrings() {
+    public Collection<String> getDebugStrings(boolean verbose) {
         List<String> list = new ArrayList<>();
 
         int count = 0;
@@ -883,20 +883,34 @@ public class RenderSectionManager {
             count++;
         }
 
-        list.add(String.format("Pools: Geometry %d/%d MiB, Index %d/%d MiB (%d buffers)",
-                MathUtil.toMib(geometryDeviceUsed), MathUtil.toMib(geometryDeviceAllocated),
-                MathUtil.toMib(indexDeviceUsed), MathUtil.toMib(indexDeviceAllocated), count));
-        list.add(String.format("Transfer Queue: %s", this.regions.getStagingBuffer().toString()));
+        if (verbose) {
+            list.add(String.format("Pools: Geometry %d/%d MiB, Index %d/%d MiB (%d buffers)",
+                    MathUtil.toMib(geometryDeviceUsed), MathUtil.toMib(geometryDeviceAllocated),
+                    MathUtil.toMib(indexDeviceUsed), MathUtil.toMib(indexDeviceAllocated), count));
+            list.add(String.format("Transfer Queue: %s", this.regions.getStagingBuffer().toString()));
+        } else {
+            list.add(String.format("(#%d) G:%d/%d I:%d/%d MiB TQ: %s",
+                    MathUtil.toMib(geometryDeviceUsed), MathUtil.toMib(geometryDeviceAllocated),
+                    MathUtil.toMib(indexDeviceUsed), MathUtil.toMib(indexDeviceAllocated), count, this.regions.getStagingBuffer().toString()));
+        }
 
-        list.add(String.format("Chunk Builder: Schd=%02d | Busy=%02d (%04d%%) | Total=%02d",
-                this.builder.getScheduledJobCount(), this.builder.getBusyThreadCount(), (int) (this.builder.getBusyFraction(this.lastFrameDuration) * 100), this.builder.getTotalThreadCount())
-        );
+        if (verbose) {
+            list.add(String.format("Chunk Builder: Schd=%02d | Busy=%02d (%04d%%) | Total=%02d",
+                    this.builder.getScheduledJobCount(), this.builder.getBusyThreadCount(), (int) (this.builder.getBusyFraction(this.lastFrameDuration) * 100), this.builder.getTotalThreadCount())
+            );
+        } else {
+            list.add(String.format("B: S%02d/B%02d/T%02d",
+                    this.builder.getScheduledJobCount(), this.builder.getBusyThreadCount(), this.builder.getTotalThreadCount())
+            );
+        }
+        
+        if (verbose) {
+            list.add(String.format("Tasks: N0=%03d | N1=%03d | Def=%03d, Recv=%03d",
+                    this.thisFrameBlockingTasks, this.nextFrameBlockingTasks, this.deferredTasks, this.buildResults.size())
+            );
+        }
 
-        list.add(String.format("Tasks: N0=%03d | N1=%03d | Def=%03d, Recv=%03d",
-                this.thisFrameBlockingTasks, this.nextFrameBlockingTasks, this.deferredTasks, this.buildResults.size())
-        );
-
-        if (PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
+        if (verbose && PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
             var meshTaskParameters = this.jobDurationEstimator.toString(ChunkBuilderMeshingTask.class);
             var sortTaskParameters = this.jobDurationEstimator.toString(ChunkBuilderSortingTask.class);
             var uploadDurationParameters = this.jobUploadDurationEstimator.toString(null);
@@ -910,7 +924,7 @@ public class RenderSectionManager {
         }
 
         if (this.sortBehavior != SortBehavior.OFF) {
-            this.sortTriggering.addDebugStrings(list, this.sortBehavior);
+            this.sortTriggering.addDebugStrings(list, this.sortBehavior, verbose);
         } else {
             list.add("TS OFF");
         }

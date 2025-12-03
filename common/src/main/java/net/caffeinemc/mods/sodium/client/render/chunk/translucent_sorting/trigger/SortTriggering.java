@@ -222,20 +222,30 @@ public class SortTriggering {
         }
     }
 
-    public void addDebugStrings(List<String> list, SortBehavior sortBehavior) {
+    public void addDebugStrings(List<String> list, SortBehavior sortBehavior, boolean verbose) {
         var splittingMode = SodiumClientMod.options().performance.quadSplittingMode;
-        list.add("TS (%s,%s) NL=%02d TrN=%02d TrS=G%03d/D%03d".formatted(
-                sortBehavior.getShortName(),
-                splittingMode.getShortName(),
-                this.gfni.getUniqueNormalCount(),
-                this.triggeredNormalCount,
-                this.gfniTriggerCount,
-                this.directTriggerCount));
-        list.add("N=%05d SNR=%05d STA=%05d DYN=%05d (DIR=%02d)".formatted(
-                this.sortTypeCounters[SortType.NONE.ordinal()],
-                this.sortTypeCounters[SortType.STATIC_NORMAL_RELATIVE.ordinal()],
-                this.sortTypeCounters[SortType.STATIC_TOPO.ordinal()],
-                this.sortTypeCounters[SortType.DYNAMIC.ordinal()],
-                this.direct.getDirectTriggerCount()));
+
+        if (verbose) {
+            list.add("TS (%s,%s) NL=%02d TrN=%02d TrS=G%03d/D%03d".formatted(
+                    sortBehavior.getShortName(),
+                    splittingMode.getShortName(),
+                    this.gfni.getUniqueNormalCount(),
+                    this.triggeredNormalCount,
+                    this.gfniTriggerCount,
+                    this.directTriggerCount));
+            list.add("N=%05d SNR=%05d STA=%05d DYN=%05d (DIR=%02d)".formatted(
+                    this.sortTypeCounters[SortType.NONE.ordinal()],
+                    this.sortTypeCounters[SortType.STATIC_NORMAL_RELATIVE.ordinal()],
+                    this.sortTypeCounters[SortType.STATIC_TOPO.ordinal()],
+                    this.sortTypeCounters[SortType.DYNAMIC.ordinal()],
+                    this.direct.getDirectTriggerCount()));
+        } else {
+            list.add("TS (%s,%s) St=%d Dy=%d".formatted(
+                    sortBehavior.getShortName(),
+                    splittingMode.getShortName(),
+                    this.sortTypeCounters[SortType.STATIC_NORMAL_RELATIVE.ordinal()] + this.sortTypeCounters[SortType.STATIC_TOPO.ordinal()],
+                    this.sortTypeCounters[SortType.DYNAMIC.ordinal()]
+            ));
+        }
     }
 }
