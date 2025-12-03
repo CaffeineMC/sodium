@@ -159,6 +159,30 @@ public class SliderControl implements Control {
             return false;
         }
 
+        @Override
+        public boolean mouseReleased(double mouseX, double mouseY, int button) {
+            if (this.option.isEnabled() && button == 0 && this.sliderHeld) {
+                this.sliderHeld = false;
+                playClickSound();
+                return true;
+            }
+
+            return false;
+        }
+
+        @Override
+        public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+            if (this.option.isEnabled() && button == 0) {
+                if (this.sliderHeld) {
+                    this.setValueFromMouse(mouseX);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
         private void setValueFromMouse(double d) {
             this.setValue((d - (double) this.getSliderX()) / (double) this.getSliderWidth());
         }
@@ -188,19 +212,5 @@ public class SliderControl implements Control {
 
             return false;
         }
-
-        @Override
-        public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-            if (this.option.isEnabled() && button == 0) {
-                if (this.sliderHeld) {
-                    this.setValueFromMouse(mouseX);
-                }
-
-                return true;
-            }
-
-            return false;
-        }
     }
-
 }
