@@ -227,7 +227,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 })
                                 .setEnabledProvider(
                                         (state) -> {
-                                            if (this.monitor == null) {
+                                            if (this.monitor == null || this.monitor.getModeCount() <= 0) {
                                                 return false;
                                             }
                                             var os = OsUtils.getOs();
