@@ -24,6 +24,7 @@ public class DebugScreenEntryListMixin {
     @Unique
     private void setFullDebugStatuses() {
         this.allStatuses.put(DebugScreenEntries.CHUNK_RENDER_STATS, DebugScreenEntryStatus.IN_F3);
+        this.allStatuses.put(DebugScreenEntries.ENTITY_RENDER_STATS, DebugScreenEntryStatus.IN_F3);
         this.allStatuses.put(DebugScreenEntries.MEMORY, DebugScreenEntryStatus.IN_F3);
         this.allStatuses.put(DebugScreenEntries.SYSTEM_SPECS, DebugScreenEntryStatus.IN_F3);
     }
