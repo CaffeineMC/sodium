@@ -7,6 +7,7 @@ import net.minecraft.client.gui.components.debug.DebugScreenEntryList;
 import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
 import net.minecraft.client.gui.components.debug.DebugScreenProfile;
 import net.minecraft.resources.ResourceLocation;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -35,12 +36,12 @@ public class DebugScreenEntryListMixin {
         this.allStatuses.put(DebugScreenEntries.CHUNK_RENDER_STATS, DebugScreenEntryStatus.IN_F3);
     }
 
-    @Inject(method = "loadDefaultProfile", at = @At(value = "FIELD", shift = At.Shift.AFTER, target = "Lnet/minecraft/client/gui/components/debug/DebugScreenEntryList;allStatuses:Ljava/util/Map;"))
+    @Inject(method = "loadDefaultProfile", at = @At(value = "FIELD", shift = At.Shift.AFTER, target = "Lnet/minecraft/client/gui/components/debug/DebugScreenEntryList;allStatuses:Ljava/util/Map;", opcode = Opcodes.PUTFIELD))
     private void injectLoadDefaultProfile(CallbackInfo ci) {
         this.setFullDebugStatuses();
     }
 
-    @Inject(method = "loadProfile", at = @At(value = "FIELD", shift = At.Shift.AFTER, target = "Lnet/minecraft/client/gui/components/debug/DebugScreenEntryList;allStatuses:Ljava/util/Map;"))
+    @Inject(method = "loadProfile", at = @At(value = "FIELD", shift = At.Shift.AFTER, target = "Lnet/minecraft/client/gui/components/debug/DebugScreenEntryList;allStatuses:Ljava/util/Map;", opcode = Opcodes.PUTFIELD))
     private void injectLoadProfile(DebugScreenProfile debugScreenProfile, CallbackInfo ci) {
         if (debugScreenProfile == DebugScreenProfile.PERFORMANCE && !PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
             this.setReducedDebugStatuses();
