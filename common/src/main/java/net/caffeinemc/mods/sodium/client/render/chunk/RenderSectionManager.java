@@ -888,9 +888,10 @@ public class RenderSectionManager {
                     MathUtil.toMib(indexDeviceUsed), MathUtil.toMib(indexDeviceAllocated), count));
             list.add(String.format("Transfer Queue: %s", this.regions.getStagingBuffer().toString()));
         } else {
-            list.add(String.format("(#%d) G:%d/%d I:%d/%d MiB TQ: %s",
+            list.add(String.format("G:%d/%d I:%d/%d MiB TQ: %s #%d",
                     MathUtil.toMib(geometryDeviceUsed), MathUtil.toMib(geometryDeviceAllocated),
-                    MathUtil.toMib(indexDeviceUsed), MathUtil.toMib(indexDeviceAllocated), count, this.regions.getStagingBuffer().toString()));
+                    MathUtil.toMib(indexDeviceUsed), MathUtil.toMib(indexDeviceAllocated),
+                    this.regions.getStagingBuffer().toString(), count));
         }
 
         if (verbose) {
