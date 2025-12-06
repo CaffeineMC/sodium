@@ -68,10 +68,6 @@ vec4 sampleRGSS(sampler2D source, vec2 uv, vec2 pixelSize) {
 
     float mipLevelExact = max(0.0, log2(effectiveDerivative / minPixelSize));
 
-    float mipLevelLow = floor(mipLevelExact);
-    float mipLevelHigh = mipLevelLow + 1.0;
-    float mipBlend = fract(mipLevelExact);
-
     const vec2 offsets[4] = vec2[](
     vec2(0.125, 0.375),
     vec2(-0.125, -0.375),
@@ -79,17 +75,12 @@ vec4 sampleRGSS(sampler2D source, vec2 uv, vec2 pixelSize) {
     vec2(-0.375, 0.125)
     );
 
-    vec4 rgssColorLow = vec4(0.0);
-    vec4 rgssColorHigh = vec4(0.0);
+    vec4 rgssColor = vec4(0.0);
     for (int i = 0; i < 4; ++i) {
         vec2 sampleUV = uv + offsets[i] * pixelSize;
-        rgssColorLow += textureLod(source, sampleUV, mipLevelLow);
-        rgssColorHigh += textureLod(source, sampleUV, mipLevelHigh);
+        rgssColor += textureLod(source, sampleUV, mipLevelExact);
     }
-    rgssColorLow *= 0.25;
-    rgssColorHigh *= 0.25;
-
-    vec4 rgssColor = mix(rgssColorLow, rgssColorHigh, mipBlend);
+    rgssColor *= 0.25;
 
     vec4 nearestColor = sampleNearest(source, uv, pixelSize, du, dv, texelScreenSize);
 
