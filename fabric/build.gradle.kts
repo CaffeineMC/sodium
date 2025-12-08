@@ -1,4 +1,5 @@
 import net.fabricmc.loom.task.RemapJarTask
+import net.fabricmc.loom.task.RemapSourcesJarTask
 
 plugins {
     id("multiloader-platform")
@@ -22,6 +23,10 @@ val configurationFrapiModJava: Configuration = configurations.create("frapiJava"
     isCanBeResolved = true
 }
 
+val configurationApiModSources: Configuration = configurations.create("apiSources") {
+    isCanBeResolved = true
+}
+
 val configurationCommonModResources: Configuration = configurations.create("commonResources") {
     isCanBeResolved = true
 }
@@ -35,6 +40,8 @@ dependencies {
     configurationApiModJava(project(path = ":common", configuration = "commonApiJava"))
     configurationCommonModJava(project(path = ":common", configuration = "commonBootJava"))
     configurationFrapiModJava(project(path = ":frapi", configuration = "frapiMainJava"))
+
+    configurationApiModSources(project(path = ":common", configuration = "commonApiSources"))
 
     configurationCommonModResources(project(path = ":common", configuration = "commonMainResources"))
     configurationCommonModResources(project(path = ":common", configuration = "commonApiResources"))
@@ -122,6 +129,13 @@ tasks {
         destinationDirectory.set(file(project.layout.buildDirectory).resolve("devlibs"))
     }
 
+    val apiSourcesJar = register<org.gradle.jvm.tasks.Jar>("apiSourcesJar") {
+        archiveClassifier.set("api-sources-dev")
+        from(configurationApiModSources)
+        from(sourceSets.main.get().resources)
+        destinationDirectory.set(file(project.layout.buildDirectory).resolve("devlibs"))
+    }
+
     register<RemapJarTask>("remapApiJar") {
         dependsOn("apiJar")
         archiveClassifier.set("api")
@@ -129,6 +143,14 @@ tasks {
         destinationDirectory.set(file(rootProject.layout.buildDirectory).resolve("api"))
 
         inputFile.set(apiJar.flatMap { it.archiveFile })
+    }
+
+    register<RemapSourcesJarTask>("remapApiSourcesJar") {
+        dependsOn("apiSourcesJar")
+        archiveClassifier.set("api-sources")
+        destinationDirectory.set(file(rootProject.layout.buildDirectory).resolve("api-sources"))
+
+        inputFile.set(apiSourcesJar.flatMap { it.archiveFile })
     }
 
     remapJar {
@@ -160,6 +182,10 @@ publishing {
 
             artifact(tasks.named("remapApiJar")) {
                 classifier = null
+            }
+
+            artifact(tasks.named("remapApiSourcesJar")) {
+                classifier = "sources"
             }
 
             pom.packaging = "jar"
