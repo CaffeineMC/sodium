@@ -12,7 +12,7 @@ import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
 import net.caffeinemc.mods.sodium.client.config.value.DynamicValue;
 import net.caffeinemc.mods.sodium.client.gui.options.TextProvider;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.lang3.Validate;
 
 import java.util.Collection;
@@ -27,7 +27,7 @@ class EnumOptionBuilderImpl<E extends Enum<E>> extends StatefulOptionBuilderImpl
     private DependentValue<Set<E>> allowedValues;
     private Function<E, Component> elementNameProvider;
 
-    EnumOptionBuilderImpl(ResourceLocation id, Class<E> enumClass) {
+    EnumOptionBuilderImpl(Identifier id, Class<E> enumClass) {
         super(id);
         this.enumClass = enumClass;
     }
@@ -62,7 +62,7 @@ class EnumOptionBuilderImpl<E extends Enum<E>> extends StatefulOptionBuilderImpl
     }
 
     @Override
-    Collection<ResourceLocation> getDependencies() {
+    Collection<Identifier> getDependencies() {
         var deps = super.getDependencies();
         deps.addAll(this.getAllowedValues().getDependencies());
         return deps;
@@ -87,7 +87,7 @@ class EnumOptionBuilderImpl<E extends Enum<E>> extends StatefulOptionBuilderImpl
     }
 
     @Override
-    public EnumOptionBuilder<E> setAllowedValuesProvider(Function<ConfigState, Set<E>> provider, ResourceLocation... dependencies) {
+    public EnumOptionBuilder<E> setAllowedValuesProvider(Function<ConfigState, Set<E>> provider, Identifier... dependencies) {
         this.allowedValues = new DynamicValue<>(provider, dependencies);
         return this;
     }
@@ -141,7 +141,7 @@ class EnumOptionBuilderImpl<E extends Enum<E>> extends StatefulOptionBuilderImpl
     }
 
     @Override
-    public EnumOptionBuilder<E> setDefaultProvider(Function<ConfigState, E> provider, ResourceLocation... dependencies) {
+    public EnumOptionBuilder<E> setDefaultProvider(Function<ConfigState, E> provider, Identifier... dependencies) {
         super.setDefaultProvider(provider, dependencies);
         return this;
     }
@@ -153,7 +153,7 @@ class EnumOptionBuilderImpl<E extends Enum<E>> extends StatefulOptionBuilderImpl
     }
 
     @Override
-    public EnumOptionBuilder<E> setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies) {
+    public EnumOptionBuilder<E> setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies) {
         super.setEnabledProvider(provider, dependencies);
         return this;
     }

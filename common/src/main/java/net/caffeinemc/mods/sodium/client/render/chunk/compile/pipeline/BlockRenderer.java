@@ -36,7 +36,7 @@ import net.minecraft.util.TriState;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.joml.Vector3f;
 
 public class BlockRenderer extends AbstractBlockRenderContext {
@@ -185,8 +185,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
 
         // if there was a downgrade from translucent to cutout, the material bits' alpha cutoff needs to be updated
         if (downgradedPass != null && material == DefaultMaterials.TRANSLUCENT && pass == DefaultTerrainRenderPasses.CUTOUT) {
-            // ONE_TENTH and HALF are functionally the same so it doesn't matter which one we take here
-            materialBits = MaterialParameters.pack(AlphaCutoffParameter.ONE_TENTH, material.mipped);
+            materialBits = MaterialParameters.pack(AlphaCutoffParameter.HALF, material.mipped);
         }
 
         ChunkModelBuilder builder = this.buffers.get(pass);

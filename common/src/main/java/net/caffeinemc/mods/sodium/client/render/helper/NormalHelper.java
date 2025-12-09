@@ -20,7 +20,7 @@ import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
 import net.caffeinemc.mods.sodium.client.render.model.QuadViewImpl;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.joml.Vector3f;
 
 /**
@@ -39,7 +39,7 @@ public abstract class NormalHelper {
      * <p>Will work with triangles also. Assumes counter-clockwise winding order, which is the norm.
      * Expects convex quads with all points co-planar.
      */
-    public static void computeFaceNormal(@NotNull Vector3f saveTo, QuadViewImpl q) {
+    public static void computeFaceNormal(@NonNull Vector3f saveTo, QuadViewImpl q) {
         final Direction nominalFace = q.getNominalFace();
 
         if (nominalFace != null && GeometryHelper.isQuadParallelToFace(nominalFace, q)) {

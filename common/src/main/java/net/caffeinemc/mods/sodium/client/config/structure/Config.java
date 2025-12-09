@@ -15,7 +15,7 @@ import net.caffeinemc.mods.sodium.client.config.value.DynamicValue;
 import net.caffeinemc.mods.sodium.client.console.Console;
 import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Collection;
 import java.util.EnumSet;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Config implements ConfigState {
-    private final Map<ResourceLocation, Option> options = new Object2ReferenceLinkedOpenHashMap<>();
+    private final Map<Identifier, Option> options = new Object2ReferenceLinkedOpenHashMap<>();
     private final ObjectOpenHashSet<StorageEventHandler> pendingStorageHandlers = new ObjectOpenHashSet<>();
     private final ImmutableList<ModOptions> modOptions;
     private final SearchIndex searchIndex = new BigramSearchIndex(this::registerSearchIndex);
@@ -71,8 +71,8 @@ public class Config implements ConfigState {
     }
 
     private void applyOptionChanges() {
-        var overrides = new Object2ReferenceOpenHashMap<ResourceLocation, OptionOverride>();
-        var overlays = new Object2ReferenceOpenHashMap<ResourceLocation, OptionOverlay>();
+        var overrides = new Object2ReferenceOpenHashMap<Identifier, OptionOverride>();
+        var overlays = new Object2ReferenceOpenHashMap<Identifier, OptionOverlay>();
 
         // collect overrides and overlays and validate them, also against each other
         for (var modConfig : this.modOptions) {
@@ -172,8 +172,8 @@ public class Config implements ConfigState {
         }
 
         // make sure there are no cycles
-        var stack = new ObjectOpenHashSet<ResourceLocation>();
-        var finished = new ObjectOpenHashSet<ResourceLocation>();
+        var stack = new ObjectOpenHashSet<Identifier>();
+        var finished = new ObjectOpenHashSet<Identifier>();
         for (var option : this.options.values()) {
             this.checkDependencyCycles(option, stack, finished);
         }
@@ -185,7 +185,7 @@ public class Config implements ConfigState {
         }
     }
 
-    private void checkDependencyCycles(Option option, ObjectOpenHashSet<ResourceLocation> stack, ObjectOpenHashSet<ResourceLocation> finished) {
+    private void checkDependencyCycles(Option option, ObjectOpenHashSet<Identifier> stack, ObjectOpenHashSet<Identifier> finished) {
         if (!stack.add(option.id)) {
             throw new IllegalArgumentException("Cycle detected in dependency graph starting from option " + option.id);
         }
@@ -227,7 +227,7 @@ public class Config implements ConfigState {
         processFlags(flags);
     }
 
-    public void applyOption(ResourceLocation id) {
+    public void applyOption(Identifier id) {
         var flags = EnumSet.noneOf(OptionFlag.class);
 
         var option = this.options.get(id);
@@ -265,7 +265,7 @@ public class Config implements ConfigState {
         this.pendingStorageHandlers.clear();
     }
 
-    public Option getOption(ResourceLocation id) {
+    public Option getOption(Identifier id) {
         return this.options.get(id);
     }
 
@@ -274,7 +274,7 @@ public class Config implements ConfigState {
     }
 
     @Override
-    public boolean readBooleanOption(ResourceLocation id) {
+    public boolean readBooleanOption(Identifier id) {
         var option = this.options.get(id);
         if (option instanceof BooleanOption booleanOption) {
             return booleanOption.getValidatedValue();
@@ -284,7 +284,7 @@ public class Config implements ConfigState {
     }
 
     @Override
-    public int readIntOption(ResourceLocation id) {
+    public int readIntOption(Identifier id) {
         var option = this.options.get(id);
         if (option instanceof IntegerOption intOption) {
             return intOption.getValidatedValue();
@@ -294,7 +294,7 @@ public class Config implements ConfigState {
     }
 
     @Override
-    public <E extends Enum<E>> E readEnumOption(ResourceLocation id, Class<E> enumClass) {
+    public <E extends Enum<E>> E readEnumOption(Identifier id, Class<E> enumClass) {
         var option = this.options.get(id);
         if (option instanceof EnumOption<?> enumOption) {
             if (enumOption.enumClass != enumClass) {

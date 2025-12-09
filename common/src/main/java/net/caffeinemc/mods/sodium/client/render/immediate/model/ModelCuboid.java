@@ -5,7 +5,7 @@ import java.util.Set;
 import net.caffeinemc.mods.sodium.client.util.Int2;
 import net.minecraft.core.Direction;
 import org.apache.commons.lang3.ArrayUtils;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public class ModelCuboid {
     public static final int NUM_CUBE_VERTICES = 8;
@@ -177,7 +177,7 @@ public class ModelCuboid {
         return (this.cullMask & (1 << faceIndex)) != 0;
     }
 
-    private static int getFaceIndex(@NotNull Direction dir) {
+    private static int getFaceIndex(@NonNull Direction dir) {
         return switch (dir) {
             case DOWN   -> FACE_NEG_Y;
             case UP     -> FACE_POS_Y;

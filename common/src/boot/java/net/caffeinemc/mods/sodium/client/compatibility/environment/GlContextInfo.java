@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.compatibility.environment;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 
 import java.util.Objects;

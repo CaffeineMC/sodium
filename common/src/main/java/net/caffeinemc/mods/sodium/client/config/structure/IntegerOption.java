@@ -6,7 +6,7 @@ import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
 import net.caffeinemc.mods.sodium.client.gui.options.control.Control;
 import net.caffeinemc.mods.sodium.client.gui.options.control.SliderControl;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Collection;
 import java.util.EnumSet;
@@ -17,7 +17,7 @@ public class IntegerOption extends StatefulOption<Integer> {
     private final DependentValue<Range> range;
     private final ControlValueFormatter valueFormatter;
 
-    public IntegerOption(ResourceLocation id, Collection<ResourceLocation> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<Integer, Component> tooltipProvider, OptionImpact impact, EnumSet<OptionFlag> flags, DependentValue<Integer> defaultValue, OptionBinding<Integer> binding, DependentValue<Range> range, ControlValueFormatter valueFormatter) {
+    public IntegerOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<Integer, Component> tooltipProvider, OptionImpact impact, EnumSet<OptionFlag> flags, DependentValue<Integer> defaultValue, OptionBinding<Integer> binding, DependentValue<Range> range, ControlValueFormatter valueFormatter) {
         super(id, dependencies, name, enabled, storage, tooltipProvider, impact, flags, defaultValue, binding);
         this.range = range;
         this.valueFormatter = valueFormatter;

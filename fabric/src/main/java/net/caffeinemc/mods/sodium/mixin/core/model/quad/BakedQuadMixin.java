@@ -4,10 +4,12 @@ import net.caffeinemc.mods.sodium.client.model.quad.BakedQuadView;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFlags;
 import net.caffeinemc.mods.sodium.client.util.ModelQuadUtil;
+import net.minecraft.client.model.geom.builders.UVPair;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
+import org.joml.Vector3fc;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,21 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BakedQuad.class)
 public abstract class BakedQuadMixin implements BakedQuadView {
-    @Shadow
-    @Final
-    protected int[] vertices;
 
-    @Shadow
-    @Final
-    protected TextureAtlasSprite sprite;
-
-    @Shadow
-    @Final
-    protected int tintIndex;
-
-    @Shadow
-    @Final
-    protected Direction direction; // This is really the light face, but we can't rename it.
 
     @Shadow
     @Final
@@ -41,6 +29,22 @@ public abstract class BakedQuadMixin implements BakedQuadView {
     @Shadow
     public abstract int lightEmission();
 
+    @Shadow
+    public abstract Vector3fc position(int i);
+
+    @Shadow
+    @Final
+    private TextureAtlasSprite sprite;
+
+    @Shadow
+    public abstract long packedUV(int i);
+
+    @Shadow
+    @Final
+    private int tintIndex;
+    @Shadow
+    @Final
+    private Direction direction;
     @Unique
     private int flags;
 
@@ -51,41 +55,41 @@ public abstract class BakedQuadMixin implements BakedQuadView {
     private ModelQuadFacing normalFace = null;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void init(int[] is, int i, Direction face, TextureAtlasSprite textureAtlasSprite, boolean bl, int j, CallbackInfo ci) {
+    private void init(Vector3fc vector3fc, Vector3fc vector3fc2, Vector3fc vector3fc3, Vector3fc vector3fc4, long l, long m, long n, long o, int i, Direction direction, TextureAtlasSprite textureAtlasSprite, boolean bl, int j, CallbackInfo ci) {
         this.normal = this.calculateNormal();
         this.normalFace = ModelQuadFacing.fromPackedNormal(this.normal);
 
-        this.flags = ModelQuadFlags.getQuadFlags(this, face);
+        this.flags = ModelQuadFlags.getQuadFlags(this, direction);
     }
 
     @Override
     public float getX(int idx) {
-        return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX]);
+        return this.position(idx).x();
     }
 
     @Override
     public float getY(int idx) {
-        return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX + 1]);
+        return this.position(idx).y();
     }
 
     @Override
     public float getZ(int idx) {
-        return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX + 2]);
+        return this.position(idx).z();
     }
 
     @Override
     public int getColor(int idx) {
-        return this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.COLOR_INDEX];
+        return 0xFFFFFFFF;//this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.COLOR_INDEX]; // TODO: Implement vertex colors
     }
 
     @Override
     public int getVertexNormal(int idx) {
-        return this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.NORMAL_INDEX];
+        return 0;//this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.NORMAL_INDEX];
     }
 
     @Override
     public int getLight(int idx) {
-        return this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.LIGHT_INDEX];
+        return 0;//this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.LIGHT_INDEX];
     }
 
     @Override
@@ -95,12 +99,12 @@ public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Override
     public float getTexU(int idx) {
-        return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.TEXTURE_INDEX]);
+        return UVPair.unpackU(this.packedUV(idx));
     }
 
     @Override
     public float getTexV(int idx) {
-        return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.TEXTURE_INDEX + 1]);
+        return UVPair.unpackV(this.packedUV(idx));
     }
 
     @Override

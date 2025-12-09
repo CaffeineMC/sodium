@@ -5,14 +5,15 @@ import com.mojang.blaze3d.platform.DisplayData;
 import com.mojang.blaze3d.platform.ScreenManager;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.platform.WindowEventHandler;
+import com.mojang.blaze3d.shaders.ShaderSource;
 import com.mojang.blaze3d.shaders.ShaderType;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.client.compatibility.checks.ModuleScanner;
 import net.caffeinemc.mods.sodium.client.compatibility.checks.PostLaunchChecks;
 import net.caffeinemc.mods.sodium.client.compatibility.environment.GlContextInfo;
 import net.caffeinemc.mods.sodium.client.platform.NativeWindowHandle;
-import net.minecraft.Util;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Util;
+import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFWNativeWin32;
 import org.lwjgl.opengl.WGL;
 import org.lwjgl.system.MemoryUtil;
@@ -37,7 +38,7 @@ public class RenderSystemMixin {
     private static long wglPrevContext;
     
     @Inject(method = "initRenderer", at = @At(value = "RETURN"))
-    private static void postContextReady(long window, int i, boolean bl, BiFunction<ResourceLocation, ShaderType, String> biFunction, boolean bl2, CallbackInfo ci) {
+    private static void postContextReady(long window, int i, boolean bl, ShaderSource shaderSource, boolean bl2, CallbackInfo ci) {
         GlContextInfo context = GlContextInfo.create();
         LOGGER.info("OpenGL Vendor: {}", context.vendor());
         LOGGER.info("OpenGL Renderer: {}", context.renderer());

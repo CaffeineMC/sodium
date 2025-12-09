@@ -7,7 +7,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +27,7 @@ public class ShaderLoader {
      * @param constants A list of constants for shader specialization
      * @return An OpenGL shader object compiled with the given user defines
      */
-    public static GlShader loadShader(ShaderType type, ResourceLocation name, ShaderConstants constants) {
+    public static GlShader loadShader(ShaderType type, Identifier name, ShaderConstants constants) {
         var parsedShader = ShaderParser.parseShader(getShaderSource(name), constants);
 
         if (OPTION_DEBUG_SHADERS) {
@@ -38,7 +38,7 @@ public class ShaderLoader {
         return new GlShader(type, name, parsedShader);
     }
 
-    public static String getShaderSource(ResourceLocation name) {
+    public static String getShaderSource(Identifier name) {
         String path = String.format("/assets/%s/shaders/%s", name.getNamespace(), name.getPath());
 
         try (InputStream in = ShaderLoader.class.getResourceAsStream(path)) {

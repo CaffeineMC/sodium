@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.platform.windows.api.d3dkmt;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.Struct;
@@ -40,7 +40,7 @@ class D3DKMTEnumAdaptersStruct extends Struct<D3DKMTEnumAdaptersStruct> {
     }
 
     @Override
-    protected @NotNull D3DKMTEnumAdaptersStruct create(long address, ByteBuffer container) {
+    protected @NonNull D3DKMTEnumAdaptersStruct create(long address, ByteBuffer container) {
         return new D3DKMTEnumAdaptersStruct(address, container);
     }
 

@@ -8,7 +8,7 @@ import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
 import net.caffeinemc.mods.sodium.client.gui.options.control.Control;
 import net.caffeinemc.mods.sodium.client.gui.options.control.CyclingControl;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Collection;
 import java.util.EnumSet;
@@ -22,7 +22,7 @@ public class EnumOption<E extends Enum<E>> extends StatefulOption<E> {
     private final DependentValue<Set<E>> allowedValues;
     private final Function<E, Component> elementNameProvider;
 
-    public EnumOption(ResourceLocation id, Collection<ResourceLocation> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<E, Component> tooltipProvider, OptionImpact impact, EnumSet<OptionFlag> flags, DependentValue<E> defaultValue, OptionBinding<E> binding, Class<E> enumClass, DependentValue<Set<E>> allowedValues, Function<E, Component> elementNameProvider) {
+    public EnumOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<E, Component> tooltipProvider, OptionImpact impact, EnumSet<OptionFlag> flags, DependentValue<E> defaultValue, OptionBinding<E> binding, Class<E> enumClass, DependentValue<Set<E>> allowedValues, Function<E, Component> elementNameProvider) {
         super(id, dependencies, name, enabled, storage, tooltipProvider, impact, flags, defaultValue, binding);
         this.enumClass = enumClass;
         this.allowedValues = allowedValues;

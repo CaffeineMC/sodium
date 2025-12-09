@@ -12,7 +12,7 @@ import net.caffeinemc.mods.sodium.client.config.value.ConstantValue;
 import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
 import net.caffeinemc.mods.sodium.client.config.value.DynamicValue;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.lang3.Validate;
 
 import java.util.Collection;
@@ -30,7 +30,7 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
     private DependentValue<V> defaultValue;
     private OptionBinding<V> binding;
 
-    StatefulOptionBuilderImpl(ResourceLocation id) {
+    StatefulOptionBuilderImpl(Identifier id) {
         super(id);
     }
 
@@ -45,7 +45,7 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
         Validate.notNull(this.getBinding(), "Binding must be set");
     }
 
-    Collection<ResourceLocation> getDependencies() {
+    Collection<Identifier> getDependencies() {
         var dependencies = super.getDependencies();
         dependencies.addAll(this.getDefaultValue().getDependencies());
         return dependencies;
@@ -125,7 +125,7 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
     }
 
     @Override
-    public StatefulOptionBuilder<V> setDefaultProvider(Function<ConfigState, V> provider, ResourceLocation... dependencies) {
+    public StatefulOptionBuilder<V> setDefaultProvider(Function<ConfigState, V> provider, Identifier... dependencies) {
         Validate.notNull(provider, "Argument must not be null");
 
         this.defaultValue = new DynamicValue<>(provider, dependencies);
@@ -162,7 +162,7 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
     }
 
     @Override
-    public StatefulOptionBuilder<V> setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies) {
+    public StatefulOptionBuilder<V> setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies) {
         super.setEnabledProvider(provider, dependencies);
         return this;
     }

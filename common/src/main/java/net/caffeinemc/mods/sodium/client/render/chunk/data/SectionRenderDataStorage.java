@@ -8,8 +8,8 @@ import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.SharedQuadIndexBuffer;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.util.UInt32;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -299,7 +299,7 @@ public class SectionRenderDataStorage {
         SectionRenderDataUnsafe.freeHeap(this.pMeshDataArray);
     }
 
-    private static void deleteAllocations(GlBufferSegment @NotNull [] allocations) {
+    private static void deleteAllocations(GlBufferSegment @NonNull [] allocations) {
         for (var allocation : allocations) {
             if (allocation != null) {
                 allocation.delete();

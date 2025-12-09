@@ -2,19 +2,19 @@ package net.caffeinemc.mods.sodium.client.config.value;
 
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.client.config.structure.Config;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Function;
 
 public class DynamicValue<V> implements DependentValue<V>, ConfigState {
-    private final Set<ResourceLocation> dependencies;
+    private final Set<Identifier> dependencies;
     private final Function<ConfigState, V> provider;
     private Config state;
     private V valueCache;
 
-    public DynamicValue(Function<ConfigState, V> provider, ResourceLocation[] dependencies) {
+    public DynamicValue(Function<ConfigState, V> provider, Identifier[] dependencies) {
         this.provider = provider;
         this.dependencies = Set.of(dependencies);
     }
@@ -32,7 +32,7 @@ public class DynamicValue<V> implements DependentValue<V>, ConfigState {
     }
 
     @Override
-    public Collection<ResourceLocation> getDependencies() {
+    public Collection<Identifier> getDependencies() {
         return this.dependencies;
     }
 
@@ -40,7 +40,7 @@ public class DynamicValue<V> implements DependentValue<V>, ConfigState {
         this.valueCache = null;
     }
 
-    private void validateRead(ResourceLocation id) {
+    private void validateRead(Identifier id) {
         if (!this.dependencies.contains(id)) {
             throw new IllegalStateException("Attempted to read option value that is not a declared dependency");
         }
@@ -48,19 +48,19 @@ public class DynamicValue<V> implements DependentValue<V>, ConfigState {
 
     // TODO: resolve dependencies with update tag here or within ConfigStateImpl?
     @Override
-    public boolean readBooleanOption(ResourceLocation id) {
+    public boolean readBooleanOption(Identifier id) {
         this.validateRead(id);
         return this.state.readBooleanOption(id);
     }
 
     @Override
-    public int readIntOption(ResourceLocation id) {
+    public int readIntOption(Identifier id) {
         this.validateRead(id);
         return this.state.readIntOption(id);
     }
 
     @Override
-    public <E extends Enum<E>> E readEnumOption(ResourceLocation id, Class<E> enumClass) {
+    public <E extends Enum<E>> E readEnumOption(Identifier id, Class<E> enumClass) {
         this.validateRead(id);
         return this.state.readEnumOption(id, enumClass);
     }

@@ -13,7 +13,7 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.core.Direction;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class MutableQuadViewWrapper extends QuadViewWrapper implements QuadEmitter {
     protected static final QuadTransform NO_TRANSFORM = q -> true;

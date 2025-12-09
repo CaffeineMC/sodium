@@ -5,13 +5,13 @@ import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class SodiumDebugEntry implements DebugScreenEntry {
-    private static final ResourceLocation DEBUG_GROUP = ResourceLocation.fromNamespaceAndPath("sodium", "debug_group");
+    private static final Identifier DEBUG_GROUP = Identifier.fromNamespaceAndPath("sodium", "debug_group");
     private final boolean verbose;
 
     public SodiumDebugEntry(boolean verbose) {

@@ -4,7 +4,7 @@ import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.*;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -39,7 +39,7 @@ public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
      * @param dependencies The options that this provider depends on.
      * @return The current builder instance.
      */
-    IntegerOptionBuilder setRangeProvider(Function<ConfigState, Range> provider, ResourceLocation... dependencies);
+    IntegerOptionBuilder setRangeProvider(Function<ConfigState, Range> provider, Identifier... dependencies);
 
     /**
      * Sets the value formatter for this integer option.
@@ -71,13 +71,13 @@ public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
     IntegerOptionBuilder setDefaultValue(Integer value);
 
     @Override
-    IntegerOptionBuilder setDefaultProvider(Function<ConfigState, Integer> provider, ResourceLocation... dependencies);
+    IntegerOptionBuilder setDefaultProvider(Function<ConfigState, Integer> provider, Identifier... dependencies);
 
     @Override
     IntegerOptionBuilder setEnabled(boolean available);
 
     @Override
-    IntegerOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies);
+    IntegerOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
 
     @Override
     IntegerOptionBuilder setBinding(Consumer<Integer> save, Supplier<Integer> load);

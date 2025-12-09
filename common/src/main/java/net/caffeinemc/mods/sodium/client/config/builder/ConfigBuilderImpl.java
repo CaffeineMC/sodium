@@ -3,7 +3,7 @@ package net.caffeinemc.mods.sodium.client.config.builder;
 import net.caffeinemc.mods.sodium.api.config.structure.*;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.config.structure.ModOptions;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -68,22 +68,22 @@ public class ConfigBuilderImpl implements ConfigBuilder {
     }
 
     @Override
-    public BooleanOptionBuilder createBooleanOption(ResourceLocation id) {
+    public BooleanOptionBuilder createBooleanOption(Identifier id) {
         return new BooleanOptionBuilderImpl(id);
     }
 
     @Override
-    public IntegerOptionBuilder createIntegerOption(ResourceLocation id) {
+    public IntegerOptionBuilder createIntegerOption(Identifier id) {
         return new IntegerOptionBuilderImpl(id);
     }
 
     @Override
-    public <E extends Enum<E>> EnumOptionBuilder<E> createEnumOption(ResourceLocation id, Class<E> enumClass) {
+    public <E extends Enum<E>> EnumOptionBuilder<E> createEnumOption(Identifier id, Class<E> enumClass) {
         return new EnumOptionBuilderImpl<>(id, enumClass);
     }
 
     @Override
-    public ExternalButtonOptionBuilder createExternalButtonOption(ResourceLocation id) {
+    public ExternalButtonOptionBuilder createExternalButtonOption(Identifier id) {
         return new ExternalButtonOptionBuilderImpl(id);
     }
 }

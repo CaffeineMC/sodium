@@ -14,7 +14,7 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
@@ -62,7 +62,7 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
         int boxY = (parentDimensions.height() / 2) - (this.height / 2);
 
         graphics.fill(boxX, boxY, boxX + this.width, boxY + this.height, 0xFF171717);
-        graphics.submitOutline(boxX, boxY, this.width, this.height, 0xFF121212);
+        graphics.renderOutline(boxX, boxY, this.width, this.height, 0xFF121212);
 
 
         int padding = 5;
@@ -90,7 +90,7 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
         }
     }
 
-    @NotNull
+    @NonNull
     public List<AbstractWidget> getWidgets() {
         return List.of(this.actionButton, this.closeButton);
     }

@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.api.config.structure;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.Function;
 
@@ -46,7 +46,7 @@ public interface ModOptionsBuilder {
      * @param texture The resource location of the icon texture.
      * @return The current builder instance.
      */
-    ModOptionsBuilder setIcon(ResourceLocation texture);
+    ModOptionsBuilder setIcon(Identifier texture);
 
     /**
      * Adds a configuration page to the mod options.
@@ -65,7 +65,7 @@ public interface ModOptionsBuilder {
      * @param replacement The option builder that defines the replacement option.
      * @return The current builder instance.
      */
-    ModOptionsBuilder registerOptionReplacement(ResourceLocation target, OptionBuilder replacement);
+    ModOptionsBuilder registerOptionReplacement(Identifier target, OptionBuilder replacement);
 
     /**
      * Registers an option overlay provided by this mod. Overlays allow partially changing an option instead of replacing it entirely.
@@ -76,5 +76,5 @@ public interface ModOptionsBuilder {
      * @param overlay The option builder that defines the overlay changes.
      * @return The current builder instance.
      */
-    ModOptionsBuilder registerOptionOverlay(ResourceLocation target, OptionBuilder overlay);
+    ModOptionsBuilder registerOptionOverlay(Identifier target, OptionBuilder overlay);
 }

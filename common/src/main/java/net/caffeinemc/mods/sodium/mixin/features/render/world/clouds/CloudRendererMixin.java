@@ -2,7 +2,7 @@ package net.caffeinemc.mods.sodium.mixin.features.render.world.clouds;
 
 import net.minecraft.client.renderer.CloudRenderer;
 import net.minecraft.core.Direction;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.system.MemoryUtil;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,8 +23,7 @@ public abstract class CloudRendererMixin {
     @Final
     private static int FLAG_USE_TOP_COLOR;
     @Shadow
-    @Nullable
-    private CloudRenderer.TextureData texture;
+    private CloudRenderer.@Nullable TextureData texture;
 
     @Shadow
     private static boolean isNorthEmpty(long l) {
@@ -84,7 +83,7 @@ public abstract class CloudRendererMixin {
     private static int sodium$addCellGeometryToBuffer(long ptr, int index,
                                                       int x,
                                                       int z,
-                                                      @Nullable CloudRenderer.RelativeCameraPos orientation,
+                                                      CloudRenderer.@Nullable RelativeCameraPos orientation,
                                                       boolean fancy, int camX, int camZ, long[] cells, int texWidth, int texHeight) {
         int o = Math.floorMod(camX + x, texWidth);
         int p = Math.floorMod(camZ + z, texHeight);

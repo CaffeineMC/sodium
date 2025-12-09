@@ -7,7 +7,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public class BakedChunkModelBuilder implements ChunkModelBuilder {
     private final ChunkMeshBufferBuilder[] vertexBuffers;
@@ -25,7 +25,7 @@ public class BakedChunkModelBuilder implements ChunkModelBuilder {
     }
 
     @Override
-    public void addSprite(@NotNull TextureAtlasSprite sprite) {
+    public void addSprite(@NonNull TextureAtlasSprite sprite) {
         this.renderData.addSprite(sprite);
     }
 

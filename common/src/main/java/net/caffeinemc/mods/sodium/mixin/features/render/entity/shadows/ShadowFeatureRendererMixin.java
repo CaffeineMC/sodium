@@ -8,6 +8,7 @@ import net.caffeinemc.mods.sodium.api.vertex.format.common.EntityVertex;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.feature.ShadowFeatureRenderer;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.phys.AABB;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;

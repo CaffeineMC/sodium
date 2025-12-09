@@ -6,7 +6,7 @@ import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -38,13 +38,13 @@ public interface BooleanOptionBuilder extends StatefulOptionBuilder<Boolean> {
     BooleanOptionBuilder setDefaultValue(Boolean value);
 
     @Override
-    BooleanOptionBuilder setDefaultProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies);
+    BooleanOptionBuilder setDefaultProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
 
     @Override
     BooleanOptionBuilder setEnabled(boolean available);
 
     @Override
-    BooleanOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies);
+    BooleanOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
 
     @Override
     BooleanOptionBuilder setBinding(Consumer<Boolean> save, Supplier<Boolean> load);

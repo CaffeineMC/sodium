@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.platform.unix;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.system.*;
 
 public class Libc {

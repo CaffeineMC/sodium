@@ -1,8 +1,8 @@
 package net.caffeinemc.mods.sodium.client.world.cloned;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceLinkedOpenHashMap;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.TimeUnit;
 import net.minecraft.core.SectionPos;
@@ -51,7 +51,7 @@ public class ClonedChunkSectionCache {
         return section;
     }
 
-    @NotNull
+    @NonNull
     private ClonedChunkSection clone(int x, int y, int z) {
         LevelChunk chunk = this.level.getChunk(x, z);
 

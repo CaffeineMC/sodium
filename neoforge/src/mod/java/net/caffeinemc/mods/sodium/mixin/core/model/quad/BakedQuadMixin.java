@@ -4,10 +4,14 @@ import net.caffeinemc.mods.sodium.client.model.quad.BakedQuadView;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFlags;
 import net.caffeinemc.mods.sodium.client.util.ModelQuadUtil;
+import net.minecraft.client.model.geom.builders.UVPair;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
+import net.neoforged.neoforge.client.model.quad.BakedColors;
+import net.neoforged.neoforge.client.model.quad.BakedNormals;
+import org.joml.Vector3fc;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,76 +22,85 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BakedQuad.class)
 public abstract class BakedQuadMixin implements BakedQuadView {
-    @Shadow
-    @Final
-    protected int[] vertices;
 
-    @Shadow
-    @Final
-    protected TextureAtlasSprite sprite;
-
-    @Shadow
-    @Final
-    protected int tintIndex;
-
-    @Shadow
-    @Final
-    protected Direction direction; // This is really the light face, but we can't rename it.
 
     @Shadow
     @Final
     private boolean shade;
 
     @Shadow
-    public abstract boolean hasAmbientOcclusion();
-
-    @Shadow
     public abstract int lightEmission();
 
+    @Shadow
+    public abstract Vector3fc position(int i);
+
+    @Shadow
+    @Final
+    private TextureAtlasSprite sprite;
+
+    @Shadow
+    public abstract long packedUV(int i);
+
+    @Shadow
+    @Final
+    private int tintIndex;
+    @Shadow
+    @Final
+    private Direction direction;
+    @Shadow
+    @Final
+    private boolean hasAmbientOcclusion;
+    @Shadow
+    @Final
+    private BakedNormals bakedNormals;
+    @Shadow
+    @Final
+    private BakedColors bakedColors;
     @Unique
     private int flags;
 
     @Unique
-    private int normal = -1;
+    private int normal;
 
     @Unique
     private ModelQuadFacing normalFace = null;
 
-    @Inject(method = {
-            "<init>([IILnet/minecraft/core/Direction;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;ZIZ)V"
-    }, at = @At("RETURN"))
-    private void init(int[] is, int i, Direction face, TextureAtlasSprite arg2, boolean bl, int ambientLight, boolean hasAmbientOcclusion, CallbackInfo ci) {
-        this.flags = ModelQuadFlags.getQuadFlags(this, face);
+    @Inject(method = "<init>(Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;JJJJILnet/minecraft/core/Direction;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;ZILnet/neoforged/neoforge/client/model/quad/BakedNormals;Lnet/neoforged/neoforge/client/model/quad/BakedColors;Z)V", at = @At("RETURN"))
+    private void init(Vector3fc position0, Vector3fc position1, Vector3fc position2, Vector3fc position3, long packedUV0, long packedUV1, long packedUV2, long packedUV3, int tintIndex, Direction direction, TextureAtlasSprite sprite, boolean shade, int lightEmission, BakedNormals bakedNormals, BakedColors bakedColors, boolean hasAmbientOcclusion, CallbackInfo ci) {
+        this.normal = this.calculateNormal();
+        this.normalFace = ModelQuadFacing.fromPackedNormal(this.normal);
+
+        this.flags = ModelQuadFlags.getQuadFlags(this, direction);
     }
 
     @Override
     public float getX(int idx) {
-        return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX]);
+        return this.position(idx).x();
     }
 
     @Override
     public float getY(int idx) {
-        return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX + 1]);
+        return this.position(idx).y();
     }
 
     @Override
     public float getZ(int idx) {
-        return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX + 2]);
+        return this.position(idx).z();
     }
 
     @Override
     public int getColor(int idx) {
-        return this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.COLOR_INDEX];
+        return this.bakedColors.color(idx); // default is -1 for now
     }
 
     @Override
     public int getVertexNormal(int idx) {
-        return this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.NORMAL_INDEX];
+        return this.bakedNormals == BakedNormals.UNSPECIFIED ? -1 : this.bakedNormals.normal(idx);//this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.NORMAL_INDEX];
     }
 
     @Override
     public int getLight(int idx) {
-        return this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.LIGHT_INDEX];
+        return 0;//this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.LIGHT_INDEX];
     }
 
     @Override
@@ -97,12 +110,12 @@ public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Override
     public float getTexU(int idx) {
-        return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.TEXTURE_INDEX]);
+        return UVPair.unpackU(this.packedUV(idx));
     }
 
     @Override
     public float getTexV(int idx) {
-        return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.TEXTURE_INDEX + 1]);
+        return UVPair.unpackV(this.packedUV(idx));
     }
 
     @Override
@@ -117,19 +130,11 @@ public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Override
     public ModelQuadFacing getNormalFace() {
-        if (this.normalFace == null) {
-            this.normalFace = ModelQuadFacing.fromPackedNormal(this.getFaceNormal());
-        }
-
         return this.normalFace;
     }
 
     @Override
     public int getFaceNormal() {
-        if (this.normal == -1) {
-            this.normal = this.calculateNormal();
-        }
-
         return this.normal;
     }
 
@@ -144,13 +149,12 @@ public abstract class BakedQuadMixin implements BakedQuadView {
     }
 
     @Override
-    @Unique(silent = true) // The target class has a function with the same name in a remapped environment
     public boolean hasShade() {
         return this.shade;
     }
 
     @Override
     public boolean hasAO() {
-        return this.hasAmbientOcclusion();
+        return this.hasAmbientOcclusion;
     }
 }

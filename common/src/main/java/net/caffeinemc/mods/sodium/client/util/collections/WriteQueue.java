@@ -1,9 +1,9 @@
 package net.caffeinemc.mods.sodium.client.util.collections;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public interface WriteQueue<E> {
     void ensureCapacity(int numElements);
 
-    void enqueue(@NotNull E e);
+    void enqueue(@NonNull E e);
 }

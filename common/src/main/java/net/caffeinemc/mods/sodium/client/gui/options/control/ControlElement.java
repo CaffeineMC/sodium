@@ -13,7 +13,7 @@ import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public abstract class ControlElement extends AbstractWidget {
     protected final AbstractOptionList list;
@@ -56,7 +56,7 @@ public abstract class ControlElement extends AbstractWidget {
         this.hovered = this.isMouseOver(mouseX, mouseY);
 
         this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.hovered ? Colors.BACKGROUND_HOVER : Colors.BACKGROUND_LIGHT);
-        this.drawString(graphics, label, this.getX() + 6, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
+        this.drawString(graphics, label, this.getX() + Layout.OPTION_TEXT_SIDE_PADDING, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
 
         if (this.isFocused()) {
             this.drawBorder(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), -1);

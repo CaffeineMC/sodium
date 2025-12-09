@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.platform.windows.api.d3dkmt;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.Struct;
 

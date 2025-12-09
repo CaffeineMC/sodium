@@ -132,7 +132,7 @@ package com.example.examplemod;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.structure.ConfigBuilder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class ExampleConfigUser implements ConfigEntryPoint {
     private final OptionStorage storage = new OptionStorage();
@@ -141,12 +141,12 @@ public class ExampleConfigUser implements ConfigEntryPoint {
     @Override
     public void registerConfigLate(ConfigBuilder builder) {
         builder.registerOwnModOptions()
-                .setIcon(ResourceLocation.parse("examplemod:textures/gui/icon.png"))
+                .setIcon(Identifier.parse("examplemod:textures/gui/icon.png"))
                 .addPage(builder.createOptionPage()
                         .setName(Component.literal("Example Page"))
                         .addOptionGroup(builder.createOptionGroup()
                                 .setName(Component.literal("Example Group")) // only if necessary for clarity
-                                .addOption(builder.createBooleanOption(ResourceLocation.parse("examplemod:example_option"))
+                                .addOption(builder.createBooleanOption(Identifier.parse("examplemod:example_option"))
                                         .setName(Component.literal("Example Option")) // use translation keys here
                                         .setTooltip(Component.literal("Example tooltip"))
                                         .setStorageHandler(this.handler)
@@ -206,7 +206,7 @@ The API is largely self-explanatory and an example is provided above. Also see S
 
 The `ConfigBuilder` instance passed to the registration method allows quick and easy registration of a mod's own options using `ConfigBuilder.registerOwnModOptions`. The mod's id, name, version or a formatter for the existing version, and the color theme can be configured on the returned `ModOptionsBuilder`. It's also possible to register options for additional mods using `ConfigBuilder.registerModOptions`. Which mod is the "own" mod for `registerOwnModOptions` is determined by the mod that owns the metadata-based entrypoint or the mod id passed to the `@ConfigEntryPointForge("examplemod")` annotation.
 
-Each registered mod gets its own header in the page list. The color of the header and the corresponding entries is randomly selected from a predefined list by default, but can be customized using `ModOptionsBuilder.setColorTheme`. A color theme is created either by specifying three (A)RGB colors or a single base color with the lighter and darker colors getting derived automatically. A mod can also specify an icon with `ModOptionsBuilder.setIcon`, which takes a `ResourceLocation` pointing to a texture, which will be tinted in the theme color and rendered in its entirety as a square.
+Each registered mod gets its own header in the page list. The color of the header and the corresponding entries is randomly selected from a predefined list by default, but can be customized using `ModOptionsBuilder.setColorTheme`. A color theme is created either by specifying three (A)RGB colors or a single base color with the lighter and darker colors getting derived automatically. A mod can also specify an icon with `ModOptionsBuilder.setIcon`, which takes a `Identifier` pointing to a texture, which will be tinted in the theme color and rendered in its entirety as a square.
 
 To simply switch to a new `Screen` when an entry in the video settings screen's page list is clicked, use `ConfigBuilder.createExternalPage` and add the returned page normally after configuring it with a name and a `Consumer<Screen>` that receives the current screen and switches to your custom screen.
 

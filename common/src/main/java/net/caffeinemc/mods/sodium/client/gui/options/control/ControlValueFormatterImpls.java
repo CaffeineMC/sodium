@@ -80,4 +80,24 @@ public class ControlValueFormatterImpls {
     public static ControlValueFormatter number() {
         return (v) -> Component.literal(String.valueOf(v));
     }
+
+    public static ControlValueFormatter anisotropyBit() {
+        return (v -> {
+            if (v == 0) {
+                return Component.translatable("options.off");
+            } else {
+                return Component.literal((1 << v) + "x");
+            }
+        });
+    }
+
+    public static ControlValueFormatter chunkFade() {
+        return (v -> {
+            if (v == 0) {
+                return Component.translatable("gui.none");
+            } else {
+                return Component.literal((double) v / 1000.0 + " seconds");
+            }
+        });
+    }
 }

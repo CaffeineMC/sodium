@@ -20,8 +20,8 @@ import java.util.Map;
 
 import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +41,7 @@ public class SodiumSpriteFinderImpl implements SodiumSpriteFinder {
     private final TextureAtlasSprite missingSprite;
     private int badSpriteCount = 0;
 
-    public SodiumSpriteFinderImpl(Map<ResourceLocation, TextureAtlasSprite> sprites, TextureAtlasSprite missingSprite) {
+    public SodiumSpriteFinderImpl(Map<Identifier, TextureAtlasSprite> sprites, TextureAtlasSprite missingSprite) {
         root = new Node(0.5f, 0.5f, 0.25f);
         this.missingSprite = missingSprite;
         sprites.values().forEach(root::add);

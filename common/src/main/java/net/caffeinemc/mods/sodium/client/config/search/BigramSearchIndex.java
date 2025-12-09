@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.config.search;
 
 import it.unimi.dsi.fastutil.objects.*;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Comparator;
 import java.util.List;
@@ -59,7 +59,7 @@ public class BigramSearchIndex extends SourceStoringIndex {
         return text;
     }
 
-    private static @NotNull Object2IntMap<String> countBigrams(String text) {
+    private static @NonNull Object2IntMap<String> countBigrams(String text) {
         int length = text.length();
         var bigramCounts = new Object2IntLinkedOpenHashMap<String>(length + 1);
 

@@ -20,8 +20,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.*;
 import net.minecraft.world.level.levelgen.DebugLevelSource;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 public class ClonedChunkSection {
     private static final DataLayer DEFAULT_SKY_LIGHT_ARRAY = new DataLayer(15);
@@ -84,7 +84,7 @@ public class ClonedChunkSection {
      * Construct a fake PalettedContainer whose contents match those of the debug world. This is needed to
      * match vanilla's odd approach of short-circuiting getBlockState calls inside its render region class.
      */
-    @NotNull
+    @NonNull
     private static PalettedContainer<BlockState> constructDebugWorldContainer(SectionPos pos) {
         // Fast path for sections which are guaranteed to be empty
         if (pos.getY() != 3 && pos.getY() != 4)
@@ -111,7 +111,7 @@ public class ClonedChunkSection {
         return container;
     }
 
-    @NotNull
+    @NonNull
     private static DataLayer[] copyLightData(Level level, SectionPos pos) {
         var arrays = new DataLayer[2];
         arrays[LightLayer.BLOCK.ordinal()] = copyLightArray(level, LightLayer.BLOCK, pos);
@@ -128,7 +128,7 @@ public class ClonedChunkSection {
      * Copies the light data array for the given light type for this chunk, or returns a default-initialized value if
      * the light array is not loaded.
      */
-    @NotNull
+    @NonNull
     private static DataLayer copyLightArray(Level level, LightLayer type, SectionPos pos) {
         var array = level.getLightEngine()
                 .getLayerListener(type)

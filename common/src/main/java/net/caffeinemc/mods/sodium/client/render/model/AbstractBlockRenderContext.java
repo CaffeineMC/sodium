@@ -21,7 +21,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -35,7 +35,6 @@ import java.util.function.Predicate;
 public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     public class BlockEmitter extends MutableQuadViewImpl {
         {
-            data = new int[EncodingFormat.TOTAL_STRIDE];
             clear();
         }
 

@@ -17,8 +17,8 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.sounds.SoundEvents;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 public abstract class AbstractWidget implements Renderable, GuiEventListener, NarratableEntry {
     protected final Font font = Minecraft.getInstance().font;
@@ -88,7 +88,7 @@ public abstract class AbstractWidget implements Renderable, GuiEventListener, Na
     }
 
     @Override
-    public @NotNull ScreenRectangle getRectangle() {
+    public @NonNull ScreenRectangle getRectangle() {
         return new ScreenRectangle(this.getX(), this.getY(), this.getWidth(), this.getHeight());
     }
 
@@ -102,7 +102,7 @@ public abstract class AbstractWidget implements Renderable, GuiEventListener, Na
     }
 
     @Override
-    public NarratableEntry.@NotNull NarrationPriority narrationPriority() {
+    public NarratableEntry.@NonNull NarrationPriority narrationPriority() {
         if (this.focused) {
             return NarratableEntry.NarrationPriority.FOCUSED;
         }

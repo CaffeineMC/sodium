@@ -3,7 +3,7 @@ import net.fabricmc.loom.task.RemapJarTask
 plugins {
     id("multiloader-platform")
 
-    id("fabric-loom") version ("1.11.4")
+    id("fabric-loom") version ("1.13.4")
 }
 
 base {
@@ -34,12 +34,12 @@ dependencies {
     configurationCommonModJava(project(path = ":common", configuration = "commonMainJava"))
     configurationApiModJava(project(path = ":common", configuration = "commonApiJava"))
     configurationCommonModJava(project(path = ":common", configuration = "commonBootJava"))
-    configurationFrapiModJava(project(path = ":frapi", configuration = "frapiMainJava"))
+    if (BuildConfig.SUPPORT_FRAPI) configurationFrapiModJava(project(path = ":frapi", configuration = "frapiMainJava"))
 
     configurationCommonModResources(project(path = ":common", configuration = "commonMainResources"))
     configurationCommonModResources(project(path = ":common", configuration = "commonApiResources"))
     configurationCommonModResources(project(path = ":common", configuration = "commonBootResources"))
-    configurationFrapiModResources(project(path = ":frapi", configuration = "frapiMainResources"))
+    if (BuildConfig.SUPPORT_FRAPI) configurationFrapiModResources(project(path = ":frapi", configuration = "frapiMainResources"))
 }
 
 sourceSets.apply {

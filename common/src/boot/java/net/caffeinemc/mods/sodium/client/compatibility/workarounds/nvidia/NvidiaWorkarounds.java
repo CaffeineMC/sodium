@@ -10,7 +10,7 @@ import net.caffeinemc.mods.sodium.client.platform.unix.Libc;
 import net.caffeinemc.mods.sodium.client.platform.windows.WindowsCommandLine;
 import net.caffeinemc.mods.sodium.client.platform.windows.WindowsFileVersion;
 import net.caffeinemc.mods.sodium.client.platform.windows.api.d3dkmt.D3DKMT;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL32C;
 import org.lwjgl.opengl.KHRDebug;

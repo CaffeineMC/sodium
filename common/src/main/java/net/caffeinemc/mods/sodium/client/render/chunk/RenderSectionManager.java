@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
+import com.mojang.blaze3d.textures.GpuSampler;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMaps;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
@@ -53,8 +54,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.apache.commons.lang3.ArrayUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.joml.Vector3dc;
 
 import java.util.*;
@@ -97,12 +98,12 @@ public class RenderSectionManager {
 
     private final SortTriggering sortTriggering;
 
-    @NotNull
+    @NonNull
     private SortedRenderLists renderLists;
     private SectionCollector sectionCollector;
     private SectionCollector lastSectionCollector;
 
-    @NotNull
+    @NonNull
     private Map<TaskQueueType, ArrayDeque<RenderSection>> taskLists;
 
     private int frame;
@@ -230,7 +231,7 @@ public class RenderSectionManager {
 
     private boolean shouldUseOcclusionCulling(Camera camera, boolean spectator) {
         final boolean useOcclusionCulling;
-        BlockPos origin = camera.getBlockPosition();
+        BlockPos origin = camera.blockPosition();
 
         if (spectator && this.level.getBlockState(origin)
                 .isSolidRender()) {
@@ -312,11 +313,11 @@ public class RenderSectionManager {
         this.markGraphDirty();
     }
 
-    public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters) {
+    public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters, GpuSampler terrainSampler) {
         RenderDevice device = RenderDevice.INSTANCE;
         CommandList commandList = device.createCommandList();
 
-        this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z), fogParameters, this.sortBehavior != SortBehavior.OFF);
+        this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z), fogParameters, this.sortBehavior != SortBehavior.OFF, terrainSampler);
 
         commandList.flush();
     }
@@ -615,7 +616,7 @@ public class RenderSectionManager {
         }
     }
 
-    private void submitSectionTask(ChunkJobCollector collector, @NotNull RenderSection section, int type, UploadResourceBudget uploadBudget, boolean blocking) {
+    private void submitSectionTask(ChunkJobCollector collector, @NonNull RenderSection section, int type, UploadResourceBudget uploadBudget, boolean blocking) {
         if (section.isDisposed()) {
             return;
         }
@@ -932,7 +933,7 @@ public class RenderSectionManager {
         return list;
     }
 
-    public @NotNull SortedRenderLists getRenderLists() {
+    public @NonNull SortedRenderLists getRenderLists() {
         return this.renderLists;
     }
 

@@ -1,8 +1,8 @@
 package net.caffeinemc.mods.sodium.client.console;
 
 import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public interface ConsoleSink {
-    void logMessage(@NotNull MessageLevel level, @NotNull String text, boolean translatable, double duration);
+    void logMessage(@NonNull MessageLevel level, @NonNull String text, boolean translatable, double duration);
 }

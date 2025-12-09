@@ -8,14 +8,14 @@ import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.structure.BooleanOptionBuilder;
 import net.caffeinemc.mods.sodium.client.config.structure.BooleanOption;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 class BooleanOptionBuilderImpl extends StatefulOptionBuilderImpl<BooleanOption, Boolean> implements BooleanOptionBuilder {
-    BooleanOptionBuilderImpl(ResourceLocation id) {
+    BooleanOptionBuilderImpl(Identifier id) {
         super(id);
     }
 
@@ -74,7 +74,7 @@ class BooleanOptionBuilderImpl extends StatefulOptionBuilderImpl<BooleanOption, 
     }
 
     @Override
-    public BooleanOptionBuilder setDefaultProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies) {
+    public BooleanOptionBuilder setDefaultProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies) {
         super.setDefaultProvider(provider, dependencies);
         return this;
     }
@@ -86,7 +86,7 @@ class BooleanOptionBuilderImpl extends StatefulOptionBuilderImpl<BooleanOption, 
     }
 
     @Override
-    public BooleanOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies) {
+    public BooleanOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies) {
         super.setEnabledProvider(provider, dependencies);
         return this;
     }

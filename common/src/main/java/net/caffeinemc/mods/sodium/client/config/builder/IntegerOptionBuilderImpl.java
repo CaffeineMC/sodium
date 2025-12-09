@@ -9,7 +9,7 @@ import net.caffeinemc.mods.sodium.client.config.value.ConstantValue;
 import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
 import net.caffeinemc.mods.sodium.client.config.value.DynamicValue;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.lang3.Validate;
 
 import java.util.Collection;
@@ -21,7 +21,7 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     private DependentValue<Range> rangeProvider;
     private ControlValueFormatter valueFormatter;
 
-    IntegerOptionBuilderImpl(ResourceLocation id) {
+    IntegerOptionBuilderImpl(Identifier id) {
         super(id);
     }
 
@@ -41,7 +41,7 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     }
 
     @Override
-    Collection<ResourceLocation> getDependencies() {
+    Collection<Identifier> getDependencies() {
         var deps = super.getDependencies();
         deps.addAll(this.getRangeProvider().getDependencies());
         return deps;
@@ -72,7 +72,7 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     }
 
     @Override
-    public IntegerOptionBuilder setRangeProvider(Function<ConfigState, Range> provider, ResourceLocation... dependencies) {
+    public IntegerOptionBuilder setRangeProvider(Function<ConfigState, Range> provider, Identifier... dependencies) {
         this.rangeProvider = new DynamicValue<>(provider, dependencies);
         return this;
     }
@@ -126,7 +126,7 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     }
 
     @Override
-    public IntegerOptionBuilder setDefaultProvider(Function<ConfigState, Integer> provider, ResourceLocation... dependencies) {
+    public IntegerOptionBuilder setDefaultProvider(Function<ConfigState, Integer> provider, Identifier... dependencies) {
         super.setDefaultProvider(provider, dependencies);
         return this;
     }
@@ -138,7 +138,7 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     }
 
     @Override
-    public IntegerOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies) {
+    public IntegerOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies) {
         super.setEnabledProvider(provider, dependencies);
         return this;
     }

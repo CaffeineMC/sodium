@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.texture;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 // Kept for mod compatibility, to be removed in next major release.
 @Deprecated(forRemoval = true)

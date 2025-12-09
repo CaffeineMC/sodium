@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.client.util.FileUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,15 +16,15 @@ public record HashedFingerprint(
         @SerializedName("v")
         int version,
 
-        @NotNull
+        @NonNull
         @SerializedName("s")
         String saltHex,
 
-        @NotNull
+        @NonNull
         @SerializedName("u")
         String uuidHashHex,
 
-        @NotNull
+        @NonNull
         @SerializedName("p")
         String pathHashHex,
 
@@ -56,7 +56,7 @@ public record HashedFingerprint(
         return data;
     }
 
-    public static void writeToDisk(@NotNull HashedFingerprint data) {
+    public static void writeToDisk(@NonNull HashedFingerprint data) {
         Objects.requireNonNull(data);
 
         try {

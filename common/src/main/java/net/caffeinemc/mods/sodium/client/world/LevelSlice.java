@@ -28,8 +28,8 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.FluidState;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -246,7 +246,7 @@ public final class LevelSlice implements BlockAndTintGetter {
     }
 
     @Override
-    public @NotNull BlockState getBlockState(BlockPos pos) {
+    public @NonNull BlockState getBlockState(BlockPos pos) {
         return this.getBlockState(pos.getX(), pos.getY(), pos.getZ());
     }
 
@@ -264,7 +264,7 @@ public final class LevelSlice implements BlockAndTintGetter {
     }
 
     @Override
-    public @NotNull FluidState getFluidState(BlockPos pos) {
+    public @NonNull FluidState getFluidState(BlockPos pos) {
         return this.getBlockState(pos)
                 .getFluidState();
     }
@@ -275,7 +275,7 @@ public final class LevelSlice implements BlockAndTintGetter {
     }
 
     @Override
-    public @NotNull LevelLightEngine getLightEngine() {
+    public @NonNull LevelLightEngine getLightEngine() {
         // Not thread-safe to access lighting data from off-thread, even if Minecraft allows it.
         throw new UnsupportedOperationException();
     }

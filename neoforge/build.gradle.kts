@@ -1,7 +1,7 @@
 plugins {
     id("multiloader-platform")
 
-    id("net.neoforged.moddev") version("2.0.107")
+    id("net.neoforged.moddev") version("2.0.120")
 }
 
 base {
@@ -13,6 +13,14 @@ repositories {
 
     maven("https://maven.su5ed.dev/releases")
     maven("https://maven.neoforged.net/releases/")
+    maven {
+        name = "Maven for PR #2815" // https://github.com/neoforged/NeoForge/pull/2815
+        url = uri("https://prmaven.neoforged.net/NeoForge/pr2815")
+        content {
+            includeModule("net.neoforged", "neoforge")
+            includeModule("net.neoforged", "testframework")
+        }
+    }
 }
 
 sourceSets {
