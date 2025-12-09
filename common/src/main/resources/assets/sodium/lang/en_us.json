@@ -77,5 +77,6 @@
   "sodium.console.config_not_loaded": "The configuration file for Sodium has been corrupted, or is currently unreadable. Some options have been temporarily reset to their defaults. Please open the Video Settings screen to resolve this problem.",
   "sodium.console.config_file_was_reset": "The config file has been reset to known-good defaults.",
   "sodium.options.search": "Search",
-  "sodium.options.search.hint": "Search..."
+  "sodium.options.search.hint": "Search...",
+  "sodium.options.open_external_page_button": "Open"
 }
