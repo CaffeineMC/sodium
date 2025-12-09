@@ -5,6 +5,7 @@ import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
+import net.caffeinemc.mods.sodium.client.config.structure.Page;
 import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlElement;
 import net.caffeinemc.mods.sodium.client.gui.prompt.ScreenPrompt;
@@ -192,7 +193,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         this.optionList.rebuild(this);
     }
 
-    private void onSectionFocused(OptionPage page) {
+    private void onSectionFocused(Page page) {
         this.pageList.switchSelected(page);
     }
 
