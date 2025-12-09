@@ -23,5 +23,5 @@ public interface ExternalPageBuilder extends PageBuilder {
      * @param currentScreenConsumer A consumer that accepts the current screen and opens the external configuration screen.
      * @return The current builder instance.
      */
-    ExternalPageBuilder setScreenProvider(Consumer<Screen> currentScreenConsumer);
+    ExternalPageBuilder setScreenConsumer(Consumer<Screen> currentScreenConsumer);
 }

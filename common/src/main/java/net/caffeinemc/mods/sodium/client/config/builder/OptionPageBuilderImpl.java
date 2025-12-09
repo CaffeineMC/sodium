@@ -20,7 +20,9 @@ class OptionPageBuilderImpl extends PageBuilderImpl implements OptionPageBuilder
     void prepareBuild() {
         super.prepareBuild();
 
-        Validate.notEmpty(this.groups, "At least one group must be added");
+        if (this.looseOptions.isEmpty()) {
+            Validate.notEmpty(this.groups, "At least one group or loose option must be added");
+        }
     }
 
     @Override

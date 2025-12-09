@@ -42,7 +42,7 @@ class ExternalButtonOptionBuilderImpl extends StaticOptionBuilderImpl<ExternalBu
     }
 
     @Override
-    public ExternalButtonOptionBuilder setScreenProvider(Consumer<Screen> currentScreenConsumer) {
+    public ExternalButtonOptionBuilder setScreenConsumer(Consumer<Screen> currentScreenConsumer) {
         this.currentScreenConsumer = currentScreenConsumer;
         return this;
     }

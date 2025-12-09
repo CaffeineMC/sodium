@@ -25,7 +25,7 @@ public class ExternalPageBuilderImpl extends PageBuilderImpl implements External
     }
 
     @Override
-    public ExternalPageBuilder setScreenProvider(Consumer<Screen> currentScreenConsumer) {
+    public ExternalPageBuilder setScreenConsumer(Consumer<Screen> currentScreenConsumer) {
         this.currentScreenConsumer = currentScreenConsumer;
         return this;
     }

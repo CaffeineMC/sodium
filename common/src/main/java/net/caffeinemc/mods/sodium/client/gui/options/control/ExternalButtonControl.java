@@ -16,6 +16,8 @@ import net.minecraft.network.chat.Style;
 import java.util.function.Consumer;
 
 public class ExternalButtonControl implements Control {
+    public static final Component BASE_BUTTON_TEXT = Component.translatable("sodium.options.open_external_page_button");
+
     private final ExternalButtonOption option;
     private final Consumer<Screen> currentScreenConsumer;
 
@@ -37,6 +39,17 @@ public class ExternalButtonControl implements Control {
     @Override
     public int getMaxWidth() {
         return Layout.BUTTON_LONG;
+    }
+
+    public static Component formatExternalButtonText(boolean enabled, ColorTheme theme) {
+        if (enabled) {
+            var enabledText = Component.empty();
+            enabledText.append(BASE_BUTTON_TEXT.copy().withStyle(ChatFormatting.UNDERLINE));
+            enabledText.append(Component.literal(" >").copy().withStyle(Style.EMPTY.withColor(theme.theme)));
+            return enabledText;
+        } else {
+            return BASE_BUTTON_TEXT.copy().withStyle(ChatFormatting.STRIKETHROUGH, ChatFormatting.GRAY);
+        }
     }
 
     private static class ExternalButtonControlElement extends ControlElement {
@@ -61,24 +74,12 @@ public class ExternalButtonControl implements Control {
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             super.render(graphics, mouseX, mouseY, delta);
 
-            var baseText = Component.translatable("selectServer.edit");
-            Component buttonText;
+            Component buttonText = formatExternalButtonText(this.option.isEnabled(), this.theme);
 
-            if (this.option.isEnabled()) {
-                var enabledText = Component.empty();
-                enabledText.append(baseText.copy().withStyle(ChatFormatting.UNDERLINE));
-                enabledText.append(Component.literal(" >").copy().withStyle(Style.EMPTY.withColor(this.theme.theme)));
-                buttonText = enabledText;
-            } else {
-                buttonText = this.formatDisabledControlValue(baseText);
-            }
-
-            var textWidth = this.font.width(buttonText);
-
-            var xEnd = this.getLimitX() - 6;
-            var x = xEnd - textWidth;
-
-            this.drawString(graphics, buttonText, x, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
+            this.drawString(graphics, buttonText,
+                    this.getLimitX() - Layout.OPTION_TEXT_SIDE_PADDING - this.font.width(buttonText),
+                    this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET,
+                    Colors.FOREGROUND);
         }
 
         private void openScreen(Screen screen) {

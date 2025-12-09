@@ -15,6 +15,7 @@ public class Layout {
     public static final int PAGE_LIST_WIDTH = 125;
     public static final int OPTION_WIDTH = 210;
     public static final int OPTION_LIST_SCROLLBAR_OFFSET = 5;
+    public static final int OPTION_TEXT_SIDE_PADDING = 6;
     public static final int ICON_MARGIN = 4;
     public static final int ICON_TEXT_BASELINE_OFFSET = -3;
     public static final int REGULAR_TEXT_BASELINE_OFFSET = -4;

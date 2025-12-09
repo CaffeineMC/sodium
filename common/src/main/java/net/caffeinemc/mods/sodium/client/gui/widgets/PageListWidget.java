@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 public class PageListWidget extends AbstractScrollable {
     private final VideoSettingsScreen parent;
     private EntryWidget selected;
-    private final Reference2ReferenceMap<OptionPage, PageEntryWidget> pageToWidget = new Reference2ReferenceOpenHashMap<>();
+    private final Reference2ReferenceMap<Page, PageEntryWidget> pageToWidget = new Reference2ReferenceOpenHashMap<>();
 
     public PageListWidget(Dim2i position, VideoSettingsScreen parent) {
         super(position);
@@ -117,7 +117,7 @@ public class PageListWidget extends AbstractScrollable {
         }
     }
 
-    public void switchSelected(OptionPage page) {
+    public void switchSelected(Page page) {
         this.switchSelectedWidget(this.pageToWidget.get(page));
     }
 
