@@ -135,8 +135,12 @@ public class Config implements ConfigState {
                         // apply overlay to option if it exists
                         if (overlay != null) {
                             var change = overlay.change();
-                            var overlaidOption = change.buildWithBaseOption(option);
-                            exchangeOption(options, i, overlaidOption, option);
+                            try {
+                                var overlaidOption = change.buildWithBaseOption(option);
+                                exchangeOption(options, i, overlaidOption, option);
+                            } catch (Exception e) {
+                                throw new IllegalArgumentException("Failed to apply overlay from '" + overlay.source() + "' to option '" + option.id + "'", e);
+                            }
                         }
                     }
                 }
