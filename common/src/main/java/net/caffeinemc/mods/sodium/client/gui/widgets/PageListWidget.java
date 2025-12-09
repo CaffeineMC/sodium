@@ -21,7 +21,7 @@ import org.jspecify.annotations.NonNull;
 public class PageListWidget extends AbstractScrollable {
     private final VideoSettingsScreen parent;
     private EntryWidget selected;
-    private final Reference2ReferenceMap<Page, PageEntryWidget> pageToWidget = new Reference2ReferenceOpenHashMap<>();
+    private final Reference2ReferenceMap<Page, PageEntryWidget<?>> pageToWidget = new Reference2ReferenceOpenHashMap<>();
 
     public PageListWidget(Dim2i position, VideoSettingsScreen parent) {
         super(position);
@@ -58,26 +58,27 @@ public class PageListWidget extends AbstractScrollable {
             this.addRenderableChild(header);
 
             for (Page page : modOptions.pages()) {
-                CenteredFlatWidget button;
+                PageEntryWidget<?> pageWidget;
                 Dim2i widgetDim = new Dim2i(x, y + listHeight, width, entryHeight);
+
+                var scrollTargetStart = widgetDim.y();
+                if (modHeaderStart != -1) {
+                    scrollTargetStart = modHeaderStart; // scroll to the mod header if the page is the first in the mod
+                    modHeaderStart = -1;
+                }
+
                 if (page instanceof OptionPage optionPage) {
-                    var scrollTargetStart = widgetDim.y();
-                    if (modHeaderStart != -1) {
-                        scrollTargetStart = modHeaderStart; // scroll to the mod header if the page is the first in the mod
-                        modHeaderStart = -1;
-                    }
-                    var pageWidget = new PageEntryWidget(widgetDim, optionPage, theme, scrollTargetStart);
-                    button = pageWidget;
-                    this.pageToWidget.put(optionPage, pageWidget);
+                    pageWidget = new OptionPageEntryWidget(widgetDim, optionPage, theme, scrollTargetStart);
                 } else if (page instanceof ExternalPage externalPage) {
-                    button = new ExternalPageEntryWidget(widgetDim, externalPage, theme);
+                    pageWidget = new ExternalPageEntryWidget(widgetDim, externalPage, theme, scrollTargetStart);
                 } else {
                     throw new IllegalStateException("Unknown page type: " + page.getClass());
                 }
 
+                this.pageToWidget.put(page, pageWidget);
                 listHeight += entryHeight;
 
-                this.addRenderableChild(button);
+                this.addRenderableChild(pageWidget);
             }
         }
 
@@ -163,14 +164,20 @@ public class PageListWidget extends AbstractScrollable {
         }
     }
 
-    private class PageEntryWidget extends EntryWidget {
-        private final OptionPage page;
-        private final int scrollTargetStart;
+    private abstract class PageEntryWidget<P extends Page> extends EntryWidget {
+        final P page;
+        final int scrollTargetStart;
 
-        PageEntryWidget(Dim2i dim, OptionPage page, ColorTheme theme, int scrollTargetStart) {
+        PageEntryWidget(Dim2i dim, P page, ColorTheme theme, int scrollTargetStart) {
             super(dim, page.name(), true, theme);
             this.page = page;
             this.scrollTargetStart = scrollTargetStart;
+        }
+    }
+
+    private class OptionPageEntryWidget extends PageEntryWidget<Page> {
+        OptionPageEntryWidget(Dim2i dim, Page page, ColorTheme theme, int scrollTargetStart) {
+            super(dim, page, theme, scrollTargetStart);
         }
 
         @Override
@@ -185,12 +192,9 @@ public class PageListWidget extends AbstractScrollable {
         }
     }
 
-    private class ExternalPageEntryWidget extends EntryWidget {
-        private final ExternalPage page;
-
-        ExternalPageEntryWidget(Dim2i dim, ExternalPage page, ColorTheme theme) {
-            super(dim, page.name(), true, theme);
-            this.page = page;
+    private class ExternalPageEntryWidget extends PageEntryWidget<ExternalPage> {
+        ExternalPageEntryWidget(Dim2i dim, ExternalPage page, ColorTheme theme, int scrollTargetStart) {
+            super(dim, page, theme, scrollTargetStart);
         }
 
         @Override

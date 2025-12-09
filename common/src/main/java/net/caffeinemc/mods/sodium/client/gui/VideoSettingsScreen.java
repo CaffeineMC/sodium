@@ -197,7 +197,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         this.pageList.switchSelected(page);
     }
 
-    public void jumpToPage(OptionPage page) {
+    public void jumpToPage(Page page) {
         if (this.optionList != null) {
             this.optionList.jumpToPage(page);
         }

@@ -192,7 +192,7 @@ public class OptionListWidget extends AbstractOptionList {
         return listHeight;
     }
 
-    public void jumpToPage(OptionPage page) {
+    public void jumpToPage(Page page) {
         var sectionInfo = this.pageToSectionInfo.get(page);
         if (sectionInfo != null) {
             this.ignoreNextScrollUpdate = true;
