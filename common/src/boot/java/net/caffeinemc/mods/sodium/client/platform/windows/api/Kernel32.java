@@ -14,6 +14,7 @@ public class Kernel32 {
     private static final int GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS = 1 << 2;
 
     private static final long PFN_GetCommandLineW;
+    private static final long PFN_GetCommandLineA;
     private static final long PFN_SetEnvironmentVariableW;
 
     private static final long PFN_GetModuleHandleExW;
@@ -24,6 +25,7 @@ public class Kernel32 {
 
     static {
         PFN_GetCommandLineW = APIUtil.apiGetFunctionAddress(LIBRARY, "GetCommandLineW");
+        PFN_GetCommandLineA = APIUtil.apiGetFunctionAddress(LIBRARY, "GetCommandLineA");
         PFN_SetEnvironmentVariableW = APIUtil.apiGetFunctionAddress(LIBRARY, "SetEnvironmentVariableW");
         PFN_GetModuleHandleExW = APIUtil.apiGetFunctionAddress(LIBRARY, "GetModuleHandleExW");
         PFN_GetLastError = APIUtil.apiGetFunctionAddress(LIBRARY, "GetLastError");
@@ -48,6 +50,10 @@ public class Kernel32 {
 
     public static long getCommandLine() {
         return JNI.callP(PFN_GetCommandLineW);
+    }
+
+    public static long getCommandLineA() {
+        return JNI.callP(PFN_GetCommandLineA);
     }
 
     public static long getModuleHandleByNames(String[] names) {

@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.compatibility.workarounds;
 
 import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
+import net.caffeinemc.mods.sodium.client.compatibility.workarounds.amd.AmdWorkarounds;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.intel.IntelWorkarounds;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds;
 import org.slf4j.Logger;
@@ -39,6 +40,10 @@ public class Workarounds {
 
         if (NvidiaWorkarounds.isNvidiaGraphicsCardPresent()) {
             workarounds.add(Reference.NVIDIA_THREADED_OPTIMIZATIONS_BROKEN);
+        }
+
+        if (AmdWorkarounds.isAmdGraphicsCardPresent()) {
+            workarounds.add(Reference.AMD_GAME_OPTIMIZATION_BROKEN);
         }
 
         if (IntelWorkarounds.isUsingIntelGen8OrOlder()) {
@@ -96,6 +101,15 @@ public class Workarounds {
          * the base model.
          * <a href="https://github.com/CaffeineMC/sodium/issues/2830">GitHub Issue</a>
          */
-        INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE
+        INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE,
+
+        /**
+         * AMD's graphics driver starting at 25.10.2 does not correctly handle glMapBufferRange
+         * when minecraft is detected, causing terrain rendering to go invisible if the launcher allows minecraft
+         * to be detected. Most commonly this happens with some third party PVP clients,
+         * but can happen with other launchers.
+         * <a href="https://github.com/CaffeineMC/sodium/issues/3318">GitHub Issue</a>
+         */
+        AMD_GAME_OPTIMIZATION_BROKEN
     }
 }
