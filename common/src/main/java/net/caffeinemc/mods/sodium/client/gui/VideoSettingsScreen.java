@@ -13,7 +13,6 @@ import net.caffeinemc.mods.sodium.client.gui.screen.ConfigCorruptedScreen;
 import net.caffeinemc.mods.sodium.client.gui.widgets.*;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
-import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -26,6 +25,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Util;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -37,6 +37,7 @@ import java.util.List;
 
 public class VideoSettingsScreen extends Screen implements ScreenPromptable {
     private final Screen prevScreen;
+    private Dim2i dim;
 
     private PageListWidget pageList;
     private SearchWidget searchWidget;
@@ -138,10 +139,16 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
     private void rebuild() {
         this.clearWidgets();
 
-        int topBarHeight = Layout.BUTTON_SHORT;
-        this.searchWidget = new SearchWidget(this::onSearchResults, new Dim2i(0, 0, this.width, topBarHeight));
+        this.updateScreenDimensions();
+        var x = this.getX();
+        var y = this.getY();
+        var w = this.getWidth();
+        var h = this.getHeight();
 
-        this.pageList = new PageListWidget(new Dim2i(0, topBarHeight, Layout.PAGE_LIST_WIDTH, this.height - topBarHeight), this);
+        int topBarHeight = Layout.BUTTON_SHORT;
+        this.searchWidget = new SearchWidget(this::onSearchResults, new Dim2i(x, y, w, topBarHeight));
+
+        this.pageList = new PageListWidget(new Dim2i(x, y + topBarHeight, Layout.PAGE_LIST_WIDTH, h - topBarHeight), this);
         this.addRenderableWidget(this.pageList);
 
         boolean stackVertically = false;
@@ -150,37 +157,72 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         int minWidthToStack = Layout.PAGE_LIST_WIDTH + Layout.INNER_MARGIN * 2 + Layout.OPTION_WIDTH + Layout.OPTION_LIST_SCROLLBAR_OFFSET + Layout.SCROLLBAR_WIDTH + Layout.BUTTON_LONG;
         int maxWidthToStack = minWidthToStack + Layout.BUTTON_LONG * 2 + Layout.INNER_MARGIN;
 
-        if (this.width > minWidthToStack && this.width < maxWidthToStack) {
+        if (w > minWidthToStack && w < maxWidthToStack) {
             stackVertically = true;
-        } else if (this.width < minWidthToStack) {
+        } else if (w < minWidthToStack) {
             reserveBottomSpace = true;
         }
 
-        this.closeButton = new FlatButtonWidget(new Dim2i(this.width - Layout.BUTTON_LONG - Layout.INNER_MARGIN, this.height - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("gui.done"), this::onClose, true, false);
+        this.closeButton = new FlatButtonWidget(new Dim2i(this.getLimitX() - Layout.BUTTON_LONG - Layout.INNER_MARGIN, this.getLimitY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("gui.done"), this::onClose, true, false);
         this.addRenderableWidget(this.closeButton);
 
         if (stackVertically) {
             this.applyButton = new FlatButtonWidget(new Dim2i(this.closeButton.getX(), this.closeButton.getY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.apply"), ConfigManager.CONFIG::applyAllOptions, true, false);
             this.undoButton = new FlatButtonWidget(new Dim2i(this.applyButton.getX(), this.applyButton.getY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.undo"), this::undoChanges, true, false);
         } else {
-            this.applyButton = new FlatButtonWidget(new Dim2i(this.closeButton.getX() - Layout.INNER_MARGIN - Layout.BUTTON_LONG, this.height - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.apply"), ConfigManager.CONFIG::applyAllOptions, true, false);
-            this.undoButton = new FlatButtonWidget(new Dim2i(this.applyButton.getX() - Layout.INNER_MARGIN - Layout.BUTTON_LONG, this.height - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.undo"), this::undoChanges, true, false);
+            this.applyButton = new FlatButtonWidget(new Dim2i(this.closeButton.getX() - Layout.INNER_MARGIN - Layout.BUTTON_LONG, this.getLimitY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.apply"), ConfigManager.CONFIG::applyAllOptions, true, false);
+            this.undoButton = new FlatButtonWidget(new Dim2i(this.applyButton.getX() - Layout.INNER_MARGIN - Layout.BUTTON_LONG, this.getLimitY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.undo"), this::undoChanges, true, false);
         }
         this.addRenderableWidget(this.undoButton);
         this.addRenderableWidget(this.applyButton);
 
-        this.donateButton = new DonationButtonWidget(this, this.width, this::openDonationPage, this::hideDonationButton);
+        this.donateButton = new DonationButtonWidget(this, this::openDonationPage, this::hideDonationButton);
         this.addRenderableWidget(this.searchWidget);
         this.updateSearchWidgetWidth();
 
         var optionListDim = new Dim2i(
                 this.pageList.getLimitX(),
-                topBarHeight + Layout.INNER_MARGIN,
+                y + topBarHeight + Layout.INNER_MARGIN,
                 Layout.OPTION_WIDTH + Layout.OPTION_LIST_SCROLLBAR_OFFSET + Layout.SCROLLBAR_WIDTH,
-                this.height - topBarHeight - (reserveBottomSpace ? (Layout.INNER_MARGIN * 3 + Layout.BUTTON_SHORT) : (Layout.INNER_MARGIN * 2))
+                h - topBarHeight - (reserveBottomSpace ? (Layout.INNER_MARGIN * 3 + Layout.BUTTON_SHORT) : (Layout.INNER_MARGIN * 2))
         );
         this.optionList = new OptionListWidget(this, optionListDim, this::onSectionFocused);
         this.addRenderableWidget(this.optionList);
+    }
+
+    private void updateScreenDimensions() {
+        // size screen to not be too wide
+        var baseContentWidth = Layout.PAGE_LIST_WIDTH + Layout.INNER_MARGIN + Layout.OPTION_WIDTH + Layout.OPTION_LIST_SCROLLBAR_OFFSET + Layout.SCROLLBAR_WIDTH + Layout.TOOLTIP_OUTER_MARGIN;
+        var minContentWidth = baseContentWidth + (Layout.MAX_TOOLTIP_WIDTH - Layout.MIN_TOOLTIP_WIDTH) / 2 + Layout.MIN_TOOLTIP_WIDTH;
+        var maxContentWidth = baseContentWidth + Layout.MAX_TOOLTIP_WIDTH;
+        var maxInterpolatingBorderWidth = 100;
+        var widthInterpolationStart = minContentWidth + Layout.CONTENT_BORDER_WIDTH;
+        var widthInterpolationEnd = maxContentWidth + maxInterpolatingBorderWidth;
+
+        int contentWidth = this.width;
+        if (this.width > minContentWidth + Layout.CONTENT_BORDER_WIDTH) {
+            // interpolate between min and max content width based on current width
+            if (this.width < widthInterpolationEnd) {
+                float t = (float) (this.width - widthInterpolationStart) / (widthInterpolationEnd - widthInterpolationStart);
+                contentWidth = minContentWidth + (int) (t * (maxContentWidth - minContentWidth));
+            } else {
+                contentWidth = maxContentWidth;
+            }
+        }
+
+        // for height, it's the other way around. there's a maximum border height
+        int contentHeight = this.height;
+        if (this.height > Layout.CONTENT_MIN_HEIGHT + Layout.CONTENT_BORDER_WIDTH) {
+            contentHeight = this.height - Layout.CONTENT_BORDER_WIDTH;
+        }
+
+        // center the content area
+        this.dim = new Dim2i(
+                (this.width - contentWidth) / 2,
+                (this.height - contentHeight) / 2,
+                contentWidth,
+                contentHeight
+        );
     }
 
     private void onSearchResults(List<Option.OptionNameSource> searchResults) {
@@ -203,7 +245,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
     }
 
     private void updateSearchWidgetWidth() {
-        this.searchWidget.updateWidgetWidth(this.width - this.donateButton.getWidth());
+        this.searchWidget.updateWidgetWidth(this.getWidth() - this.donateButton.getWidth());
     }
 
     private void hideDonationButton() {
@@ -415,7 +457,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
 
     @Override
     public Dim2i getDimensions() {
-        return new Dim2i(0, 0, this.width, this.height);
+        return this.dim;
     }
 
     public static int renderIconWithSpacing(GuiGraphics graphics, Identifier icon, int color, int x, int y, int height, int margin) {

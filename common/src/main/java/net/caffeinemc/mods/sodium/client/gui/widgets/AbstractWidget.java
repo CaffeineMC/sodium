@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gui.widgets;
 
+import net.caffeinemc.mods.sodium.client.gui.Dimensioned;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.InputType;
 import net.minecraft.client.Minecraft;
@@ -20,7 +21,7 @@ import net.minecraft.sounds.SoundEvents;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
-public abstract class AbstractWidget implements Renderable, GuiEventListener, NarratableEntry {
+public abstract class AbstractWidget implements Renderable, GuiEventListener, NarratableEntry, Dimensioned {
     protected final Font font = Minecraft.getInstance().font;
     private final Dim2i dim;
     protected boolean focused;
@@ -28,6 +29,11 @@ public abstract class AbstractWidget implements Renderable, GuiEventListener, Na
 
     protected AbstractWidget(Dim2i dim) {
         this.dim = dim;
+    }
+
+    @Override
+    public Dim2i getDimensions() {
+        return this.dim;
     }
 
     protected void drawString(GuiGraphics graphics, String text, int x, int y, int color) {
@@ -53,38 +59,6 @@ public abstract class AbstractWidget implements Renderable, GuiEventListener, Na
     protected void playClickSound() {
         Minecraft.getInstance().getSoundManager()
                 .play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F));
-    }
-
-    public int getX() {
-        return this.dim.x();
-    }
-
-    public int getY() {
-        return this.dim.y();
-    }
-
-    public int getWidth() {
-        return this.dim.width();
-    }
-
-    public int getHeight() {
-        return this.dim.height();
-    }
-
-    public final int getLimitX() {
-        return this.getX() + this.getWidth();
-    }
-
-    public final int getLimitY() {
-        return this.getY() + this.getHeight();
-    }
-
-    public final int getCenterX() {
-        return this.getX() + this.getWidth() / 2;
-    }
-
-    public final int getCenterY() {
-        return this.getY() + this.getHeight() / 2;
     }
 
     @Override

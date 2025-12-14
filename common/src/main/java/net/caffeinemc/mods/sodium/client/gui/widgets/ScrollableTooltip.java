@@ -14,8 +14,8 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
-import org.jspecify.annotations.NonNull;
 import org.joml.Vector2i;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,13 +27,10 @@ public class ScrollableTooltip {
     private static final int SPRITE_WIDTH = 10;
     private static final int ARROW_HEIGHT = 9;
 
-    private static final int MIN_TOOLTIP_WIDTH = 100;
-    private static final int MAX_TOOLTIP_WIDTH = 200;
     private static final int TEXT_HORIZONTAL_PADDING = Layout.INNER_MARGIN - 1;
     private static final int TEXT_VERTICAL_PADDING = TEXT_HORIZONTAL_PADDING;
     private static final int LEFT_BOX_MARGIN = ARROW_WIDTH; // arrow includes one pixel of margin
-    private static final int OUTER_BOX_MARGIN = 3;
-    private static final int UPPER_BOX_MARGIN = Layout.BUTTON_SHORT + OUTER_BOX_MARGIN;
+    private static final int UPPER_BOX_MARGIN = Layout.BUTTON_SHORT + Layout.TOOLTIP_OUTER_MARGIN;
 
     private final Font font = Minecraft.getInstance().font;
     private ControlElement hoveredElement;
@@ -113,16 +110,16 @@ public class ScrollableTooltip {
 
     private boolean positionTooltip(boolean needsScrolling) {
         int elementLimitX = this.hoveredElement.getLimitX() + LEFT_BOX_MARGIN + Layout.SCROLLBAR_WIDTH;
-        int defaultBoxWidth = Math.min(this.parent.width - elementLimitX - OUTER_BOX_MARGIN, MAX_TOOLTIP_WIDTH);
+        int defaultBoxWidth = Math.min(this.parent.getLimitX() - elementLimitX - Layout.TOOLTIP_OUTER_MARGIN, Layout.MAX_TOOLTIP_WIDTH);
         int defaultBoxY = this.hoveredElement.getY();
         // noinspection UnnecessaryLocalVariable
         int defaultBoxX = elementLimitX;
 
         int boxWidth = 0, boxX = 0, boxY = 0;
         boolean fixedBoxY = false;
-        int boxYCutoff = this.parent.height - OUTER_BOX_MARGIN;
+        int boxYCutoff = this.parent.getLimitY() - Layout.TOOLTIP_OUTER_MARGIN;
 
-        this.overlayMode = defaultBoxWidth < MIN_TOOLTIP_WIDTH;
+        this.overlayMode = defaultBoxWidth < Layout.MIN_TOOLTIP_WIDTH;
 
         if (!this.overlayMode) {
             // Hovered element above the area so tooltip has full width, needs to be up high enough to not intersect with the area
@@ -139,8 +136,8 @@ public class ScrollableTooltip {
             else if (this.hoveredElement.getLimitX() < this.reservedArea.x) {
                 int availableWidth = this.reservedArea.x - elementLimitX;
 
-                if (availableWidth >= MIN_TOOLTIP_WIDTH) {
-                    boxWidth = Math.min(availableWidth, MAX_TOOLTIP_WIDTH);
+                if (availableWidth >= Layout.MIN_TOOLTIP_WIDTH) {
+                    boxWidth = Math.min(availableWidth, Layout.MAX_TOOLTIP_WIDTH);
                     boxX = defaultBoxX;
                     boxY = defaultBoxY;
                 } else {
@@ -158,24 +155,23 @@ public class ScrollableTooltip {
 
         if (this.overlayMode) {
             // in overlay mode the tooltip is shown on top of the options list, either above or below
-            boxWidth = this.hoveredElement.getWidth() - 2 * OUTER_BOX_MARGIN;
-            boxX = this.hoveredElement.getX() + OUTER_BOX_MARGIN;
+            boxWidth = this.hoveredElement.getWidth() - 2 * Layout.TOOLTIP_OUTER_MARGIN;
+            boxX = this.hoveredElement.getX() + Layout.TOOLTIP_OUTER_MARGIN;
 
             // place the content above or below the hovered element depending on which side has more space
             int spaceAbove = this.hoveredElement.getY() - UPPER_BOX_MARGIN;
-            int spaceBelow = this.parent.height - this.hoveredElement.getLimitY() - OUTER_BOX_MARGIN;
+            int spaceBelow = this.parent.getLimitY() - this.hoveredElement.getLimitY() - Layout.TOOLTIP_OUTER_MARGIN;
             if (spaceBelow >= spaceAbove) {
-                boxY = this.hoveredElement.getLimitY() + OUTER_BOX_MARGIN;
-                boxYCutoff = this.parent.height - OUTER_BOX_MARGIN;
+                boxY = this.hoveredElement.getLimitY() + Layout.TOOLTIP_OUTER_MARGIN;
+                boxYCutoff = this.parent.getLimitY() - Layout.TOOLTIP_OUTER_MARGIN;
                 
                 // fix the box's upper y position since moving it up would cause it to overlap the hovered element
                 fixedBoxY = true;
             } else {
-                boxY = this.hoveredElement.getY() - OUTER_BOX_MARGIN;
-                boxYCutoff = this.hoveredElement.getY() - OUTER_BOX_MARGIN;
+                boxY = this.hoveredElement.getY() - Layout.TOOLTIP_OUTER_MARGIN;
+                boxYCutoff = this.hoveredElement.getY() - Layout.TOOLTIP_OUTER_MARGIN;
                 // it automatically gets moved up as far as necessary later
             }
-
         }
 
         int contentHeight = this.generateTooltipContent(boxWidth, needsScrolling);
@@ -254,6 +250,6 @@ public class ScrollableTooltip {
      * @param y The y coordinate of the top left corner of the reserved area
      */
     public void setReservedAreaTopLeftCorner(int x, int y) {
-        this.reservedArea.set(x - OUTER_BOX_MARGIN, y - OUTER_BOX_MARGIN);
+        this.reservedArea.set(x - Layout.TOOLTIP_OUTER_MARGIN, y - Layout.TOOLTIP_OUTER_MARGIN);
     }
 }

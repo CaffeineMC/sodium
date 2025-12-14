@@ -14,10 +14,9 @@ public class DonationButtonWidget {
     private final FlatButtonWidget donateButtonText;
     private boolean donateButtonEnabled;
     
-    public DonationButtonWidget(VideoSettingsScreen parent, int screenWidth, Runnable openDonationPage, Runnable hideDonationButton) {
-        int y = 0; // Layout.INNER_MARGIN;
-        this.hideDonateButton = new FlatButtonWidget(new Dim2i(screenWidth - Layout.BUTTON_SHORT - Layout.INNER_MARGIN, y, Layout.BUTTON_SHORT, Layout.BUTTON_SHORT), Component.literal("x"), hideDonationButton, true, false);
-        this.donateButtonText = new FlatButtonWidget(new Dim2i(this.hideDonateButton.getX() - CLOSE_BUTTON_MARGIN - DONATE_BUTTON_WIDTH, y, DONATE_BUTTON_WIDTH, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.donate"), openDonationPage, true, false);
+    public DonationButtonWidget(VideoSettingsScreen parent, Runnable openDonationPage, Runnable hideDonationButton) {
+        this.hideDonateButton = new FlatButtonWidget(new Dim2i(parent.getLimitX() - Layout.BUTTON_SHORT - Layout.INNER_MARGIN, parent.getY(), Layout.BUTTON_SHORT, Layout.BUTTON_SHORT), Component.literal("x"), hideDonationButton, true, false);
+        this.donateButtonText = new FlatButtonWidget(new Dim2i(this.hideDonateButton.getX() - CLOSE_BUTTON_MARGIN - DONATE_BUTTON_WIDTH, parent.getY(), DONATE_BUTTON_WIDTH, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.donate"), openDonationPage, true, false);
 
         this.updateDisplay(parent, !SodiumClientMod.options().notifications.hasClearedDonationButton);
     }
