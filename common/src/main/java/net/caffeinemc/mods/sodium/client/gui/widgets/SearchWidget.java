@@ -6,13 +6,14 @@ import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
 import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import org.jspecify.annotations.NonNull;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -69,7 +70,9 @@ public class SearchWidget extends AbstractParentWidget {
         this.searchBox.setMaxLength(200);
         this.searchBox.setBordered(false);
         this.searchBox.setResponder(this::triggerSearch);
-        this.searchBox.setHint(Component.translatable("sodium.options.search.hint"));
+        this.searchBox.setHint(
+                Component.translatable("sodium.options.search.hint")
+                        .withStyle(Style.EMPTY.withColor(ChatFormatting.GRAY)));
 
         this.addChild(this.searchBox);
         this.addChild(this.clearButton);
