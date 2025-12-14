@@ -1,6 +1,5 @@
 package net.caffeinemc.mods.sodium.client.gui.options.control;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
@@ -95,7 +94,7 @@ public class SliderControl implements Control {
             if (drawSlider) {
                 this.thumbPosition = this.getThumbPositionForValue(value);
 
-                var range = this.option.getRange();
+                var range = this.option.getSteppedValidator();
                 double thumbOffset = Mth.clamp((double) (this.getIntValue() - range.min()) / range.getSpread() * sliderWidth, 0, sliderWidth);
 
                 int thumbX = (int) (sliderX + thumbOffset - THUMB_WIDTH);
@@ -136,12 +135,12 @@ public class SliderControl implements Control {
         }
 
         public int getIntValue() {
-            var range = this.option.getRange();
+            var range = this.option.getSteppedValidator();
             return range.min() + (range.step() * (int) Math.round((this.thumbPosition / (1.0D / range.getSpread())) / range.step()));
         }
 
         public double getThumbPositionForValue(int value) {
-            var range = this.option.getRange();
+            var range = this.option.getSteppedValidator();
             return (value - range.min()) * (1.0D / range.getSpread());
         }
 
@@ -203,7 +202,7 @@ public class SliderControl implements Control {
         public boolean keyPressed(KeyEvent event) {
             if (!isFocused()) return false;
 
-            var range = this.option.getRange();
+            var range = this.option.getSteppedValidator();
             if (event.isLeft()) {
                 this.option.modifyValue(Mth.clamp(this.option.getValidatedValue() - range.step(), range.max(), range.max()));
                 return true;

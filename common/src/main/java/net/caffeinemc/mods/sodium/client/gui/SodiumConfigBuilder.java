@@ -9,6 +9,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
+import net.caffeinemc.mods.sodium.api.config.option.ClampingRange;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.option.Range;
@@ -181,7 +182,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setName(Component.translatable("options.guiScale"))
                                 .setTooltip(Component.translatable("sodium.options.gui_scale.tooltip"))
                                 .setValueFormatter(ControlValueFormatterImpls.guiScale())
-                                .setRangeProvider((state) -> new Range(0, this.window.calculateScale(0, Minecraft.getInstance().isEnforceUnicode()), 1), ConfigState.UPDATE_ON_REBUILD)
+                                .setValidatorProvider((state) -> new ClampingRange(0, this.window.calculateScale(0, Minecraft.getInstance().isEnforceUnicode()), 1), ConfigState.UPDATE_ON_REBUILD)
                                 .setDefaultValue(0)
                                 .setBinding(this.vanillaOpts.guiScale()::set, this.vanillaOpts.guiScale()::get)
                 )

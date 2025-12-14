@@ -4,7 +4,7 @@ import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.ControlValueFormatter;
 import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
-import net.caffeinemc.mods.sodium.api.config.option.Range;
+import net.caffeinemc.mods.sodium.api.config.option.SteppedValidator;
 import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
 import net.caffeinemc.mods.sodium.client.gui.options.control.Control;
 import net.caffeinemc.mods.sodium.client.gui.options.control.SliderControl;
@@ -17,42 +17,46 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class IntegerOption extends StatefulOption<Integer> {
-    private final DependentValue<Range> range;
+    private final DependentValue<SteppedValidator> validator;
     private final ControlValueFormatter valueFormatter;
 
-    public IntegerOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<Integer, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<Integer> defaultValue, OptionBinding<Integer> binding, DependentValue<Range> range, ControlValueFormatter valueFormatter) {
+    public IntegerOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<Integer, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<SteppedValidator> validator, DependentValue<Integer> defaultValue, OptionBinding<Integer> binding, ControlValueFormatter valueFormatter) {
         super(id, dependencies, name, enabled, storage, tooltipProvider, impact, flags, defaultValue, binding);
-        this.range = range;
+        this.validator = validator;
         this.valueFormatter = valueFormatter;
     }
 
     @Override
     void visitDependentValues(Consumer<DependentValue<?>> visitor) {
         super.visitDependentValues(visitor);
-        visitor.accept(this.range);
+        visitor.accept(this.validator);
     }
 
     @Override
-    public boolean isValueValid(Integer value) {
-        return this.range.get(this.state).isValueValid(value);
+    Integer validateValue(Integer value) {
+        if (this.validator != null) {
+            return this.validator.get(this.state).getValidatedValue(value, () -> this.defaultValue.get(this.state));
+        } else {
+            return value;
+        }
     }
 
     @Override
     Control createControl() {
-        var range = this.range.get(this.state);
+        var range = this.validator.get(this.state);
         return new SliderControl(this, range.min(), range.max(), range.step());
     }
 
-    public Range getRange() {
-        return this.range.get(this.state);
+    public SteppedValidator getSteppedValidator() {
+        return this.validator.get(this.state);
     }
 
     public Component formatValue(int value) {
         return this.valueFormatter.format(value);
     }
 
-    public DependentValue<Range> getRangeProvider() {
-        return this.range;
+    public DependentValue<SteppedValidator> getValidatorProvider() {
+        return this.validator;
     }
 
     public ControlValueFormatter getValueFormatter() {

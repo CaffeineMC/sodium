@@ -1,16 +1,18 @@
 package net.caffeinemc.mods.sodium.api.config.option;
 
+import net.minecraft.util.Mth;
+
 import java.util.function.Supplier;
 
 /**
- * A record representing a range of integer values with a specified step. When validating a value, it uses the default value if the value is out of range or does not conform to the step.
+ * A record representing a range of integer values with a specified step. When validating a value, it clamps the value to the nearest valid value within the range.
  *
  * @param min  The minimum value of the range (inclusive).
  * @param max  The maximum value of the range (inclusive).
  * @param step The step increment between valid values in the range.
  */
-public record Range(int min, int max, int step) implements SteppedValidator {
-    public Range {
+public record ClampingRange(int min, int max, int step) implements SteppedValidator {
+    public ClampingRange {
         if (min > max) {
             throw new IllegalArgumentException("Min must be less than or equal to max");
         }
@@ -21,9 +23,13 @@ public record Range(int min, int max, int step) implements SteppedValidator {
 
     @Override
     public Integer getValidatedValue(Integer value, Supplier<Integer> defaultValueSupplier) {
-        if (isValueValid(value)) {
-            return value;
+        if (value < this.min) {
+            return this.min;
+        } else if (value > this.max) {
+            return this.max;
+        } else {
+            int adjustedValue = this.min + ((value - this.min + this.step / 2) / this.step) * this.step;
+            return Mth.clamp(adjustedValue, this.min, this.max);
         }
-        return defaultValueSupplier.get();
     }
 }

@@ -3,7 +3,6 @@ package net.caffeinemc.mods.sodium.client.config.structure;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
-import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
 import net.caffeinemc.mods.sodium.client.config.value.DynamicValue;
@@ -11,7 +10,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -67,13 +65,11 @@ public abstract class StatefulOption<V> extends Option {
         var previousValue = this.modifiedValue;
         this.value = this.binding.load();
 
-        if (!isValueValid(this.value)) {
-            var defaultValue = this.defaultValue.get(this.state);
-            if (defaultValue != this.value) {
-                this.value = defaultValue;
-                this.binding.save(this.value);
-                this.state.notifyStorageWrite(this.storage);
-            }
+        var newValue = this.validateValue(this.value);
+        if (newValue != this.value) {
+            this.value = newValue;
+            this.binding.save(this.value);
+            this.state.notifyStorageWrite(this.storage);
         }
 
         this.modifiedValue = this.value;
@@ -83,15 +79,17 @@ public abstract class StatefulOption<V> extends Option {
     }
 
     public V getValidatedValue() {
-        if (!isValueValid(this.modifiedValue)) {
-            var previousValue = this.modifiedValue;
-            this.modifiedValue = this.defaultValue.get(this.state);
-            if (this.modifiedValue != previousValue) {
-                this.state.invalidateDependents(this.dependents);
-            }
+        var newValue = this.validateValue(this.modifiedValue);
+        if (newValue != this.modifiedValue) {
+            this.modifiedValue = newValue;
+            this.state.invalidateDependents(this.dependents);
         }
 
         return this.modifiedValue;
+    }
+
+    V validateValue(V value) {
+        return value;
     }
 
     @Override
@@ -108,10 +106,6 @@ public abstract class StatefulOption<V> extends Option {
             return true;
         }
         return false;
-    }
-
-    public boolean isValueValid(V value) {
-        return true;
     }
 
     @Override

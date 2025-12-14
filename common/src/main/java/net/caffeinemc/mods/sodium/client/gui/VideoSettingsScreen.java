@@ -4,7 +4,6 @@ import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
-import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
 import net.caffeinemc.mods.sodium.client.config.structure.Page;
 import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlElement;
@@ -340,7 +339,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
             if (option instanceof IntegerOption guiScaleOption) {
                 var value = guiScaleOption.getValidatedValue();
                 if (value instanceof Integer intValue) {
-                    var range = guiScaleOption.getRange();
+                    var range = guiScaleOption.getSteppedValidator();
                     var top = range.max() + 1;
                     var auto = range.min();
 

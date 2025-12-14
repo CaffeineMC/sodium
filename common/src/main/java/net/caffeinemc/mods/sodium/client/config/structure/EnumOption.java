@@ -1,9 +1,8 @@
 package net.caffeinemc.mods.sodium.client.config.structure;
 
-import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
-import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
-import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
+import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
+import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
 import net.caffeinemc.mods.sodium.client.gui.options.control.Control;
 import net.caffeinemc.mods.sodium.client.gui.options.control.CyclingControl;
@@ -11,7 +10,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -36,8 +34,8 @@ public class EnumOption<E extends Enum<E>> extends StatefulOption<E> {
     }
 
     @Override
-    public boolean isValueValid(E value) {
-        return this.allowedValues.get(this.state).contains(value);
+    E validateValue(E value) {
+        return this.isValueAllowed(value) ? value : this.defaultValue.get(this.state);
     }
 
     @Override
