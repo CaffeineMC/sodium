@@ -58,7 +58,7 @@ public class TickBoxControl implements Control {
             final int yEnd = y + 10;
 
             final boolean enabled = this.option.isEnabled();
-            final boolean ticked = enabled && this.option.getValidatedValue();
+            final boolean ticked = this.option.getValidatedValue();
 
             final int color;
 
