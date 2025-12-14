@@ -68,6 +68,9 @@ public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
     IntegerOptionBuilder setFlags(OptionFlag... flags);
 
     @Override
+    IntegerOptionBuilder setFlags(Identifier... flags);
+
+    @Override
     IntegerOptionBuilder setDefaultValue(Integer value);
 
     @Override

@@ -1,5 +1,7 @@
 package net.caffeinemc.mods.sodium.api.config.option;
 
+import net.minecraft.resources.Identifier;
+
 /**
  * Flags that indicate specific actions required when an option is changed.
  */
@@ -27,5 +29,15 @@ public enum OptionFlag {
     /**
      * Indicates that the game needs to be restarted for the option change to take effect.
      */
-    REQUIRES_GAME_RESTART
+    REQUIRES_GAME_RESTART;
+
+    private final Identifier id = Identifier.fromNamespaceAndPath("sodium", "builtin_option_flag." + this.name().toLowerCase());
+
+    /**
+     * Gets the {@link Identifier} for this option flag.
+     * @return The identifier.
+     */
+    public Identifier getId() {
+        return this.id;
+    }
 }

@@ -16,8 +16,7 @@ import net.minecraft.resources.Identifier;
 import org.apache.commons.lang3.Validate;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -26,7 +25,7 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
     private StorageEventHandler storage;
     private Function<V, Component> tooltipProvider;
     private OptionImpact impact;
-    private EnumSet<OptionFlag> flags;
+    private Set<Identifier> flags;
     private DependentValue<V> defaultValue;
     private OptionBinding<V> binding;
 
@@ -63,7 +62,7 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
         return getFirstNotNull(this.impact, StatefulOption::getImpact);
     }
 
-    EnumSet<OptionFlag> getFlags() {
+    Set<Identifier> getFlags() {
         return getFirstNotNull(this.flags, StatefulOption::getFlags);
     }
 
@@ -109,10 +108,16 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
 
     @Override
     public StatefulOptionBuilder<V> setFlags(OptionFlag... flags) {
-        if (this.getFlags() == null) {
-            this.flags = EnumSet.noneOf(OptionFlag.class);
+        var idFlags = new Identifier[flags.length];
+        for (int i = 0; i < flags.length; i++) {
+            idFlags[i] = flags[i].getId();
         }
-        Collections.addAll(this.getFlags(), flags);
+        return this.setFlags(idFlags);
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setFlags(Identifier... flags) {
+        this.flags = Set.of(flags);
         return this;
     }
 

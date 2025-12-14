@@ -183,10 +183,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setValueFormatter(ControlValueFormatterImpls.guiScale())
                                 .setRangeProvider((state) -> new Range(0, this.window.calculateScale(0, Minecraft.getInstance().isEnforceUnicode()), 1), ConfigState.UPDATE_ON_REBUILD)
                                 .setDefaultValue(0)
-                                .setBinding(value -> {
-                                    this.vanillaOpts.guiScale().set(value);
-                                    Minecraft.getInstance().resizeDisplay();
-                                }, this.vanillaOpts.guiScale()::get)
+                                .setBinding(this.vanillaOpts.guiScale()::set, this.vanillaOpts.guiScale()::get)
                 )
                 .addOption(
                         builder.createBooleanOption(Identifier.parse("sodium:general.fullscreen"))

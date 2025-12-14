@@ -135,6 +135,12 @@ class EnumOptionBuilderImpl<E extends Enum<E>> extends StatefulOptionBuilderImpl
     }
 
     @Override
+    public EnumOptionBuilder<E> setFlags(Identifier... flags) {
+        super.setFlags(flags);
+        return this;
+    }
+
+    @Override
     public EnumOptionBuilder<E> setDefaultValue(E value) {
         super.setDefaultValue(value);
         return this;

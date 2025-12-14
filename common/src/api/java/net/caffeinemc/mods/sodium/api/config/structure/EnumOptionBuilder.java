@@ -74,6 +74,9 @@ public interface EnumOptionBuilder<E extends Enum<E>> extends StatefulOptionBuil
     EnumOptionBuilder<E> setFlags(OptionFlag... flags);
 
     @Override
+    EnumOptionBuilder<E> setFlags(Identifier... flags);
+
+    @Override
     EnumOptionBuilder<E> setDefaultValue(E value);
 
     @Override

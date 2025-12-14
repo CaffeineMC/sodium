@@ -12,6 +12,7 @@ import net.minecraft.resources.Identifier;
 
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -19,7 +20,7 @@ public abstract class StatefulOption<V> extends Option {
     final StorageEventHandler storage;
     final Function<V, Component> tooltipProvider;
     final OptionImpact impact;
-    final EnumSet<OptionFlag> flags;
+    final Set<Identifier> flags;
     final DependentValue<V> defaultValue;
     final OptionBinding<V> binding;
 
@@ -28,7 +29,7 @@ public abstract class StatefulOption<V> extends Option {
     private V value;
     private V modifiedValue;
 
-    StatefulOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<V, Component> tooltipProvider, OptionImpact impact, EnumSet<OptionFlag> flags, DependentValue<V> defaultValue, OptionBinding<V> binding) {
+    StatefulOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<V, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<V> defaultValue, OptionBinding<V> binding) {
         super(id, dependencies, name, enabled);
         this.storage = storage;
         this.tooltipProvider = tooltipProvider;
@@ -124,7 +125,7 @@ public abstract class StatefulOption<V> extends Option {
     }
 
     @Override
-    public EnumSet<OptionFlag> getFlags() {
+    public Set<Identifier> getFlags() {
         return this.flags;
     }
 

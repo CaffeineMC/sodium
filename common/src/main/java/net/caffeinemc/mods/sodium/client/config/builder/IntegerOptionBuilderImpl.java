@@ -120,6 +120,12 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     }
 
     @Override
+    public IntegerOptionBuilder setFlags(Identifier... flags) {
+        super.setFlags(flags);
+        return this;
+    }
+
+    @Override
     public IntegerOptionBuilder setDefaultValue(Integer value) {
         super.setDefaultValue(value);
         return this;

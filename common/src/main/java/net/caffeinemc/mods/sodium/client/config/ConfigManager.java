@@ -1,14 +1,13 @@
 package net.caffeinemc.mods.sodium.client.config;
 
 
-import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import net.caffeinemc.mods.sodium.api.config.structure.ConfigBuilder;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
+import net.caffeinemc.mods.sodium.api.config.structure.ConfigBuilder;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.config.structure.Config;
 import net.caffeinemc.mods.sodium.client.config.builder.ConfigBuilderImpl;
+import net.caffeinemc.mods.sodium.client.config.structure.Config;
 import net.caffeinemc.mods.sodium.client.config.structure.ModOptions;
 import net.minecraft.CrashReport;
 import net.minecraft.client.Minecraft;
@@ -122,7 +121,7 @@ public class ConfigManager {
         modConfigs.add(0, sodiumModOptions);
 
         try {
-            CONFIG = new Config(ImmutableList.copyOf(modConfigs));
+            CONFIG = new Config(modConfigs);
         } catch (Exception e) {
             crashWithMessage("Failed to build config options", e);
         }

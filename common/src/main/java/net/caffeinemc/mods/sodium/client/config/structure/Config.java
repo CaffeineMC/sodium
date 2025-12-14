@@ -1,12 +1,12 @@
 package net.caffeinemc.mods.sodium.client.config.structure;
 
-import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
+import net.caffeinemc.mods.sodium.api.config.option.FlagHook;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.client.config.search.BigramSearchIndex;
 import net.caffeinemc.mods.sodium.client.config.search.SearchIndex;
@@ -17,19 +17,18 @@ import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
 
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Config implements ConfigState {
     private final Map<Identifier, Option> options = new Object2ReferenceLinkedOpenHashMap<>();
-    private final ObjectOpenHashSet<StorageEventHandler> pendingStorageHandlers = new ObjectOpenHashSet<>();
-    private final ImmutableList<ModOptions> modOptions;
+    private final Set<StorageEventHandler> pendingStorageHandlers = new ObjectOpenHashSet<>();
+    private final List<ModOptions> modOptions;
     private final SearchIndex searchIndex = new BigramSearchIndex(this::registerSearchIndex);
     private final Collection<DynamicValue<?>> globalRebuildDependents = new ObjectArrayList<>();
+    private final Map<Identifier, Collection<FlagHook>> flagHooks = new Object2ReferenceOpenHashMap<>();
+    private final Set<FlagHook> triggeredHooks = new ObjectOpenHashSet<>();
 
-    public Config(ImmutableList<ModOptions> modOptions) {
+    public Config(List<ModOptions> modOptions) {
         this.modOptions = modOptions;
 
         this.collectOptions();
@@ -64,6 +63,14 @@ public class Config implements ConfigState {
 
                         this.options.put(option.id, option);
                         option.setParentConfig(this);
+                    }
+                }
+            }
+
+            if (modConfig.flagHooks() != null) {
+                for (var hook : modConfig.flagHooks()) {
+                    for (var trigger : hook.getTriggers()) {
+                        this.flagHooks.computeIfAbsent(trigger, k -> new ObjectArrayList<>()).add(hook);
                     }
                 }
             }
@@ -211,12 +218,15 @@ public class Config implements ConfigState {
     }
 
     public void applyAllOptions() {
-        var flags = EnumSet.noneOf(OptionFlag.class);
+        Set<Identifier> flags = null;
 
         for (var option : this.options.values()) {
             if (option.applyChanges()) {
                 var optionFlags = option.getFlags();
                 if (optionFlags != null) {
+                    if (flags == null) {
+                        flags = new ObjectOpenHashSet<>();
+                    }
                     flags.addAll(optionFlags);
                 }
             }
@@ -224,19 +234,25 @@ public class Config implements ConfigState {
 
         this.flushStorageHandlers();
 
+        if (flags == null) {
+            return;
+        }
         processFlags(flags);
     }
 
     public void applyOption(Identifier id) {
-        var flags = EnumSet.noneOf(OptionFlag.class);
+        Set<Identifier> flags = null;
 
         var option = this.options.get(id);
         if (option != null && option.applyChanges()) {
-            flags.addAll(option.getFlags());
+            flags = option.getFlags();
         }
 
         this.flushStorageHandlers();
 
+        if (flags == null) {
+            return;
+        }
         processFlags(flags);
     }
 
@@ -269,7 +285,7 @@ public class Config implements ConfigState {
         return this.options.get(id);
     }
 
-    public ImmutableList<ModOptions> getModOptions() {
+    public List<ModOptions> getModOptions() {
         return this.modOptions;
     }
 
@@ -307,29 +323,43 @@ public class Config implements ConfigState {
         throw new IllegalArgumentException("Can't read enum value from option with id " + id);
     }
 
-    private static void processFlags(Collection<OptionFlag> flags) {
+    private void processFlags(Set<Identifier> flags) {
         Minecraft client = Minecraft.getInstance();
 
         if (client.level != null) {
-            if (flags.contains(OptionFlag.REQUIRES_RENDERER_RELOAD)) {
+            if (flags.contains(OptionFlag.REQUIRES_RENDERER_RELOAD.getId())) {
                 client.levelRenderer.allChanged();
-            } else if (flags.contains(OptionFlag.REQUIRES_RENDERER_UPDATE)) {
+            } else if (flags.contains(OptionFlag.REQUIRES_RENDERER_UPDATE.getId())) {
                 client.levelRenderer.needsUpdate();
             }
         }
 
-        if (flags.contains(OptionFlag.REQUIRES_ASSET_RELOAD)) {
+        if (flags.contains(OptionFlag.REQUIRES_ASSET_RELOAD.getId())) {
             client.updateMaxMipLevel(client.options.mipmapLevels().get());
             client.delayTextureReload();
         }
 
-        if (flags.contains(OptionFlag.REQUIRES_VIDEOMODE_RELOAD)) {
+        if (flags.contains(OptionFlag.REQUIRES_VIDEOMODE_RELOAD.getId())) {
             client.getWindow().changeFullscreenVideoMode();
         }
 
-        if (flags.contains(OptionFlag.REQUIRES_GAME_RESTART)) {
+        if (flags.contains(OptionFlag.REQUIRES_GAME_RESTART.getId())) {
             Console.instance().logMessage(MessageLevel.WARN,
                     "sodium.console.game_restart", true, 10.0);
+        }
+
+        // process the registered flag hooks
+        this.triggeredHooks.clear();
+        var immutableFlags = Collections.unmodifiableSet(flags);
+        for (var flag : flags) {
+            var hooks = this.flagHooks.get(flag);
+            if (hooks != null) {
+                for (var hook : hooks) {
+                    if (this.triggeredHooks.add(hook)) {
+                        hook.accept(immutableFlags);
+                    }
+                }
+            }
         }
     }
 }

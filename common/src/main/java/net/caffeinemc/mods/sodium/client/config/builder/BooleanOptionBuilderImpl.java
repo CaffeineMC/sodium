@@ -68,6 +68,12 @@ class BooleanOptionBuilderImpl extends StatefulOptionBuilderImpl<BooleanOption, 
     }
 
     @Override
+    public BooleanOptionBuilder setFlags(Identifier... flags) {
+        super.setFlags(flags);
+        return this;
+    }
+
+    @Override
     public BooleanOptionBuilder setDefaultValue(Boolean value) {
         super.setDefaultValue(value);
         return this;

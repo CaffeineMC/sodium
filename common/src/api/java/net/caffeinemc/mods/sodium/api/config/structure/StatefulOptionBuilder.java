@@ -51,6 +51,14 @@ public interface StatefulOptionBuilder<V> extends OptionBuilder {
     StatefulOptionBuilder<V> setFlags(OptionFlag... flags);
 
     /**
+     * Sets flags for this option using {@link Identifier} instances.
+     *
+     * @param flags The flags as identifiers.
+     * @return The current builder instance.
+     */
+    StatefulOptionBuilder<V> setFlags(Identifier... flags);
+
+    /**
      * Sets the default value for this option. The default value is used when the binding returns an invalid value, such as during the first load.
      *
      * @param value The default value.

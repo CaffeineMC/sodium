@@ -35,6 +35,9 @@ public interface BooleanOptionBuilder extends StatefulOptionBuilder<Boolean> {
     BooleanOptionBuilder setFlags(OptionFlag... flags);
 
     @Override
+    BooleanOptionBuilder setFlags(Identifier... flags);
+
+    @Override
     BooleanOptionBuilder setDefaultValue(Boolean value);
 
     @Override
