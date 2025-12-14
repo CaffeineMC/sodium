@@ -227,7 +227,7 @@ public class Config implements ConfigState {
         for (var option : this.options.values()) {
             if (option.applyChanges()) {
                 var optionFlags = option.getFlags();
-                if (optionFlags != null) {
+                if (optionFlags != null && !optionFlags.isEmpty()) {
                     if (flags == null) {
                         flags = new ObjectOpenHashSet<>();
                     }
