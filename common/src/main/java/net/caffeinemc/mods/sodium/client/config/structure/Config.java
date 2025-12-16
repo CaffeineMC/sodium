@@ -19,7 +19,7 @@ import net.minecraft.resources.Identifier;
 
 import java.util.*;
 
-public class Config {
+public class Config implements ConfigState {
     private final Map<Identifier, Option> options = new Object2ReferenceLinkedOpenHashMap<>();
     private final Set<StorageEventHandler> pendingStorageHandlers = new ObjectOpenHashSet<>();
     private final List<ModOptions> modOptions;
@@ -337,7 +337,7 @@ public class Config {
             if (hooks != null) {
                 for (var hook : hooks) {
                     if (this.triggeredHooks.add(hook)) {
-                        hook.accept(immutableFlags);
+                        hook.accept(immutableFlags, this);
                     }
                 }
             }
@@ -385,5 +385,20 @@ public class Config {
         }
 
         throw new IllegalArgumentException("Can't read enum value from option with id " + id);
+    }
+
+    @Override
+    public boolean readBooleanOption(Identifier id) {
+        return this.readBooleanOption(id, true);
+    }
+
+    @Override
+    public int readIntOption(Identifier id) {
+        return this.readIntOption(id, true);
+    }
+
+    @Override
+    public <E extends Enum<E>> E readEnumOption(Identifier id, Class<E> enumClass) {
+        return this.readEnumOption(id, enumClass, true);
     }
 }

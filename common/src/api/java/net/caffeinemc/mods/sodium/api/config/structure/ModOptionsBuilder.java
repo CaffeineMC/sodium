@@ -1,11 +1,12 @@
 package net.caffeinemc.mods.sodium.api.config.structure;
 
+import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.option.FlagHook;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.minecraft.resources.Identifier;
 
 import java.util.Collection;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -89,10 +90,10 @@ public interface ModOptionsBuilder {
      * @param triggers The flags to listen for.
      * @return The current builder instance.
      */
-    ModOptionsBuilder registerFlagHook(Consumer<Collection<Identifier>> hook, Identifier... triggers);
+    ModOptionsBuilder registerFlagHook(BiConsumer<Collection<Identifier>, ConfigState> hook, Identifier... triggers);
 
     /**
-     * Registers a hook just like {@link #registerFlagHook(Consumer, Identifier...)}, but using a {@link FlagHook}.
+     * Registers a hook just like {@link #registerFlagHook(BiConsumer, Identifier...)}, but using a {@link FlagHook}.
      *
      * @param hook The flag hook to register.
      * @return The current builder instance.

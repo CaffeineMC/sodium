@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.client.config.builder;
 
 import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.option.FlagHook;
 import net.caffeinemc.mods.sodium.api.config.structure.ColorThemeBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.ModOptionsBuilder;
@@ -15,7 +16,7 @@ import org.apache.commons.lang3.Validate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 class ModOptionsBuilderImpl implements ModOptionsBuilder {
@@ -111,7 +112,7 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
     }
 
     @Override
-    public ModOptionsBuilder registerFlagHook(Consumer<Collection<Identifier>> hook, Identifier... triggers) {
+    public ModOptionsBuilder registerFlagHook(BiConsumer<Collection<Identifier>, ConfigState> hook, Identifier... triggers) {
         return this.registerFlagHook(new FlagHookImpl(hook, List.of(triggers)));
     }
 
