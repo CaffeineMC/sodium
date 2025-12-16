@@ -229,6 +229,8 @@ Disabling an option with `OptionBuilder.setEnabled(false)` shows the option as s
 
 The binding configured with `OptionBuilder.setBinding` is called when changes to the options have been made and are applied, or when the value no longer fulfills the option's constraints and is reset to the default value. It's also used to initially load a value during initialization.
 
+The hook given with `OptionBuilder.setApplyHook` is run after the option has been saved if its valued changed. The hook is given access to the current `ConfigState`, without needing to declare dependencies since the hook does not return anything. This is equivalent to making a singleton custom flag for this option and registering a flag hook for it, and it is implemented this way internally.
+
 ### Using `? extends OptionBuilder`
 
 Some of the attributes of an option are required and you must set them, or registration will fail. The concrete extensions of `OptionBuilder` for each of the option types have some additional methods for configuring type-specific things, some of which are also required. Notably, `EnumOptionBuilder.setElementNameProvider` and `IntegerOptionBuilder.setValueFormatter` are required in order to display these types of options. The method `setValueFormatter` for integer options takes a `ControlValueFormatter`, which simply formats a number as a `Component`. Many standard value formatters are provided in `ControlValueFormatterImpls` (not part of the API package).

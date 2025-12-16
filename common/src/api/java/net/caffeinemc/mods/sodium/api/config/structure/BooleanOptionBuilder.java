@@ -54,4 +54,7 @@ public interface BooleanOptionBuilder extends StatefulOptionBuilder<Boolean> {
 
     @Override
     BooleanOptionBuilder setBinding(OptionBinding<Boolean> binding);
+
+    @Override
+    BooleanOptionBuilder setApplyHook(Consumer<ConfigState> hook);
 }

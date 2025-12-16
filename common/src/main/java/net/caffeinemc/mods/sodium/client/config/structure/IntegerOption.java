@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.config.structure;
 
+import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.ControlValueFormatter;
 import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
@@ -20,8 +21,8 @@ public class IntegerOption extends StatefulOption<Integer> {
     private final DependentValue<SteppedValidator> validator;
     private final ControlValueFormatter valueFormatter;
 
-    public IntegerOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<Integer, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<SteppedValidator> validator, DependentValue<Integer> defaultValue, OptionBinding<Integer> binding, ControlValueFormatter valueFormatter) {
-        super(id, dependencies, name, enabled, storage, tooltipProvider, impact, flags, defaultValue, binding);
+    public IntegerOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<Integer, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<SteppedValidator> validator, DependentValue<Integer> defaultValue, OptionBinding<Integer> binding, Consumer<ConfigState> applyHook, ControlValueFormatter valueFormatter) {
+        super(id, dependencies, name, enabled, storage, tooltipProvider, impact, flags, defaultValue, binding, applyHook);
         this.validator = validator;
         this.valueFormatter = valueFormatter;
     }

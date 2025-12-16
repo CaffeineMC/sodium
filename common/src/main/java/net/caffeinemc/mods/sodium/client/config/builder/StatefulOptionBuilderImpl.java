@@ -28,6 +28,7 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
     private Set<Identifier> flags;
     private DependentValue<V> defaultValue;
     private OptionBinding<V> binding;
+    private Consumer<ConfigState> applyHook;
 
     StatefulOptionBuilderImpl(Identifier id) {
         super(id);
@@ -72,6 +73,10 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
 
     OptionBinding<V> getBinding() {
         return getFirstNotNull(this.binding, StatefulOption::getBinding);
+    }
+
+    Consumer<ConfigState> getApplyHook() {
+        return getFirstNotNull(this.applyHook, StatefulOption::getApplyHook);
     }
 
     @Override
@@ -169,6 +174,12 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
     @Override
     public StatefulOptionBuilder<V> setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies) {
         super.setEnabledProvider(provider, dependencies);
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setApplyHook(Consumer<ConfigState> hook) {
+        this.applyHook = hook;
         return this;
     }
 }

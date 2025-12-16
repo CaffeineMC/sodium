@@ -91,4 +91,12 @@ public interface StatefulOptionBuilder<V> extends OptionBuilder {
      * @return The current builder instance.
      */
     StatefulOptionBuilder<V> setBinding(OptionBinding<V> binding);
+
+    /**
+     * Sets a hook that is triggered after the options' value has been saved if it changed.
+     *
+     * @param hook The hook to be executed after applying the option.
+     * @return The current builder instance.
+     */
+    StatefulOptionBuilder<V> setApplyHook(Consumer<ConfigState> hook);
 }

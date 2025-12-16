@@ -104,4 +104,7 @@ public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
 
     @Override
     IntegerOptionBuilder setBinding(OptionBinding<Integer> binding);
+
+    @Override
+    IntegerOptionBuilder setApplyHook(Consumer<ConfigState> hook);
 }

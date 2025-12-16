@@ -37,7 +37,7 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     IntegerOption build() {
         this.prepareBuild();
 
-        return new IntegerOption(this.id, this.getDependencies(), this.getName(), this.getEnabled(), this.getStorage(), this.getTooltipProvider(), this.getImpact(), this.getFlags(), this.getValidatorProvider(), this.getDefaultValue(), this.getBinding(), this.getValueFormatter());
+        return new IntegerOption(this.id, this.getDependencies(), this.getName(), this.getEnabled(), this.getStorage(), this.getTooltipProvider(), this.getImpact(), this.getFlags(), this.getValidatorProvider(), this.getDefaultValue(), this.getBinding(), this.getApplyHook(), this.getValueFormatter());
     }
 
     @Override
@@ -170,6 +170,12 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     @Override
     public IntegerOptionBuilder setBinding(OptionBinding<Integer> binding) {
         super.setBinding(binding);
+        return this;
+    }
+
+    @Override
+    public IntegerOptionBuilder setApplyHook(Consumer<ConfigState> hook) {
+        super.setApplyHook(hook);
         return this;
     }
 }

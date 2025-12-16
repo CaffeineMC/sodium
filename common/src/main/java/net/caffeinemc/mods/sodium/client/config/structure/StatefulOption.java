@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.config.structure;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
@@ -21,6 +22,8 @@ public abstract class StatefulOption<V> extends Option {
     final Set<Identifier> flags;
     final DependentValue<V> defaultValue;
     final OptionBinding<V> binding;
+    final Consumer<ConfigState> applyHook;
+    final Identifier applyHookId;
 
     private final Collection<DynamicValue<?>> dependents = new ObjectOpenHashSet<>(0);
     private final Collection<DynamicValue<?>> applyDependents = new ObjectOpenHashSet<>(0);
@@ -28,7 +31,7 @@ public abstract class StatefulOption<V> extends Option {
     private V value;
     private V modifiedValue;
 
-    StatefulOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<V, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<V> defaultValue, OptionBinding<V> binding) {
+    StatefulOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<V, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<V> defaultValue, OptionBinding<V> binding, Consumer<ConfigState> applyHook) {
         super(id, dependencies, name, enabled);
         this.storage = storage;
         this.tooltipProvider = tooltipProvider;
@@ -36,6 +39,13 @@ public abstract class StatefulOption<V> extends Option {
         this.flags = flags;
         this.defaultValue = defaultValue;
         this.binding = binding;
+        this.applyHook = applyHook;
+
+        if (applyHook != null) {
+            this.applyHookId = Identifier.fromNamespaceAndPath("__meta__", "apply_hook_" + id.getNamespace() + "_" + id.getPath());
+        } else {
+            this.applyHookId = null;
+        }
     }
 
     @Override
@@ -146,5 +156,13 @@ public abstract class StatefulOption<V> extends Option {
 
     public OptionBinding<V> getBinding() {
         return this.binding;
+    }
+
+    public Consumer<ConfigState> getApplyHook() {
+        return this.applyHook;
+    }
+
+    public Identifier getApplyHookId() {
+        return this.applyHookId;
     }
 }

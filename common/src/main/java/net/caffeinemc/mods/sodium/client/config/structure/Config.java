@@ -18,6 +18,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 public class Config implements ConfigState {
     private final Map<Identifier, Option> options = new Object2ReferenceLinkedOpenHashMap<>();
@@ -33,6 +34,7 @@ public class Config implements ConfigState {
 
         this.collectOptions();
         this.applyOptionChanges();
+        this.collectApplyHooks();
         this.validateDependencies();
 
         // load options initially from their bindings
@@ -52,6 +54,12 @@ public class Config implements ConfigState {
         return this.searchIndex.startQuery();
     }
 
+    private void registerHook(FlagHook hook) {
+        for (var trigger : hook.getTriggers()) {
+            this.flagHooks.computeIfAbsent(trigger, k -> new ObjectArrayList<>()).add(hook);
+        }
+    }
+
     private void collectOptions() {
         for (var modConfig : this.modOptions) {
             for (var page : modConfig.pages()) {
@@ -69,9 +77,7 @@ public class Config implements ConfigState {
 
             if (modConfig.flagHooks() != null) {
                 for (var hook : modConfig.flagHooks()) {
-                    for (var trigger : hook.getTriggers()) {
-                        this.flagHooks.computeIfAbsent(trigger, k -> new ObjectArrayList<>()).add(hook);
-                    }
+                    this.registerHook(hook);
                 }
             }
         }
@@ -161,6 +167,31 @@ public class Config implements ConfigState {
             ConfigState.UPDATE_ON_APPLY
     );
 
+    private record ApplyHookFlagHook(Identifier applyHookId, Consumer<ConfigState> applyHook) implements FlagHook {
+        @Override
+        public Collection<Identifier> getTriggers() {
+            return Set.of(this.applyHookId);
+        }
+
+        @Override
+        public void accept(Collection<Identifier> identifiers, ConfigState configState) {
+            this.applyHook.accept(configState);
+        }
+    }
+
+    private void collectApplyHooks() {
+        // collect all apply hooks and convert them into singleton flag hooks
+        for (var option : this.options.values()) {
+            if (option instanceof StatefulOption<?> statefulOption) {
+                var applyHook = statefulOption.getApplyHook();
+                if (applyHook == null) {
+                    continue;
+                }
+                this.registerHook(new ApplyHookFlagHook(statefulOption.getApplyHookId(), applyHook));
+            }
+        }
+    }
+
     private void validateDependencies() {
         for (var option : this.options.values()) {
             for (var dependency : option.dependencies) {
@@ -243,6 +274,16 @@ public class Config implements ConfigState {
                         flags = new ObjectOpenHashSet<>();
                     }
                     flags.addAll(optionFlags);
+                }
+
+                if (option instanceof StatefulOption<?> statefulOption) {
+                    var applyHookId = statefulOption.getApplyHookId();
+                    if (applyHookId != null) {
+                        if (flags == null) {
+                            flags = new ObjectOpenHashSet<>();
+                        }
+                        flags.add(applyHookId);
+                    }
                 }
             }
         }

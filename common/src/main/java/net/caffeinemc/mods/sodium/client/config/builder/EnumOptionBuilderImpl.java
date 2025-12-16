@@ -51,7 +51,7 @@ class EnumOptionBuilderImpl<E extends Enum<E>> extends StatefulOptionBuilderImpl
 
         this.prepareBuild();
 
-        return new EnumOption<>(this.id, this.getDependencies(), this.getName(), this.getEnabled(), this.getStorage(), this.getTooltipProvider(), this.getImpact(), this.getFlags(), this.getDefaultValue(), this.getBinding(), this.getEnumClass(), this.getAllowedValues(), this.getElementNameProvider());
+        return new EnumOption<>(this.id, this.getDependencies(), this.getName(), this.getEnabled(), this.getStorage(), this.getTooltipProvider(), this.getImpact(), this.getFlags(), this.getDefaultValue(), this.getBinding(), this.getApplyHook(), this.getEnumClass(), this.getAllowedValues(), this.getElementNameProvider());
     }
 
     @Override
@@ -173,6 +173,12 @@ class EnumOptionBuilderImpl<E extends Enum<E>> extends StatefulOptionBuilderImpl
     @Override
     public EnumOptionBuilder<E> setBinding(OptionBinding<E> binding) {
         super.setBinding(binding);
+        return this;
+    }
+
+    @Override
+    public EnumOptionBuilder<E> setApplyHook(Consumer<ConfigState> hook) {
+        super.setApplyHook(hook);
         return this;
     }
 }

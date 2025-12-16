@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.config.structure;
 
+import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
@@ -20,8 +21,8 @@ public class EnumOption<E extends Enum<E>> extends StatefulOption<E> {
     private final DependentValue<Set<E>> allowedValues;
     private final Function<E, Component> elementNameProvider;
 
-    public EnumOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<E, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<E> defaultValue, OptionBinding<E> binding, Class<E> enumClass, DependentValue<Set<E>> allowedValues, Function<E, Component> elementNameProvider) {
-        super(id, dependencies, name, enabled, storage, tooltipProvider, impact, flags, defaultValue, binding);
+    public EnumOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<E, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<E> defaultValue, OptionBinding<E> binding, Consumer<ConfigState> applyHook, Class<E> enumClass, DependentValue<Set<E>> allowedValues, Function<E, Component> elementNameProvider) {
+        super(id, dependencies, name, enabled, storage, tooltipProvider, impact, flags, defaultValue, binding, applyHook);
         this.enumClass = enumClass;
         this.allowedValues = allowedValues;
         this.elementNameProvider = elementNameProvider;

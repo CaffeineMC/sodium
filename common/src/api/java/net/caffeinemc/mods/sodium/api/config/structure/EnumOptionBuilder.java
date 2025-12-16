@@ -93,4 +93,7 @@ public interface EnumOptionBuilder<E extends Enum<E>> extends StatefulOptionBuil
 
     @Override
     EnumOptionBuilder<E> setBinding(OptionBinding<E> binding);
+
+    @Override
+    EnumOptionBuilder<E> setApplyHook(Consumer<ConfigState> hook);
 }
