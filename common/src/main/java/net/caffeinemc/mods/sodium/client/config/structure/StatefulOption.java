@@ -23,6 +23,7 @@ public abstract class StatefulOption<V> extends Option {
     final OptionBinding<V> binding;
 
     private final Collection<DynamicValue<?>> dependents = new ObjectOpenHashSet<>(0);
+    private final Collection<DynamicValue<?>> applyDependents = new ObjectOpenHashSet<>(0);
 
     private V value;
     private V modifiedValue;
@@ -45,6 +46,10 @@ public abstract class StatefulOption<V> extends Option {
 
     void registerDependent(DynamicValue<?> dependent) {
         this.dependents.add(dependent);
+    }
+
+    void registerApplyDependent(DynamicValue<?> dependent) {
+        this.applyDependents.add(dependent);
     }
 
     public void modifyValue(V value) {
@@ -75,6 +80,7 @@ public abstract class StatefulOption<V> extends Option {
         this.modifiedValue = this.value;
         if (this.value != previousValue) {
             this.state.invalidateDependents(this.dependents);
+            this.state.invalidateDependents(this.applyDependents);
         }
     }
 
@@ -88,9 +94,11 @@ public abstract class StatefulOption<V> extends Option {
         return this.modifiedValue;
     }
 
-    V validateValue(V value) {
-        return value;
+    public V getAppliedValue() {
+        return this.value;
     }
+
+    abstract V validateValue(V value);
 
     @Override
     public boolean hasChanged() {
@@ -103,6 +111,7 @@ public abstract class StatefulOption<V> extends Option {
             this.value = this.modifiedValue;
             this.binding.save(this.value);
             this.state.notifyStorageWrite(this.storage);
+            this.state.invalidateDependents(this.applyDependents);
             return true;
         }
         return false;

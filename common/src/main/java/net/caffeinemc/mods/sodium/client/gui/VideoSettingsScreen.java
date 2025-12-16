@@ -379,8 +379,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
             var location = Identifier.parse("sodium:general.gui_scale");
             var option = ConfigManager.CONFIG.getOption(location);
             if (option instanceof IntegerOption guiScaleOption) {
-                var value = guiScaleOption.getValidatedValue();
-                if (value instanceof Integer intValue) {
+                if (guiScaleOption.getValidatedValue() instanceof Integer intValue) {
                     var range = guiScaleOption.getSteppedValidator();
                     var top = range.max() + 1;
                     var auto = range.min();

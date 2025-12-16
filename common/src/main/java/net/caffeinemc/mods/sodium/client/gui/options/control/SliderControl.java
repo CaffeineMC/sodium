@@ -12,16 +12,11 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
-import org.apache.commons.lang3.Validate;
 
 public class SliderControl implements Control {
     private final IntegerOption option;
 
-    public SliderControl(IntegerOption option, int min, int max, int interval) {
-        Validate.isTrue(max > min, "The maximum value must be greater than the minimum value");
-        Validate.isTrue(interval > 0, "The slider interval must be greater than zero");
-        Validate.isTrue(((max - min) % interval) == 0, "The maximum value must be divisible by the interval");
-
+    public SliderControl(IntegerOption option) {
         this.option = option;
     }
 
@@ -94,10 +89,7 @@ public class SliderControl implements Control {
             if (drawSlider) {
                 this.thumbPosition = this.getThumbPositionForValue(value);
 
-                var range = this.option.getSteppedValidator();
-                double thumbOffset = Mth.clamp((double) (this.getIntValue() - range.min()) / range.getSpread() * sliderWidth, 0, sliderWidth);
-
-                int thumbX = (int) (sliderX + thumbOffset - THUMB_WIDTH);
+                int thumbX = (int) (sliderX + this.thumbPosition * sliderWidth - THUMB_WIDTH);
                 int trackY = (int) (sliderY + (sliderHeight / 2f) - ((double) TRACK_HEIGHT / 2));
 
                 this.drawRect(graphics, sliderX, trackY, sliderX + sliderWidth, trackY + TRACK_HEIGHT, this.theme.themeLighter);
@@ -134,14 +126,19 @@ public class SliderControl implements Control {
             return this.contentWidth;
         }
 
-        public int getIntValue() {
-            var range = this.option.getSteppedValidator();
-            return range.min() + (range.step() * (int) Math.round((this.thumbPosition / (1.0D / range.getSpread())) / range.step()));
-        }
-
         public double getThumbPositionForValue(int value) {
             var range = this.option.getSteppedValidator();
-            return (value - range.min()) * (1.0D / range.getSpread());
+            int min = range.min();
+            int max = range.max();
+            return (double) (value - min) / (max - min);
+        }
+
+        private int getValueForThumbPosition() {
+            var range = this.option.getSteppedValidator();
+            int step = range.step();
+            int min = range.min();
+            int max = range.max();
+            return min + (step * (int) Math.round((this.thumbPosition * (max - min)) / step));
         }
 
         @Override
@@ -185,17 +182,13 @@ public class SliderControl implements Control {
         }
 
         private void setValueFromMouse(double d) {
-            this.setValue((d - (double) this.getSliderX()) / (double) this.getSliderWidth());
+            this.setValue(Mth.clamp((d - (double) this.getSliderX()) / (double) this.getSliderWidth(), 0.0D, 1.0D));
         }
 
-        public void setValue(double d) {
-            this.thumbPosition = Mth.clamp(d, 0.0D, 1.0D);
+        public void setValue(double newThumbPosition) {
+            this.thumbPosition = newThumbPosition;
 
-            int value = this.getIntValue();
-
-            if (this.option.getValidatedValue() != value) {
-                this.option.modifyValue(value);
-            }
+            this.option.modifyValue(this.getValueForThumbPosition());
         }
 
         @Override
@@ -203,11 +196,18 @@ public class SliderControl implements Control {
             if (!isFocused()) return false;
 
             var range = this.option.getSteppedValidator();
-            if (event.isLeft()) {
-                this.option.modifyValue(Mth.clamp(this.option.getValidatedValue() - range.step(), range.max(), range.max()));
-                return true;
-            } else if (event.isRight()) {
-                this.option.modifyValue(Mth.clamp(this.option.getValidatedValue() + range.step(), range.min(), range.max()));
+            var isLeft = event.isLeft();
+            var isRight = event.isRight();
+            if (isLeft || isRight) {
+                var validatedValue = this.option.getValidatedValue();
+                var step = range.step();
+                if (isLeft) {
+                    validatedValue -= step;
+                } else {
+                    validatedValue += step;
+                }
+                this.option.modifyValue(validatedValue);
+                this.option.getValidatedValue();
                 return true;
             }
 

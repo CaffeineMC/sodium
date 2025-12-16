@@ -3,7 +3,6 @@ package net.caffeinemc.mods.sodium.client.config.structure;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
-import net.caffeinemc.mods.sodium.api.config.option.Validator;
 import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
 import net.caffeinemc.mods.sodium.client.gui.options.control.Control;
 import net.caffeinemc.mods.sodium.client.gui.options.control.TickBoxControl;
@@ -22,5 +21,10 @@ public class BooleanOption extends StatefulOption<Boolean> {
     @Override
     Control createControl() {
         return new TickBoxControl(this);
+    }
+
+    @Override
+    Boolean validateValue(Boolean value) {
+        return value;
     }
 }

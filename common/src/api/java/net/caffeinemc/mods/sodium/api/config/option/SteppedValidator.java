@@ -1,11 +1,28 @@
 package net.caffeinemc.mods.sodium.api.config.option;
 
+import java.util.function.Supplier;
+
 /**
  * Common interface for validators that define a stepped range of integer values.
  */
 public interface SteppedValidator extends Validator<Integer> {
+    /**
+     * Gets the minimum value of the range.
+     * @return The minimum value.
+     */
     int min();
+
+    /**
+     * Gets the maximum value of the range.
+     * @return The maximum value.
+     */
     int max();
+
+    /**
+     * Gets the step increment between valid values in the range.
+     *
+     * @return The step increment.
+     */
     int step();
 
     /**
@@ -15,15 +32,15 @@ public interface SteppedValidator extends Validator<Integer> {
      * @return True if the value is valid, false otherwise.
      */
     default boolean isValueValid(int value) {
-        return value >= min() && value <= max() && (value - min()) % step() == 0;
+        int min = this.min();
+        return value >= min && value <= this.max() && (value - min) % this.step() == 0;
     }
 
-    /**
-     * Gets the spread of the range (max - min).
-     *
-     * @return The spread of the range.
-     */
-    default int getSpread() {
-        return this.max() - this.min();
+    @Override
+    default Integer getValidatedValue(Integer value, Supplier<Integer> defaultValueSupplier) {
+        if (isValueValid(value)) {
+            return value;
+        }
+        return defaultValueSupplier.get();
     }
 }

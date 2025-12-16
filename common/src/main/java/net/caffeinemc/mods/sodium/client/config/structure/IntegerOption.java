@@ -43,8 +43,7 @@ public class IntegerOption extends StatefulOption<Integer> {
 
     @Override
     Control createControl() {
-        var range = this.validator.get(this.state);
-        return new SliderControl(this, range.min(), range.max(), range.step());
+        return new SliderControl(this);
     }
 
     public SteppedValidator getSteppedValidator() {

@@ -9,7 +9,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
-import net.caffeinemc.mods.sodium.api.config.option.ClampingRange;
+import net.caffeinemc.mods.sodium.api.config.option.GUIScaleRange;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.option.Range;
@@ -41,7 +41,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 
 // TODO: get initialValue from the vanilla options (it's private)
 public class SodiumConfigBuilder implements ConfigEntryPoint {
@@ -182,7 +181,12 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setName(Component.translatable("options.guiScale"))
                                 .setTooltip(Component.translatable("sodium.options.gui_scale.tooltip"))
                                 .setValueFormatter(ControlValueFormatterImpls.guiScale())
-                                .setValidatorProvider((state) -> new ClampingRange(0, this.window.calculateScale(0, Minecraft.getInstance().isEnforceUnicode()), 1), ConfigState.UPDATE_ON_REBUILD)
+                                .setValidatorProvider((state) -> {
+                                    var savedValue = state.readIntOption(Identifier.parse("sodium:general.gui_scale"));
+                                    var realMax = this.window.calculateScale(0, Minecraft.getInstance().isEnforceUnicode());
+                                    var presentationMax = Math.max(savedValue, realMax);
+                                    return new GUIScaleRange(presentationMax);
+                                }, ConfigState.UPDATE_ON_REBUILD, ConfigState.UPDATE_ON_APPLY)
                                 .setDefaultValue(0)
                                 .setBinding(this.vanillaOpts.guiScale()::set, this.vanillaOpts.guiScale()::get)
                 )

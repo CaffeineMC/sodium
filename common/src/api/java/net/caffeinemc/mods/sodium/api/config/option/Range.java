@@ -1,7 +1,5 @@
 package net.caffeinemc.mods.sodium.api.config.option;
 
-import java.util.function.Supplier;
-
 /**
  * A record representing a range of integer values with a specified step. When validating a value, it uses the default value if the value is out of range or does not conform to the step.
  *
@@ -17,13 +15,5 @@ public record Range(int min, int max, int step) implements SteppedValidator {
         if (step <= 0) {
             throw new IllegalArgumentException("Step must be greater than 0");
         }
-    }
-
-    @Override
-    public Integer getValidatedValue(Integer value, Supplier<Integer> defaultValueSupplier) {
-        if (isValueValid(value)) {
-            return value;
-        }
-        return defaultValueSupplier.get();
     }
 }

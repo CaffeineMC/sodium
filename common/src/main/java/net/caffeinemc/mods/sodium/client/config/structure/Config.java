@@ -19,7 +19,7 @@ import net.minecraft.resources.Identifier;
 
 import java.util.*;
 
-public class Config implements ConfigState {
+public class Config {
     private final Map<Identifier, Option> options = new Object2ReferenceLinkedOpenHashMap<>();
     private final Set<StorageEventHandler> pendingStorageHandlers = new ObjectOpenHashSet<>();
     private final List<ModOptions> modOptions;
@@ -156,10 +156,15 @@ public class Config implements ConfigState {
         original.setParentConfig(null);
     }
 
+    private static final Set<Identifier> SPECIAL_DEPENDENCIES = Set.of(
+            ConfigState.UPDATE_ON_REBUILD,
+            ConfigState.UPDATE_ON_APPLY
+    );
+
     private void validateDependencies() {
         for (var option : this.options.values()) {
             for (var dependency : option.dependencies) {
-                if (!this.options.containsKey(dependency) && !dependency.equals(ConfigState.UPDATE_ON_REBUILD)) {
+                if (!this.options.containsKey(dependency) && !SPECIAL_DEPENDENCIES.contains(dependency)) {
                     throw new IllegalArgumentException("Option " + option.id + " depends on non-existent option " + dependency);
                 }
             }
@@ -170,6 +175,12 @@ public class Config implements ConfigState {
                     for (var dependency : dependent.getDependencies()) {
                         if (dependency.equals(ConfigState.UPDATE_ON_REBUILD)) {
                             this.globalRebuildDependents.add(dynamicValue);
+                            continue;
+                        }
+
+                        if (dependency.equals(ConfigState.UPDATE_ON_APPLY) && option instanceof StatefulOption<?> statefulOption) {
+                            statefulOption.registerApplyDependent(dynamicValue);
+                            dynamicValue.allowReadingParentOption(option.id);
                             continue;
                         }
 
@@ -293,40 +304,6 @@ public class Config implements ConfigState {
         return this.modOptions;
     }
 
-    @Override
-    public boolean readBooleanOption(Identifier id) {
-        var option = this.options.get(id);
-        if (option instanceof BooleanOption booleanOption) {
-            return booleanOption.getValidatedValue();
-        }
-
-        throw new IllegalArgumentException("Can't read boolean value from option with id " + id);
-    }
-
-    @Override
-    public int readIntOption(Identifier id) {
-        var option = this.options.get(id);
-        if (option instanceof IntegerOption intOption) {
-            return intOption.getValidatedValue();
-        }
-
-        throw new IllegalArgumentException("Can't read int value from option with id " + id);
-    }
-
-    @Override
-    public <E extends Enum<E>> E readEnumOption(Identifier id, Class<E> enumClass) {
-        var option = this.options.get(id);
-        if (option instanceof EnumOption<?> enumOption) {
-            if (enumOption.enumClass != enumClass) {
-                throw new IllegalArgumentException("Enum class mismatch for option with id " + id + ": requested " + enumClass + ", option has " + enumOption.enumClass);
-            }
-
-            return enumClass.cast(enumOption.getValidatedValue());
-        }
-
-        throw new IllegalArgumentException("Can't read enum value from option with id " + id);
-    }
-
     private void processFlags(Set<Identifier> flags) {
         Minecraft client = Minecraft.getInstance();
 
@@ -365,5 +342,48 @@ public class Config implements ConfigState {
                 }
             }
         }
+    }
+
+    public boolean readBooleanOption(Identifier id, boolean appliedValue) {
+        var option = this.options.get(id);
+        if (option instanceof BooleanOption booleanOption) {
+            if (appliedValue) {
+                return booleanOption.getAppliedValue();
+            } else {
+                return booleanOption.getValidatedValue();
+            }
+        }
+
+        throw new IllegalArgumentException("Can't read boolean value from option with id " + id);
+    }
+
+    public int readIntOption(Identifier id, boolean appliedValue) {
+        var option = this.options.get(id);
+        if (option instanceof IntegerOption intOption) {
+            if (appliedValue) {
+                return intOption.getAppliedValue();
+            } else {
+                return intOption.getValidatedValue();
+            }
+        }
+
+        throw new IllegalArgumentException("Can't read int value from option with id " + id);
+    }
+
+    public <E extends Enum<E>> E readEnumOption(Identifier id, Class<E> enumClass, boolean appliedValue) {
+        var option = this.options.get(id);
+        if (option instanceof EnumOption<?> enumOption) {
+            if (enumOption.enumClass != enumClass) {
+                throw new IllegalArgumentException("Enum class mismatch for option with id " + id + ": requested " + enumClass + ", option has " + enumOption.enumClass);
+            }
+
+            if (appliedValue) {
+                return enumClass.cast(enumOption.getAppliedValue());
+            } else {
+                return enumClass.cast(enumOption.getValidatedValue());
+            }
+        }
+
+        throw new IllegalArgumentException("Can't read enum value from option with id " + id);
     }
 }

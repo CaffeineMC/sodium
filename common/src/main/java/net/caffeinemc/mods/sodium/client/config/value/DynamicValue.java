@@ -10,6 +10,7 @@ import java.util.function.Function;
 
 public class DynamicValue<V> implements DependentValue<V>, ConfigState {
     private final Set<Identifier> dependencies;
+    private Identifier parentOption = null;
     private final Function<ConfigState, V> provider;
     private Config state;
     private V valueCache;
@@ -36,32 +37,40 @@ public class DynamicValue<V> implements DependentValue<V>, ConfigState {
         return this.dependencies;
     }
 
+    public void allowReadingParentOption(Identifier id) {
+        this.parentOption = id;
+    }
+
     public void invalidateCache() {
         this.valueCache = null;
     }
 
-    private void validateRead(Identifier id) {
+    private boolean getReadType(Identifier id) {
         if (!this.dependencies.contains(id)) {
+            if (id.equals(this.parentOption)) {
+                return true;
+            }
             throw new IllegalStateException("Attempted to read option value that is not a declared dependency");
         }
+        return false;
     }
 
     // TODO: resolve dependencies with update tag here or within ConfigStateImpl?
     @Override
     public boolean readBooleanOption(Identifier id) {
-        this.validateRead(id);
-        return this.state.readBooleanOption(id);
+        var readType = this.getReadType(id);
+        return this.state.readBooleanOption(id, readType);
     }
 
     @Override
     public int readIntOption(Identifier id) {
-        this.validateRead(id);
-        return this.state.readIntOption(id);
+        var readType = this.getReadType(id);
+        return this.state.readIntOption(id, readType);
     }
 
     @Override
     public <E extends Enum<E>> E readEnumOption(Identifier id, Class<E> enumClass) {
-        this.validateRead(id);
-        return this.state.readEnumOption(id, enumClass);
+        var readType = this.getReadType(id);
+        return this.state.readEnumOption(id, enumClass, readType);
     }
 }
