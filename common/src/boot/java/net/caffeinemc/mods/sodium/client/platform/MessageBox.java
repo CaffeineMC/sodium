@@ -9,9 +9,6 @@ import org.jspecify.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-import java.awt.*;
-import java.io.IOException;
-import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
