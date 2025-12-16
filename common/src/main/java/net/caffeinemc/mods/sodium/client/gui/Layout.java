@@ -10,7 +10,7 @@ public class Layout {
     public static final int OPTION_MOD_MARGIN = 12;
     public static final int OPTION_LEFT_INSET = OPTION_GROUP_MARGIN;
 
-    public static final int SCROLLBAR_WIDTH = 5;
+    public static final int SCROLLBAR_WIDTH = 7;
 
     public static final int TEXT_LEFT_PADDING = 8;
     public static final int TEXT_PARAGRAPH_SPACING = 8;
