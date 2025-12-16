@@ -26,7 +26,7 @@ public class ControlValueFormatterImpls {
             } else if (0 == v) {
                 return Component.translatable("options.fullscreen.current");
             } else {
-                return Component.literal(monitor.getMode(v - 1).toString().replace(" (24bit)", ""));
+                return Component.literal(monitor.getMode(Math.min(v - 1, monitor.getModeCount() - 1)).toString().replace(" (24bit)", ""));
             }
         };
     }

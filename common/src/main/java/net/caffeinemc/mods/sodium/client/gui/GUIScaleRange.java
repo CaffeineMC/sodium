@@ -1,4 +1,6 @@
-package net.caffeinemc.mods.sodium.api.config.option;
+package net.caffeinemc.mods.sodium.client.gui;
+
+import net.caffeinemc.mods.sodium.api.config.option.SteppedValidator;
 
 /**
  * A record representing a range of integer values with a specified step. When validating a value, it clamps the value to the nearest valid value within the range.

@@ -130,7 +130,7 @@ public class SliderControl implements Control {
             var range = this.option.getSteppedValidator();
             int min = range.min();
             int max = range.max();
-            return (double) (value - min) / (max - min);
+            return Mth.clamp((double) (value - min) / (max - min), 0.0d, 1.0d);
         }
 
         private int getValueForThumbPosition() {

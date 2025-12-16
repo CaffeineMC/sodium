@@ -9,7 +9,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
-import net.caffeinemc.mods.sodium.api.config.option.GUIScaleRange;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.option.Range;
@@ -53,12 +52,10 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
     private final StorageEventHandler sodiumStorage;
 
     private final @Nullable Window window;
-    private final Monitor monitor;
 
     public SodiumConfigBuilder() {
         var minecraft = Minecraft.getInstance();
         this.window = minecraft.getWindow();
-        this.monitor = this.window == null ? null : this.window.findBestMonitor();
 
         this.vanillaOpts = minecraft.options;
         this.vanillaStorage = this.vanillaOpts == null ? null : () -> {
@@ -77,6 +74,13 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
             SodiumClientMod.logger().info("Flushed changes to Sodium configuration");
         };
+    }
+
+    private Monitor getMonitor() {
+        if (this.window == null) {
+            return null;
+        }
+        return this.window.findBestMonitor();
     }
 
     public static void registerIcon(TextureManager textureManager) {
@@ -214,23 +218,26 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setTooltip(Component.translatable("sodium.options.fullscreen_resolution.tooltip"))
                                 .setValueFormatter(ControlValueFormatterImpls.resolution())
                                 // the max value of 1 when the monitor is not available prevents an exception from being thrown
-                                .setRange(0, this.monitor != null ? this.monitor.getModeCount() : 1, 1)
+                                .setValidator(new FullscreenResolutionRange())
                                 .setDefaultValue(0)
                                 .setBinding(value -> {
-                                    if (this.monitor != null) {
-                                        this.window.setPreferredFullscreenVideoMode(0 == value ? Optional.empty() : Optional.of(this.monitor.getMode(value - 1)));
+                                    var monitor = this.getMonitor();
+                                    if (monitor != null) {
+                                        this.window.setPreferredFullscreenVideoMode(0 == value ? Optional.empty() : Optional.of(monitor.getMode(value - 1)));
                                     }
                                 }, () -> {
-                                    if (this.monitor == null) {
+                                    var monitor = this.getMonitor();
+                                    if (monitor == null) {
                                         return 0;
                                     } else {
                                         Optional<VideoMode> optional = this.window.getPreferredFullscreenVideoMode();
-                                        return optional.map((videoMode) -> this.monitor.getVideoModeIndex(videoMode) + 1).orElse(0);
+                                        return optional.map((videoMode) -> monitor.getVideoModeIndex(videoMode) + 1).orElse(0);
                                     }
                                 })
                                 .setEnabledProvider(
                                         (state) -> {
-                                            if (this.monitor == null || this.monitor.getModeCount() <= 0) {
+                                            var monitor = this.getMonitor();
+                                            if (monitor == null || monitor.getModeCount() <= 0) {
                                                 return false;
                                             }
                                             var os = OsUtils.getOs();
