@@ -21,7 +21,22 @@ public class IntegerOption extends StatefulOption<Integer> {
     private final DependentValue<SteppedValidator> validator;
     private final ControlValueFormatter valueFormatter;
 
-    public IntegerOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<Integer, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<SteppedValidator> validator, DependentValue<Integer> defaultValue, Boolean controlHiddenWhenDisabled, OptionBinding<Integer> binding, Consumer<ConfigState> applyHook, ControlValueFormatter valueFormatter) {
+    public IntegerOption(
+            Identifier id,
+            Collection<Identifier> dependencies,
+            Component name,
+            DependentValue<Boolean> enabled,
+            StorageEventHandler storage,
+            Function<Integer, Component> tooltipProvider,
+            OptionImpact impact,
+            Set<Identifier> flags,
+            DependentValue<Integer> defaultValue,
+            Boolean controlHiddenWhenDisabled,
+            OptionBinding<Integer> binding,
+            Consumer<ConfigState> applyHook,
+            DependentValue<SteppedValidator> validator,
+            ControlValueFormatter valueFormatter
+    ) {
         super(id, dependencies, name, enabled, storage, tooltipProvider, impact, flags, defaultValue, controlHiddenWhenDisabled, binding, applyHook);
         this.validator = validator;
         this.valueFormatter = valueFormatter;

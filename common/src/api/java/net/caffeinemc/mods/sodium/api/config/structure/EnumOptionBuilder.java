@@ -30,33 +30,14 @@ public interface EnumOptionBuilder<E extends Enum<E>> extends StatefulOptionBuil
         return e -> names[e.ordinal()];
     }
 
-    /**
-     * Sets the allowed values for this enum option.
-     *
-     * @param allowedValues The set of allowed enum values.
-     * @return This builder instance.
-     */
-    EnumOptionBuilder<E> setAllowedValues(Set<E> allowedValues);
-
-    /**
-     * Sets a provider function to determine the allowed values for this enum option based on the current configuration state.
-     *
-     * @param provider     The function that provides the set of allowed enum values.
-     * @param dependencies The options that this provider depends on.
-     * @return This builder instance.
-     */
-    EnumOptionBuilder<E> setAllowedValuesProvider(Function<ConfigState, Set<E>> provider, Identifier... dependencies);
-
-    /**
-     * Sets a provider function to determine the display name for each enum constant.
-     *
-     * @param provider The function that provides the display name for each enum constant.
-     * @return This builder instance.
-     */
-    EnumOptionBuilder<E> setElementNameProvider(Function<E, Component> provider);
-
     @Override
     EnumOptionBuilder<E> setName(Component name);
+
+    @Override
+    EnumOptionBuilder<E> setEnabled(boolean available);
+
+    @Override
+    EnumOptionBuilder<E> setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
 
     @Override
     EnumOptionBuilder<E> setStorageHandler(StorageEventHandler storage);
@@ -83,12 +64,6 @@ public interface EnumOptionBuilder<E extends Enum<E>> extends StatefulOptionBuil
     EnumOptionBuilder<E> setDefaultProvider(Function<ConfigState, E> provider, Identifier... dependencies);
 
     @Override
-    EnumOptionBuilder<E> setEnabled(boolean available);
-
-    @Override
-    EnumOptionBuilder<E> setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
-
-    @Override
     EnumOptionBuilder<E> setControlHiddenWhenDisabled(boolean hidden);
 
     @Override
@@ -99,4 +74,29 @@ public interface EnumOptionBuilder<E extends Enum<E>> extends StatefulOptionBuil
 
     @Override
     EnumOptionBuilder<E> setApplyHook(Consumer<ConfigState> hook);
+
+    /**
+     * Sets the allowed values for this enum option.
+     *
+     * @param allowedValues The set of allowed enum values.
+     * @return This builder instance.
+     */
+    EnumOptionBuilder<E> setAllowedValues(Set<E> allowedValues);
+
+    /**
+     * Sets a provider function to determine the allowed values for this enum option based on the current configuration state.
+     *
+     * @param provider     The function that provides the set of allowed enum values.
+     * @param dependencies The options that this provider depends on.
+     * @return This builder instance.
+     */
+    EnumOptionBuilder<E> setAllowedValuesProvider(Function<ConfigState, Set<E>> provider, Identifier... dependencies);
+
+    /**
+     * Sets a provider function to determine the display name for each enum constant.
+     *
+     * @param provider The function that provides the display name for each enum constant.
+     * @return This builder instance.
+     */
+    EnumOptionBuilder<E> setElementNameProvider(Function<E, Component> provider);
 }

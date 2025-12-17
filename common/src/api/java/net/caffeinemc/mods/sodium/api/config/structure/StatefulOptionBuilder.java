@@ -21,6 +21,12 @@ public interface StatefulOptionBuilder<V> extends OptionBuilder {
     @Override
     StatefulOptionBuilder<V> setName(Component name);
 
+    @Override
+    OptionBuilder setEnabled(boolean available);
+
+    @Override
+    OptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
+
     /**
      * Sets the storage handler for this option.
      *
@@ -80,12 +86,6 @@ public interface StatefulOptionBuilder<V> extends OptionBuilder {
      * @return The current builder instance.
      */
     StatefulOptionBuilder<V> setDefaultProvider(Function<ConfigState, V> provider, Identifier... dependencies);
-
-    @Override
-    OptionBuilder setEnabled(boolean available);
-
-    @Override
-    OptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
 
     /**
      * Sets whether the control for this option should be hidden when the option is disabled. This should only be set to false when the user should know what the state of the option is even when it is disabled, and they cannot interact with it.

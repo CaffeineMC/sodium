@@ -20,6 +20,12 @@ public interface BooleanOptionBuilder extends StatefulOptionBuilder<Boolean> {
     BooleanOptionBuilder setName(Component name);
 
     @Override
+    BooleanOptionBuilder setEnabled(boolean available);
+
+    @Override
+    BooleanOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
+
+    @Override
     BooleanOptionBuilder setStorageHandler(StorageEventHandler storage);
 
     @Override
@@ -42,12 +48,6 @@ public interface BooleanOptionBuilder extends StatefulOptionBuilder<Boolean> {
 
     @Override
     BooleanOptionBuilder setDefaultProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
-
-    @Override
-    BooleanOptionBuilder setEnabled(boolean available);
-
-    @Override
-    BooleanOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
 
     @Override
     BooleanOptionBuilder setControlHiddenWhenDisabled(boolean hidden);

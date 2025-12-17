@@ -16,7 +16,20 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class BooleanOption extends StatefulOption<Boolean> {
-    public BooleanOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<Boolean, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<Boolean> defaultValue, Boolean controlHiddenWhenDisabled, OptionBinding<Boolean> binding, Consumer<ConfigState> applyHook) {
+    public BooleanOption(
+            Identifier id,
+            Collection<Identifier> dependencies,
+            Component name,
+            DependentValue<Boolean> enabled,
+            StorageEventHandler storage,
+            Function<Boolean, Component> tooltipProvider,
+            OptionImpact impact,
+            Set<Identifier> flags,
+            DependentValue<Boolean> defaultValue,
+            Boolean controlHiddenWhenDisabled,
+            OptionBinding<Boolean> binding,
+            Consumer<ConfigState> applyHook
+    ) {
         super(id, dependencies, name, enabled, storage, tooltipProvider, impact, flags, defaultValue, controlHiddenWhenDisabled, binding, applyHook);
     }
 

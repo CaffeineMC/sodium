@@ -14,6 +14,51 @@ import java.util.function.Supplier;
  * Builder interface for defining integer options. Refines builder methods to return this class instead of the base interface and have an {@link Integer} value type.
  */
 public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
+    @Override
+    IntegerOptionBuilder setName(Component name);
+
+    @Override
+    IntegerOptionBuilder setEnabled(boolean available);
+
+    @Override
+    IntegerOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
+
+    @Override
+    IntegerOptionBuilder setStorageHandler(StorageEventHandler storage);
+
+    @Override
+    IntegerOptionBuilder setTooltip(Component tooltip);
+
+    @Override
+    IntegerOptionBuilder setTooltip(Function<Integer, Component> tooltip);
+
+    @Override
+    IntegerOptionBuilder setImpact(OptionImpact impact);
+
+    @Override
+    IntegerOptionBuilder setFlags(OptionFlag... flags);
+
+    @Override
+    IntegerOptionBuilder setFlags(Identifier... flags);
+
+    @Override
+    IntegerOptionBuilder setDefaultValue(Integer value);
+
+    @Override
+    IntegerOptionBuilder setDefaultProvider(Function<ConfigState, Integer> provider, Identifier... dependencies);
+
+    @Override
+    IntegerOptionBuilder setControlHiddenWhenDisabled(boolean hidden);
+
+    @Override
+    IntegerOptionBuilder setBinding(Consumer<Integer> save, Supplier<Integer> load);
+
+    @Override
+    IntegerOptionBuilder setBinding(OptionBinding<Integer> binding);
+
+    @Override
+    IntegerOptionBuilder setApplyHook(Consumer<ConfigState> hook);
+
     /**
      * Sets the range for this integer option.
      *
@@ -65,49 +110,4 @@ public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
      * @return The current builder instance.
      */
     IntegerOptionBuilder setValueFormatter(ControlValueFormatter formatter);
-
-    @Override
-    IntegerOptionBuilder setName(Component name);
-
-    @Override
-    IntegerOptionBuilder setStorageHandler(StorageEventHandler storage);
-
-    @Override
-    IntegerOptionBuilder setTooltip(Component tooltip);
-
-    @Override
-    IntegerOptionBuilder setTooltip(Function<Integer, Component> tooltip);
-
-    @Override
-    IntegerOptionBuilder setImpact(OptionImpact impact);
-
-    @Override
-    IntegerOptionBuilder setFlags(OptionFlag... flags);
-
-    @Override
-    IntegerOptionBuilder setFlags(Identifier... flags);
-
-    @Override
-    IntegerOptionBuilder setDefaultValue(Integer value);
-
-    @Override
-    IntegerOptionBuilder setDefaultProvider(Function<ConfigState, Integer> provider, Identifier... dependencies);
-
-    @Override
-    IntegerOptionBuilder setEnabled(boolean available);
-
-    @Override
-    IntegerOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
-
-    @Override
-    IntegerOptionBuilder setControlHiddenWhenDisabled(boolean hidden);
-
-    @Override
-    IntegerOptionBuilder setBinding(Consumer<Integer> save, Supplier<Integer> load);
-
-    @Override
-    IntegerOptionBuilder setBinding(OptionBinding<Integer> binding);
-
-    @Override
-    IntegerOptionBuilder setApplyHook(Consumer<ConfigState> hook);
 }

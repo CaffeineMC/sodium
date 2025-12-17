@@ -37,7 +37,17 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     IntegerOption build() {
         this.prepareBuild();
 
-        return new IntegerOption(this.id, this.getDependencies(), this.getName(), this.getEnabled(), this.getStorage(), this.getTooltipProvider(), this.getImpact(), this.getFlags(), this.getValidatorProvider(), this.getDefaultValue(), this.getControlHiddenWhenDisabled(), this.getBinding(), this.getApplyHook(), this.getValueFormatter());
+        return new IntegerOption(
+                this.id,
+                this.getDependencies(),
+                this.getName(),
+                this.getEnabled(),
+                this.getStorage(),
+                this.getTooltipProvider(),
+                this.getImpact(),
+                this.getFlags(),
+                this.getDefaultValue(), this.getControlHiddenWhenDisabled(), this.getBinding(), this.getApplyHook(), this.getValidatorProvider(),
+                this.getValueFormatter());
     }
 
     @Override
@@ -61,43 +71,20 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     }
 
     @Override
-    public IntegerOptionBuilder setRange(int min, int max, int step) {
-        return this.setRange(new Range(min, max, step));
-    }
-
-    @Override
-    public IntegerOptionBuilder setRange(Range range) {
-        this.validatorProvider = new ConstantValue<>(range);
-        return this;
-    }
-
-    @Override
-    public IntegerOptionBuilder setRangeProvider(Function<ConfigState, SteppedValidator> provider, Identifier... dependencies) {
-        this.validatorProvider = new DynamicValue<>(provider, dependencies);
-        return this;
-    }
-
-    @Override
-    public IntegerOptionBuilder setValidator(SteppedValidator validator) {
-        this.validatorProvider = new ConstantValue<>(validator);
-        return this;
-    }
-
-    @Override
-    public IntegerOptionBuilder setValidatorProvider(Function<ConfigState, SteppedValidator> provider, Identifier... dependencies) {
-        this.validatorProvider = new DynamicValue<>(provider, dependencies);
-        return this;
-    }
-
-    @Override
-    public IntegerOptionBuilder setValueFormatter(ControlValueFormatter formatter) {
-        this.valueFormatter = formatter;
-        return this;
-    }
-
-    @Override
     public IntegerOptionBuilder setName(Component name) {
         super.setName(name);
+        return this;
+    }
+
+    @Override
+    public IntegerOptionBuilder setEnabled(boolean available) {
+        super.setEnabled(available);
+        return this;
+    }
+
+    @Override
+    public IntegerOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies) {
+        super.setEnabledProvider(provider, dependencies);
         return this;
     }
 
@@ -150,18 +137,6 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     }
 
     @Override
-    public IntegerOptionBuilder setEnabled(boolean available) {
-        super.setEnabled(available);
-        return this;
-    }
-
-    @Override
-    public IntegerOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies) {
-        super.setEnabledProvider(provider, dependencies);
-        return this;
-    }
-
-    @Override
     public IntegerOptionBuilder setControlHiddenWhenDisabled(boolean hidden) {
         super.setControlHiddenWhenDisabled(hidden);
         return this;
@@ -182,6 +157,41 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     @Override
     public IntegerOptionBuilder setApplyHook(Consumer<ConfigState> hook) {
         super.setApplyHook(hook);
+        return this;
+    }
+
+    @Override
+    public IntegerOptionBuilder setRange(int min, int max, int step) {
+        return this.setRange(new Range(min, max, step));
+    }
+
+    @Override
+    public IntegerOptionBuilder setRange(Range range) {
+        this.validatorProvider = new ConstantValue<>(range);
+        return this;
+    }
+
+    @Override
+    public IntegerOptionBuilder setRangeProvider(Function<ConfigState, SteppedValidator> provider, Identifier... dependencies) {
+        this.validatorProvider = new DynamicValue<>(provider, dependencies);
+        return this;
+    }
+
+    @Override
+    public IntegerOptionBuilder setValidator(SteppedValidator validator) {
+        this.validatorProvider = new ConstantValue<>(validator);
+        return this;
+    }
+
+    @Override
+    public IntegerOptionBuilder setValidatorProvider(Function<ConfigState, SteppedValidator> provider, Identifier... dependencies) {
+        this.validatorProvider = new DynamicValue<>(provider, dependencies);
+        return this;
+    }
+
+    @Override
+    public IntegerOptionBuilder setValueFormatter(ControlValueFormatter formatter) {
+        this.valueFormatter = formatter;
         return this;
     }
 }

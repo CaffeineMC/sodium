@@ -22,7 +22,11 @@ public abstract class Option {
     Config state;
     Control control;
 
-    Option(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled) {
+    Option(
+            Identifier id,
+            Collection<Identifier> dependencies,
+            Component name,
+            DependentValue<Boolean> enabled) {
         if (dependencies.contains(id)) {
             throw new IllegalArgumentException("Option cannot depend on itself");
         }

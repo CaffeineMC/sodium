@@ -42,12 +42,6 @@ class ExternalButtonOptionBuilderImpl extends StaticOptionBuilderImpl<ExternalBu
     }
 
     @Override
-    public ExternalButtonOptionBuilder setScreenConsumer(Consumer<Screen> currentScreenConsumer) {
-        this.currentScreenConsumer = currentScreenConsumer;
-        return this;
-    }
-
-    @Override
     public ExternalButtonOptionBuilder setName(Component name) {
         super.setName(name);
         return this;
@@ -68,6 +62,12 @@ class ExternalButtonOptionBuilderImpl extends StaticOptionBuilderImpl<ExternalBu
     @Override
     public ExternalButtonOptionBuilder setTooltip(Component tooltip) {
         super.setTooltip(tooltip);
+        return this;
+    }
+
+    @Override
+    public ExternalButtonOptionBuilder setScreenConsumer(Consumer<Screen> currentScreenConsumer) {
+        this.currentScreenConsumer = currentScreenConsumer;
         return this;
     }
 }

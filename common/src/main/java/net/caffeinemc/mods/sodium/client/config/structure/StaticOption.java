@@ -9,7 +9,12 @@ import java.util.Collection;
 public abstract class StaticOption extends Option {
     final Component tooltip;
 
-    StaticOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, Component tooltip) {
+    StaticOption(
+            Identifier id,
+            Collection<Identifier> dependencies,
+            Component name, DependentValue<Boolean> enabled,
+            Component tooltip
+    ) {
         super(id, dependencies, name, enabled);
         this.tooltip = tooltip;
     }

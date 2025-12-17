@@ -12,13 +12,6 @@ import java.util.function.Function;
  * Builder interface for defining external button options.
  */
 public interface ExternalButtonOptionBuilder extends OptionBuilder {
-    /** Sets the screen consumer for the external button option.
-     *
-     * @param currentScreenConsumer A consumer that accepts the current screen and opens the external configuration screen.
-     * @return The current builder instance.
-     */
-    ExternalButtonOptionBuilder setScreenConsumer(Consumer<Screen> currentScreenConsumer);
-
     @Override
     ExternalButtonOptionBuilder setName(Component name);
 
@@ -30,4 +23,11 @@ public interface ExternalButtonOptionBuilder extends OptionBuilder {
 
     @Override
     ExternalButtonOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
+
+    /** Sets the screen consumer for the external button option.
+     *
+     * @param currentScreenConsumer A consumer that accepts the current screen and opens the external configuration screen.
+     * @return The current builder instance.
+     */
+    ExternalButtonOptionBuilder setScreenConsumer(Consumer<Screen> currentScreenConsumer);
 }

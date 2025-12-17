@@ -32,7 +32,20 @@ public abstract class StatefulOption<V> extends Option {
     private V value;
     private V modifiedValue;
 
-    StatefulOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<V, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<V> defaultValue, Boolean controlHiddenWhenDisabled, OptionBinding<V> binding, Consumer<ConfigState> applyHook) {
+    StatefulOption(
+            Identifier id,
+            Collection<Identifier> dependencies,
+            Component name,
+            DependentValue<Boolean> enabled,
+            StorageEventHandler storage,
+            Function<V, Component> tooltipProvider,
+            OptionImpact impact,
+            Set<Identifier> flags,
+            DependentValue<V> defaultValue,
+            Boolean controlHiddenWhenDisabled,
+            OptionBinding<V> binding,
+            Consumer<ConfigState> applyHook
+    ) {
         super(id, dependencies, name, enabled);
         this.storage = storage;
         this.tooltipProvider = tooltipProvider;
