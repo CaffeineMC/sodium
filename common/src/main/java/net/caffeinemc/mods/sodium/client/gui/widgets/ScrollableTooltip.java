@@ -3,13 +3,15 @@ package net.caffeinemc.mods.sodium.client.gui.widgets;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
 import net.caffeinemc.mods.sodium.client.gui.Layout;
-import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlElement;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -29,8 +31,6 @@ public class ScrollableTooltip {
 
     private static final int TEXT_HORIZONTAL_PADDING = Layout.INNER_MARGIN - 1;
     private static final int TEXT_VERTICAL_PADDING = TEXT_HORIZONTAL_PADDING;
-    private static final int LEFT_BOX_MARGIN = ARROW_WIDTH; // arrow includes one pixel of margin
-    private static final int UPPER_BOX_MARGIN = Layout.BUTTON_SHORT + Layout.TOOLTIP_OUTER_MARGIN;
 
     private final Font font = Minecraft.getInstance().font;
     private ControlElement hoveredElement;
@@ -39,11 +39,21 @@ public class ScrollableTooltip {
     private Dim2i visibleDim;
     private boolean overlayMode;
     private final List<FormattedCharSequence> content = new ArrayList<>();
-    private final VideoSettingsScreen parent;
+    private final TooltipParent parent;
+    private Dim2i tooltipArea; // area for the tooltip to be within
     private final Vector2i reservedArea = new Vector2i(); // area reserved for action buttons
 
-    public ScrollableTooltip(VideoSettingsScreen parent) {
+    public ScrollableTooltip(TooltipParent parent) {
         this.parent = parent;
+    }
+
+    public interface TooltipParent {
+        <T extends GuiEventListener & Renderable & NarratableEntry> T addRenderableWidget(T guiEventListener);
+        void removeWidget(GuiEventListener guiEventListener);
+    }
+
+    public void setTooltipArea(Dim2i area) {
+        this.tooltipArea = area;
     }
 
     public void onControlHover(ControlElement hovered, int mouseX, int mouseY) {
@@ -109,15 +119,13 @@ public class ScrollableTooltip {
     }
 
     private boolean positionTooltip(boolean needsScrolling) {
-        int elementLimitX = this.hoveredElement.getLimitX() + LEFT_BOX_MARGIN + Layout.SCROLLBAR_WIDTH;
-        int defaultBoxWidth = Math.min(this.parent.getLimitX() - elementLimitX - Layout.TOOLTIP_OUTER_MARGIN, Layout.MAX_TOOLTIP_WIDTH);
+        int defaultBoxWidth = Math.min(this.tooltipArea.getLimitX() - this.tooltipArea.x(), Layout.MAX_TOOLTIP_WIDTH);
         int defaultBoxY = this.hoveredElement.getY();
-        // noinspection UnnecessaryLocalVariable
-        int defaultBoxX = elementLimitX;
+        int defaultBoxX = this.tooltipArea.x();
 
         int boxWidth = 0, boxX = 0, boxY = 0;
         boolean fixedBoxY = false;
-        int boxYCutoff = this.parent.getLimitY() - Layout.TOOLTIP_OUTER_MARGIN;
+        int boxYCutoff = this.tooltipArea.getLimitY();
 
         this.overlayMode = defaultBoxWidth < Layout.MIN_TOOLTIP_WIDTH;
 
@@ -133,8 +141,8 @@ public class ScrollableTooltip {
             }
 
             // Hovered element left of the area but enough space to show tooltip with reduced width
-            else if (this.hoveredElement.getLimitX() < this.reservedArea.x) {
-                int availableWidth = this.reservedArea.x - elementLimitX;
+            else if (this.tooltipArea.x() < this.reservedArea.x) {
+                int availableWidth = this.reservedArea.x - this.tooltipArea.x();
 
                 if (availableWidth >= Layout.MIN_TOOLTIP_WIDTH) {
                     boxWidth = Math.min(availableWidth, Layout.MAX_TOOLTIP_WIDTH);
@@ -159,11 +167,11 @@ public class ScrollableTooltip {
             boxX = this.hoveredElement.getX() + Layout.TOOLTIP_OUTER_MARGIN;
 
             // place the content above or below the hovered element depending on which side has more space
-            int spaceAbove = this.hoveredElement.getY() - UPPER_BOX_MARGIN;
-            int spaceBelow = this.parent.getLimitY() - this.hoveredElement.getLimitY() - Layout.TOOLTIP_OUTER_MARGIN;
+            int spaceAbove = this.hoveredElement.getY() - this.tooltipArea.y();
+            int spaceBelow = this.tooltipArea.getLimitY() - this.hoveredElement.getLimitY() - Layout.TOOLTIP_OUTER_MARGIN;
             if (spaceBelow >= spaceAbove) {
                 boxY = this.hoveredElement.getLimitY() + Layout.TOOLTIP_OUTER_MARGIN;
-                boxYCutoff = this.parent.getLimitY() - Layout.TOOLTIP_OUTER_MARGIN;
+                boxYCutoff = this.tooltipArea.getLimitY() - Layout.TOOLTIP_OUTER_MARGIN;
                 
                 // fix the box's upper y position since moving it up would cause it to overlap the hovered element
                 fixedBoxY = true;
@@ -184,8 +192,8 @@ public class ScrollableTooltip {
             }
 
             // prevent it from moving up further than the tooltip safe area
-            if (boxY < UPPER_BOX_MARGIN) {
-                boxY = UPPER_BOX_MARGIN;
+            if (boxY < this.tooltipArea.y()) {
+                boxY = this.tooltipArea.y();
             }
         }
 
@@ -207,6 +215,10 @@ public class ScrollableTooltip {
             // draw small triangular arrow attached to the side of the tooltip box pointing at the hovered element, in the margin between the hovered element and the tooltip box
             int arrowX = this.visibleDim.x() - ARROW_WIDTH;
             int arrowY = this.hoveredElement.getCenterY() - (ARROW_HEIGHT / 2);
+
+            // constraint the arrow to be within the tooltip area
+            arrowY = Math.max(arrowY, this.tooltipArea.y());
+            arrowY = Math.min(arrowY + ARROW_HEIGHT, this.tooltipArea.getLimitY()) - ARROW_HEIGHT;
 
             graphics.nextStratum();
 

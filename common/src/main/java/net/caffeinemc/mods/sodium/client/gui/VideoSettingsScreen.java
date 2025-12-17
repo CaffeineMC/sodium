@@ -35,9 +35,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-public class VideoSettingsScreen extends Screen implements ScreenPromptable {
+public class VideoSettingsScreen extends Screen implements ScreenPromptable, ScrollableTooltip.TooltipParent {
     private final Screen prevScreen;
     private Dim2i dim;
+    private boolean insetX, insetY;
 
     private PageListWidget pageList;
     private SearchWidget searchWidget;
@@ -136,6 +137,22 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         }
     }
 
+    private int ifInsetX(int value) {
+        return this.insetX ? value : 0;
+    }
+
+    private int ifInsetY(int value) {
+        return this.insetY ? value : 0;
+    }
+
+    private int ifNotInsetX(int value) {
+        return this.insetX ? 0 : value;
+    }
+
+    private int ifNotInsetY(int value) {
+        return this.insetY ? 0 : value;
+    }
+
     private void rebuild() {
         this.clearWidgets();
 
@@ -148,7 +165,8 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         int topBarHeight = Layout.BUTTON_SHORT;
         this.searchWidget = new SearchWidget(this::onSearchResults, new Dim2i(x, y, w, topBarHeight));
 
-        this.pageList = new PageListWidget(new Dim2i(x, y + topBarHeight, Layout.PAGE_LIST_WIDTH, h - topBarHeight), this);
+        int topBarClear = topBarHeight + ifInsetY(Layout.INNER_MARGIN);
+        this.pageList = new PageListWidget(new Dim2i(x, y + topBarClear, Layout.PAGE_LIST_WIDTH, h - topBarClear), this);
         this.addRenderableWidget(this.pageList);
 
         boolean stackVertically = false;
@@ -163,7 +181,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
             reserveBottomSpace = true;
         }
 
-        this.closeButton = new FlatButtonWidget(new Dim2i(this.getLimitX() - Layout.BUTTON_LONG - Layout.INNER_MARGIN, this.getLimitY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("gui.done"), this::onClose, true, false);
+        this.closeButton = new FlatButtonWidget(new Dim2i(this.getLimitX() - Layout.BUTTON_LONG - ifNotInsetX(Layout.INNER_MARGIN), this.getLimitY() - (ifNotInsetY(Layout.INNER_MARGIN) + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("gui.done"), this::onClose, true, false);
         this.addRenderableWidget(this.closeButton);
 
         if (stackVertically) {
@@ -184,10 +202,20 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
                 this.pageList.getLimitX(),
                 y + topBarHeight + Layout.INNER_MARGIN,
                 Layout.OPTION_WIDTH + Layout.OPTION_LIST_SCROLLBAR_OFFSET + Layout.SCROLLBAR_WIDTH,
-                h - topBarHeight - (reserveBottomSpace ? (Layout.INNER_MARGIN * 3 + Layout.BUTTON_SHORT) : (Layout.INNER_MARGIN * 2))
+                h - topBarHeight - (reserveBottomSpace ? (Layout.INNER_MARGIN * 2 + Layout.BUTTON_SHORT) : Layout.INNER_MARGIN) - ifNotInsetY(Layout.INNER_MARGIN)
         );
         this.optionList = new OptionListWidget(this, optionListDim, this::onSectionFocused);
         this.addRenderableWidget(this.optionList);
+
+        var tooltipAreaY = y + topBarHeight + ifInsetY(Layout.TOOLTIP_OUTER_MARGIN);
+        this.tooltip.setTooltipArea(
+                new Dim2i(
+                        this.optionList.getLimitX(),
+                        tooltipAreaY,
+                        this.getLimitX() - this.optionList.getLimitX() - ifNotInsetX(Layout.TOOLTIP_OUTER_MARGIN),
+                        this.getLimitY() - tooltipAreaY - ifNotInsetY(Layout.TOOLTIP_OUTER_MARGIN)
+                )
+        );
     }
 
     private void updateScreenDimensions() {
@@ -200,6 +228,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
         var widthInterpolationEnd = maxContentWidth + maxInterpolatingBorderWidth;
 
         int contentWidth = this.width;
+        this.insetX = false;
         if (this.width > minContentWidth + Layout.CONTENT_BORDER_WIDTH) {
             // interpolate between min and max content width based on current width
             if (this.width < widthInterpolationEnd) {
@@ -208,12 +237,15 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable {
             } else {
                 contentWidth = maxContentWidth;
             }
+            this.insetX = true;
         }
 
         // for height, it's the other way around. there's a maximum border height
         int contentHeight = this.height;
-        if (this.height > Layout.CONTENT_MIN_HEIGHT + Layout.CONTENT_BORDER_WIDTH) {
-            contentHeight = this.height - Layout.CONTENT_BORDER_WIDTH;
+        this.insetY = false;
+        if (this.height > Layout.CONTENT_MIN_HEIGHT + Layout.CONTENT_BORDER_HEIGHT && this.insetX) {
+            contentHeight = this.height - Layout.CONTENT_BORDER_HEIGHT;
+            this.insetY = true;
         }
 
         // center the content area
