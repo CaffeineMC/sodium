@@ -18,6 +18,15 @@ import java.util.function.Supplier;
  * @param <V> The type of the option's value.
  */
 public interface StatefulOptionBuilder<V> extends OptionBuilder {
+    @Override
+    StatefulOptionBuilder<V> setName(Component name);
+
+    @Override
+    OptionBuilder setEnabled(boolean available);
+
+    @Override
+    OptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies);
+
     /**
      * Sets the storage handler for this option.
      *
@@ -25,6 +34,9 @@ public interface StatefulOptionBuilder<V> extends OptionBuilder {
      * @return The current builder instance.
      */
     StatefulOptionBuilder<V> setStorageHandler(StorageEventHandler storage);
+
+    @Override
+    StatefulOptionBuilder<V> setTooltip(Component tooltip);
 
     /**
      * Sets a functional tooltip for this option that changes the text based on the selected value.
@@ -51,6 +63,14 @@ public interface StatefulOptionBuilder<V> extends OptionBuilder {
     StatefulOptionBuilder<V> setFlags(OptionFlag... flags);
 
     /**
+     * Sets flags for this option using {@link ResourceLocation} instances.
+     *
+     * @param flags The flags as identifiers.
+     * @return The current builder instance.
+     */
+    StatefulOptionBuilder<V> setFlags(ResourceLocation... flags);
+
+    /**
      * Sets the default value for this option. The default value is used when the binding returns an invalid value, such as during the first load.
      *
      * @param value The default value.
@@ -68,6 +88,16 @@ public interface StatefulOptionBuilder<V> extends OptionBuilder {
     StatefulOptionBuilder<V> setDefaultProvider(Function<ConfigState, V> provider, ResourceLocation... dependencies);
 
     /**
+     * Sets whether the control for this option should be hidden when the option is disabled. This should only be set to false when the user should know what the state of the option is even when it is disabled, and they cannot interact with it.
+     *
+     * By default, controls are hidden when disabled.
+     *
+     * @param hidden True to hide the control when disabled, false to show it.
+     * @return The current builder instance.
+     */
+    StatefulOptionBuilder<V> setControlHiddenWhenDisabled(boolean hidden);
+
+    /**
      * Sets a binding for this option using save and load functions.
      *
      * @param save The function to save the option's value.
@@ -83,4 +113,12 @@ public interface StatefulOptionBuilder<V> extends OptionBuilder {
      * @return The current builder instance.
      */
     StatefulOptionBuilder<V> setBinding(OptionBinding<V> binding);
+
+    /**
+     * Sets a hook that is triggered after the options' value has been saved if it changed.
+     *
+     * @param hook The hook to be executed after applying the option.
+     * @return The current builder instance.
+     */
+    StatefulOptionBuilder<V> setApplyHook(Consumer<ConfigState> hook);
 }

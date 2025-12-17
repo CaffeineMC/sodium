@@ -191,7 +191,7 @@ public class OptionListWidget extends AbstractOptionList {
         return listHeight;
     }
 
-    public void jumpToPage(OptionPage page) {
+    public void jumpToPage(Page page) {
         var sectionInfo = this.pageToSectionInfo.get(page);
         if (sectionInfo != null) {
             this.ignoreNextScrollUpdate = true;
@@ -286,7 +286,7 @@ public class OptionListWidget extends AbstractOptionList {
             int textOffset = Layout.OPTION_TEXT_SIDE_PADDING;
             int textY = this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET;
             if (this.icon != null) {
-                textOffset = VideoSettingsScreen.renderIconWithSpacing(graphics, this.icon, this.textColor, this.getX(), this.getY(), this.getHeight(), Layout.ICON_MARGIN) + 12;
+                textOffset = VideoSettingsScreen.renderIconWithSpacing(graphics, this.icon, this.textColor, this.getX(), this.getY(), this.getHeight(), Layout.ICON_MARGIN);
                 textY = this.getCenterY() + Layout.ICON_TEXT_BASELINE_OFFSET;
             }
             this.drawString(graphics, truncateTextToFit(this.title, this.getWidth() - textOffset), this.getX() + textOffset, textY, this.textColor);

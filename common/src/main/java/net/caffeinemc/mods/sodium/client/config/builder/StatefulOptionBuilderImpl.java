@@ -16,8 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.Validate;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -26,9 +25,11 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
     private StorageEventHandler storage;
     private Function<V, Component> tooltipProvider;
     private OptionImpact impact;
-    private EnumSet<OptionFlag> flags;
+    private Set<ResourceLocation> flags;
     private DependentValue<V> defaultValue;
+    private Boolean controlHiddenWhenDisabled;
     private OptionBinding<V> binding;
+    private Consumer<ConfigState> applyHook;
 
     StatefulOptionBuilderImpl(ResourceLocation id) {
         super(id);
@@ -63,7 +64,7 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
         return getFirstNotNull(this.impact, StatefulOption::getImpact);
     }
 
-    EnumSet<OptionFlag> getFlags() {
+    Set<ResourceLocation> getFlags() {
         return getFirstNotNull(this.flags, StatefulOption::getFlags);
     }
 
@@ -71,8 +72,16 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
         return getFirstNotNull(this.defaultValue, StatefulOption::getDefaultValue);
     }
 
+    Boolean getControlHiddenWhenDisabled() {
+        return getFirstNotNull(this.controlHiddenWhenDisabled, StatefulOption::getControlHiddenWhenDisabled);
+    }
+
     OptionBinding<V> getBinding() {
         return getFirstNotNull(this.binding, StatefulOption::getBinding);
+    }
+
+    Consumer<ConfigState> getApplyHook() {
+        return getFirstNotNull(this.applyHook, StatefulOption::getApplyHook);
     }
 
     @Override
@@ -109,10 +118,16 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
 
     @Override
     public StatefulOptionBuilder<V> setFlags(OptionFlag... flags) {
-        if (this.getFlags() == null) {
-            this.flags = EnumSet.noneOf(OptionFlag.class);
+        var idFlags = new ResourceLocation[flags.length];
+        for (int i = 0; i < flags.length; i++) {
+            idFlags[i] = flags[i].getId();
         }
-        Collections.addAll(this.getFlags(), flags);
+        return this.setFlags(idFlags);
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setFlags(ResourceLocation... flags) {
+        this.flags = Set.of(flags);
         return this;
     }
 
@@ -164,6 +179,18 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
     @Override
     public StatefulOptionBuilder<V> setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies) {
         super.setEnabledProvider(provider, dependencies);
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setControlHiddenWhenDisabled(boolean hidden) {
+        this.controlHiddenWhenDisabled = hidden;
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setApplyHook(Consumer<ConfigState> hook) {
+        this.applyHook = hook;
         return this;
     }
 }

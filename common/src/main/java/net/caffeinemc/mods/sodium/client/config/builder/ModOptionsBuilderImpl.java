@@ -1,14 +1,22 @@
 package net.caffeinemc.mods.sodium.client.config.builder;
 
 import com.google.common.collect.ImmutableList;
-import net.caffeinemc.mods.sodium.api.config.structure.*;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.caffeinemc.mods.sodium.api.config.ConfigState;
+import net.caffeinemc.mods.sodium.api.config.option.FlagHook;
+import net.caffeinemc.mods.sodium.api.config.structure.ColorThemeBuilder;
+import net.caffeinemc.mods.sodium.api.config.structure.ModOptionsBuilder;
+import net.caffeinemc.mods.sodium.api.config.structure.OptionBuilder;
+import net.caffeinemc.mods.sodium.api.config.structure.PageBuilder;
 import net.caffeinemc.mods.sodium.client.config.structure.*;
 import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.Validate;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 class ModOptionsBuilderImpl implements ModOptionsBuilder {
@@ -20,6 +28,7 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
     private final List<Page> pages = new ArrayList<>();
     private List<OptionOverride> optionOverrides;
     private List<OptionOverlay> optionOverlays;
+    private Collection<FlagHook> flagHooks;
 
     ModOptionsBuilderImpl(String configId, String name, String version) {
         this.configId = configId;
@@ -43,7 +52,7 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
             this.theme = ColorTheme.PRESETS[Math.abs(this.configId.hashCode()) % ColorTheme.PRESETS.length];
         }
 
-        return new ModOptions(this.configId, this.name, this.version, this.theme, this.icon, ImmutableList.copyOf(this.pages), overrides, overlays);
+        return new ModOptions(this.configId, this.name, this.version, this.theme, this.icon, ImmutableList.copyOf(this.pages), overrides, overlays, this.flagHooks);
     }
 
     @Override
@@ -99,6 +108,20 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
             this.optionOverlays = new ArrayList<>();
         }
         this.optionOverlays.add(optionOverlay);
+        return this;
+    }
+
+    @Override
+    public ModOptionsBuilder registerFlagHook(BiConsumer<Collection<ResourceLocation>, ConfigState> hook, ResourceLocation... triggers) {
+        return this.registerFlagHook(new FlagHookImpl(hook, List.of(triggers)));
+    }
+
+    @Override
+    public ModOptionsBuilder registerFlagHook(FlagHook hook) {
+        if (this.flagHooks == null) {
+            this.flagHooks = new ObjectArrayList<>();
+        }
+        this.flagHooks.add(hook);
         return this;
     }
 }

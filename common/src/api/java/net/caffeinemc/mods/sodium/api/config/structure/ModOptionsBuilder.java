@@ -1,7 +1,12 @@
 package net.caffeinemc.mods.sodium.api.config.structure;
 
+import net.caffeinemc.mods.sodium.api.config.ConfigState;
+import net.caffeinemc.mods.sodium.api.config.option.FlagHook;
+import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.Collection;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -77,4 +82,21 @@ public interface ModOptionsBuilder {
      * @return The current builder instance.
      */
     ModOptionsBuilder registerOptionOverlay(ResourceLocation target, OptionBuilder overlay);
+
+    /**
+     * Registers a hook that will be called after an option which has any of the specified flags changed. This can be used to implement custom behavior in response to option changes. To hook on built-in flags, use the identifiers given by {@link OptionFlag#getId()}. The hook is given an array of all flags that triggered the hook. Note that the hook may be called with a set of flags larger than the set of flags it is interested in for performance reasons, since this lets us avoid generating a different flag set for every hook.
+     *
+     * @param hook    The hook to run, with the set of all triggered flags.
+     * @param triggers The flags to listen for.
+     * @return The current builder instance.
+     */
+    ModOptionsBuilder registerFlagHook(BiConsumer<Collection<ResourceLocation>, ConfigState> hook, ResourceLocation... triggers);
+
+    /**
+     * Registers a hook just like {@link #registerFlagHook(BiConsumer, ResourceLocation...)}, but using a {@link FlagHook}.
+     *
+     * @param hook The flag hook to register.
+     * @return The current builder instance.
+     */
+    ModOptionsBuilder registerFlagHook(FlagHook hook);
 }

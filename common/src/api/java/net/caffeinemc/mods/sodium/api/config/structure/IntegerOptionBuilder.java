@@ -14,6 +14,51 @@ import java.util.function.Supplier;
  * Builder interface for defining integer options. Refines builder methods to return this class instead of the base interface and have an {@link Integer} value type.
  */
 public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
+    @Override
+    IntegerOptionBuilder setName(Component name);
+
+    @Override
+    IntegerOptionBuilder setEnabled(boolean available);
+
+    @Override
+    IntegerOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies);
+
+    @Override
+    IntegerOptionBuilder setStorageHandler(StorageEventHandler storage);
+
+    @Override
+    IntegerOptionBuilder setTooltip(Component tooltip);
+
+    @Override
+    IntegerOptionBuilder setTooltip(Function<Integer, Component> tooltip);
+
+    @Override
+    IntegerOptionBuilder setImpact(OptionImpact impact);
+
+    @Override
+    IntegerOptionBuilder setFlags(OptionFlag... flags);
+
+    @Override
+    IntegerOptionBuilder setFlags(ResourceLocation... flags);
+
+    @Override
+    IntegerOptionBuilder setDefaultValue(Integer value);
+
+    @Override
+    IntegerOptionBuilder setDefaultProvider(Function<ConfigState, Integer> provider, ResourceLocation... dependencies);
+
+    @Override
+    IntegerOptionBuilder setControlHiddenWhenDisabled(boolean hidden);
+
+    @Override
+    IntegerOptionBuilder setBinding(Consumer<Integer> save, Supplier<Integer> load);
+
+    @Override
+    IntegerOptionBuilder setBinding(OptionBinding<Integer> binding);
+
+    @Override
+    IntegerOptionBuilder setApplyHook(Consumer<ConfigState> hook);
+
     /**
      * Sets the range for this integer option.
      *
@@ -39,7 +84,24 @@ public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
      * @param dependencies The options that this provider depends on.
      * @return The current builder instance.
      */
-    IntegerOptionBuilder setRangeProvider(Function<ConfigState, Range> provider, ResourceLocation... dependencies);
+    IntegerOptionBuilder setRangeProvider(Function<ConfigState, SteppedValidator> provider, ResourceLocation... dependencies);
+
+    /**
+     * Sets a validator for this integer option. A {@link Range} is a type of stepped validator.
+     *
+     * @param validator The validator to set.
+     * @return The current builder instance.
+     */
+    IntegerOptionBuilder setValidator(SteppedValidator validator);
+
+    /**
+     * Sets a provider function to determine the validator for this integer option based on the current configuration state.
+     *
+     * @param provider     The function that provides the validator.
+     * @param dependencies The options that this provider depends on.
+     * @return The current builder instance.
+     */
+    IntegerOptionBuilder setValidatorProvider(Function<ConfigState, SteppedValidator> provider, ResourceLocation... dependencies);
 
     /**
      * Sets the value formatter for this integer option.
@@ -48,40 +110,4 @@ public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
      * @return The current builder instance.
      */
     IntegerOptionBuilder setValueFormatter(ControlValueFormatter formatter);
-
-    @Override
-    IntegerOptionBuilder setName(Component name);
-
-    @Override
-    IntegerOptionBuilder setStorageHandler(StorageEventHandler storage);
-
-    @Override
-    IntegerOptionBuilder setTooltip(Component tooltip);
-
-    @Override
-    IntegerOptionBuilder setTooltip(Function<Integer, Component> tooltip);
-
-    @Override
-    IntegerOptionBuilder setImpact(OptionImpact impact);
-
-    @Override
-    IntegerOptionBuilder setFlags(OptionFlag... flags);
-
-    @Override
-    IntegerOptionBuilder setDefaultValue(Integer value);
-
-    @Override
-    IntegerOptionBuilder setDefaultProvider(Function<ConfigState, Integer> provider, ResourceLocation... dependencies);
-
-    @Override
-    IntegerOptionBuilder setEnabled(boolean available);
-
-    @Override
-    IntegerOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies);
-
-    @Override
-    IntegerOptionBuilder setBinding(Consumer<Integer> save, Supplier<Integer> load);
-
-    @Override
-    IntegerOptionBuilder setBinding(OptionBinding<Integer> binding);
 }

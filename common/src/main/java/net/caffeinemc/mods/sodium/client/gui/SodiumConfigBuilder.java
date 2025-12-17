@@ -9,7 +9,6 @@ import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
-import net.caffeinemc.mods.sodium.api.config.option.Range;
 import net.caffeinemc.mods.sodium.api.config.structure.*;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
@@ -42,12 +41,10 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
     private final StorageEventHandler sodiumStorage;
 
     private final @Nullable Window window;
-    private final Monitor monitor;
 
     public SodiumConfigBuilder() {
         var minecraft = Minecraft.getInstance();
         this.window = minecraft.getWindow();
-        this.monitor = this.window == null ? null : this.window.findBestMonitor();
 
         this.vanillaOpts = minecraft.options;
         this.vanillaStorage = this.vanillaOpts == null ? null : () -> {
@@ -66,6 +63,13 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
             SodiumClientMod.logger().info("Flushed changes to Sodium configuration");
         };
+    }
+
+    private Monitor getMonitor() {
+        if (this.window == null) {
+            return null;
+        }
+        return this.window.findBestMonitor();
     }
 
     @Override
@@ -153,12 +157,14 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setName(Component.translatable("options.guiScale"))
                                 .setTooltip(Component.translatable("sodium.options.gui_scale.tooltip"))
                                 .setValueFormatter(ControlValueFormatterImpls.guiScale())
-                                .setRangeProvider((state) -> new Range(0, this.window.calculateScale(0, Minecraft.getInstance().isEnforceUnicode()), 1), ConfigState.UPDATE_ON_REBUILD)
+                                .setValidatorProvider((state) -> {
+                                    var savedValue = state.readIntOption(ResourceLocation.parse("sodium:general.gui_scale"));
+                                    var realMax = this.window.calculateScale(0, Minecraft.getInstance().isEnforceUnicode());
+                                    var presentationMax = Math.max(savedValue, realMax);
+                                    return new GUIScaleRange(presentationMax);
+                                }, ConfigState.UPDATE_ON_REBUILD, ConfigState.UPDATE_ON_APPLY)
                                 .setDefaultValue(0)
-                                .setBinding(value -> {
-                                    this.vanillaOpts.guiScale().set(value);
-                                    Minecraft.getInstance().resizeDisplay();
-                                }, this.vanillaOpts.guiScale()::get)
+                                .setBinding(this.vanillaOpts.guiScale()::set, this.vanillaOpts.guiScale()::get)
                 )
                 .addOption(
                         builder.createBooleanOption(ResourceLocation.parse("sodium:general.fullscreen"))
@@ -184,23 +190,26 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setTooltip(Component.translatable("sodium.options.fullscreen_resolution.tooltip"))
                                 .setValueFormatter(ControlValueFormatterImpls.resolution())
                                 // the max value of 1 when the monitor is not available prevents an exception from being thrown
-                                .setRange(0, this.monitor != null ? this.monitor.getModeCount() : 1, 1)
+                                .setValidator(new FullscreenResolutionRange())
                                 .setDefaultValue(0)
                                 .setBinding(value -> {
-                                    if (this.monitor != null) {
-                                        this.window.setPreferredFullscreenVideoMode(0 == value ? Optional.empty() : Optional.of(this.monitor.getMode(value - 1)));
+                                    var monitor = this.getMonitor();
+                                    if (monitor != null) {
+                                        this.window.setPreferredFullscreenVideoMode(0 == value ? Optional.empty() : Optional.of(monitor.getMode(value - 1)));
                                     }
                                 }, () -> {
-                                    if (this.monitor == null) {
+                                    var monitor = this.getMonitor();
+                                    if (monitor == null) {
                                         return 0;
                                     } else {
                                         Optional<VideoMode> optional = this.window.getPreferredFullscreenVideoMode();
-                                        return optional.map((videoMode) -> this.monitor.getVideoModeIndex(videoMode) + 1).orElse(0);
+                                        return optional.map((videoMode) -> monitor.getVideoModeIndex(videoMode) + 1).orElse(0);
                                     }
                                 })
                                 .setEnabledProvider(
                                         (state) -> {
-                                            if (this.monitor == null || this.monitor.getModeCount() <= 0) {
+                                            var monitor = this.getMonitor();
+                                            if (monitor == null || monitor.getModeCount() <= 0) {
                                                 return false;
                                             }
                                             var os = OsUtils.getOs();

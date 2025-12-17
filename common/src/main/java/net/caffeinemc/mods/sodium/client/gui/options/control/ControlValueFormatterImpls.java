@@ -20,12 +20,13 @@ public class ControlValueFormatterImpls {
         return (v) -> {
             Monitor monitor = Minecraft.getInstance().getWindow().findBestMonitor();
 
-            if (monitor == null || OsUtils.getOs() != OsUtils.OperatingSystem.WIN) {
+            var os = OsUtils.getOs();
+            if (monitor == null || !(os == OsUtils.OperatingSystem.WIN || os == OsUtils.OperatingSystem.MAC)) {
                 return Component.empty();
             } else if (0 == v) {
                 return Component.translatable("options.fullscreen.current");
             } else {
-                return Component.literal(monitor.getMode(v - 1).toString().replace(" (24bit)", ""));
+                return Component.literal(monitor.getMode(Math.min(v - 1, monitor.getModeCount() - 1)).toString().replace(" (24bit)", ""));
             }
         };
     }

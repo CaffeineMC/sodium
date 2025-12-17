@@ -45,6 +45,9 @@ Here's a summary of the features this config API provides:
 - early registration for mods that need to have their options available before the window is created
 - entrypoint-based config registration
 - declarative builder-based style
+- option overlay or replacement to modify existing options
+  - overlaying only changes some properties of another option
+- custom flags to perform actions after certain changes
 
 ## Getting Started
 
@@ -226,8 +229,38 @@ Disabling an option with `OptionBuilder.setEnabled(false)` shows the option as s
 
 The binding configured with `OptionBuilder.setBinding` is called when changes to the options have been made and are applied, or when the value no longer fulfills the option's constraints and is reset to the default value. It's also used to initially load a value during initialization.
 
+The hook given with `OptionBuilder.setApplyHook` is run after the option has been saved if its valued changed. The hook is given access to the current `ConfigState`, without needing to declare dependencies since the hook does not return anything. This is equivalent to making a singleton custom flag for this option and registering a flag hook for it, and it is implemented this way internally.
+
 ### Using `? extends OptionBuilder`
 
 Some of the attributes of an option are required and you must set them, or registration will fail. The concrete extensions of `OptionBuilder` for each of the option types have some additional methods for configuring type-specific things, some of which are also required. Notably, `EnumOptionBuilder.setElementNameProvider` and `IntegerOptionBuilder.setValueFormatter` are required in order to display these types of options. The method `setValueFormatter` for integer options takes a `ControlValueFormatter`, which simply formats a number as a `Component`. Many standard value formatters are provided in `ControlValueFormatterImpls` (not part of the API package).
 
 Integer and enum options can have value constraints that restrict the set of allowed values the user can select. For integer options, a `Range` must be configured with `IntegerOptionBuilder.setRange` so that the slider's start, end, and step positions are well-defined. Enum options may be configured to only allow the selection of certain elements with `EnumOptionBuilder.setAllowedValues`.
+
+### Using Option Overlays and Replacement
+
+It's a typical use case to want to change one of Sodium's or another mod's options to have a different range or behavior. This can be achieved in one of two ways: by replacing the option or by applying an overlay to it.
+
+#### Replacement
+
+You can replace another option with `ModOptionsBuilder.registerOptionReplacement` by supplying a target identifier and a new option built as usual. The ID of the new option replaces the ID of the old option, and you can optionally choose to adopt the old option's ID to remain a target for overlays targeting it.
+
+#### Overlays
+
+Changing only some aspects of an option is possible through `ModOptionsBuilder.registerOptionOverlay`. You supply a partial option by using the same option builder as one usually does. The properties of the target options are replaced with the new ones if specified.
+
+### Custom Flags
+
+By registering a flag hook with `ModOptionsBuilder.registerFlagHook` you can run code after a flag from the specified set is triggered. After an option is applied and its value has been saved, all of its attached flags are triggered. The st of trigger flags for `registerFlagHook` can include custom flags, which are simply an arbitrary `Identifier`, or one of the meta flags, such as `OptionFlag.REQUIRES_RENDERER_RELOAD.getId()`.
+
+### Dependent Values
+
+To use a dynamic value method of the form `set___Provider`, you need to pass it a value provider. This provider is called with a reference to the current state of the options store. In order to be allowed to read the values of other options from it, you need to pass the IDs of the options this provider depends on as arguments to the method. Reading from options that are not declared as a dependency throws an exception. The system makes sure no dynamic value of an option depends on its own value or other options' values that indirectly depend on the first option, i.e. cycles are forbidden.
+
+#### Special Dependencies
+
+Providers that declare a dependency on `ConfigState.UPDATE_ON_REBUILD` are refreshed when the UI is rebuilt.
+
+Providers that declare a dependency on `ConfigState.UPDATE_ON_APPLY` are refreshed when the modified value of the option they are attached to is applied. This is the only situation in which a dynamic valued property of an option is allowed to depend on its containing options' value.
+
+Both of these special dependencies are typically not needed and making use of them is most likely user error. Sodium only uses them for making sure the extremely weird GUI Scale option behaves as expected.

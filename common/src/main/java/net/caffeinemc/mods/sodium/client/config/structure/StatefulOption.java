@@ -1,9 +1,9 @@
 package net.caffeinemc.mods.sodium.client.config.structure;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
-import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
 import net.caffeinemc.mods.sodium.client.config.value.DynamicValue;
@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Collection;
-import java.util.EnumSet;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -19,23 +19,48 @@ public abstract class StatefulOption<V> extends Option {
     final StorageEventHandler storage;
     final Function<V, Component> tooltipProvider;
     final OptionImpact impact;
-    final EnumSet<OptionFlag> flags;
+    final Set<ResourceLocation> flags;
     final DependentValue<V> defaultValue;
+    final Boolean controlHiddenWhenDisabled;
     final OptionBinding<V> binding;
+    final Consumer<ConfigState> applyHook;
+    final ResourceLocation applyHookId;
 
     private final Collection<DynamicValue<?>> dependents = new ObjectOpenHashSet<>(0);
+    private final Collection<DynamicValue<?>> applyDependents = new ObjectOpenHashSet<>(0);
 
     private V value;
     private V modifiedValue;
 
-    StatefulOption(ResourceLocation id, Collection<ResourceLocation> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<V, Component> tooltipProvider, OptionImpact impact, EnumSet<OptionFlag> flags, DependentValue<V> defaultValue, OptionBinding<V> binding) {
+    StatefulOption(
+            ResourceLocation id,
+            Collection<ResourceLocation> dependencies,
+            Component name,
+            DependentValue<Boolean> enabled,
+            StorageEventHandler storage,
+            Function<V, Component> tooltipProvider,
+            OptionImpact impact,
+            Set<ResourceLocation> flags,
+            DependentValue<V> defaultValue,
+            Boolean controlHiddenWhenDisabled,
+            OptionBinding<V> binding,
+            Consumer<ConfigState> applyHook
+    ) {
         super(id, dependencies, name, enabled);
         this.storage = storage;
         this.tooltipProvider = tooltipProvider;
         this.impact = impact;
         this.flags = flags;
         this.defaultValue = defaultValue;
+        this.controlHiddenWhenDisabled = controlHiddenWhenDisabled;
         this.binding = binding;
+        this.applyHook = applyHook;
+
+        if (applyHook != null) {
+            this.applyHookId = ResourceLocation.fromNamespaceAndPath("__meta__", "apply_hook_" + id.getNamespace() + "_" + id.getPath());
+        } else {
+            this.applyHookId = null;
+        }
     }
 
     @Override
@@ -46,6 +71,10 @@ public abstract class StatefulOption<V> extends Option {
 
     void registerDependent(DynamicValue<?> dependent) {
         this.dependents.add(dependent);
+    }
+
+    void registerApplyDependent(DynamicValue<?> dependent) {
+        this.applyDependents.add(dependent);
     }
 
     public void modifyValue(V value) {
@@ -66,32 +95,35 @@ public abstract class StatefulOption<V> extends Option {
         var previousValue = this.modifiedValue;
         this.value = this.binding.load();
 
-        if (!isValueValid(this.value)) {
-            var defaultValue = this.defaultValue.get(this.state);
-            if (defaultValue != this.value) {
-                this.value = defaultValue;
-                this.binding.save(this.value);
-                this.state.notifyStorageWrite(this.storage);
-            }
+        var newValue = this.validateValue(this.value);
+        if (newValue != this.value) {
+            this.value = newValue;
+            this.binding.save(this.value);
+            this.state.notifyStorageWrite(this.storage);
         }
 
         this.modifiedValue = this.value;
         if (this.value != previousValue) {
             this.state.invalidateDependents(this.dependents);
+            this.state.invalidateDependents(this.applyDependents);
         }
     }
 
     public V getValidatedValue() {
-        if (!isValueValid(this.modifiedValue)) {
-            var previousValue = this.modifiedValue;
-            this.modifiedValue = this.defaultValue.get(this.state);
-            if (this.modifiedValue != previousValue) {
-                this.state.invalidateDependents(this.dependents);
-            }
+        var newValue = this.validateValue(this.modifiedValue);
+        if (newValue != this.modifiedValue) {
+            this.modifiedValue = newValue;
+            this.state.invalidateDependents(this.dependents);
         }
 
         return this.modifiedValue;
     }
+
+    public V getAppliedValue() {
+        return this.value;
+    }
+
+    abstract V validateValue(V value);
 
     @Override
     public boolean hasChanged() {
@@ -104,13 +136,10 @@ public abstract class StatefulOption<V> extends Option {
             this.value = this.modifiedValue;
             this.binding.save(this.value);
             this.state.notifyStorageWrite(this.storage);
+            this.state.invalidateDependents(this.applyDependents);
             return true;
         }
         return false;
-    }
-
-    public boolean isValueValid(V value) {
-        return true;
     }
 
     @Override
@@ -124,7 +153,7 @@ public abstract class StatefulOption<V> extends Option {
     }
 
     @Override
-    public EnumSet<OptionFlag> getFlags() {
+    public Set<ResourceLocation> getFlags() {
         return this.flags;
     }
 
@@ -140,7 +169,29 @@ public abstract class StatefulOption<V> extends Option {
         return this.defaultValue;
     }
 
+    public Boolean getControlHiddenWhenDisabled() {
+        return this.controlHiddenWhenDisabled;
+    }
+
+    public boolean showControl() {
+        if (this.isEnabled()) {
+            return true;
+        }
+        if (this.controlHiddenWhenDisabled == null) {
+            return false;
+        }
+        return !this.controlHiddenWhenDisabled;
+    }
+
     public OptionBinding<V> getBinding() {
         return this.binding;
+    }
+
+    public Consumer<ConfigState> getApplyHook() {
+        return this.applyHook;
+    }
+
+    public ResourceLocation getApplyHookId() {
+        return this.applyHookId;
     }
 }

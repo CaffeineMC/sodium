@@ -30,6 +30,51 @@ public interface EnumOptionBuilder<E extends Enum<E>> extends StatefulOptionBuil
         return e -> names[e.ordinal()];
     }
 
+    @Override
+    EnumOptionBuilder<E> setName(Component name);
+
+    @Override
+    EnumOptionBuilder<E> setEnabled(boolean available);
+
+    @Override
+    EnumOptionBuilder<E> setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies);
+
+    @Override
+    EnumOptionBuilder<E> setStorageHandler(StorageEventHandler storage);
+
+    @Override
+    EnumOptionBuilder<E> setTooltip(Component tooltip);
+
+    @Override
+    EnumOptionBuilder<E> setTooltip(Function<E, Component> tooltip);
+
+    @Override
+    EnumOptionBuilder<E> setImpact(OptionImpact impact);
+
+    @Override
+    EnumOptionBuilder<E> setFlags(OptionFlag... flags);
+
+    @Override
+    EnumOptionBuilder<E> setFlags(ResourceLocation... flags);
+
+    @Override
+    EnumOptionBuilder<E> setDefaultValue(E value);
+
+    @Override
+    EnumOptionBuilder<E> setDefaultProvider(Function<ConfigState, E> provider, ResourceLocation... dependencies);
+
+    @Override
+    EnumOptionBuilder<E> setControlHiddenWhenDisabled(boolean hidden);
+
+    @Override
+    EnumOptionBuilder<E> setBinding(Consumer<E> save, Supplier<E> load);
+
+    @Override
+    EnumOptionBuilder<E> setBinding(OptionBinding<E> binding);
+
+    @Override
+    EnumOptionBuilder<E> setApplyHook(Consumer<ConfigState> hook);
+
     /**
      * Sets the allowed values for this enum option.
      *
@@ -54,40 +99,4 @@ public interface EnumOptionBuilder<E extends Enum<E>> extends StatefulOptionBuil
      * @return This builder instance.
      */
     EnumOptionBuilder<E> setElementNameProvider(Function<E, Component> provider);
-
-    @Override
-    EnumOptionBuilder<E> setName(Component name);
-
-    @Override
-    EnumOptionBuilder<E> setStorageHandler(StorageEventHandler storage);
-
-    @Override
-    EnumOptionBuilder<E> setTooltip(Component tooltip);
-
-    @Override
-    EnumOptionBuilder<E> setTooltip(Function<E, Component> tooltip);
-
-    @Override
-    EnumOptionBuilder<E> setImpact(OptionImpact impact);
-
-    @Override
-    EnumOptionBuilder<E> setFlags(OptionFlag... flags);
-
-    @Override
-    EnumOptionBuilder<E> setDefaultValue(E value);
-
-    @Override
-    EnumOptionBuilder<E> setDefaultProvider(Function<ConfigState, E> provider, ResourceLocation... dependencies);
-
-    @Override
-    EnumOptionBuilder<E> setEnabled(boolean available);
-
-    @Override
-    EnumOptionBuilder<E> setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies);
-
-    @Override
-    EnumOptionBuilder<E> setBinding(Consumer<E> save, Supplier<E> load);
-
-    @Override
-    EnumOptionBuilder<E> setBinding(OptionBinding<E> binding);
 }

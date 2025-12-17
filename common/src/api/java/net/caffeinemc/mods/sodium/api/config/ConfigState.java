@@ -12,6 +12,11 @@ public interface ConfigState {
     ResourceLocation UPDATE_ON_REBUILD = ResourceLocation.parse("__meta__:update_on_rebuild");
 
     /**
+     * Special option ID to be passed as a dependency of a dynamic value provider to indicate that the provider should be re-evaluated when the value for the parent option is applied. This allows the dynamic value to read the value of the option itself, which would be an error otherwise. It does not allow reading other options unless they are also declared as dependencies.
+     */
+    ResourceLocation UPDATE_ON_APPLY = ResourceLocation.parse("__meta__:update_on_apply");
+
+    /**
      * Reads a boolean option from the configuration state.
      *
      * @param id The ID of the option.
