@@ -51,6 +51,10 @@ public class TickBoxControl implements Control {
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             super.render(graphics, mouseX, mouseY, delta);
 
+            if (!this.option.showControl()) {
+                return;
+            }
+
             final int x = this.getLimitX() - 16;
             final int y = this.getCenterY() - 5;
             final int xEnd = x + 10;

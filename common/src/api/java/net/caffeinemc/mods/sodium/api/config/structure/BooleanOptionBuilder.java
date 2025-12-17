@@ -50,6 +50,9 @@ public interface BooleanOptionBuilder extends StatefulOptionBuilder<Boolean> {
     BooleanOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
 
     @Override
+    BooleanOptionBuilder setControlHiddenWhenDisabled(boolean hidden);
+
+    @Override
     BooleanOptionBuilder setBinding(Consumer<Boolean> save, Supplier<Boolean> load);
 
     @Override

@@ -23,7 +23,7 @@ class BooleanOptionBuilderImpl extends StatefulOptionBuilderImpl<BooleanOption, 
     BooleanOption build() {
         this.prepareBuild();
 
-        return new BooleanOption(this.id, this.getDependencies(), this.getName(), this.getEnabled(), this.getStorage(), this.getTooltipProvider(), this.getImpact(), this.getFlags(), this.getDefaultValue(), this.getBinding(), this.getApplyHook());
+        return new BooleanOption(this.id, this.getDependencies(), this.getName(), this.getEnabled(), this.getStorage(), this.getTooltipProvider(), this.getImpact(), this.getFlags(), this.getDefaultValue(), this.getControlHiddenWhenDisabled(), this.getBinding(), this.getApplyHook());
     }
 
     @Override
@@ -94,6 +94,12 @@ class BooleanOptionBuilderImpl extends StatefulOptionBuilderImpl<BooleanOption, 
     @Override
     public BooleanOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies) {
         super.setEnabledProvider(provider, dependencies);
+        return this;
+    }
+
+    @Override
+    public BooleanOptionBuilder setControlHiddenWhenDisabled(boolean hidden) {
+        super.setControlHiddenWhenDisabled(hidden);
         return this;
     }
 

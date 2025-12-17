@@ -21,6 +21,7 @@ public abstract class StatefulOption<V> extends Option {
     final OptionImpact impact;
     final Set<Identifier> flags;
     final DependentValue<V> defaultValue;
+    final Boolean controlHiddenWhenDisabled;
     final OptionBinding<V> binding;
     final Consumer<ConfigState> applyHook;
     final Identifier applyHookId;
@@ -31,13 +32,14 @@ public abstract class StatefulOption<V> extends Option {
     private V value;
     private V modifiedValue;
 
-    StatefulOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<V, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<V> defaultValue, OptionBinding<V> binding, Consumer<ConfigState> applyHook) {
+    StatefulOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<V, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<V> defaultValue, Boolean controlHiddenWhenDisabled, OptionBinding<V> binding, Consumer<ConfigState> applyHook) {
         super(id, dependencies, name, enabled);
         this.storage = storage;
         this.tooltipProvider = tooltipProvider;
         this.impact = impact;
         this.flags = flags;
         this.defaultValue = defaultValue;
+        this.controlHiddenWhenDisabled = controlHiddenWhenDisabled;
         this.binding = binding;
         this.applyHook = applyHook;
 
@@ -152,6 +154,20 @@ public abstract class StatefulOption<V> extends Option {
 
     public DependentValue<V> getDefaultValue() {
         return this.defaultValue;
+    }
+
+    public Boolean getControlHiddenWhenDisabled() {
+        return this.controlHiddenWhenDisabled;
+    }
+
+    public boolean showControl() {
+        if (this.isEnabled()) {
+            return true;
+        }
+        if (this.controlHiddenWhenDisabled == null) {
+            return false;
+        }
+        return !this.controlHiddenWhenDisabled;
     }
 
     public OptionBinding<V> getBinding() {

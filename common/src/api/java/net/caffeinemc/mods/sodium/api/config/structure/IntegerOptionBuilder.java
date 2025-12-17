@@ -100,6 +100,9 @@ public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
     IntegerOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
 
     @Override
+    IntegerOptionBuilder setControlHiddenWhenDisabled(boolean hidden);
+
+    @Override
     IntegerOptionBuilder setBinding(Consumer<Integer> save, Supplier<Integer> load);
 
     @Override

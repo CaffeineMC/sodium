@@ -21,8 +21,8 @@ public class EnumOption<E extends Enum<E>> extends StatefulOption<E> {
     private final DependentValue<Set<E>> allowedValues;
     private final Function<E, Component> elementNameProvider;
 
-    public EnumOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<E, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<E> defaultValue, OptionBinding<E> binding, Consumer<ConfigState> applyHook, Class<E> enumClass, DependentValue<Set<E>> allowedValues, Function<E, Component> elementNameProvider) {
-        super(id, dependencies, name, enabled, storage, tooltipProvider, impact, flags, defaultValue, binding, applyHook);
+    public EnumOption(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled, StorageEventHandler storage, Function<E, Component> tooltipProvider, OptionImpact impact, Set<Identifier> flags, DependentValue<E> defaultValue, Boolean controlHiddenWhenDisabled, OptionBinding<E> binding, Consumer<ConfigState> applyHook, Class<E> enumClass, DependentValue<Set<E>> allowedValues, Function<E, Component> elementNameProvider) {
+        super(id, dependencies, name, enabled, storage, tooltipProvider, impact, flags, defaultValue, controlHiddenWhenDisabled, binding, applyHook);
         this.enumClass = enumClass;
         this.allowedValues = allowedValues;
         this.elementNameProvider = elementNameProvider;

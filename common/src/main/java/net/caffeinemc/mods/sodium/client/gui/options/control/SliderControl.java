@@ -86,6 +86,10 @@ public class SliderControl implements Control {
             // render the label first and then the slider to prevent the highlight rect from darkening the slider
             super.render(graphics, mouseX, mouseY, delta);
 
+            if (!this.option.showControl()) {
+                return;
+            }
+
             if (drawSlider) {
                 this.thumbPosition = this.getThumbPositionForValue(value);
 

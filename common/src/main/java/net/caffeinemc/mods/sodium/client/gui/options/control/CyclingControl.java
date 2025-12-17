@@ -60,6 +60,10 @@ public class CyclingControl<T extends Enum<T>> implements Control {
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             super.render(graphics, mouseX, mouseY, delta);
 
+            if (!this.option.showControl()) {
+                return;
+            }
+
             var value = this.option.getValidatedValue();
             Component name = this.option.getElementName(value);
 

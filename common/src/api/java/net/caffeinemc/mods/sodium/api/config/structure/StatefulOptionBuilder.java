@@ -18,6 +18,9 @@ import java.util.function.Supplier;
  * @param <V> The type of the option's value.
  */
 public interface StatefulOptionBuilder<V> extends OptionBuilder {
+    @Override
+    StatefulOptionBuilder<V> setName(Component name);
+
     /**
      * Sets the storage handler for this option.
      *
@@ -25,6 +28,9 @@ public interface StatefulOptionBuilder<V> extends OptionBuilder {
      * @return The current builder instance.
      */
     StatefulOptionBuilder<V> setStorageHandler(StorageEventHandler storage);
+
+    @Override
+    StatefulOptionBuilder<V> setTooltip(Component tooltip);
 
     /**
      * Sets a functional tooltip for this option that changes the text based on the selected value.
@@ -74,6 +80,22 @@ public interface StatefulOptionBuilder<V> extends OptionBuilder {
      * @return The current builder instance.
      */
     StatefulOptionBuilder<V> setDefaultProvider(Function<ConfigState, V> provider, Identifier... dependencies);
+
+    @Override
+    OptionBuilder setEnabled(boolean available);
+
+    @Override
+    OptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
+
+    /**
+     * Sets whether the control for this option should be hidden when the option is disabled. This should only be set to false when the user should know what the state of the option is even when it is disabled, and they cannot interact with it.
+     *
+     * By default, controls are hidden when disabled.
+     *
+     * @param hidden True to hide the control when disabled, false to show it.
+     * @return The current builder instance.
+     */
+    StatefulOptionBuilder<V> setControlHiddenWhenDisabled(boolean hidden);
 
     /**
      * Sets a binding for this option using save and load functions.

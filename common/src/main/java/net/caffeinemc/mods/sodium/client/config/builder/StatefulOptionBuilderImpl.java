@@ -27,6 +27,7 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
     private OptionImpact impact;
     private Set<Identifier> flags;
     private DependentValue<V> defaultValue;
+    private Boolean controlHiddenWhenDisabled;
     private OptionBinding<V> binding;
     private Consumer<ConfigState> applyHook;
 
@@ -69,6 +70,10 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
 
     DependentValue<V> getDefaultValue() {
         return getFirstNotNull(this.defaultValue, StatefulOption::getDefaultValue);
+    }
+
+    Boolean getControlHiddenWhenDisabled() {
+        return getFirstNotNull(this.controlHiddenWhenDisabled, StatefulOption::getControlHiddenWhenDisabled);
     }
 
     OptionBinding<V> getBinding() {
@@ -174,6 +179,12 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
     @Override
     public StatefulOptionBuilder<V> setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies) {
         super.setEnabledProvider(provider, dependencies);
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setControlHiddenWhenDisabled(boolean hidden) {
+        this.controlHiddenWhenDisabled = hidden;
         return this;
     }
 

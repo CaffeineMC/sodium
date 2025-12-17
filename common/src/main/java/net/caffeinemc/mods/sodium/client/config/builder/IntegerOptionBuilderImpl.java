@@ -37,7 +37,7 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     IntegerOption build() {
         this.prepareBuild();
 
-        return new IntegerOption(this.id, this.getDependencies(), this.getName(), this.getEnabled(), this.getStorage(), this.getTooltipProvider(), this.getImpact(), this.getFlags(), this.getValidatorProvider(), this.getDefaultValue(), this.getBinding(), this.getApplyHook(), this.getValueFormatter());
+        return new IntegerOption(this.id, this.getDependencies(), this.getName(), this.getEnabled(), this.getStorage(), this.getTooltipProvider(), this.getImpact(), this.getFlags(), this.getValidatorProvider(), this.getDefaultValue(), this.getControlHiddenWhenDisabled(), this.getBinding(), this.getApplyHook(), this.getValueFormatter());
     }
 
     @Override
@@ -158,6 +158,12 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     @Override
     public IntegerOptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies) {
         super.setEnabledProvider(provider, dependencies);
+        return this;
+    }
+
+    @Override
+    public IntegerOptionBuilder setControlHiddenWhenDisabled(boolean hidden) {
+        super.setControlHiddenWhenDisabled(hidden);
         return this;
     }
 

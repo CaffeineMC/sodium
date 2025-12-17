@@ -89,6 +89,9 @@ public interface EnumOptionBuilder<E extends Enum<E>> extends StatefulOptionBuil
     EnumOptionBuilder<E> setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
 
     @Override
+    EnumOptionBuilder<E> setControlHiddenWhenDisabled(boolean hidden);
+
+    @Override
     EnumOptionBuilder<E> setBinding(Consumer<E> save, Supplier<E> load);
 
     @Override
