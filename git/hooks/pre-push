@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# read inputs passed by pre-push
+while read -r _local_ref _local_sha remote_ref _remote_sha
+do
+    case "$remote_ref" in
+        refs/tags/*)
+            tag_version="${remote_ref#refs/tags/mc*?-}"
+            mod_version=$(sed -n 's/.*MOD_VERSION: String = "\(.*\)"/\1/p' buildSrc/src/main/kotlin/BuildConfig.kt)
+
+            # check if either local branch is dirty or if there's a tag mismatch
+            if [ -n "$(git status --porcelain)" ]; then
+                echo "Local branch is dirty, please commit your changes or stash them before trying to push a tag"
+                exit 1
+            elif [ "$tag_version" != "$mod_version" ]; then
+                echo "Tag version and Mod version does not match! Did you forget to update the mod version?"
+                echo "Tag version : $tag_version"
+                echo "Mod version : $mod_version"
+                exit 1
+            fi
+            ;;
+    esac
+done
+
+exit 0
