@@ -65,10 +65,6 @@ public class Config implements ConfigState {
             for (var page : modConfig.pages()) {
                 for (var group : page.groups()) {
                     for (var option : group.options()) {
-                        if (!option.id.getNamespace().equals(modConfig.configId())) {
-                            throw new IllegalArgumentException("Namespace of option id '" + option.id + "' does not match the configId '" + modConfig.configId() + "' of the enclosing mod config");
-                        }
-
                         this.options.put(option.id, option);
                         option.setParentConfig(this);
                     }
