@@ -84,7 +84,7 @@ public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
      * @param dependencies The options that this provider depends on.
      * @return The current builder instance.
      */
-    IntegerOptionBuilder setRangeProvider(Function<ConfigState, SteppedValidator> provider, Identifier... dependencies);
+    IntegerOptionBuilder setRangeProvider(Function<ConfigState, ? extends SteppedValidator> provider, Identifier... dependencies);
 
     /**
      * Sets a validator for this integer option. A {@link Range} is a type of stepped validator.
@@ -101,7 +101,7 @@ public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
      * @param dependencies The options that this provider depends on.
      * @return The current builder instance.
      */
-    IntegerOptionBuilder setValidatorProvider(Function<ConfigState, SteppedValidator> provider, Identifier... dependencies);
+    IntegerOptionBuilder setValidatorProvider(Function<ConfigState, ? extends SteppedValidator> provider, Identifier... dependencies);
 
     /**
      * Sets the value formatter for this integer option.
