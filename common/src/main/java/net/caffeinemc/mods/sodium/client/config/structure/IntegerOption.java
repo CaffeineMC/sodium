@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class IntegerOption extends StatefulOption<Integer> {
-    private final DependentValue<SteppedValidator> validator;
+    private final DependentValue<? extends SteppedValidator> validator;
     private final ControlValueFormatter valueFormatter;
 
     public IntegerOption(
@@ -34,7 +34,7 @@ public class IntegerOption extends StatefulOption<Integer> {
             Boolean controlHiddenWhenDisabled,
             OptionBinding<Integer> binding,
             Consumer<ConfigState> applyHook,
-            DependentValue<SteppedValidator> validator,
+            DependentValue<? extends SteppedValidator> validator,
             ControlValueFormatter valueFormatter
     ) {
         super(id, dependencies, name, enabled, storage, tooltipProvider, impact, flags, defaultValue, controlHiddenWhenDisabled, binding, applyHook);
@@ -70,7 +70,7 @@ public class IntegerOption extends StatefulOption<Integer> {
         return this.valueFormatter.format(value);
     }
 
-    public DependentValue<SteppedValidator> getValidatorProvider() {
+    public DependentValue<? extends SteppedValidator> getValidatorProvider() {
         return this.validator;
     }
 

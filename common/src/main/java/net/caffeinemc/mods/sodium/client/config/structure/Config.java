@@ -30,7 +30,7 @@ public class Config implements ConfigState {
     private final Set<FlagHook> triggeredHooks = new ObjectOpenHashSet<>();
 
     public Config(List<ModOptions> modOptions) {
-        this.modOptions = modOptions;
+        this.modOptions = Collections.unmodifiableList(modOptions);
 
         this.collectOptions();
         this.applyOptionChanges();
