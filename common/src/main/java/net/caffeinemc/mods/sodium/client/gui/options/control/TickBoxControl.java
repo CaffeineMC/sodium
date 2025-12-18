@@ -117,7 +117,6 @@ public class TickBoxControl implements Control {
 
         private void toggleControl() {
             this.playClickSound();
-            this.playClickSound();
 
             this.option.modifyValue(!this.option.getValidatedValue());
         }

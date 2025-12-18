@@ -96,8 +96,6 @@ public class CyclingControl<T extends Enum<T>> implements Control {
         private void cycleControl(boolean reverse) {
             this.playClickSound();
 
-            this.playClickSound();
-
             var currentValue = this.option.getValidatedValue();
             int startIndex = 0;
             for (; startIndex < this.baseValues.length; startIndex++) {
