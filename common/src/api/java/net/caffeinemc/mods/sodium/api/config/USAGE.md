@@ -203,9 +203,9 @@ Sodium constructs one instance of the entrypoint class, and then calls the early
 
 ### Icon Design
 
-The UI is designed with monochrome binary-alpha icons in mind, which are tinted in the color of each mod's theme. We recommend users of the api either don't supply an icon, or show an appropriately styled icon. Users can also choose to break this convention and present a regular full-color icon through means provided in the API.
+The UI is designed with monochrome, binary-alpha icons in mind. These icons are tinted the color of each mod's theme. We recommend that API users avoid displaying an icon that isn't appropriately styled. However, users can choose to deviate from this convention by presenting a regular, full-color icon using the means provided in the API.
 
-Explicitly setting a theme color is not required, as the system will automatically pick one from a predefined set. If a custom theme color is set, note that it should have a minimum level of saturation to remain true to its purpose: an accent color. The theme color's saturation is automatically adjusted to fulfill this purpose. It is also not reasonable to set the brightness/value of the theme color to be too dark, for aesthetic and accessibility. The theme base color should also not be chosen too bright or the highlight color, which is brighter, has no contrast against it.
+It is not necessary to explicitly set a theme color, as the system will automatically select one from a predefined set. However, if you set a custom theme color, it should have a minimum level of saturation to remain true to its purpose as an accent color. For aesthetic and accessibility reasons, it is also not reasonable to set the brightness/value of the theme color to be too dark. The theme base color should also not be too bright, otherwise the highlight color, which is brighter, will have no contrast against it.
 
 ## API Notes
 
