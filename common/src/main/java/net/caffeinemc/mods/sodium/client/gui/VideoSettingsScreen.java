@@ -224,12 +224,12 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
         var minContentWidth = baseContentWidth + (Layout.MAX_TOOLTIP_WIDTH - Layout.MIN_TOOLTIP_WIDTH) / 2 + Layout.MIN_TOOLTIP_WIDTH;
         var maxContentWidth = baseContentWidth + Layout.MAX_TOOLTIP_WIDTH;
         var maxInterpolatingBorderWidth = 100;
-        var widthInterpolationStart = minContentWidth + Layout.CONTENT_BORDER_WIDTH;
+        var widthInterpolationStart = minContentWidth + Layout.CONTENT_BORDER_MIN_WIDTH;
         var widthInterpolationEnd = maxContentWidth + maxInterpolatingBorderWidth;
 
         int contentWidth = this.width;
         this.insetX = false;
-        if (this.width > minContentWidth + Layout.CONTENT_BORDER_WIDTH) {
+        if (this.width > minContentWidth + Layout.CONTENT_BORDER_MIN_WIDTH) {
             // interpolate between min and max content width based on current width
             if (this.width < widthInterpolationEnd) {
                 float t = (float) (this.width - widthInterpolationStart) / (widthInterpolationEnd - widthInterpolationStart);
