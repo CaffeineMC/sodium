@@ -25,6 +25,7 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
     private String version;
     private ColorTheme theme;
     private Identifier icon;
+    private boolean iconMonochrome = true;
     private final List<Page> pages = new ArrayList<>();
     private List<OptionOverride> optionOverrides;
     private List<OptionOverlay> optionOverlays;
@@ -52,7 +53,7 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
             this.theme = ColorTheme.PRESETS[Math.abs(this.configId.hashCode()) % ColorTheme.PRESETS.length];
         }
 
-        return new ModOptions(this.configId, this.name, this.version, this.theme, this.icon, ImmutableList.copyOf(this.pages), overrides, overlays, this.flagHooks);
+        return new ModOptions(this.configId, this.name, this.version, this.theme, this.icon, this.iconMonochrome, ImmutableList.copyOf(this.pages), overrides, overlays, this.flagHooks);
     }
 
     @Override
@@ -82,6 +83,13 @@ class ModOptionsBuilderImpl implements ModOptionsBuilder {
     @Override
     public ModOptionsBuilder setIcon(Identifier texture) {
         this.icon = texture;
+        return this;
+    }
+
+    @Override
+    public ModOptionsBuilder setNonTintedIcon(Identifier texture) {
+        this.icon = texture;
+        this.iconMonochrome = false;
         return this;
     }
 

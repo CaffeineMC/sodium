@@ -199,7 +199,13 @@ Each mod adds a page for its options, within each page there are groups of optio
 
 Some attributes of an option can be provided dynamically, meaning the returned value can depend on the state of another option. The default value, option enablement, and the allowed values can be computed dynamically. The methods for setting a dynamic value provider also require you to specify a list of dependencies, which are the resource locations of the options that the dynamic value provider reads from. Since dynamically evaluated attributes may change the state of an option, cyclic dependencies will lead to option registration failing and the game crashing.
 
-Sodium constructs one instance of the entrypoint class, and then calls the early and late registration methods at the right time. 
+Sodium constructs one instance of the entrypoint class, and then calls the early and late registration methods at the right time.
+
+### Icon Design
+
+The UI is designed with monochrome binary-alpha icons in mind, which are tinted in the color of each mod's theme. We recommend users of the api either don't supply an icon, or show an appropriately styled icon. Users can also choose to break this convention and present a regular full-color icon through means provided in the API.
+
+Explicitly setting a theme color is not required, as the system will automatically pick one from a predefined set. If a custom theme color is set, note that it should have a minimum level of saturation to remain true to its purpose: an accent color. The theme color's saturation is automatically adjusted to fulfill this purpose. It is also not reasonable to set the brightness/value of the theme color to be too dark, for aesthetic and accessibility. The theme base color should also not be chosen too bright or the highlight color, which is brighter, has no contrast against it.
 
 ## API Notes
 
@@ -209,7 +215,7 @@ The API is largely self-explanatory and an example is provided above. Also see S
 
 The `ConfigBuilder` instance passed to the registration method allows quick and easy registration of a mod's own options using `ConfigBuilder.registerOwnModOptions`. The mod's id, name, version or a formatter for the existing version, and the color theme can be configured on the returned `ModOptionsBuilder`. It's also possible to register options for additional mods using `ConfigBuilder.registerModOptions`. Which mod is the "own" mod for `registerOwnModOptions` is determined by the mod that owns the metadata-based entrypoint or the mod id passed to the `@ConfigEntryPointForge("examplemod")` annotation.
 
-Each registered mod gets its own header in the page list. The color of the header and the corresponding entries is randomly selected from a predefined list by default, but can be customized using `ModOptionsBuilder.setColorTheme`. A color theme is created either by specifying three (A)RGB colors or a single base color with the lighter and darker colors getting derived automatically. A mod can also specify an icon with `ModOptionsBuilder.setIcon`, which takes a `Identifier` pointing to a texture, which will be tinted in the theme color and rendered in its entirety as a square.
+Each registered mod gets its own header in the page list. The color of the header and the corresponding entries is randomly selected from a predefined list by default, but can be customized using `ModOptionsBuilder.setColorTheme`. A color theme is created either by specifying three (A)RGB colors or a single base color with the lighter and darker colors getting derived automatically. A mod can also specify an icon with `ModOptionsBuilder.setIcon`, which takes a `Identifier` pointing to a texture, which will be tinted in the theme color and rendered in its entirety as a square. Icons set with `ModOptionsBuilder.setNonTintedIcon` are not tinted.
 
 To simply switch to a new `Screen` when an entry in the video settings screen's page list is clicked, use `ConfigBuilder.createExternalPage` and add the returned page normally after configuring it with a name and a `Consumer<Screen>` that receives the current screen and switches to your custom screen.
 

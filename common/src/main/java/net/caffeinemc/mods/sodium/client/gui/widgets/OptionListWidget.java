@@ -88,7 +88,7 @@ public class OptionListWidget extends AbstractOptionList {
             // Add mod header if mod has changed
             if (lastSource == null || lastSource.getModOptions() != modOptions) {
                 listHeight += Layout.OPTION_MOD_MARGIN;
-                var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions.name(), theme, modOptions.icon());
+                var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions.name(), theme, modOptions.icon(), modOptions.iconMonochrome());
                 this.addRenderableChild(modHeader);
                 listHeight += this.entryHeight;
             }
@@ -131,7 +131,7 @@ public class OptionListWidget extends AbstractOptionList {
             // Add mod header
             listHeight += Layout.OPTION_MOD_MARGIN;
             var modHeaderStart = listHeight;
-            var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions.name(), theme, modOptions.icon());
+            var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions.name(), theme, modOptions.icon(), modOptions.iconMonochrome());
             this.addRenderableChild(modHeader);
             listHeight += this.entryHeight;
 
@@ -272,10 +272,12 @@ public class OptionListWidget extends AbstractOptionList {
 
     private static class ModHeaderWidget extends HeaderWidget {
         final Identifier icon;
+        final boolean iconMonochrome;
 
-        public ModHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme, Identifier icon) {
+        public ModHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme, Identifier icon, boolean iconMonochrome) {
             super(list, dim, ChatFormatting.BOLD + title, theme.themeLighter, Colors.BACKGROUND_DARKER);
             this.icon = icon;
+            this.iconMonochrome = iconMonochrome;
         }
 
         @Override
@@ -287,7 +289,7 @@ public class OptionListWidget extends AbstractOptionList {
             int textOffset = Layout.OPTION_TEXT_SIDE_PADDING;
             int textY = this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET;
             if (this.icon != null) {
-                textOffset = VideoSettingsScreen.renderIconWithSpacing(graphics, this.icon, this.textColor, this.getX(), this.getY(), this.getHeight(), Layout.ICON_MARGIN);
+                textOffset = VideoSettingsScreen.renderIconWithSpacing(graphics, this.icon,  this.textColor, this.iconMonochrome, this.getX(), this.getY(), this.getHeight(), Layout.ICON_MARGIN);
                 textY = this.getCenterY() + Layout.ICON_TEXT_BASELINE_OFFSET;
             }
             this.drawString(graphics, truncateTextToFit(this.title, this.getWidth() - textOffset), this.getX() + textOffset, textY, this.textColor);

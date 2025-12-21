@@ -39,6 +39,8 @@ public interface ModOptionsBuilder {
 
     /**
      * Sets the color theme for the mod options UI. A color theme is optional and a theme will be chosen at random (deterministically) from a predetermined set of reasonable colors if none is provided.
+     * <p>
+     * Basic validation is applied to the color theme to ensure it's not grayscale and not too dark.
      *
      * @param colorTheme The color theme builder.
      * @return The current builder instance.
@@ -46,12 +48,31 @@ public interface ModOptionsBuilder {
     ModOptionsBuilder setColorTheme(ColorThemeBuilder colorTheme);
 
     /**
-     * Sets the icon texture for the mod. The icon should be centered within the square texture and the background should be transparent. The icon will be rendered monochrome tinted in the mod's theme color. No icon will be shown if none is provided and the layout adjusted accordingly.
+     * Sets the icon texture for the mod. See the documentation for more information about appropriate icon design. The summary is as follows. An icon should:
      *
-     * @param texture The resource location of the icon texture.
+     * <ul>
+     * <li> Be a square texture (e.g. 64x64, 128x128, etc).</li>
+     * <li> Have a transparent background unless the main content of the icon fills the entire square.</li>
+     * <li> Have binary alpha (fully opaque or fully transparent).</li>
+     * <li> Have limited detail since it will be rendered at a small size.</li>
+     * </ul>
+     * <p>
+     * Icons set with this method are tinted monochrome in the mod's theme color. This means the texture itself should be fully white to result in the theme when tinted.
+     * <p>
+     * No icon will be shown if none is provided and the layout adjusted accordingly.
+     *
+     * @param texture The ID of the icon texture.
      * @return The current builder instance.
      */
     ModOptionsBuilder setIcon(Identifier texture);
+
+    /**
+     * Sets the icon texture for the mod. Same as {@link #setIcon(Identifier)}, but the texture will be rendered in its original color instead of being tinted.
+     *
+     * @param texture The ID of the icon texture.
+     * @return The current builder instance.
+     */
+    ModOptionsBuilder setNonTintedIcon(Identifier texture);
 
     /**
      * Adds a configuration page to the mod options.
@@ -86,7 +107,7 @@ public interface ModOptionsBuilder {
     /**
      * Registers a hook that will be called after an option which has any of the specified flags changed. This can be used to implement custom behavior in response to option changes. To hook on built-in flags, use the identifiers given by {@link OptionFlag#getId()}. The hook is given an array of all flags that triggered the hook. Note that the hook may be called with a set of flags larger than the set of flags it is interested in for performance reasons, since this lets us avoid generating a different flag set for every hook.
      *
-     * @param hook    The hook to run, with the set of all triggered flags.
+     * @param hook     The hook to run, with the set of all triggered flags.
      * @param triggers The flags to listen for.
      * @return The current builder instance.
      */

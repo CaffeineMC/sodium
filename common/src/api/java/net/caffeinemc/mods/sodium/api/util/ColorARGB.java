@@ -227,4 +227,8 @@ public class ColorARGB implements ColorU8 {
             default -> 0;
         };
     }
+
+    public static int fromHSV(float[] hsv) {
+        return fromHSV(hsv[0], hsv[1], hsv[2]);
+    }
 }

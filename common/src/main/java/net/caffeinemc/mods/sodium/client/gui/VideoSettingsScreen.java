@@ -491,7 +491,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
         return this.dim;
     }
 
-    public static int renderIconWithSpacing(GuiGraphics graphics, Identifier icon, int color, int x, int y, int height, int margin) {
+    public static int renderIconWithSpacing(GuiGraphics graphics, Identifier icon, int color, boolean iconMonochrome, int x, int y, int height, int margin) {
         int iconSize = height - margin * 2;
 
         var texture = Minecraft.getInstance().getTextureManager().getTexture(icon);
@@ -500,7 +500,11 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
 
         x = x + margin;
         y = y + height / 2 - iconSize / 2;
-        graphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0, 0, iconSize, iconSize, w, h, w, h, color);
+        if (iconMonochrome) {
+            graphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0, 0, iconSize, iconSize, w, h, w, h, color);
+        } else {
+            graphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0, 0, iconSize, iconSize, w, h, w, h);
+        }
 
         return margin * 2 + iconSize;
     }
