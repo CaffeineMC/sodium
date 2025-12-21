@@ -2,6 +2,8 @@ package net.caffeinemc.mods.sodium.api.config.option;
 
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.Locale;
+
 /**
  * Flags that indicate specific actions required when an option is changed.
  */
@@ -31,7 +33,7 @@ public enum OptionFlag {
      */
     REQUIRES_GAME_RESTART;
 
-    private final ResourceLocation id = ResourceLocation.fromNamespaceAndPath("sodium", "builtin_option_flag." + this.name().toLowerCase());
+    private final ResourceLocation id = ResourceLocation.fromNamespaceAndPath("sodium", "builtin_option_flag." + this.name().toLowerCase(Locale.ROOT));
 
     /**
      * Gets the {@link ResourceLocation} for this option flag.
