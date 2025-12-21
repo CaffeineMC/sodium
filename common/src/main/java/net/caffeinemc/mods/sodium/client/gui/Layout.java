@@ -30,7 +30,7 @@ public class Layout {
     public static final int MAX_TOOLTIP_WIDTH = 200;
     public static final int TOOLTIP_OUTER_MARGIN = 3;
 
-    public static final int CONTENT_BORDER_WIDTH = 25;
+    public static final int CONTENT_BORDER_MIN_WIDTH = 100;
     public static final int CONTENT_BORDER_HEIGHT = OPTION_MOD_MARGIN;
     public static final int CONTENT_MIN_HEIGHT = 300;
 }
