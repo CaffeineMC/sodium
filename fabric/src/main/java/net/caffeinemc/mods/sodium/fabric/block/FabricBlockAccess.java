@@ -85,11 +85,6 @@ public class FabricBlockAccess implements PlatformBlockAccess {
     }
 
     @Override
-    public boolean shouldBlockEntityGlow(BlockEntity blockEntity, LocalPlayer player) {
-        return false;
-    }
-
-    @Override
     public boolean shouldOccludeFluid(Direction adjDirection, BlockState adjBlockState, FluidState fluid) {
         return adjBlockState.getFluidState().getType().isSame(fluid.getType());
     }
