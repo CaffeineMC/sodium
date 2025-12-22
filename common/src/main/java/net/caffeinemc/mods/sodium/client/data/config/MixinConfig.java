@@ -40,11 +40,6 @@ public class MixinConfig {
 
         this.addMixinRule("features.model", true);
 
-        this.addMixinRule("features.options", true);
-        this.addMixinRule("features.options.overlays", true);
-        this.addMixinRule("features.options.render_layers", true);
-        this.addMixinRule("features.options.weather", true);
-
         this.addMixinRule("features.render", true);
 
         this.addMixinRule("features.render.compositing", true);
@@ -52,8 +47,6 @@ public class MixinConfig {
         this.addMixinRule("features.render.entity", true);
         this.addMixinRule("features.render.entity.cull", true);
         this.addMixinRule("features.render.entity.shadow", true);
-
-        this.addMixinRule("features.render.frapi", true);
 
         this.addMixinRule("features.render.gui", true);
         this.addMixinRule("features.render.gui.font", true);
@@ -73,12 +66,8 @@ public class MixinConfig {
         this.addMixinRule("features.render.world.clouds", true);
         this.addMixinRule("features.render.world.sky", true);
 
-        this.addMixinRule("features.shader", true);
-        this.addMixinRule("features.shader.uniform", true);
-
         this.addMixinRule("features.textures", true);
         this.addMixinRule("features.textures.animations", true);
-        this.addMixinRule("features.textures.mipmaps", true);
 
         this.addMixinRule("features.world", true);
         this.addMixinRule("features.world.biome", true);
