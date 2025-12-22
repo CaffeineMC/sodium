@@ -1,9 +1,5 @@
 #version 330 core
 
-#ifndef MAX_TEXTURE_LOD_BIAS
-#error "MAX_TEXTURE_LOD_BIAS constant not specified"
-#endif
-
 #import <sodium:include/fog.glsl>
 #import <sodium:include/chunk_material.glsl>
 
