@@ -77,13 +77,6 @@ public interface PlatformBlockAccess {
     AmbientOcclusionMode usesAmbientOcclusion(BlockModelPart model, BlockState state, ChunkSectionLayer renderType, BlockAndTintGetter level, BlockPos pos);
 
     /**
-     * @param blockEntity The block entity to check.
-     * @param player The current player rendering.
-     * @return Whether this block entity should activate the outline shader.
-     */
-    boolean shouldBlockEntityGlow(BlockEntity blockEntity, LocalPlayer player);
-
-    /**
      * Determines if a fluid adjacent to the block on the given side should not be rendered.
      *
      * @param adjDirection      the face of this block that the fluid is adjacent to
