@@ -10,7 +10,6 @@ public class Colors {
     public static final int THEME_DARKER = 0xFF7A9E9E;
     public static final int FOREGROUND = 0xFFFFFFFF;
     public static final int FOREGROUND_DISABLED = 0xFFAAAAAA;
-    public static final int FOREGROUND_INVERTED = 0xFF000000;
 
     public static final int BACKGROUND_LIGHT = 0x40000000;
     public static final int BACKGROUND_MEDIUM = 0x60000000;
@@ -38,5 +37,12 @@ public class Colors {
         var s = Mth.clamp(hsv[1] * (1 - Math.abs(factor)), 0, 1);
         var b = Mth.clamp(hsv[2] * (1 + factor), 0, 1);
         return ColorARGB.transferAlpha(ColorARGB.fromHSV(hsv[0], s, b), color);
+    }
+
+    public static int constrainColorHSV(int color, float minSaturation, float minBrightness) {
+        float[] hsv = ColorARGB.toHSV(color);
+        hsv[1] = Math.max(hsv[1], minSaturation);
+        hsv[2] = Math.max(hsv[2], minBrightness);
+        return ColorARGB.fromHSV(hsv);
     }
 }
