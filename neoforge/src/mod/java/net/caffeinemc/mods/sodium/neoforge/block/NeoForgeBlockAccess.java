@@ -52,12 +52,6 @@ public class NeoForgeBlockAccess implements PlatformBlockAccess {
     }
 
     @Override
-    public boolean shouldBlockEntityGlow(BlockEntity blockEntity, LocalPlayer player) {
-        // TODO: NeoForge does not yet have a hook on 1.21.2.
-        return false;
-    }
-
-    @Override
     public boolean shouldOccludeFluid(Direction adjDirection, BlockState adjBlockState, FluidState fluid) {
         return adjBlockState.shouldHideAdjacentFluidFace(adjDirection, fluid);
     }
