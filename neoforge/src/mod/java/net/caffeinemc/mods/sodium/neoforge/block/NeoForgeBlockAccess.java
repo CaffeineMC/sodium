@@ -53,7 +53,7 @@ public class NeoForgeBlockAccess implements PlatformBlockAccess {
 
     @Override
     public boolean shouldBlockEntityGlow(BlockEntity blockEntity, LocalPlayer player) {
-        return blockEntity.hasCustomOutlineRendering();
+        return blockEntity.hasCustomOutlineRendering(player);
     }
 
     @Override
