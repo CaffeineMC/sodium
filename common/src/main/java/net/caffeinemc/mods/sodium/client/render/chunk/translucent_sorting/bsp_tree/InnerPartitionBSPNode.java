@@ -16,6 +16,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexE
 import net.caffeinemc.mods.sodium.client.util.MathUtil;
 import net.caffeinemc.mods.sodium.client.util.sorting.RadixSort;
 import net.minecraft.util.Mth;
+import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
 import java.util.Arrays;
@@ -471,6 +472,10 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         splittingGroup.clear();
     }
 
+    private static boolean floatEquals(float a, float b) {
+        return Float.floatToIntBits(a) == Float.floatToIntBits(b) || Math.abs(a - b) <= TQuad.VERTEX_EPSILON;
+    }
+
     static private BSPNode handleUnsortableBySplitting(BSPWorkspace workspace, IntArrayList indexes, int depth, BSPNode oldNode, IntArrayList splittingGroup) {
         // pick the first quad if there's no prepared splitting group
         int representativeIndex;
@@ -487,6 +492,9 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         // split all quads by the splitting group's plane
         var splitPlane = representative.getVeryAccurateNormal();
         var splitDistance = representative.getAccurateDotProduct();
+        var splitPlaneNeg = splitPlane.negate(new Vector3f());
+        var splitDistanceNeg = -splitDistance;
+        var splitPlaneIsAligned = representativeFacing.isAligned();
 
         IntArrayList inside = new IntArrayList();
         IntArrayList outside = new IntArrayList();
@@ -507,11 +515,17 @@ abstract class InnerPartitionBSPNode extends BSPNode {
             var quadFacing = insideQuad.getFacing();
 
             // eliminate quads that lie in the split plane
-            if (quadFacing == representativeFacing && insideQuad.getAccurateDotProduct() == splitDistance &&
-                    (representativeFacing != ModelQuadFacing.UNASSIGNED ||
-                            insideQuad.getVeryAccurateNormal().equals(splitPlane))) {
-                splittingGroup.add(candidateIndex);
-                continue;
+            if (quadFacing == representativeFacing) {
+                var accurateNormal = insideQuad.getVeryAccurateNormal();
+                var accurateDotProduct = insideQuad.getAccurateDotProduct();
+                var coplanar = floatEquals(accurateDotProduct, splitDistance) && (splitPlaneIsAligned ||
+                        accurateNormal.equals(splitPlane, TQuad.VERTEX_EPSILON));
+                var antiCoplanar = coplanar || floatEquals(accurateDotProduct, splitDistanceNeg) && (splitPlaneIsAligned ||
+                        accurateNormal.equals(splitPlaneNeg, TQuad.VERTEX_EPSILON));
+                if (coplanar || antiCoplanar) {
+                    splittingGroup.add(candidateIndex);
+                    continue;
+                }
             }
 
             // split the geometry with the plane
