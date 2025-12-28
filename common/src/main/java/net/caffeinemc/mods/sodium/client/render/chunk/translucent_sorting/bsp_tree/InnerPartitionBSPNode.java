@@ -646,17 +646,18 @@ abstract class InnerPartitionBSPNode extends BSPNode {
                 splitTriangleCorner(cornerIndex, outsideQuad, insideQuad, splitPlane, splitDistance);
             }
         } else { // uniqueVertices == 4, masked == unmasked
-            // after dealing with the other cases, now two vertices being on the plane implies the quad is split exactly along its diagonal
-            // insideCount is 2, onPlaneMap is 0b0101 or 0b1010
-            if (onPlaneCount == 2) {
-                // this case can be treated like even splitting if the two on-plane vertices are declared as each part of one of the sides
-                if (onPlaneMap == 0b0101) {
-                    insideMap |= 0b0001;
-                } else {
-                    insideMap |= 0b0010;
-                }
+            // it's split along the diagonal.
+            // this case can be treated like even splitting if the two on-plane vertices are declared as each part of one of the sides
+            if (onPlaneCount == 2 && onPlaneMap == 0b0101) {
+                insideMap |= 0b0001;
+                insideCount = 2;
+            } else if (onPlaneCount == 2 && onPlaneMap == 0b1010) {
+                insideMap |= 0b0010;
                 insideCount = 2;
             }
+
+            // or it's a bent quad where one edge lies on the split and the opposite edge crosses the split.
+            // in this case it simply falls through to one of the odd splitting modes
 
             // one vertex being on the plane now implies the quad is split on a vertex and through an edge.
             // if there is one vertex inside (and two outside), move the on-plane vertex inside to produce an even split case.
