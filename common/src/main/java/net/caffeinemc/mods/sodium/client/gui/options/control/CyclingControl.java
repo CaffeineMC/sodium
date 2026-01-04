@@ -71,7 +71,7 @@ public class CyclingControl<T extends Enum<T>> implements Control {
             int strWidth = this.getStringWidth(name);
             this.drawString(graphics, name, this.getLimitX() - strWidth - 6, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
 
-            if(this.isHovered()) {
+            if (this.isHovered()) {
                 graphics.requestCursor(CursorTypes.POINTING_HAND);
             }
         }

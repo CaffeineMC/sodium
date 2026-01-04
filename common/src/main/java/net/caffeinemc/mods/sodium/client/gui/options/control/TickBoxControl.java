@@ -93,7 +93,7 @@ public class TickBoxControl implements Control {
                 graphics.fill(xEnd - 1, yEnd - size, xEnd, yEnd, color);
             }
 
-            if(this.isHovered()) {
+            if (this.isHovered()) {
                 graphics.requestCursor(CursorTypes.POINTING_HAND);
             }
         }

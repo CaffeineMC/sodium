@@ -337,7 +337,7 @@ public class OptionListWidget extends AbstractOptionList {
                     this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET,
                     Colors.FOREGROUND);
 
-            if(this.isHovered()) {
+            if (this.isHovered()) {
                 graphics.requestCursor(CursorTypes.POINTING_HAND);
             }
         }

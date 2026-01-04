@@ -181,7 +181,7 @@ public class PageListWidget extends AbstractScrollable {
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             super.render(graphics, mouseX, mouseY, delta);
 
-            if(this.isHovered()) {
+            if (this.isHovered()) {
                 graphics.requestCursor(CursorTypes.POINTING_HAND);
             }
         }
