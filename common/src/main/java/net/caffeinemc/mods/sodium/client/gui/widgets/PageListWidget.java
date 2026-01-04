@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gui.widgets;
 
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
@@ -174,6 +175,15 @@ public class PageListWidget extends AbstractScrollable {
             super(dim, page.name(), true, theme);
             this.page = page;
             this.scrollTargetStart = scrollTargetStart;
+        }
+
+        @Override
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+            super.render(graphics, mouseX, mouseY, delta);
+
+            if(this.isHovered()) {
+                graphics.requestCursor(CursorTypes.POINTING_HAND);
+            }
         }
     }
 

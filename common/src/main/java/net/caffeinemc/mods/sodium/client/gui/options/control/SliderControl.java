@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gui.options.control;
 
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
@@ -102,6 +103,10 @@ public class SliderControl implements Control {
                 this.drawString(graphics, label, sliderX - labelWidth - 6, sliderY + (sliderHeight / 2) + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
             } else {
                 this.drawString(graphics, label, sliderX + sliderWidth - labelWidth, sliderY + (sliderHeight / 2) + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
+            }
+
+            if(this.isHovered() && this.sliderHeld) {
+                graphics.requestCursor(CursorTypes.RESIZE_EW);
             }
         }
 

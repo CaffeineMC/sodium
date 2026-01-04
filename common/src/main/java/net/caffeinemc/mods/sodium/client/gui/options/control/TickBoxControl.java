@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gui.options.control;
 
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import net.caffeinemc.mods.sodium.client.config.structure.BooleanOption;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
@@ -90,6 +91,10 @@ public class TickBoxControl implements Control {
 
                 graphics.fill(xEnd - size, yEnd - 1, xEnd, yEnd, color);
                 graphics.fill(xEnd - 1, yEnd - size, xEnd, yEnd, color);
+            }
+
+            if(this.isHovered()) {
+                graphics.requestCursor(CursorTypes.POINTING_HAND);
             }
         }
 

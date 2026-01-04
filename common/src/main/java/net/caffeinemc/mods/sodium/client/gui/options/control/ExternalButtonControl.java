@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gui.options.control;
 
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import net.caffeinemc.mods.sodium.client.config.structure.ExternalButtonOption;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
@@ -81,6 +82,10 @@ public class ExternalButtonControl implements Control {
                     this.getLimitX() - Layout.OPTION_TEXT_SIDE_PADDING - this.font.width(buttonText),
                     this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET,
                     Colors.FOREGROUND);
+
+            if(this.isHovered()) {
+                graphics.requestCursor(CursorTypes.POINTING_HAND);
+            }
         }
 
         private void openScreen(Screen screen) {

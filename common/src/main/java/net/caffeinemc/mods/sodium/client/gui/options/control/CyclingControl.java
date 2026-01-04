@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gui.options.control;
 
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import net.caffeinemc.mods.sodium.client.config.structure.EnumOption;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
@@ -69,6 +70,10 @@ public class CyclingControl<T extends Enum<T>> implements Control {
 
             int strWidth = this.getStringWidth(name);
             this.drawString(graphics, name, this.getLimitX() - strWidth - 6, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
+
+            if(this.isHovered()) {
+                graphics.requestCursor(CursorTypes.POINTING_HAND);
+            }
         }
 
         @Override
