@@ -97,7 +97,7 @@ public class ControlValueFormatterImpls {
             if (v == 0) {
                 return Component.translatable("gui.none");
             } else {
-                return Component.literal((double) v / 1000.0 + " seconds");
+                return Component.translatable("sodium.options.chunk_fade_time.value", (double) v / 1000.0);
             }
         });
     }
