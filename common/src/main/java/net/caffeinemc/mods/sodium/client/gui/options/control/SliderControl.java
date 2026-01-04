@@ -105,8 +105,8 @@ public class SliderControl implements Control {
                 this.drawString(graphics, label, sliderX + sliderWidth - labelWidth, sliderY + (sliderHeight / 2) + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
             }
 
-            if(this.isHovered() && this.sliderHeld) {
-                graphics.requestCursor(CursorTypes.RESIZE_EW);
+            if(this.isMouseOverSlider(mouseX, mouseY)) {
+                graphics.requestCursor(this.sliderHeld ? CursorTypes.RESIZE_EW : CursorTypes.POINTING_HAND);
             }
         }
 
