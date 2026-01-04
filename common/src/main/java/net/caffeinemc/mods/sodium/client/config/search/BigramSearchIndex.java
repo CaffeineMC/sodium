@@ -34,6 +34,9 @@ public class BigramSearchIndex extends SourceStoringIndex {
             if (text == null) {
                 continue;
             }
+            if (text.isBlank()) {
+                throw new IllegalStateException("Text source " + source + " returned blank text");
+            }
 
             text = conditionText(text).trim();
 

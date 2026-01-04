@@ -95,6 +95,7 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
     @Override
     public StatefulOptionBuilder<V> setTooltip(Component tooltip) {
         Validate.notNull(tooltip, "Argument must not be null");
+        Validate.notBlank(tooltip.getString(), "Tooltip must not be blank");
 
         this.tooltipProvider = v -> tooltip;
         return this;
