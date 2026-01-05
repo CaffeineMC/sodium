@@ -267,14 +267,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
         );
         generalPage.addOptionGroup(builder.createOptionGroup()
                 .addOption(
-                        builder.createBooleanOption(Identifier.parse("sodium:general.view_bobbing"))
-                                .setStorageHandler(this.vanillaStorage)
-                                .setName(Component.translatable("options.viewBobbing"))
-                                .setTooltip(Component.translatable("sodium.options.view_bobbing.tooltip"))
-                                .setDefaultValue(true)
-                                .setBinding(this.vanillaOpts.bobView()::set, this.vanillaOpts.bobView()::get)
-                )
-                .addOption(
                         builder.createEnumOption(Identifier.parse("sodium:general.attack_indicator"), AttackIndicatorStatus.class)
                                 .setStorageHandler(this.vanillaStorage)
                                 .setName(Component.translatable("options.attackIndicator"))
