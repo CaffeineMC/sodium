@@ -300,10 +300,10 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
 
         super.render(graphics, this.prompt != null ? -1 : mouseX, this.prompt != null ? -1 : mouseY, delta);
 
-        this.tooltip.render(graphics);
-
         if (this.prompt != null) {
             this.prompt.render(graphics, mouseX, mouseY, delta);
+        } else {
+            this.tooltip.render(graphics);
         }
     }
 
