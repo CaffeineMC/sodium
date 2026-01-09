@@ -245,6 +245,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                                     state.readBooleanOption(Identifier.parse("sodium:general.fullscreen"));
                                         },
                                         Identifier.parse("sodium:general.fullscreen"))
+                                .setFlags(OptionFlag.REQUIRES_VIDEOMODE_RELOAD)
                 )
                 .addOption(
                         builder.createBooleanOption(Identifier.parse("sodium:general.vsync"))
