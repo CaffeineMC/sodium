@@ -42,8 +42,8 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
     public void init() {
         var parentDimensions = this.parent.getDimensions();
 
-        int boxX = (parentDimensions.width() / 2) - (this.width / 2);
-        int boxY = (parentDimensions.height() / 2) - (this.height / 2);
+        int boxX = parentDimensions.getCenterX() - (this.width / 2);
+        int boxY = parentDimensions.getCenterY() - (this.height / 2);
 
         this.closeButton = new FlatButtonWidget(new Dim2i((boxX + this.width) - 84, (boxY + this.height) - 24, 80, Layout.BUTTON_SHORT), Component.literal("Close"), this::close, true, false, PROMPT_THEME);
 
@@ -57,12 +57,12 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
 
         var parentDimensions = this.parent.getDimensions();
 
-        graphics.fill(0, 0, parentDimensions.width(), parentDimensions.height(), 0x70090909);
+        graphics.fill(0, 0, graphics.guiWidth(), graphics.guiHeight(), 0x70090909);
 
         matrices.translate(0.0f, 0.0f, 50.0f);
 
-        int boxX = (parentDimensions.width() / 2) - (this.width / 2);
-        int boxY = (parentDimensions.height() / 2) - (this.height / 2);
+        int boxX = parentDimensions.getCenterX() - (this.width / 2);
+        int boxY = parentDimensions.getCenterY() - (this.height / 2);
 
         graphics.fill(boxX, boxY, boxX + this.width, boxY + this.height, 0xFF171717);
         graphics.renderOutline(boxX, boxY, this.width, this.height, 0xFF121212);
