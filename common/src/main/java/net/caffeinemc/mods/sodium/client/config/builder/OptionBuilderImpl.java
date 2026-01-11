@@ -42,6 +42,7 @@ public abstract class OptionBuilderImpl<O extends Option> implements OptionBuild
 
     void validateData() {
         Validate.notNull(this.getName(), "Name must be set");
+        Validate.notBlank(this.getName().getString(), "Name must not be blank");
     }
 
     void prepareBuild() {
