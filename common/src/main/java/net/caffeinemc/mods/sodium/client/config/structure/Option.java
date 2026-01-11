@@ -128,6 +128,11 @@ public abstract class Option {
         protected String getTextFromSource() {
             return Option.this.getName().getString();
         }
+
+        @Override
+        public String toString() {
+            return "OptionNameSource{option id=" + Option.this.id + "}";
+        }
     }
 }
 

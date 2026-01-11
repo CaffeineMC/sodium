@@ -16,6 +16,7 @@ abstract class StaticOptionBuilderImpl<O extends StaticOption> extends OptionBui
     @Override
     void validateData() {
         Validate.notNull(this.getTooltip(), "Tooltip must be set");
+        Validate.notBlank(this.getTooltip().getString(), "Tooltip must not be blank");
     }
 
     Component getTooltip() {
