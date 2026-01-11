@@ -16,6 +16,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexE
 import net.caffeinemc.mods.sodium.client.util.MathUtil;
 import net.caffeinemc.mods.sodium.client.util.sorting.RadixSort;
 import net.minecraft.util.Mth;
+import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
 import java.util.Arrays;
@@ -471,6 +472,10 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         splittingGroup.clear();
     }
 
+    private static boolean floatEquals(float a, float b) {
+        return Float.floatToIntBits(a) == Float.floatToIntBits(b) || Math.abs(a - b) <= TQuad.VERTEX_EPSILON;
+    }
+
     static private BSPNode handleUnsortableBySplitting(BSPWorkspace workspace, IntArrayList indexes, int depth, BSPNode oldNode, IntArrayList splittingGroup) {
         // pick the first quad if there's no prepared splitting group
         int representativeIndex;
@@ -487,6 +492,9 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         // split all quads by the splitting group's plane
         var splitPlane = representative.getVeryAccurateNormal();
         var splitDistance = representative.getAccurateDotProduct();
+        var splitPlaneNeg = splitPlane.negate(new Vector3f());
+        var splitDistanceNeg = -splitDistance;
+        var splitPlaneIsAligned = representativeFacing.isAligned();
 
         IntArrayList inside = new IntArrayList();
         IntArrayList outside = new IntArrayList();
@@ -507,11 +515,17 @@ abstract class InnerPartitionBSPNode extends BSPNode {
             var quadFacing = insideQuad.getFacing();
 
             // eliminate quads that lie in the split plane
-            if (quadFacing == representativeFacing && insideQuad.getAccurateDotProduct() == splitDistance &&
-                    (representativeFacing != ModelQuadFacing.UNASSIGNED ||
-                            insideQuad.getVeryAccurateNormal().equals(splitPlane))) {
-                splittingGroup.add(candidateIndex);
-                continue;
+            if (quadFacing == representativeFacing) {
+                var accurateNormal = insideQuad.getVeryAccurateNormal();
+                var accurateDotProduct = insideQuad.getAccurateDotProduct();
+                var coplanar = floatEquals(accurateDotProduct, splitDistance) && (splitPlaneIsAligned ||
+                        accurateNormal.equals(splitPlane, TQuad.VERTEX_EPSILON));
+                var antiCoplanar = coplanar || floatEquals(accurateDotProduct, splitDistanceNeg) && (splitPlaneIsAligned ||
+                        accurateNormal.equals(splitPlaneNeg, TQuad.VERTEX_EPSILON));
+                if (coplanar || antiCoplanar) {
+                    splittingGroup.add(candidateIndex);
+                    continue;
+                }
             }
 
             // split the geometry with the plane
@@ -646,17 +660,18 @@ abstract class InnerPartitionBSPNode extends BSPNode {
                 splitTriangleCorner(cornerIndex, outsideQuad, insideQuad, splitPlane, splitDistance);
             }
         } else { // uniqueVertices == 4, masked == unmasked
-            // after dealing with the other cases, now two vertices being on the plane implies the quad is split exactly along its diagonal
-            // insideCount is 2, onPlaneMap is 0b0101 or 0b1010
-            if (onPlaneCount == 2) {
-                // this case can be treated like even splitting if the two on-plane vertices are declared as each part of one of the sides
-                if (onPlaneMap == 0b0101) {
-                    insideMap |= 0b0001;
-                } else {
-                    insideMap |= 0b0010;
-                }
+            // it's split along the diagonal.
+            // this case can be treated like even splitting if the two on-plane vertices are declared as each part of one of the sides
+            if (onPlaneCount == 2 && onPlaneMap == 0b0101) {
+                insideMap |= 0b0001;
+                insideCount = 2;
+            } else if (onPlaneCount == 2 && onPlaneMap == 0b1010) {
+                insideMap |= 0b0010;
                 insideCount = 2;
             }
+
+            // or it's a bent quad where one edge lies on the split and the opposite edge crosses the split.
+            // in this case it simply falls through to one of the odd splitting modes
 
             // one vertex being on the plane now implies the quad is split on a vertex and through an edge.
             // if there is one vertex inside (and two outside), move the on-plane vertex inside to produce an even split case.
