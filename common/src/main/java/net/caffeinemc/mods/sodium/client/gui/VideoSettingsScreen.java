@@ -4,6 +4,7 @@ import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
+import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
 import net.caffeinemc.mods.sodium.client.config.structure.Page;
 import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlElement;
@@ -26,8 +27,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
+import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
@@ -37,6 +38,8 @@ import java.util.List;
 
 public class VideoSettingsScreen extends Screen implements ScreenPromptable, ScrollableTooltip.TooltipParent {
     private final Screen prevScreen;
+    private final @Nullable OptionPage initiallyFocusedPage;
+
     private Dim2i dim;
     private boolean insetX, insetY;
 
@@ -54,9 +57,14 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
     private @Nullable ScreenPrompt prompt;
 
     private VideoSettingsScreen(Screen prevScreen) {
+        this(prevScreen, null);
+    }
+
+    private VideoSettingsScreen(Screen prevScreen, @Nullable OptionPage initiallyFocusedPage) {
         super(Component.literal("Sodium Renderer Settings"));
 
         this.prevScreen = prevScreen;
+        this.initiallyFocusedPage = initiallyFocusedPage;
 
         this.checkPromptTimers();
 
@@ -118,10 +126,14 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
     }
 
     public static Screen createScreen(Screen currentScreen) {
+        return createScreen(currentScreen, null);
+    }
+
+    public static Screen createScreen(Screen currentScreen, @Nullable OptionPage initiallyFocusedPage) {
         if (SodiumClientMod.options().isReadOnly()) {
             return new ConfigCorruptedScreen(currentScreen, VideoSettingsScreen::new);
         } else {
-            return new VideoSettingsScreen(currentScreen);
+            return new VideoSettingsScreen(currentScreen, initiallyFocusedPage);
         }
     }
 
@@ -134,6 +146,11 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
 
         if (this.prompt != null) {
             this.prompt.init();
+        }
+
+        if (this.initiallyFocusedPage != null) {
+            this.jumpToPage(this.initiallyFocusedPage);
+            this.onSectionFocused(this.initiallyFocusedPage);
         }
     }
 
