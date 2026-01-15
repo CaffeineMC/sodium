@@ -6,6 +6,8 @@ import net.caffeinemc.mods.sodium.client.compatibility.workarounds.intel.IntelWo
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.lwjgl.glfw.GLFWNativeWayland;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -51,16 +53,13 @@ public class Workarounds {
             workarounds.add(Reference.INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE);
         }
 
-        if (operatingSystem == OsUtils.OperatingSystem.LINUX) {
-            var session = System.getenv("XDG_SESSION_TYPE");
+        if (operatingSystem == OsUtils.OperatingSystem.LINUX && GLFWNativeWayland.glfwGetWaylandDisplay() != 0L) {
+            var glfwMajor = new int[1];
+            var glfwMinor = new int[1];
+            
+            GLFW.glfwGetVersion(glfwMajor, glfwMinor, null);
 
-            if (session == null) {
-                LOGGER.warn("Unable to determine desktop session type because the environment variable XDG_SESSION_TYPE " +
-                        "is not set! Your user session may not be configured correctly.");
-            }
-
-            if (Objects.equals(session, "wayland")) {
-                // This will also apply under Xwayland, even though the problem does not happen there
+            if (!(glfwMajor[0] >= 3 && glfwMinor[0] >= 4)) {
                 workarounds.add(Reference.NO_ERROR_CONTEXT_UNSUPPORTED);
             }
         }
@@ -82,7 +81,8 @@ public class Workarounds {
         NVIDIA_THREADED_OPTIMIZATIONS_BROKEN,
 
         /**
-         * Requesting a No Error Context causes a crash at startup when using a Wayland session.
+         * Requesting a No Error Context causes a crash at startup when using a Wayland session on GLFW
+           <3.4.
          * <a href="https://github.com/CaffeineMC/sodium/issues/1624">GitHub Issue</a>
          */
         NO_ERROR_CONTEXT_UNSUPPORTED,
@@ -113,3 +113,4 @@ public class Workarounds {
         AMD_GAME_OPTIMIZATION_BROKEN
     }
 }
+
