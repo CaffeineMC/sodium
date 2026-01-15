@@ -1,6 +1,5 @@
 package net.caffeinemc.mods.sodium.client.compatibility.workarounds;
 
-import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.amd.AmdWorkarounds;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.intel.IntelWorkarounds;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds;
@@ -38,7 +37,6 @@ public class Workarounds {
 
     private static Set<Reference> findNecessaryWorkarounds() {
         var workarounds = EnumSet.noneOf(Reference.class);
-        var operatingSystem = OsUtils.getOs();
 
         if (NvidiaWorkarounds.isNvidiaGraphicsCardPresent()) {
             workarounds.add(Reference.NVIDIA_THREADED_OPTIMIZATIONS_BROKEN);
@@ -53,7 +51,7 @@ public class Workarounds {
             workarounds.add(Reference.INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE);
         }
 
-        if (operatingSystem == OsUtils.OperatingSystem.LINUX && GLFWNativeWayland.glfwGetWaylandDisplay() != 0L) {
+        if (GLFWNativeWayland.glfwGetWaylandDisplay() != 0L) {
             var glfwMajor = new int[1];
             var glfwMinor = new int[1];
             
