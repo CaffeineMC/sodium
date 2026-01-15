@@ -58,9 +58,16 @@ public class Workarounds {
                 LOGGER.warn("Unable to determine desktop session type because the environment variable XDG_SESSION_TYPE " +
                         "is not set! Your user session may not be configured correctly.");
             }
-
-            if (Objects.equals(session, "wayland")) {
-                // This will also apply under Xwayland, even though the problem does not happen there
+            
+            // Prevent workaround on XWayland
+            var display = System.getenv("DISPLAY");
+            
+            // Prevent workaround on GLFW >= 3.4.*
+            int[] glfwMajor = new int[1];
+            int[] glfwMinor = new int[1];
+            glfwGetVersion(glfwMajor, glfwMinor, null);
+            
+            if (Objects.equals(session, "wayland") && display == null && !(glfwMajor >= 3 && glfwMinor >= 4)) {
                 workarounds.add(Reference.NO_ERROR_CONTEXT_UNSUPPORTED);
             }
         }
