@@ -265,6 +265,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
             var oppositeDirection = axis + 3;
             int alignedFacingBitmap = 0;
             boolean onlyIntervalSide = true;
+            int positiveSignCount = 0;
 
             // collect all the geometry's start and end points in this direction
             points.clear();
@@ -282,7 +283,11 @@ abstract class InnerPartitionBSPNode extends BSPNode {
                     onlyIntervalSide = false;
                 }
 
-                alignedFacingBitmap |= 1 << quad.getFacing().ordinal();
+                var facing = quad.getFacing();
+                if (facing.getSign() > 0) {
+                    positiveSignCount++;
+                }
+                alignedFacingBitmap |= 1 << facing.ordinal();
             }
 
             // simplified SNR heuristic as seen in TranslucentGeometryCollector#sortTypeHeuristic (case D)
@@ -295,7 +300,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
                     // check if the geometry is aligned to the axis
                     if (onlyIntervalSide) {
                         // this means the already generated points array can be used
-                        return buildSNRLeafNodeFromPoints(workspace, points);
+                        return buildSNRLeafNodeFromPoints(workspace, points, positiveSignCount);
                     } else {
                         return buildSNRLeafNodeFromQuads(workspace, indexes);
                     }
@@ -1028,7 +1033,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
             perm[i] = i;
         }
 
-        RadixSort.sortIndirect(perm, keys, false);
+        RadixSort.sortIndirect(perm, keys, true);
 
         for (int i = 0; i < indexCount; i++) {
             perm[i] = indexBuffer[perm[i]];
@@ -1037,23 +1042,38 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         return new LeafMultiBSPNode(BSPSortState.compressIndexes(IntArrayList.wrap(perm), false));
     }
 
-    static private BSPNode buildSNRLeafNodeFromPoints(BSPWorkspace workspace, LongArrayList points) {
+    static private BSPNode buildSNRLeafNodeFromPoints(BSPWorkspace workspace, LongArrayList points, int positiveSignCount) {
+        int pointCount = points.size();
+        if (positiveSignCount < pointCount) {
+            // invert the distance for all points where the quad is facing backwards,
+            // this is necessary to make the quad order stable relative to the quad index
+            for (int i = 0; i < pointCount; i++) {
+                // based one each quad's facing, order them forwards or backwards,
+                // this means forwards is written from the start and backwards is written from the end
+                var point = points.getLong(i);
+                var quadIndex = decodeQuadIndex(point);
+                if (workspace.get(quadIndex).getFacing().getSign() == -1) {
+                    points.set(i, point ^ 0xFFFFFFFF00000000L); // invert distance bits
+                }
+            }
+        }
+
         // also sort by ascending encoded point but then process as an SNR result
-        Arrays.sort(points.elements(), 0, points.size());
+        Arrays.sort(points.elements(), 0, pointCount);
 
         // since the quads are aligned and are all INTERVAL_SIDE, there's no issues with duplicates.
         // the length of the array is exactly how many quads there are.
-        int[] quadIndexes = new int[points.size()];
-        int forwards = 0;
-        int backwards = quadIndexes.length - 1;
-        for (int i = 0; i < points.size(); i++) {
+        int[] quadIndexes = new int[pointCount];
+        int positive = 0;
+        int negative = positiveSignCount;
+        for (int i = 0; i < pointCount; i++) {
             // based one each quad's facing, order them forwards or backwards,
             // this means forwards is written from the start and backwards is written from the end
             var quadIndex = decodeQuadIndex(points.getLong(i));
             if (workspace.get(quadIndex).getFacing().getSign() == 1) {
-                quadIndexes[forwards++] = quadIndex;
+                quadIndexes[positive++] = quadIndex;
             } else {
-                quadIndexes[backwards--] = quadIndex;
+                quadIndexes[negative++] = quadIndex;
             }
         }
 
