@@ -104,7 +104,8 @@
     "sspb" : "<6.0.0",
     "moreculling": "<1.6.0-beta.2",
     "simply-no-shading": "<7.6.2",
-    "betterend": "<=21.0.11"
+    "betterend" : "<=21.0.11",
+    "enchanteds_sodium_options" : "<1.0.1"
   },
   "provides" : [
     "indium"
