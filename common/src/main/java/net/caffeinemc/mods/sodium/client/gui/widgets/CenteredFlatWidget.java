@@ -45,7 +45,7 @@ public abstract class CenteredFlatWidget extends AbstractWidget {
         this.hovered = this.isMouseOver(mouseX, mouseY);
 
         int backgroundColor = this.hovered ? this.theme.bgHighlight : (this.selected ? this.theme.bgDefault : this.theme.bgInactive);
-        int textColor = this.selected || !this.isSelectable ? this.theme.themeLighter : this.theme.themeDarker;
+        int textColor = this.selected || !this.isSelectable ? this.theme.themeLighter : this.hovered ? this.theme.theme : theme.themeDarker;
 
         int x1 = this.getX();
         int y1 = this.getY();
