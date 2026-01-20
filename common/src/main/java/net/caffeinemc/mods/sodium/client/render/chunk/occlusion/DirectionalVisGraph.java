@@ -190,10 +190,13 @@ public class DirectionalVisGraph {
             stackSize++;
         }
 
+        var originFaceEnum = GraphDirection.toEnum(originFace);
         for (int direction = 0; direction < GraphDirection.COUNT; direction++) {
             if (GraphDirectionSet.contains(connectedFaces, direction)) {
-                visibilitySet.set(GraphDirection.toEnum(originFace), GraphDirection.toEnum(direction), true);
+                visibilitySet.set(originFaceEnum, GraphDirection.toEnum(direction), true);
             }
         }
+
+        visibilitySet.set(originFaceEnum, originFaceEnum, true);
     }
 }
