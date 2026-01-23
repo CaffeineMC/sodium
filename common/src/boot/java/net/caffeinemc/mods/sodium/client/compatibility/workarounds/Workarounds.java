@@ -65,7 +65,7 @@ public class Workarounds {
             
             GLFW.glfwGetVersion(glfwMajor, glfwMinor, null);
 
-            if (Objects.equals(session, "wayland") && !(glfwMajor[0] >= 3 && glfwMinor[0] >= 4)) {
+            if (Objects.equals(session, "wayland") && !(glfwMajor[0] > 3 || glfwMajor[0] == 3 && glfwMinor[0] >= 4)) {
                 // This will also apply under Xwayland, even though the problem does not happen there
                 workarounds.add(Reference.NO_ERROR_CONTEXT_UNSUPPORTED);
             }
