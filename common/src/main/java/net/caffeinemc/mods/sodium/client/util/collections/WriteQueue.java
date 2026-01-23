@@ -6,4 +6,6 @@ public interface WriteQueue<E> {
     void ensureCapacity(int numElements);
 
     void enqueue(@NotNull E e);
+
+    boolean isEmpty();
 }

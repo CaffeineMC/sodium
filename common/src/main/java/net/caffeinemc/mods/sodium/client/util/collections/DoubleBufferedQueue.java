@@ -109,5 +109,10 @@ public final class DoubleBufferedQueue<E> {
         private static int getNextSize(int minimumSize, int currentSize) {
             return Math.max(minimumSize, currentSize << 1);
         }
+
+        @Override
+        public boolean isEmpty() {
+            return this.readIndex == this.writeIndex;
+        }
     }
 }
