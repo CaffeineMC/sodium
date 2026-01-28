@@ -316,11 +316,11 @@ public class DefaultFluidRenderer {
                     }
                 }
 
-                float u1 = sprite.getU(0.0F);
-                float u2 = sprite.getU(0.5F);
-                float v1 = sprite.getV((1.0F - c1) * 0.5F);
-                float v2 = sprite.getV((1.0F - c2) * 0.5F);
-                float v3 = sprite.getV(0.5F);
+                float u1 = sprite.getU(0.75F);
+                float u2 = sprite.getU(0.25F);
+                float v1 = sprite.getV(0.25F + (1.0F - c1) * 0.5F);
+                float v2 = sprite.getV(0.25F + (1.0F - c2) * 0.5F);
+                float v3 = sprite.getV(0.75F);
 
                 quad.setSprite(sprite);
 
@@ -377,6 +377,19 @@ public class DefaultFluidRenderer {
     private void writeQuad(ChunkModelBuilder builder, TranslucentGeometryCollector collector, Material material, BlockPos offset, ModelQuadView quad,
                            ModelQuadFacing facing, boolean flip) {
         var vertices = this.vertices;
+        float minU = 0.0f;
+        float maxU = 0.0f;
+
+        if (flip) {
+            minU = quad.getTexU(0);
+            maxU = minU;
+
+            for (int i = 1; i < 4; i++) {
+                float u = quad.getTexU(i);
+                minU = Math.min(minU, u);
+                maxU = Math.max(maxU, u);
+            }
+        }
 
         for (int i = 0; i < 4; i++) {
             var out = vertices[flip ? (3 - i + 1) & 0b11 : i];
@@ -386,7 +399,8 @@ public class DefaultFluidRenderer {
 
             out.color = this.quadColors[i];
             out.ao = this.brightness[i];
-            out.u = quad.getTexU(i);
+            float u = quad.getTexU(i);
+            out.u = flip ? (minU + maxU - u) : u;
             out.v = quad.getTexV(i);
             out.light = this.quadLightData.lm[i];
         }
