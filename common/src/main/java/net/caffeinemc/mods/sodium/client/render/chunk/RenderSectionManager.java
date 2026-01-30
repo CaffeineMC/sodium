@@ -54,9 +54,9 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.apache.commons.lang3.ArrayUtils;
+import org.joml.Vector3dc;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.joml.Vector3dc;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -435,14 +435,17 @@ public class RenderSectionManager {
                 // if result was blocking (or is approximately visible) and section is now newly renderable, force render it since it's probably a newly uncovered chunk.
                 // This also fixes flickering issues with pistons moving blocks and switching between being a mesh and a BE.
                 if (job != null
-                        && (job.isBlocking() || this.isSectionImmediatePresentationCandidate(result.render))
-                        && RenderSectionFlags.renderingMoreTypesNow(prevFlags, chunkBuildOutput.info.flags)) {
-                    // if there is currently no section collector since there was no graph traversal,
-                    // reuse the previous section collector and use it to generate new extended render lists
-                    if (this.sectionCollector == null) {
-                        this.sectionCollector = this.lastSectionCollector;
+                        && (job.isBlocking() || this.isSectionImmediatePresentationCandidate(result.render))) {
+                    // make sure only to add the section's new render flags to avoid duplicate entries in the render list
+                    var newFlags = RenderSectionFlags.getNewRenderFlags(prevFlags, chunkBuildOutput.info.flags);
+                    if (newFlags != 0) {
+                        // if there is currently no section collector since there was no graph traversal,
+                        // reuse the previous section collector and use it to generate new extended render lists
+                        if (this.sectionCollector == null) {
+                            this.sectionCollector = this.lastSectionCollector;
+                        }
+                        this.sectionCollector.visitWithFlags(result.render, newFlags);
                     }
-                    this.sectionCollector.visit(result.render);
                 }
 
                 result.render.setLastMeshResultSize(resultSize);
