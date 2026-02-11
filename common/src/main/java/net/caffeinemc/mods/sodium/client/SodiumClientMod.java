@@ -1,6 +1,5 @@
 package net.caffeinemc.mods.sodium.client;
 
-import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.console.Console;
 import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
 import net.caffeinemc.mods.sodium.client.data.fingerprint.FingerprintMeasure;
@@ -22,8 +21,6 @@ public class SodiumClientMod {
         MOD_VERSION = version;
 
         OPTIONS = loadConfig();
-
-        ConfigManager.registerConfigsEarly();
 
         try {
             updateFingerprint();
