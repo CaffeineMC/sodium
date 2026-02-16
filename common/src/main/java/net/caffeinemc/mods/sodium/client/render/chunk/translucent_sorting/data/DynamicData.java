@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.GeometryPlanes;
 import net.minecraft.core.SectionPos;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3dc;
 
 public abstract class DynamicData extends PresentTranslucentData {
@@ -22,7 +23,7 @@ public abstract class DynamicData extends PresentTranslucentData {
 
     public abstract DynamicSorter getSorter();
 
-    public GeometryPlanes getGeometryPlanes() {
+    public @Nullable GeometryPlanes getGeometryPlanes() {
         return this.geometryPlanes;
     }
 

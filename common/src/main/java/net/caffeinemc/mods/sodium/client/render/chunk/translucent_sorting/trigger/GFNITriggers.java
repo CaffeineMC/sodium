@@ -63,6 +63,9 @@ class GFNITriggers implements SectionTriggers<DynamicData> {
     public void integrateSection(SortTriggering ts, SectionPos pos, DynamicData data, CameraMovement movement) {
         long sectionPos = pos.asLong();
         var geometryPlanes = data.getGeometryPlanes();
+        if (geometryPlanes == null) {
+            return;
+        }
 
         // go through all normal lists and check against the normals that the group
         // builder has. if the normal list has data for the section, but the group
