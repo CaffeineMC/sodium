@@ -34,10 +34,9 @@ public abstract class SectionCollector implements RenderListProvider, RenderSect
         }
     }
 
-    @Override
-    public void visit(RenderSection section) {
+    private void visit(RenderSection section, int flags) {
         // only process section (and associated render list) if it has content that needs rendering
-        if (section.getFlags() != 0) {
+        if (flags != 0) {
             RenderRegion region = section.getRegion();
             ChunkRenderList renderList = region.getRenderList();
 
@@ -47,7 +46,7 @@ public abstract class SectionCollector implements RenderListProvider, RenderSect
                 this.renderLists.add(renderList);
             }
 
-            renderList.add(section);
+            renderList.add(section.getSectionIndex(), flags);
         }
 
         // always add to rebuild lists though, because it might just not be built yet
@@ -69,6 +68,15 @@ public abstract class SectionCollector implements RenderListProvider, RenderSect
                 queue.add(section);
             }
         }
+    }
+
+    @Override
+    public void visit(RenderSection section) {
+        this.visit(section, section.getFlags());
+    }
+
+    public void visitWithFlags(RenderSection section, int flags) {
+        this.visit(section, flags);
     }
 
     @Override
