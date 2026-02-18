@@ -1,7 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.lists;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.LocalSectionIndex;
-import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionFlags;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.util.iterator.ByteArrayIterator;
@@ -126,15 +125,11 @@ public class ChunkRenderList {
         }
     }
 
-    public void add(RenderSection render) {
-        if (this.size >= RenderRegion.REGION_SIZE) {
-            throw new ArrayIndexOutOfBoundsException("Render list is full");
-        }
-
+    /*
+    In immediate presentation mode this method is called during the processing of results for immediate-mode built sections. Sometimes this means that their render flags change as a result of the build. However, when the section was already entered into the render list and the render list was full, this resulted in an exception since previously this method threw when the render list was full. It's also not good to have the section be in the render list twice. The method now accepts a flags parameter, which is set to only the new flags when updating the render lists with immediate built results, to prevent this issue.
+     */
+    public void add(int index, int flags) {
         this.size++;
-
-        int index = render.getSectionIndex();
-        int flags = render.getFlags();
 
         if (((flags >>> RenderSectionFlags.HAS_BLOCK_GEOMETRY) & 1) == 1) {
             this.sectionsWithGeometryMap[index >> 6] |= 1L << (index & 0b111111);

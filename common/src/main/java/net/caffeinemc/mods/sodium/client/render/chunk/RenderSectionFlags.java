@@ -15,9 +15,8 @@ public class RenderSectionFlags {
     public static boolean needsRender(int flags) {
         return (flags & MASK_NEEDS_RENDER) != 0;
     }
-    
-    public static boolean renderingMoreTypesNow(int prevFlags, int newFlags) {
-        // true if there is some bit that is set now and was not set previously
-        return ((newFlags & MASK_NEEDS_RENDER) & ~(prevFlags & MASK_NEEDS_RENDER)) != 0;
+
+    public static int getNewRenderFlags(int prevFlags, int newFlags) {
+        return ((newFlags & MASK_NEEDS_RENDER) & ~(prevFlags & MASK_NEEDS_RENDER));
     }
 }
