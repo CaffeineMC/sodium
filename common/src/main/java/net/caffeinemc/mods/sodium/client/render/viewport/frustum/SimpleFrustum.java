@@ -1,12 +1,9 @@
 package net.caffeinemc.mods.sodium.client.render.viewport.frustum;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
+import net.caffeinemc.mods.sodium.mixin.core.render.frustum.FrustumIntersectionAccessor;
 import org.joml.FrustumIntersection;
 import org.joml.Vector4f;
-
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Field;
 
 public final class SimpleFrustum implements Frustum {
     private float nxX, nxY, nxZ, negNxW;
@@ -18,25 +15,9 @@ public final class SimpleFrustum implements Frustum {
 
     private final FrustumIntersection frustum;
 
-    private static final MethodHandle PLANES_GETTER;
-    static {
-        try {
-            Field field = FrustumIntersection.class.getDeclaredField("planes");
-            field.setAccessible(true);
-            PLANES_GETTER = MethodHandles.lookup().unreflectGetter(field);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException("Failed to find planes field in JOML", e);
-        }
-    }
-
     public SimpleFrustum(FrustumIntersection frustumIntersection) {
         this.frustum = frustumIntersection;
-        Vector4f[] planes;
-        try {
-            planes = (Vector4f[]) PLANES_GETTER.invokeExact(frustumIntersection);
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to access planes field in FrustumIntersection", e);
-        }
+        Vector4f[] planes = ((FrustumIntersectionAccessor) frustumIntersection).getPlanes();
 
         nxX = planes[0].x;
         nxY = planes[0].y;
