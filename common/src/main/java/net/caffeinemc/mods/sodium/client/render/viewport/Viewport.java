@@ -1,18 +1,18 @@
 package net.caffeinemc.mods.sodium.client.render.viewport;
 
-import net.caffeinemc.mods.sodium.client.render.viewport.frustum.Frustum;
+import net.caffeinemc.mods.sodium.client.render.viewport.frustum.SimpleFrustum;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import org.joml.Vector3d;
 
 public final class Viewport {
-    private final Frustum frustum;
+    private final SimpleFrustum frustum;
     private final CameraTransform transform;
 
     private final SectionPos sectionCoords;
     private final BlockPos blockCoords;
 
-    public Viewport(Frustum frustum, Vector3d position) {
+    public Viewport(SimpleFrustum frustum, Vector3d position) {
         this.frustum = frustum;
         this.transform = new CameraTransform(position.x, position.y, position.z);
 
@@ -25,20 +25,20 @@ public final class Viewport {
         this.blockCoords = BlockPos.containing(position.x, position.y, position.z);
     }
 
-    public boolean isBoxVisible(int intOriginX, int intOriginY, int intOriginZ, float floatSizeX, float floatSizeY, float floatSizeZ) {
+    public boolean isBoxVisible(int intOriginX, int intOriginY, int intOriginZ) {
         float floatOriginX = (intOriginX - this.transform.intX) - this.transform.fracX;
         float floatOriginY = (intOriginY - this.transform.intY) - this.transform.fracY;
         float floatOriginZ = (intOriginZ - this.transform.intZ) - this.transform.fracZ;
 
-        return this.frustum.testAab(
-                floatOriginX - floatSizeX,
-                floatOriginY - floatSizeY,
-                floatOriginZ - floatSizeZ,
+        return this.frustum.testCubeQuick(floatOriginX, floatOriginY, floatOriginZ);
+    }
 
-                floatOriginX + floatSizeX,
-                floatOriginY + floatSizeY,
-                floatOriginZ + floatSizeZ
-        );
+    public boolean isBoxVisibleLooser(int intOriginX, int intOriginY, int intOriginZ) {
+        float floatOriginX = (intOriginX - this.transform.intX) - this.transform.fracX;
+        float floatOriginY = (intOriginY - this.transform.intY) - this.transform.fracY;
+        float floatOriginZ = (intOriginZ - this.transform.intZ) - this.transform.fracZ;
+
+        return this.frustum.testCubeWithExtend(floatOriginX, floatOriginY, floatOriginZ, 1.0625f);
     }
 
     public boolean isBoxVisibleDirect(float floatOriginX, float floatOriginY, float floatOriginZ, float floatSize) {
