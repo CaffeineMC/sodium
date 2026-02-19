@@ -53,8 +53,14 @@ public abstract class CloudRendererMixin {
     private void buildMesh(CloudRenderer.RelativeCameraPos relativeCameraPos, ByteBuffer byteBuffer, int cellX, int cellZ, boolean fancy, int radius) {
         if (this.texture != null) {
             long[] cells = this.texture.cells();
-            int width = this.texture.width();
-            int height = this.texture.height();
+            int texWidth = this.texture.width();
+            int texHeight = this.texture.height();
+
+            int scaleX = texWidth / 256;
+            int scaleZ = texHeight / 256;
+
+            scaleX = Math.max(scaleX, 1);
+            scaleZ = Math.max(scaleZ, 1);
 
             long ptr = MemoryUtil.memAddress(byteBuffer);
             int cellIndex = byteBuffer.position() / 3;
@@ -64,10 +70,10 @@ public abstract class CloudRendererMixin {
                     int dz = ring - Math.abs(dx);
                     if (dz >= 0 && dz <= radius && dx * dx + dz * dz <= radius * radius) {
                         if (dz != 0) {
-                            cellIndex = sodium$addCellGeometryToBuffer(ptr, cellIndex, dx, -dz, relativeCameraPos, fancy, cellX, cellZ, cells, width, height);
+                            cellIndex = sodium$addCellGeometryToBuffer(ptr, cellIndex, dx, -dz, relativeCameraPos, fancy, cellX, cellZ, cells, texWidth, texHeight, scaleX, scaleZ);
                         }
 
-                        cellIndex = sodium$addCellGeometryToBuffer(ptr, cellIndex, dx, dz, relativeCameraPos, fancy, cellX, cellZ, cells, width, height);
+                        cellIndex = sodium$addCellGeometryToBuffer(ptr, cellIndex, dx, dz, relativeCameraPos, fancy, cellX, cellZ, cells, texWidth, texHeight, scaleX, scaleZ);
                     }
                 }
             }
@@ -84,9 +90,13 @@ public abstract class CloudRendererMixin {
                                                       int x,
                                                       int z,
                                                       CloudRenderer.@Nullable RelativeCameraPos orientation,
-                                                      boolean fancy, int camX, int camZ, long[] cells, int texWidth, int texHeight) {
-        int o = Math.floorMod(camX + x, texWidth);
-        int p = Math.floorMod(camZ + z, texHeight);
+                                                      boolean fancy, int camX, int camZ, long[] cells, int texWidth, int texHeight, int scaleX, int scaleZ) {
+        int o = Math.floorMod(camX + x, 256) * scaleX;
+        int p = Math.floorMod(camZ + z, 256) * scaleZ;
+
+        o = Math.min(o, texWidth - 1);
+        p = Math.min(p, texHeight - 1);
+
         long faces = cells[o + p * texWidth];
 
         if (faces == 0) {
