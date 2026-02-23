@@ -78,7 +78,7 @@ public final class SimpleFrustum implements Frustum {
                 pzZ * (pzZ < 0 ? -size : size));
     }
 
-    public boolean testCubeQuick(float x, float y, float z) {
+    public boolean testSection(float x, float y, float z) {
         // Skip far plane checks because it has been ensured by searchDistance and isWithinRenderDistance check in OcclusionCuller
         return nxX * x + nxY * y + nxZ * z >= negNxW &&
                 pxX * x + pxY * y + pxZ * z >= negPxW &&
@@ -87,7 +87,7 @@ public final class SimpleFrustum implements Frustum {
                 nzX * x + nzY * y + nzZ * z >= negNzW;
     }
 
-    public boolean testCubeWithExtend(float floatOriginX, float floatOriginY, float floatOriginZ, float extend) {
+    public boolean testSectionExpanded(float floatOriginX, float floatOriginY, float floatOriginZ, float extend) {
         float minX = floatOriginX - extend;
         float maxX = floatOriginX + extend;
         float minY = floatOriginY - extend;

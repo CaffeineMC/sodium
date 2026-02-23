@@ -1,18 +1,18 @@
 package net.caffeinemc.mods.sodium.client.render.viewport;
 
-import net.caffeinemc.mods.sodium.client.render.viewport.frustum.SimpleFrustum;
+import net.caffeinemc.mods.sodium.client.render.viewport.frustum.Frustum;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import org.joml.Vector3d;
 
 public final class Viewport {
-    private final SimpleFrustum frustum;
+    private final Frustum frustum;
     private final CameraTransform transform;
 
     private final SectionPos sectionCoords;
     private final BlockPos blockCoords;
 
-    public Viewport(SimpleFrustum frustum, Vector3d position) {
+    public Viewport(Frustum frustum, Vector3d position) {
         this.frustum = frustum;
         this.transform = new CameraTransform(position.x, position.y, position.z);
 
@@ -30,7 +30,7 @@ public final class Viewport {
         float floatOriginY = (intOriginY - this.transform.intY) - this.transform.fracY;
         float floatOriginZ = (intOriginZ - this.transform.intZ) - this.transform.fracZ;
 
-        return this.frustum.testCubeQuick(floatOriginX, floatOriginY, floatOriginZ);
+        return this.frustum.testSection(floatOriginX, floatOriginY, floatOriginZ);
     }
 
     public boolean isBoxVisibleLooser(int intOriginX, int intOriginY, int intOriginZ) {
@@ -38,7 +38,7 @@ public final class Viewport {
         float floatOriginY = (intOriginY - this.transform.intY) - this.transform.fracY;
         float floatOriginZ = (intOriginZ - this.transform.intZ) - this.transform.fracZ;
 
-        return this.frustum.testCubeWithExtend(floatOriginX, floatOriginY, floatOriginZ, 1.0625f);
+        return this.frustum.testSectionExpanded(floatOriginX, floatOriginY, floatOriginZ, 1.0625f);
     }
 
     public boolean isBoxVisibleDirect(float floatOriginX, float floatOriginY, float floatOriginZ, float floatSize) {
