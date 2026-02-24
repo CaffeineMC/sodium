@@ -379,7 +379,7 @@ public class GlBufferArena {
         } else {
             newCapacity = (long) (requiredTotalSize * FEW_SEGMENTS_GROWTH_FACTOR);
         }
-        return newCapacity;
+        return (newCapacity + 3) & ~3;
     }
 
     private long getRequiredTotalSize(List<PendingUpload> queue) {
