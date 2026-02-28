@@ -110,17 +110,24 @@ public class PreLaunchChecks {
     }
 
     private static String getLwjglCodeSource() {
-        ProtectionDomain domain = Version.class.getProtectionDomain();
-        if (domain != null) {
-            CodeSource source = domain.getCodeSource();
-            if (source != null) {
-                URL location = source.getLocation();
-                if (location != null) {
-                    String path = location.getPath().replace('\\', '/');
-                    path = path.split("!")[0];
-                    return path;
+        try {
+            ProtectionDomain domain = Version.class.getProtectionDomain();
+            if (domain != null) {
+                CodeSource source = domain.getCodeSource();
+                if (source != null) {
+                    URL location = source.getLocation();
+                    if (location != null) {
+                        String path = location.getPath();
+                        if (path != null) {
+                            path = path.replace('\\', '/');
+                            path = path.split("!")[0];
+                            return path;
+                        }
+                    }
                 }
             }
+        } catch (Throwable t) {
+            LOGGER.error("Error while checking code source of LWJGL", t);
         }
         return null;
     }
