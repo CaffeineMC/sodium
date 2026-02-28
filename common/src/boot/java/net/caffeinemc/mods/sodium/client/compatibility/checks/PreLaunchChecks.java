@@ -86,7 +86,8 @@ public class PreLaunchChecks {
                     You seem to be using ###LAUNCHER###.
 
                     You must change the LWJGL version in your launcher to continue. \
-                    This is usually controlled by the settings for a profile or instance in your launcher.""";
+                    This is usually controlled by the settings for a profile or instance in your launcher."""
+                    .replace("###LAUNCHER###", launcher);
         } else {
             advice = """
                     You must change the LWJGL version in your launcher to continue. \
