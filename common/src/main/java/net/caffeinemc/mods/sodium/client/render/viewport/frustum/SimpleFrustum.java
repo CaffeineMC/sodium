@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.viewport.frustum;
 
-import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
+import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import org.joml.FrustumIntersection;
 import org.joml.Vector4f;
 
@@ -57,7 +57,7 @@ public final class SimpleFrustum implements Frustum {
         pzY = planes[5].y;
         pzZ = planes[5].z;
 
-        final float size = OcclusionCuller.CHUNK_SECTION_SIZE;
+        final float size = Viewport.CHUNK_SECTION_PADDED_RADIUS;
         negNxW = -(planes[0].w + nxX * (nxX < 0 ? -size : size) +
                 nxY * (nxY < 0 ? -size : size) +
                 nxZ * (nxZ < 0 ? -size : size));

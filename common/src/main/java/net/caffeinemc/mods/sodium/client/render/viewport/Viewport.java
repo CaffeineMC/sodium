@@ -6,6 +6,15 @@ import net.minecraft.core.SectionPos;
 import org.joml.Vector3d;
 
 public final class Viewport {
+    // The bounding box of a chunk section must be large enough to contain all possible geometry within it. Block models
+    // can extend outside a block volume by +/- 1.0 blocks on all axis. Additionally, we make use of a small epsilon
+    // to deal with floating point imprecision during a frustum check (see GH#2132).
+    public static final float CHUNK_SECTION_RADIUS = 8.0f /* chunk bounds */;
+    public static final float CHUNK_SECTION_MARGIN = 1.0f /* maximum model extent */ + 0.125f /* epsilon */;
+    public static final float CHUNK_SECTION_NEARBY_MARGIN = 2.0f /* larger model extent */ + 0.125f /* epsilon */;
+    public static final float CHUNK_SECTION_PADDED_RADIUS = CHUNK_SECTION_RADIUS + CHUNK_SECTION_MARGIN;
+    private static final float LOOSER_MARGIN_EXTRA = CHUNK_SECTION_NEARBY_MARGIN - CHUNK_SECTION_MARGIN;
+
     private final Frustum frustum;
     private final CameraTransform transform;
 
@@ -38,7 +47,7 @@ public final class Viewport {
         float floatOriginY = (intOriginY - this.transform.intY) - this.transform.fracY;
         float floatOriginZ = (intOriginZ - this.transform.intZ) - this.transform.fracZ;
 
-        return this.frustum.testSectionExpanded(floatOriginX, floatOriginY, floatOriginZ, 1.0625f);
+        return this.frustum.testSectionExpanded(floatOriginX, floatOriginY, floatOriginZ, LOOSER_MARGIN_EXTRA);
     }
 
     public boolean isBoxVisibleDirect(float floatOriginX, float floatOriginY, float floatOriginZ, float floatSize) {
