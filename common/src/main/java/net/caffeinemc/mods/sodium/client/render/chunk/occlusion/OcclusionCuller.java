@@ -56,7 +56,7 @@ public class OcclusionCuller {
             processQueue(visitor, viewport, searchDistance, useOcclusionCulling, frame, queues.read(), queues.write());
         }
 
-        this.addNearbySections(visitor, viewport, searchDistance, frame);
+        this.addNearbySections(visitor, viewport, frame);
     }
 
     private static void processQueue(RenderSectionVisitor visitor,
@@ -226,13 +226,6 @@ public class OcclusionCuller {
         return clamped;
     }
 
-    // The bounding box of a chunk section must be large enough to contain all possible geometry within it. Block models
-    // can extend outside a block volume by +/- 1.0 blocks on all axis. Additionally, we make use of a small epsilon
-    // to deal with floating point imprecision during a frustum check (see GH#2132).
-    public static final float CHUNK_SECTION_RADIUS = 8.0f /* chunk bounds */;
-    public static final float CHUNK_SECTION_MARGIN = 1.0f /* maximum model extent */ + 0.125f /* epsilon */;
-    public static final float CHUNK_SECTION_SIZE = CHUNK_SECTION_RADIUS + CHUNK_SECTION_MARGIN;
-
     public static boolean isWithinFrustum(Viewport viewport, RenderSection section) {
         return viewport.isBoxVisible(section.getCenterX(), section.getCenterY(), section.getCenterZ());
     }
@@ -247,7 +240,7 @@ public class OcclusionCuller {
     // for all neighboring, even diagonally neighboring, sections around the origin to render them
     // if their extended bounding box is visible, and they may render large models that extend
     // outside the 16x16x16 base volume of the section.
-    private void addNearbySections(RenderSectionVisitor visitor, Viewport viewport, float searchDistance, int frame) {
+    private void addNearbySections(RenderSectionVisitor visitor, Viewport viewport, int frame) {
         var origin = viewport.getChunkCoord();
         var originX = origin.getX();
         var originY = origin.getY();
