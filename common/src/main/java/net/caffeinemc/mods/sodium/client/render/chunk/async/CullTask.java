@@ -7,11 +7,12 @@ import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.SectionTree;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 
 import java.util.Collection;
+import java.util.LinkedList;
 
 public abstract class CullTask<T> extends AsyncRenderTask<T> {
     protected final OcclusionCuller occlusionCuller;
     protected final boolean useOcclusionCulling;
-    private Collection<RenderSection> presentPatches;
+    private LinkedList<Collection<RenderSection>> presentPatches;
 
     protected CullTask(Viewport viewport, float buildDistance, int frame, OcclusionCuller occlusionCuller, boolean useOcclusionCulling) {
         super(viewport, buildDistance, frame);
@@ -23,7 +24,11 @@ public abstract class CullTask<T> extends AsyncRenderTask<T> {
 
     @Override
     public void registerPresentPatches(Collection<RenderSection> presentPatches) {
-        this.presentPatches = presentPatches;
+        // maintain a list of present patch sets because the task may receive multiple patch sets if it runs for longer than a frame and multiple instances of patching are required. We don't want to simply .addAll the collection because multiple tasks may be sharing the same patch set.
+        if (this.presentPatches == null) {
+            this.presentPatches = new LinkedList<>();
+        }
+        this.presentPatches.add(presentPatches);
     }
 
     protected void applyPresentPatches(SectionTree result) {
@@ -31,12 +36,14 @@ public abstract class CullTask<T> extends AsyncRenderTask<T> {
             return;
         }
 
-        for (var section : this.presentPatches) {
-            var x = section.getChunkX();
-            var y = section.getChunkY();
-            var z = section.getChunkZ();
+        for (var patchList : this.presentPatches) {
+            for (var section : patchList) {
+                var x = section.getChunkX();
+                var y = section.getChunkY();
+                var z = section.getChunkZ();
 
-            result.patchMarkPresent(x, y, z);
+                result.patchMarkPresent(x, y, z);
+            }
         }
     }
 }
