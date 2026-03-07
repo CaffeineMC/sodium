@@ -2,13 +2,6 @@ package net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline;
 
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenCustomHashMap;
-import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
-import net.caffeinemc.mods.sodium.client.util.DirectionUtil;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -36,11 +29,15 @@ public class ShapeComparisonCache {
         return voxelShape == Shapes.empty() || voxelShape.isEmpty();
     }
 
-
     public boolean lookup(VoxelShape self, VoxelShape other) {
+        return this.lookup(self, other, null);
+    }
+
+    public boolean lookup(VoxelShape self, VoxelShape other, VoxelShape constraint) {
         ShapeComparison comparison = this.cachedComparisonObject;
         comparison.self = self;
         comparison.other = other;
+        comparison.constraint = constraint;
 
         // Entries at the cache are promoted to the top of the table when accessed
         // The entries at the bottom of the table are removed when it gets too large
@@ -52,7 +49,14 @@ public class ShapeComparisonCache {
     }
 
     private boolean calculate(ShapeComparison comparison) {
-        boolean result = Shapes.joinIsNotEmpty(comparison.self, comparison.other, BooleanOp.ONLY_FIRST);
+        var self = comparison.self;
+
+        // only consider part of the self shape where it is not occluded by the constraint
+        if (comparison.constraint != null && !comparison.constraint.isEmpty()) {
+            self = Shapes.join(comparison.self, comparison.constraint, BooleanOp.ONLY_FIRST);
+        }
+
+        boolean result = Shapes.joinIsNotEmpty(self, comparison.other, BooleanOp.ONLY_FIRST);
 
         // Remove entries while the table is too large
         while (this.comparisonLookupTable.size() >= CACHE_SIZE) {
@@ -65,15 +69,15 @@ public class ShapeComparisonCache {
     }
 
     private static final class ShapeComparison {
-        private VoxelShape self, other;
+        private VoxelShape self, other, constraint;
 
         private ShapeComparison() {
-
         }
 
-        private ShapeComparison(VoxelShape self, VoxelShape other) {
+        private ShapeComparison(VoxelShape self, VoxelShape other, VoxelShape constraint) {
             this.self = self;
             this.other = other;
+            this.constraint = constraint;
         }
 
         public static class ShapeComparisonStrategy implements Hash.Strategy<ShapeComparison> {
@@ -81,6 +85,7 @@ public class ShapeComparisonCache {
             public int hashCode(ShapeComparison value) {
                 int result = System.identityHashCode(value.self);
                 result = 31 * result + System.identityHashCode(value.other);
+                result = 31 * result + System.identityHashCode(value.constraint);
 
                 return result;
             }
@@ -95,12 +100,12 @@ public class ShapeComparisonCache {
                     return false;
                 }
 
-                return a.self == b.self && a.other == b.other;
+                return a.self == b.self && a.other == b.other && a.constraint == b.constraint;
             }
         }
 
         public ShapeComparison copy() {
-            return new ShapeComparison(this.self, this.other);
+            return new ShapeComparison(this.self, this.other, this.constraint);
         }
     }
 }

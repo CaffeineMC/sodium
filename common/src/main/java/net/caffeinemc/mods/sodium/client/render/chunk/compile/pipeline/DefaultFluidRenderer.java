@@ -37,8 +37,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-// TODO: fix perfectly joining stairs from being fluid-exposed to each other and making weird fluid shapes, use shape operation BooleanOp.AND (extend cache to support it)
-
 /**
  * The default fluid renderer implementation generates fluid geometry for each fluid block based on its fluid state, the block state, and other blocks around it.
  * <p>
@@ -164,18 +162,20 @@ public class DefaultFluidRenderer {
         return this.isFluidSelfVisible(blockState, dir, Shapes.block());
     }
 
+    public boolean isFluidSideExposed(BlockAndTintGetter world, BlockState ownBlockState, BlockPos neighborPos, Direction facing, float height) {
+        return this.isFluidSideExposed(ownBlockState, world.getBlockState(neighborPos), facing, height);
+    }
+
     /**
      * Checks if a face of a fluid block with a specific height should be rendered based on the neighboring block state.
      *
-     * @param world       The block view for this render context
-     * @param neighborPos The position of the neighboring block
-     * @param facing      The facing direction of the side to check
-     * @param height      The height of the fluid
+     * @param ownBlockState      The state of the block in the level
+     * @param neighborBlockState The state of the neighboring block in the level
+     * @param facing             The facing direction of the side to check
+     * @param height             The height of the fluid
      * @return True if the fluid side facing {@param facing} is not occluded, otherwise false
      */
-    public boolean isFluidSideExposed(BlockAndTintGetter world, BlockPos neighborPos, Direction facing, float height) {
-        var neighborBlockState = world.getBlockState(neighborPos);
-
+    public boolean isFluidSideExposed(BlockState ownBlockState, BlockState neighborBlockState, Direction facing, float height) {
         // zero-height fluids don't render anything anyway
         if (height <= 0.0F) {
             return false;
@@ -210,11 +210,12 @@ public class DefaultFluidRenderer {
             fluidShape = Shapes.box(0.0D, 0.0D, 0.0D, 1.0D, height, 1.0D);
         }
 
-        return this.occlusionCache.lookup(fluidShape, neighborShape);
+        var ownShape = ownBlockState.getFaceOcclusionShape(facing);
+        return this.occlusionCache.lookup(fluidShape, neighborShape, ownShape);
     }
 
-    private boolean isSideExposedOffset(BlockAndTintGetter world, BlockPos originPos, Direction dir, float height) {
-        return this.isFluidSideExposed(world, this.scratchPos.setWithOffset(originPos, dir), dir, height);
+    private boolean isSideExposedOffset(BlockAndTintGetter world, BlockState ownBlockState, BlockPos originPos, Direction dir, float height) {
+        return this.isFluidSideExposed(world, ownBlockState, this.scratchPos.setWithOffset(originPos, dir), dir, height);
     }
 
     /**
@@ -298,17 +299,20 @@ public class DefaultFluidRenderer {
         // if there is any fluid on either side, check if the diagonal has any
         if (filteredHeightA > 0.0f || filteredHeightB > 0.0f) {
             // check that there's an accessible path to the diagonal
-            var aNeighbor = this.scratchPos.setWithOffset(origin, dirA);
-            var exposedAD = this.isFullBlockFluidSelfVisible(world.getBlockState(aNeighbor), dirB) &&
-                    this.isSideExposedOffset(world, aNeighbor, dirB, 1.0f);
-            var bNeighbor = this.scratchPos.setWithOffset(origin, dirB);
-            var exposedBD = this.isFullBlockFluidSelfVisible(world.getBlockState(bNeighbor), dirA) &&
-                    this.isSideExposedOffset(world, bNeighbor, dirA, 1.0f);
+            BlockPos aNeighbor = this.scratchPos.setWithOffset(origin, dirA);
+            BlockState aNeighborState = world.getBlockState(aNeighbor);
+            boolean exposedAD = this.isFullBlockFluidSelfVisible(aNeighborState, dirB) &&
+                    this.isSideExposedOffset(world, aNeighborState, aNeighbor, dirB, 1.0f);
+
+            BlockPos bNeighbor = this.scratchPos.setWithOffset(origin, dirB);
+            BlockState bNeighborState = world.getBlockState(bNeighbor);
+            boolean exposedBD = this.isFullBlockFluidSelfVisible(bNeighborState, dirA) &&
+                    this.isSideExposedOffset(world, bNeighborState, bNeighbor, dirA, 1.0f);
 
             exposedADB = exposedAD && exposedBD;
             if (exposedA && exposedAD || exposedB && exposedBD) {
                 // add a sample using diagonal block's fluid height
-                var abNeighbor = this.scratchPos.set(origin).move(dirA).move(dirB);
+                BlockPos abNeighbor = this.scratchPos.set(origin).move(dirA).move(dirB);
                 float height = this.sampleFluidHeight(world, fluid, abNeighbor);
 
                 if (height >= 1.0f) {
@@ -343,7 +347,7 @@ public class DefaultFluidRenderer {
 
         boolean upVisible = this.isFullBlockFluidVisible(level, blockPos, Direction.UP, blockState, fluidState);
         boolean downVisible = this.isFullBlockFluidVisible(level, blockPos, Direction.DOWN, blockState, fluidState) &&
-                this.isSideExposedOffset(level, blockPos, Direction.DOWN, FULL_HEIGHT);
+                this.isSideExposedOffset(level, blockState, blockPos, Direction.DOWN, FULL_HEIGHT);
 
         // self-visibility and visibility are kept separate because self-visibility is used by the corner height sampling
         // while visibility would be too strict (as faces are not visible if there's an adjacent fluid of the same type)
@@ -373,10 +377,10 @@ public class DefaultFluidRenderer {
             northEastHeight = 1.0f;
         } else {
             // calculate the exposure of the side faces using a conservative estimate (1.0f) of the fluid height for deciding what neighbor samples to take
-            boolean northExposed = northSelfVisible && this.isSideExposedOffset(level, blockPos, Direction.NORTH, 1.0f);
-            boolean southExposed = southSelfVisible && this.isSideExposedOffset(level, blockPos, Direction.SOUTH, 1.0f);
-            boolean westExposed = westSelfVisible && this.isSideExposedOffset(level, blockPos, Direction.WEST, 1.0f);
-            boolean eastExposed = eastSelfVisible && this.isSideExposedOffset(level, blockPos, Direction.EAST, 1.0f);
+            boolean northExposed = northSelfVisible && this.isSideExposedOffset(level, blockState, blockPos, Direction.NORTH, 1.0f);
+            boolean southExposed = southSelfVisible && this.isSideExposedOffset(level, blockState, blockPos, Direction.SOUTH, 1.0f);
+            boolean westExposed = westSelfVisible && this.isSideExposedOffset(level, blockState, blockPos, Direction.WEST, 1.0f);
+            boolean eastExposed = eastSelfVisible && this.isSideExposedOffset(level, blockState, blockPos, Direction.EAST, 1.0f);
 
             float heightNorth = this.sampleFluidHeight(level, fluid, blockPos, Direction.NORTH);
             float heightSouth = this.sampleFluidHeight(level, fluid, blockPos, Direction.SOUTH);
@@ -406,7 +410,7 @@ public class DefaultFluidRenderer {
         // calculate up fluid face exposure
         if (upVisible) {
             float totalMinHeight = Math.min(Math.min(northWestHeight, southWestHeight), Math.min(southEastHeight, northEastHeight));
-            upVisible = this.isSideExposedOffset(level, blockPos, Direction.UP, totalMinHeight);
+            upVisible = this.isSideExposedOffset(level, blockState, blockPos, Direction.UP, totalMinHeight);
         }
 
         // apply heuristic to not render up face it's in a flooded cave
@@ -577,7 +581,7 @@ public class DefaultFluidRenderer {
             var sideFluidHeight = Math.max(c1, c2);
             this.scratchPos.setWithOffset(blockPos, dir);
 
-            if (this.isFluidSideExposed(level, this.scratchPos, dir, sideFluidHeight)) {
+            if (this.isFluidSideExposed(level, blockState, this.scratchPos, dir, sideFluidHeight)) {
                 TextureAtlasSprite sprite = sprites[1];
 
                 boolean isOverlay = false;
