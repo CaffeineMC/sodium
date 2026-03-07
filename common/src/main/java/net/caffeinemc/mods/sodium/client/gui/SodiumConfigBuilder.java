@@ -18,7 +18,6 @@ import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
-import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.minecraft.client.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -495,21 +494,19 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                 )
         );
 
-        if (PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
-            performancePage.addOptionGroup(builder.createOptionGroup()
-                    .addOption(
-                            builder.createEnumOption(ResourceLocation.parse("sodium:performance.quad_splitting"), QuadSplittingMode.class)
-                                    .setStorageHandler(this.sodiumStorage)
-                                    .setName(Component.translatable("sodium.options.quad_splitting.name"))
-                                    .setTooltip(Component.translatable("sodium.options.quad_splitting.tooltip"))
-                                    .setImpact(OptionImpact.MEDIUM)
-                                    .setDefaultValue(DEFAULTS.performance.quadSplittingMode)
-                                    .setBinding(value -> this.sodiumOpts.performance.quadSplittingMode = value, () -> this.sodiumOpts.performance.quadSplittingMode)
-                                    .setEnabled(SodiumClientMod.options().debug.terrainSortingEnabled)
-                                    .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
-                    )
-            );
-        }
+        performancePage.addOptionGroup(builder.createOptionGroup()
+                .addOption(
+                        builder.createEnumOption(ResourceLocation.parse("sodium:performance.quad_splitting"), QuadSplittingMode.class)
+                                .setStorageHandler(this.sodiumStorage)
+                                .setName(Component.translatable("sodium.options.quad_splitting.name"))
+                                .setTooltip(Component.translatable("sodium.options.quad_splitting.tooltip"))
+                                .setImpact(OptionImpact.MEDIUM)
+                                .setDefaultValue(DEFAULTS.performance.quadSplittingMode)
+                                .setBinding(value -> this.sodiumOpts.performance.quadSplittingMode = value, () -> this.sodiumOpts.performance.quadSplittingMode)
+                                .setEnabled(SodiumClientMod.options().debug.terrainSortingEnabled)
+                                .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
+                )
+        );
         return performancePage;
     }
 
