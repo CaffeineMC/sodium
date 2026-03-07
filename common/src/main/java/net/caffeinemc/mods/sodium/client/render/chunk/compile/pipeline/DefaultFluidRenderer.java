@@ -1,8 +1,8 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline;
 
 
-import it.unimi.dsi.fastutil.bytes.ByteArrayList;
-import it.unimi.dsi.fastutil.bytes.ByteList;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
@@ -63,7 +63,7 @@ public class DefaultFluidRenderer {
     private final BlockPos.MutableBlockPos occlusionScratchPos = new BlockPos.MutableBlockPos();
     private float scratchHeight = 0.0f;
     private int scratchSamples = 0;
-    private final ByteList stack = new ByteArrayList();
+    private final IntList stack = new IntArrayList();
     private long visited = 0;
 
     private final ShapeComparisonCache occlusionCache = new ShapeComparisonCache();
@@ -93,7 +93,7 @@ public class DefaultFluidRenderer {
      * @param fluid   The fluid state
      * @return True if the fluid side facing {@param facing} is visible, otherwise false
      */
-    public boolean isFullBlockFluidSideVisible(BlockGetter view, BlockPos selfPos, Direction facing, FluidState fluid) {
+    private boolean isFullBlockFluidSideVisible(BlockGetter view, BlockPos selfPos, Direction facing, FluidState fluid) {
         // perform occlusion against the neighboring block
         BlockState otherState = view.getBlockState(this.occlusionScratchPos.setWithOffset(selfPos, facing));
 
@@ -138,7 +138,7 @@ public class DefaultFluidRenderer {
      * @param fluidShape     The shape of the fluid
      * @return True if the fluid side facing {@param facing} is self-visible, otherwise false
      */
-    public boolean isFluidSelfVisible(BlockState selfBlockState, Direction facing, VoxelShape fluidShape) {
+    private boolean isFluidSelfVisible(BlockState selfBlockState, Direction facing, VoxelShape fluidShape) {
         // only perform self-occlusion if the own block state can't occlude
         if (selfBlockState.canOcclude()) {
             var selfShape = selfBlockState.getFaceOcclusionShape(facing);
@@ -162,7 +162,7 @@ public class DefaultFluidRenderer {
         return this.isFluidSelfVisible(blockState, dir, Shapes.block());
     }
 
-    public boolean isFluidSideExposed(BlockAndTintGetter world, BlockState ownBlockState, BlockPos neighborPos, Direction facing, float height) {
+    private boolean isFluidSideExposed(BlockAndTintGetter world, BlockState ownBlockState, BlockPos neighborPos, Direction facing, float height) {
         return this.isFluidSideExposed(ownBlockState, world.getBlockState(neighborPos), facing, height);
     }
 
@@ -175,7 +175,7 @@ public class DefaultFluidRenderer {
      * @param height             The height of the fluid
      * @return True if the fluid side facing {@param facing} is not occluded, otherwise false
      */
-    public boolean isFluidSideExposed(BlockState ownBlockState, BlockState neighborBlockState, Direction facing, float height) {
+    private boolean isFluidSideExposed(BlockState ownBlockState, BlockState neighborBlockState, Direction facing, float height) {
         // zero-height fluids don't render anything anyway
         if (height <= 0.0F) {
             return false;
@@ -342,6 +342,7 @@ public class DefaultFluidRenderer {
         return result;
     }
 
+    @Override
     public void render(LevelSlice level, BlockState blockState, FluidState fluidState, BlockPos blockPos, BlockPos offset, TranslucentGeometryCollector collector, ChunkModelBuilder meshBuilder, Material material, ColorProvider<FluidState> colorProvider, TextureAtlasSprite[] sprites) {
         Fluid fluid = fluidState.getType();
 
@@ -636,41 +637,40 @@ public class DefaultFluidRenderer {
     private int getUpFaceExposureByNeighbors(BlockAndTintGetter level, BlockPos origin, FluidState fluidState) {
         // performs a simple DFS using a stack and a visited bit mask
         this.visited = 0;
-        var stack = this.stack;
-        stack.clear();
+        this.stack.clear();
 
         var result = 0;
-        result |= visitExposureNeighbor(level, origin, fluidState, stack, (byte) 0, (byte) 0);
+        result |= visitExposureNeighbor(level, origin, fluidState, 0, 0);
         if (result == BOTH_EXPOSED) {
             return result;
         }
 
-        while (!stack.isEmpty()) {
+        while (!this.stack.isEmpty()) {
             // remove coordinates from the stack in reverse order to preserve their format
-            var z = stack.removeByte(stack.size() - 1);
-            var x = stack.removeByte(stack.size() - 1);
+            int z = this.stack.removeInt(this.stack.size() - 1);
+            int x = this.stack.removeInt(this.stack.size() - 1);
 
             // traverse into unvisited neighbors, return immediately if both faces are exposed (no further change possible)
-            if (x < 2) {
-                result |= visitExposureNeighbor(level, origin, fluidState, stack, (byte) (x + 1), z);
+            if (x < 1) {
+                result |= visitExposureNeighbor(level, origin, fluidState, x + 1, z);
                 if (result == BOTH_EXPOSED) {
                     return result;
                 }
             }
-            if (x > -2) {
-                result |= visitExposureNeighbor(level, origin, fluidState, stack, (byte) (x - 1), z);
+            if (x > -1) {
+                result |= visitExposureNeighbor(level, origin, fluidState, x - 1, z);
                 if (result == BOTH_EXPOSED) {
                     return result;
                 }
             }
-            if (z < 2) {
-                result |= visitExposureNeighbor(level, origin, fluidState, stack, x, (byte) (z + 1));
+            if (z < 1) {
+                result |= visitExposureNeighbor(level, origin, fluidState, x, z + 1);
                 if (result == BOTH_EXPOSED) {
                     return result;
                 }
             }
-            if (z > -2) {
-                result |= visitExposureNeighbor(level, origin, fluidState, stack, x, (byte) (z - 1));
+            if (z > -1) {
+                result |= visitExposureNeighbor(level, origin, fluidState, x, z - 1);
                 if (result == BOTH_EXPOSED) {
                     return result;
                 }
@@ -684,7 +684,7 @@ public class DefaultFluidRenderer {
         return 1L << ((x + 2) + (z + 2) * 5);
     }
 
-    private int visitExposureNeighbor(BlockAndTintGetter level, BlockPos origin, FluidState fluidState, ByteList stack, byte xOffset, byte zOffset) {
+    private int visitExposureNeighbor(BlockAndTintGetter level, BlockPos origin, FluidState fluidState, int xOffset, int zOffset) {
         // stop if position was already visited previously
         var upNeighborMask = offsetToMask(xOffset, zOffset);
         if ((this.visited & upNeighborMask) != 0) {
