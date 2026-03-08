@@ -281,69 +281,43 @@ public class OcclusionCuller {
             return;
         }
 
-        if (origin == null) {
-            // the viewpoint is outside the world, so the angle computations relying on propagating angle information
-            // from the origin section to the others won't work.
-            if (GraphDirectionSet.contains(outgoing, GraphDirection.DOWN)) {
-                visitNode(queue, section.adjacentDown, GraphDirectionSet.of(GraphDirection.UP));
-            }
+        var originSection = origin == null ? null : section;
 
-            if (GraphDirectionSet.contains(outgoing, GraphDirection.UP)) {
-                visitNode(queue, section.adjacentUp, GraphDirectionSet.of(GraphDirection.DOWN));
-            }
-
-            if (GraphDirectionSet.contains(outgoing, GraphDirection.NORTH)) {
-                visitNode(queue, section.adjacentNorth, GraphDirectionSet.of(GraphDirection.SOUTH));
-            }
-
-            if (GraphDirectionSet.contains(outgoing, GraphDirection.SOUTH)) {
-                visitNode(queue, section.adjacentSouth, GraphDirectionSet.of(GraphDirection.NORTH));
-            }
-
-            if (GraphDirectionSet.contains(outgoing, GraphDirection.WEST)) {
-                visitNode(queue, section.adjacentWest, GraphDirectionSet.of(GraphDirection.EAST));
-            }
-
-            if (GraphDirectionSet.contains(outgoing, GraphDirection.EAST)) {
-                visitNode(queue, section.adjacentEast, GraphDirectionSet.of(GraphDirection.WEST));
-            }
-            return;
+        // the viewpoint is outside the world, so the angle computations relying on propagating angle information
+        // from the origin section to the others won't work.
+        if (GraphDirectionSet.contains(outgoing, GraphDirection.DOWN)) {
+            visitNode(queue, originSection, section.adjacentDown, GraphDirection.UP);
         }
 
-        if (GraphDirectionSet.contains(outgoing, GraphDirection.DOWN) &&
-                section.adjacentDown.intersectSlopes(this.inBoundsOrigin, section, this.token)) {
-            visitNode(queue, section.adjacentDown, GraphDirectionSet.of(GraphDirection.UP));
+        if (GraphDirectionSet.contains(outgoing, GraphDirection.UP)) {
+            visitNode(queue, originSection, section.adjacentUp, GraphDirection.DOWN);
         }
 
-        if (GraphDirectionSet.contains(outgoing, GraphDirection.UP) &&
-                section.adjacentUp.intersectSlopes(this.inBoundsOrigin, section, this.token)) {
-            visitNode(queue, section.adjacentUp, GraphDirectionSet.of(GraphDirection.DOWN));
+        if (GraphDirectionSet.contains(outgoing, GraphDirection.NORTH)) {
+            visitNode(queue, originSection, section.adjacentNorth, GraphDirection.SOUTH);
         }
 
-        if (GraphDirectionSet.contains(outgoing, GraphDirection.NORTH) &&
-                section.adjacentNorth.intersectSlopes(this.inBoundsOrigin, section, this.token)) {
-            visitNode(queue, section.adjacentNorth, GraphDirectionSet.of(GraphDirection.SOUTH));
+        if (GraphDirectionSet.contains(outgoing, GraphDirection.SOUTH)) {
+            visitNode(queue, originSection, section.adjacentSouth, GraphDirection.NORTH);
         }
 
-        if (GraphDirectionSet.contains(outgoing, GraphDirection.SOUTH) &&
-                section.adjacentSouth.intersectSlopes(this.inBoundsOrigin, section, this.token)) {
-            visitNode(queue, section.adjacentSouth, GraphDirectionSet.of(GraphDirection.NORTH));
+        if (GraphDirectionSet.contains(outgoing, GraphDirection.WEST)) {
+            visitNode(queue, originSection, section.adjacentWest, GraphDirection.EAST);
         }
 
-        if (GraphDirectionSet.contains(outgoing, GraphDirection.WEST) &&
-                section.adjacentWest.intersectSlopes(this.inBoundsOrigin, section, this.token)) {
-            visitNode(queue, section.adjacentWest, GraphDirectionSet.of(GraphDirection.EAST));
-        }
-
-        if (GraphDirectionSet.contains(outgoing, GraphDirection.EAST) &&
-                section.adjacentEast.intersectSlopes(this.inBoundsOrigin, section, this.token)) {
-            visitNode(queue, section.adjacentEast, GraphDirectionSet.of(GraphDirection.WEST));
+        if (GraphDirectionSet.contains(outgoing, GraphDirection.EAST)) {
+            visitNode(queue, originSection, section.adjacentEast, GraphDirection.WEST);
         }
     }
 
-    private void visitNode(WriteQueue<RenderSection> queue, RenderSection section, int incoming) {
+    private void visitNode(WriteQueue<RenderSection> queue, RenderSection originSection, RenderSection section, int incomingDirection) {
         // isn't usually null, but can be null if the bfs is happening during loading or unloading of chunks
         if (section == null) {
+            return;
+        }
+
+        // perform angular occlusion culling if enabled in general and locally
+        if (originSection != null && !section.intersectSlopes(this.inBoundsOrigin, originSection, this.token)) {
             return;
         }
 
@@ -361,7 +335,7 @@ public class OcclusionCuller {
             }
         }
 
-        section.addIncomingDirections(incoming);
+        section.addIncomingDirections(GraphDirectionSet.of(incomingDirection));
     }
 
     @SuppressWarnings("ManualMinMaxCalculation") // we know what we are doing.
@@ -531,7 +505,7 @@ public class OcclusionCuller {
     private void tryInitNode(WriteQueue<RenderSection> queue, int x, int y, int z, int direction) {
         var section = this.getRenderSection(x, y, z);
 
-        visitNode(queue, section, GraphDirectionSet.of(direction));
+        visitNode(queue, null, section, direction);
     }
 
     private RenderSection getRenderSection(int x, int y, int z) {
