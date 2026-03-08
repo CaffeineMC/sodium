@@ -634,11 +634,11 @@ public class DefaultFluidRenderer implements SodiumFluidRenderer {
                     }
                 }
 
-                float u1 = sprite.getU(0.75F);
-                float u2 = sprite.getU(0.25F);
-                float v1 = sprite.getV(0.25F + (1.0F - c1) * 0.5F);
-                float v2 = sprite.getV(0.25F + (1.0F - c2) * 0.5F);
-                float v3 = sprite.getV(0.75F);
+                float u1 = sprite.getU(0.5F);
+                float u2 = sprite.getU(0.0F);
+                float v1 = sprite.getV((1.0F - c1) * 0.5F);
+                float v2 = sprite.getV((1.0F - c2) * 0.5F);
+                float v3 = sprite.getV(0.5F);
 
                 quad.setSprite(sprite);
 
