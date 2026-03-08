@@ -287,7 +287,7 @@ public class SodiumWorldRenderer {
 
         if (GLFW.glfwGetKey(this.client.getWindow().handle(), GLFW.GLFW_KEY_X) == GLFW.GLFW_PRESS) {
             useNewFluidRenderer = false;
-        } else if (GLFW.glfwGetKey(this.client.getWindow().handle(), GLFW.GLFW_KEY_W) == GLFW.GLFW_PRESS) {
+        } else if (GLFW.glfwGetKey(this.client.getWindow().handle(), GLFW.GLFW_KEY_W) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(this.client.getWindow().handle(), GLFW.GLFW_KEY_C) == GLFW.GLFW_PRESS) {
             useNewFluidRenderer = true;
         }
 
