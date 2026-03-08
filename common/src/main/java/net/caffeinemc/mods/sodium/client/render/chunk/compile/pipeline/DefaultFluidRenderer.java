@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
+import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
 import net.caffeinemc.mods.sodium.client.model.light.LightMode;
 import net.caffeinemc.mods.sodium.client.model.light.LightPipeline;
@@ -42,25 +43,25 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * <p>
  * First, preliminary culling for the six fluid faces determines whether they are visible at all. Visibility refers to a whether a face is rendered. Faces are not rendered if the neighboring block is of the same fluid type or if the face is occluded by the block it's contained in, i.e. water logging, or the neighboring block. Self-visibility refers to whether the block the fluid is inside is preventing the fluid face from rendering.
  * <p>
- * If the fluid block is not a full fluid block, the corner fluid heights are calculated from the fluid heights of the surrounding blocks. Each corner is calculated separately and takes weighted samples, which are then averaged into the final height. The fluid block itself contributes a sample, alongside directly neighboring and diagonally neighboring blocks, depending on connectivity. Samples from neighboring blocks are only taken if the blocks' shapes don't occlude the path between them. A sample is also taken from the diagonally neighboring block, if there is a path to it through one of the direct neighbors.
+ * If the fluid block is not a full fluid block, the corner fluid heights are calculated from the fluid heights of the surrounding blocks. Each corner is calculated separately and takes weighted samples, which are then averaged into the final height. The fluid block itself contributes a sample, alongside directly neighboring and diagonally neighboring blocks, depending on connectivity. A sample is also taken from the diagonally neighboring block.
  * <p>
  * Before visible fluid faces are rendered into quads, they must also be tested as exposed. Exposed means that there is an open path through this face of the fluid block. This is independent of whether there's another block of this type of fluid there. The exposed test is done against the neighboring block's occlusion shape.
  * <p>
  * Visible implies self-visible implies exposed but not the other way around.
  * <p>
- * The top fluid face is additionally culled if the flooded cave heuristic determines that the fluid is within a flooded cave. Within flooded caves the top face isn't rendered for performance and because it would look ugly.
+ * The top fluid face is additionally culled if the flooded cave heuristic determines that the fluid is within a flooded cave. Within flooded caves the downward-facing top face isn't rendered for performance and because it would look ugly.
  */
-public class DefaultFluidRenderer {
-    // TODO: allow this to be changed by vertex format, WARNING: make sure TQuad knows about EPSILON
-    // TODO: move fluid rendering to a separate render pass and control glPolygonOffset and glDepthFunc to fix this properly
-    public static final float EPSILON = 0.001f;
+public class DefaultFluidRenderer implements SodiumFluidRenderer {
     private static final float ALIGNED_EQUALS_EPSILON = 0.011f;
 
     private static final float DISCARD_SAMPLE = -1.0f;
     private static final float FULL_HEIGHT = 0.8888889f;
 
+    private final boolean hiddenFluidCulling;
+    private final boolean improvedFluidShaping;
+
     private final BlockPos.MutableBlockPos scratchPos = new BlockPos.MutableBlockPos();
-    private final BlockPos.MutableBlockPos occlusionScratchPos = new BlockPos.MutableBlockPos();
+    private final BlockPos.MutableBlockPos secondScratchPos = new BlockPos.MutableBlockPos();
     private float scratchHeight = 0.0f;
     private int scratchSamples = 0;
     private final IntList stack = new IntArrayList();
@@ -80,8 +81,10 @@ public class DefaultFluidRenderer {
 
     public DefaultFluidRenderer(LightPipelineProvider lighters) {
         this.quad.setLightFace(Direction.UP);
-
         this.lighters = lighters;
+
+        this.hiddenFluidCulling = SodiumClientMod.options().quality.hiddenFluidCulling;
+        this.improvedFluidShaping = SodiumClientMod.options().quality.improvedFluidShaping;
     }
 
     /**
@@ -95,7 +98,7 @@ public class DefaultFluidRenderer {
      */
     private boolean isFullBlockFluidSideVisible(BlockGetter view, BlockPos selfPos, Direction facing, FluidState fluid) {
         // perform occlusion against the neighboring block
-        BlockState otherState = view.getBlockState(this.occlusionScratchPos.setWithOffset(selfPos, facing));
+        BlockState otherState = view.getBlockState(this.secondScratchPos.setWithOffset(selfPos, facing));
 
         // check for special fluid occlusion behavior
         if (PlatformBlockAccess.getInstance().shouldOccludeFluid(facing.getOpposite(), otherState, fluid)) {
@@ -271,7 +274,7 @@ public class DefaultFluidRenderer {
     }
 
     /**
-     * Calculates the corner height of a fluid block based on the fluid heights of the surrounding blocks by taking samples of connected blocks.
+     * Calculates the corner height of a fluid block based on the fluid heights of the surrounding blocks by taking samples.
      *
      * @param world        The block view for this render context
      * @param origin       The position of the fluid block
@@ -286,13 +289,35 @@ public class DefaultFluidRenderer {
      * @return The calculated corner height
      */
     private float fluidCornerHeight(BlockAndTintGetter world, BlockPos origin, Fluid fluid, float fluidHeight, Direction dirA, Direction dirB, float fluidHeightA, float fluidHeightB, boolean exposedA, boolean exposedB) {
-        // if both sides are full height fluids, the corner is full height too
         float filteredHeightA = exposedA ? fluidHeightA : DISCARD_SAMPLE;
         float filteredHeightB = exposedB ? fluidHeightB : DISCARD_SAMPLE;
         if (filteredHeightA >= 1.0f || filteredHeightB >= 1.0f) {
             return 1.0f;
         }
 
+        float cornerHeight;
+        if (this.improvedFluidShaping) {
+            cornerHeight = sampleFluidCornerSmart(world, origin, fluid, dirA, dirB, fluidHeightA, fluidHeightB, exposedA, exposedB, filteredHeightA, filteredHeightB);
+        } else {
+            cornerHeight = sampleFluidCornerBasic(world, origin, fluid, dirA, dirB, fluidHeightA, fluidHeightB, filteredHeightA, filteredHeightB);
+        }
+        if (cornerHeight >= 1.0f) {
+            return 1.0f;
+        }
+
+        this.addHeightSample(fluidHeight);
+
+        // gather the samples and reset
+        float result = this.scratchHeight / this.scratchSamples;
+
+        this.scratchHeight = 0.0f;
+        this.scratchSamples = 0;
+
+        return result;
+    }
+
+    // samples using the exposure path between the waterlogged blocks. This prevents slants from appearing when there's a fully blocked but waterlogged block next to a fluid. The downside is that it can somewhat obscure which direction the water is actually flowing.
+    private float sampleFluidCornerSmart(BlockAndTintGetter world, BlockPos origin, Fluid fluid, Direction dirA, Direction dirB, float fluidHeightA, float fluidHeightB, boolean exposedA, boolean exposedB, float filteredHeightA, float filteredHeightB) {
         //  "D" stands for diagonal
         boolean exposedADB = false;
 
@@ -331,15 +356,26 @@ public class DefaultFluidRenderer {
             this.addHeightSample(fluidHeightB);
         }
 
-        this.addHeightSample(fluidHeight);
+        return Float.NaN;
+    }
 
-        // gather the samples and reset
-        float result = this.scratchHeight / this.scratchSamples;
+    private float sampleFluidCornerBasic(BlockAndTintGetter world, BlockPos origin, Fluid fluid, Direction dirA, Direction dirB, float fluidHeightA, float fluidHeightB, float filteredHeightA, float filteredHeightB) {
+        // if there is any fluid on either side, check if the diagonal has any
+        if (filteredHeightA > 0.0f || filteredHeightB > 0.0f) {
+            BlockPos abNeighbor = this.scratchPos.set(origin).move(dirA).move(dirB);
+            float height = this.sampleFluidHeight(world, fluid, abNeighbor);
 
-        this.scratchHeight = 0.0f;
-        this.scratchSamples = 0;
+            if (height >= 1.0f) {
+                return 1.0f;
+            }
 
-        return result;
+            this.addHeightSample(height);
+        }
+
+        this.addHeightSample(fluidHeightA);
+        this.addHeightSample(fluidHeightB);
+
+        return Float.NaN;
     }
 
     @Override
@@ -418,7 +454,9 @@ public class DefaultFluidRenderer {
         boolean inwardsUpFaceVisible = true;
         if (upVisible) {
             var exposureResult = getUpFaceExposureByNeighbors(level, blockPos, fluidState);
-            upVisible = exposureResult != NO_EXPOSURE;
+            if (this.hiddenFluidCulling) {
+                upVisible = exposureResult != NO_EXPOSURE;
+            }
             inwardsUpFaceVisible = exposureResult == BOTH_EXPOSED;
         }
 
@@ -635,6 +673,9 @@ public class DefaultFluidRenderer {
      * NOTE: Sometimes this suffers from missing block updates because neighboring chunks aren't rebuild if the block receiving the update wasn't on the chunk border.
      */
     private int getUpFaceExposureByNeighbors(BlockAndTintGetter level, BlockPos origin, FluidState fluidState) {
+        // when hidden fluid culling is enabled, the radius is greater to somewhat compensate for the potential fluid surface interruption
+        final int radius = this.hiddenFluidCulling ? 2 : 1;
+
         // performs a simple DFS using a stack and a visited bit mask
         this.visited = 0;
         this.stack.clear();
@@ -651,25 +692,25 @@ public class DefaultFluidRenderer {
             int x = this.stack.removeInt(this.stack.size() - 1);
 
             // traverse into unvisited neighbors, return immediately if both faces are exposed (no further change possible)
-            if (x < 1) {
+            if (x < radius) {
                 result |= visitExposureNeighbor(level, origin, fluidState, x + 1, z);
                 if (result == BOTH_EXPOSED) {
                     return result;
                 }
             }
-            if (x > -1) {
+            if (x > -radius) {
                 result |= visitExposureNeighbor(level, origin, fluidState, x - 1, z);
                 if (result == BOTH_EXPOSED) {
                     return result;
                 }
             }
-            if (z < 1) {
+            if (z < radius) {
                 result |= visitExposureNeighbor(level, origin, fluidState, x, z + 1);
                 if (result == BOTH_EXPOSED) {
                     return result;
                 }
             }
-            if (z > -1) {
+            if (z > -radius) {
                 result |= visitExposureNeighbor(level, origin, fluidState, x, z - 1);
                 if (result == BOTH_EXPOSED) {
                     return result;
@@ -709,8 +750,8 @@ public class DefaultFluidRenderer {
         // since the potential fluid surface is not connected.
         if (neighborBlockState.getFluidState().isSourceOfType(fluid)) {
             if (!aboveIsSameFluid) {
-                stack.add(xOffset);
-                stack.add(zOffset);
+                this.stack.add(xOffset);
+                this.stack.add(zOffset);
             }
         }
 
@@ -722,7 +763,7 @@ public class DefaultFluidRenderer {
         }
 
         // expose faces if the block above is not the same fluid and not solid, i.e. the up face is visible.
-        // If it's a block that should have fluid faces rendered against it, expose both. Otherwise just the outwards face is rendered
+        // If it's a block that should have fluid faces rendered against it, expose both. Otherwise, just the outwards face is rendered
         // to prevent the inwards face from being visible from within the water. However, the outwards face is still visible from the outside
         // and needs to be rendered in any case the block is not solid.
         if (!aboveIsSameFluid && !aboveBlockState.isSolidRender()) {

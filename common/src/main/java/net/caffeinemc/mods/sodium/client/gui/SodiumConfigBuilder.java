@@ -483,6 +483,28 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 }, Identifier.parse("sodium:quality.filtering_mode"))
                 )
         );
+
+        qualityPage.addOptionGroup(builder.createOptionGroup()
+                .addOption(
+                        builder.createBooleanOption(Identifier.parse("sodium:quality.hidden_fluid_culling"))
+                                .setStorageHandler(this.sodiumStorage)
+                                .setName(Component.translatable("sodium.options.hidden_fluid_culling.name"))
+                                .setTooltip(Component.translatable("sodium.options.hidden_fluid_culling.tooltip"))
+                                .setImpact(OptionImpact.MEDIUM)
+                                .setDefaultValue(DEFAULTS.quality.hiddenFluidCulling)
+                                .setBinding(value -> this.sodiumOpts.quality.hiddenFluidCulling = value, () -> this.sodiumOpts.quality.hiddenFluidCulling)
+                                .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
+                )
+                .addOption(
+                        builder.createBooleanOption(Identifier.parse("sodium:quality.improved_fluid_shaping"))
+                                .setStorageHandler(this.sodiumStorage)
+                                .setName(Component.translatable("sodium.options.improved_fluid_shaping.name"))
+                                .setTooltip(Component.translatable("sodium.options.improved_fluid_shaping.tooltip"))
+                                .setDefaultValue(DEFAULTS.quality.improvedFluidShaping)
+                                .setBinding(value -> this.sodiumOpts.quality.improvedFluidShaping = value, () -> this.sodiumOpts.quality.improvedFluidShaping)
+                                .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
+                )
+        );
         return qualityPage;
     }
 
