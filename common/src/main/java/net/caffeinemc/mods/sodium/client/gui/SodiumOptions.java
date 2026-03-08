@@ -36,7 +36,7 @@ public class SodiumOptions {
     }
 
     public static class QualitySettings {
-        public boolean hiddenFluidCulling = false;
+        public boolean hiddenFluidCulling = true;
         public boolean improvedFluidShaping = false;
     }
 
