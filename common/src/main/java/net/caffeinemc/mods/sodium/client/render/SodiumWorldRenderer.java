@@ -433,7 +433,7 @@ public class SodiumWorldRenderer {
             return true;
         }
 
-        AABB bb = ((EntityRendererAccessor) renderer).sodium$getCullingBox(entity);
+        AABB bb = ((EntityRendererAccessor) renderer).sodium$getBoundingBoxForCulling(entity);
 
         // bail on very large entities to avoid checking many sections
         double entityVolume = (bb.maxX - bb.minX) * (bb.maxY - bb.minY) * (bb.maxZ - bb.minZ);
