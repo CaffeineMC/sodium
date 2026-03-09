@@ -8,9 +8,9 @@ import net.minecraft.client.renderer.texture.SpriteContents;
 
 @Mixin(SpriteContents.AnimatedTexture.class)
 public interface SpriteContentsAnimatedTextureAccessor {
-    @Accessor
-    List<SpriteContents.FrameInfo> getFrames();
+    @Accessor("frames")
+    List<SpriteContents.FrameInfo> sodium$getFrames();
 
-    @Accessor
-    int getFrameRowSize();
+    @Accessor("frameRowSize")
+    int sodium$getFrameRowSize();
 }

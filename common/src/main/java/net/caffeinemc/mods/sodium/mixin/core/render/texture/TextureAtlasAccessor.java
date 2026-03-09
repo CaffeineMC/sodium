@@ -6,9 +6,9 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(TextureAtlas.class)
 public interface TextureAtlasAccessor {
-    @Accessor
-    int getWidth();
+    @Accessor("width")
+    int sodium$getWidth();
 
-    @Accessor
-    int getHeight();
+    @Accessor("height")
+    int sodium$getHeight();
 }

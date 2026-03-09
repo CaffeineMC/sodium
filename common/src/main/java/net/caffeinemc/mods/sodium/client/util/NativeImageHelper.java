@@ -13,6 +13,6 @@ public class NativeImageHelper {
         }
 
         return ((NativeImageAccessor) (Object) nativeImage) // duck type since NativeImage is final
-                .getPixels();
+                .sodium$getPixels();
     }
 }

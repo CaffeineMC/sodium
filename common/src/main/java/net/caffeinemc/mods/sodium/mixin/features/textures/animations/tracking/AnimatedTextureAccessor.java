@@ -9,5 +9,5 @@ import net.minecraft.client.renderer.texture.SpriteContents;
 @Mixin(SpriteContents.AnimatedTexture.class)
 public interface AnimatedTextureAccessor {
     @Accessor("frames")
-    List<SpriteContents.FrameInfo> getFrames();
+    List<SpriteContents.FrameInfo> sodium$getFrames();
 }
