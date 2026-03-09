@@ -6,7 +6,8 @@
     "defaultRequire": 1
   },
   "overwrites": {
-    "conformVisibility": true
+    "conformVisibility": true,
+    "requireAnnotations": true
   },
   "client": [
     "BakedModelMixin",
