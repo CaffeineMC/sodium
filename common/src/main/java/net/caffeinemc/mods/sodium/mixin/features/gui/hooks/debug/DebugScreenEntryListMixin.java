@@ -36,12 +36,7 @@ public class DebugScreenEntryListMixin {
         this.allStatuses.put(DebugScreenEntries.CHUNK_RENDER_STATS, DebugScreenEntryStatus.IN_OVERLAY);
     }
 
-    @Inject(method = "loadDefaultProfile", at = @At(value = "FIELD", shift = At.Shift.AFTER, target = "Lnet/minecraft/client/gui/components/debug/DebugScreenEntryList;allStatuses:Ljava/util/Map;", opcode = Opcodes.PUTFIELD))
-    private void injectLoadDefaultProfile(CallbackInfo ci) {
-        this.setFullDebugStatuses();
-    }
-
-    @Inject(method = "loadProfile", at = @At(value = "FIELD", shift = At.Shift.AFTER, target = "Lnet/minecraft/client/gui/components/debug/DebugScreenEntryList;allStatuses:Ljava/util/Map;", opcode = Opcodes.PUTFIELD))
+    @Inject(method = "resetToProfile", at = @At("HEAD"))
     private void injectLoadProfile(DebugScreenProfile debugScreenProfile, CallbackInfo ci) {
         if (debugScreenProfile == DebugScreenProfile.PERFORMANCE && !PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
             this.setReducedDebugStatuses();

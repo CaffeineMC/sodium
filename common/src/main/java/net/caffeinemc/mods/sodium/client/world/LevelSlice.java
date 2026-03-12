@@ -14,7 +14,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
+import net.minecraft.world.level.CardinalLighting;
 import net.minecraft.world.level.ColorResolver;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
@@ -105,6 +106,8 @@ public final class LevelSlice implements BlockAndTintGetter {
     // The volume that this WorldSlice contains
     private BoundingBox volume;
 
+    private final boolean ambientOcclusion;
+
     public static ChunkRenderContext prepare(Level level, SectionPos pos, ClonedChunkSectionCache cache) {
         LevelChunk chunk = level.getChunk(pos.getX(), pos.getZ());
         LevelChunkSection section = chunk.getSections()[level.getSectionIndexFromSectionY(pos.getY())];
@@ -166,6 +169,8 @@ public final class LevelSlice implements BlockAndTintGetter {
         for (BlockState[] blockArray : this.blockArrays) {
             Arrays.fill(blockArray, EMPTY_BLOCK_STATE);
         }
+
+        this.ambientOcclusion = Minecraft.getInstance().options.ambientOcclusion().get();
     }
 
     public void copyData(ChunkRenderContext context) {
@@ -270,11 +275,6 @@ public final class LevelSlice implements BlockAndTintGetter {
     }
 
     @Override
-    public float getShade(Direction direction, boolean shaded) {
-        return this.level.getShade(direction, shaded);
-    }
-
-    @Override
     public @NonNull LevelLightEngine getLightEngine() {
         // Not thread-safe to access lighting data from off-thread, even if Minecraft allows it.
         throw new UnsupportedOperationException();
@@ -349,6 +349,11 @@ public final class LevelSlice implements BlockAndTintGetter {
     }
 
     @Override
+    public CardinalLighting cardinalLighting() {
+        return level.cardinalLighting();
+    }
+
+    @Override
     public int getBlockTint(BlockPos pos, ColorResolver resolver) {
         return this.biomeColors.getColor(resolver, pos.getX(), pos.getY(), pos.getZ());
     }
@@ -392,5 +397,9 @@ public final class LevelSlice implements BlockAndTintGetter {
 
     public static int getLocalSectionIndex(int sectionX, int sectionY, int sectionZ) {
         return (sectionY * SECTION_ARRAY_LENGTH * SECTION_ARRAY_LENGTH) + (sectionZ * SECTION_ARRAY_LENGTH) + sectionX;
+    }
+
+    public boolean useAmbientOcclusion() {
+        return ambientOcclusion;
     }
 }

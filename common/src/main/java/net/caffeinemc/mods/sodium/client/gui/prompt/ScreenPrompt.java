@@ -7,7 +7,7 @@ import net.caffeinemc.mods.sodium.client.gui.widgets.AbstractWidget;
 import net.caffeinemc.mods.sodium.client.gui.widgets.FlatButtonWidget;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.input.KeyEvent;
@@ -51,7 +51,7 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
         this.actionButton = new FlatButtonWidget(new Dim2i((boxX + this.width) - 198, (boxY + this.height) - 24, 110, Layout.BUTTON_SHORT), this.action.label, this::runAction, true, false, PROMPT_THEME);
     }
 
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         var parentDimensions = this.parent.getDimensions();
 
         graphics.fill(0, 0, graphics.guiWidth(), graphics.guiHeight(), 0x70090909);
@@ -60,7 +60,7 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
         int boxY = parentDimensions.getCenterY() - (this.height / 2);
 
         graphics.fill(boxX, boxY, boxX + this.width, boxY + this.height, 0xFF171717);
-        graphics.renderOutline(boxX, boxY, this.width, this.height, 0xFF121212);
+        graphics.outline(boxX, boxY, this.width, this.height, 0xFF121212);
 
 
         int padding = 5;
@@ -76,7 +76,7 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
             var formatted = font.split(paragraph, textMaxWidth);
 
             for (var line : formatted) {
-                graphics.drawString(font, line, textX, textY, Colors.FOREGROUND, true);
+                graphics.text(font, line, textX, textY, Colors.FOREGROUND, true);
                 textY += font.lineHeight + 2;
             }
 
@@ -84,7 +84,7 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
         }
 
         for (var button : getWidgets()) {
-            button.render(graphics, mouseX, mouseY, delta);
+            button.extractRenderState(graphics, mouseX, mouseY, delta);
         }
     }
 

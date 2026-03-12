@@ -3,7 +3,7 @@ package net.caffeinemc.mods.sodium.mixin.fabric;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.caffeinemc.mods.sodium.client.world.biome.LevelBiomeSlice;
-import net.fabricmc.fabric.api.blockview.v2.FabricBlockView;
+import net.fabricmc.fabric.api.blockgetter.v2.FabricBlockGetter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.world.level.biome.Biome;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(LevelSlice.class)
-public abstract class LevelSliceMixin implements FabricBlockView {
+public abstract class LevelSliceMixin implements FabricBlockGetter {
     @Shadow
     private BoundingBox volume;
 

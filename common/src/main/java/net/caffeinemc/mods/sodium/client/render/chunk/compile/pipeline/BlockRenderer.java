@@ -1,9 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline;
 
-import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.util.ColorMixer;
-import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProviderRegistry;
 import net.caffeinemc.mods.sodium.client.model.light.LightMode;
@@ -12,12 +10,8 @@ import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadOrientation;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
-import net.caffeinemc.mods.sodium.client.render.chunk.terrain.DefaultTerrainRenderPasses;
-import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
-import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.parameters.AlphaCutoffParameter;
-import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.parameters.MaterialParameters;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
@@ -27,8 +21,7 @@ import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
@@ -90,14 +83,8 @@ public class BlockRenderer extends AbstractBlockRenderContext {
 
         this.prepareCulling(true);
 
-        this.defaultRenderType = ItemBlockRenderTypes.getChunkRenderType(state);
-        this.allowDowngrade = true;
-
-
         random.setSeed(state.getSeed(pos));
         PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, getForEmitting(), random, level, pos, state, this::bufferDefaultModel);
-
-        this.defaultRenderType = null;
     }
 
     /**
@@ -116,7 +103,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         final boolean emissive = quad.emissive();
 
         final ChunkSectionLayer blendMode = quad.getRenderType();
-        final Material material = DefaultMaterials.forChunkLayer(blendMode == null ? defaultRenderType : blendMode);
+        final Material material = DefaultMaterials.forChunkLayer(blendMode);
 
         this.tintQuad(quad);
         this.shadeQuad(quad, lightMode, emissive, shadeMode);
@@ -168,24 +155,13 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         var materialBits = material.bits();
         ModelQuadFacing normalFace = quad.normalFace();
 
-        // attempt render pass downgrade if possible
         var pass = material.pass;
-
-        var downgradedPass = attemptPassDowngrade(atlasSprite, pass);
-        if (downgradedPass != null) {
-            pass = downgradedPass;
-        }
 
         // collect all translucent quads into the translucency sorting system if enabled,
         // and discard the quad if it's invalid (i.e. not visible)
         if (pass.isTranslucent() && this.collector != null &&
                 this.collector.appendQuad(vertices, normalFace, quad.getFaceNormal())) {
             return;
-        }
-
-        // if there was a downgrade from translucent to cutout, the material bits' alpha cutoff needs to be updated
-        if (downgradedPass != null && material == DefaultMaterials.TRANSLUCENT && pass == DefaultTerrainRenderPasses.CUTOUT) {
-            materialBits = MaterialParameters.pack(AlphaCutoffParameter.HALF, material.mipped);
         }
 
         ChunkModelBuilder builder = this.buffers.get(pass);
@@ -195,72 +171,5 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         if (atlasSprite != null) {
             builder.addSprite(atlasSprite);
         }
-    }
-
-    private boolean validateQuadUVs(TextureAtlasSprite atlasSprite) {
-        // sanity check that the quad's UVs are within the sprite's bounds
-        var spriteUMin = atlasSprite.getU0();
-        var spriteUMax = atlasSprite.getU1();
-        var spriteVMin = atlasSprite.getV0();
-        var spriteVMax = atlasSprite.getV1();
-
-        for (int i = 0; i < 4; i++) {
-            var u = this.vertices[i].u;
-            var v = this.vertices[i].v;
-            if (u < spriteUMin || u > spriteUMax || v < spriteVMin || v > spriteVMax) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private @Nullable TerrainRenderPass attemptPassDowngrade(TextureAtlasSprite sprite, TerrainRenderPass pass) {
-        if (!allowDowngrade || Workarounds.isWorkaroundEnabled(Workarounds.Reference.INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE)) {
-            return null;
-        }
-
-        boolean attemptDowngrade = true;
-        boolean hasNonOpaqueVertex = false;
-
-        for (int i = 0; i < 4; i++) {
-            hasNonOpaqueVertex |= ColorABGR.unpackAlpha(this.vertices[i].color) != 0xFF;
-        }
-
-        // don't do downgrade if some vertex is not fully opaque
-        if (pass.isTranslucent() && hasNonOpaqueVertex) {
-            attemptDowngrade = false;
-        }
-
-        if (attemptDowngrade) {
-            attemptDowngrade = validateQuadUVs(sprite);
-        }
-
-        if (attemptDowngrade) {
-            return getDowngradedPass(sprite, pass);
-        }
-
-        return null;
-    }
-
-    private static TerrainRenderPass getDowngradedPass(TextureAtlasSprite sprite, TerrainRenderPass pass) {
-        if (sprite instanceof TextureAtlasSpriteExtension spriteExt) {
-            // Some mods may use a custom ticker which we cannot look into. To avoid problems with these mods,
-            // do not attempt to downgrade the render pass.
-            if (spriteExt.sodium$hasUnknownImageContents()) {
-                return pass;
-            }
-
-            if (sprite.contents() instanceof SpriteContentsExtension contentsExt) {
-                if (pass == DefaultTerrainRenderPasses.TRANSLUCENT && !contentsExt.sodium$hasTranslucentPixels()) {
-                    pass = DefaultTerrainRenderPasses.CUTOUT;
-                }
-                if (pass == DefaultTerrainRenderPasses.CUTOUT && !contentsExt.sodium$hasTransparentPixels()) {
-                    pass = DefaultTerrainRenderPasses.SOLID;
-                }
-            }
-        }
-
-        return pass;
     }
 }

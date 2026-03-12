@@ -22,7 +22,6 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import org.jspecify.annotations.Nullable;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.Direction;
 

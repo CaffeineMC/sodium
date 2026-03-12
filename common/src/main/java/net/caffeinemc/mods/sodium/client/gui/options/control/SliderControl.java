@@ -8,7 +8,7 @@ import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
 import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -60,7 +60,7 @@ public class SliderControl implements Control {
         }
 
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
             int sliderX = this.getSliderX();
             int sliderY = this.getSliderY();
             int sliderWidth = this.getSliderWidth();
@@ -85,7 +85,7 @@ public class SliderControl implements Control {
             }
 
             // render the label first and then the slider to prevent the highlight rect from darkening the slider
-            super.render(graphics, mouseX, mouseY, delta);
+            super.extractRenderState(graphics, mouseX, mouseY, delta);
 
             if (!this.option.showControl()) {
                 return;

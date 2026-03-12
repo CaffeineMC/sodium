@@ -9,6 +9,7 @@ import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import net.minecraft.client.gui.font.glyphs.BakedSheetGlyph;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
@@ -53,8 +54,8 @@ public class BakedGlyphMixin {
      * @reason Use intrinsics
      * @author JellySquid
      */
-    @Inject(method = "render(ZFFFLorg/joml/Matrix4f;Lcom/mojang/blaze3d/vertex/VertexConsumer;IZI)V", at = @At("HEAD"), cancellable = true)
-    private void drawFast(boolean italic, float x, float y, float z, Matrix4f matrix, VertexConsumer vertexConsumer, int c, boolean bl2, int light, CallbackInfo ci) {
+    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    private void drawFast(boolean italic, float x, float y, float z, Matrix4fc matrix, VertexConsumer vertexConsumer, int c, boolean bl2, int light, CallbackInfo ci) {
         var writer = VertexConsumerUtils.convertOrLog(vertexConsumer);
 
         if (writer == null) {
@@ -98,7 +99,7 @@ public class BakedGlyphMixin {
      * @author JellySquid
      */
     @Inject(method = "buildEffect", at = @At("HEAD"), cancellable = true)
-    private void drawEffectFast(BakedSheetGlyph.EffectInstance effect, float offset, float depthOffset, int c, VertexConsumer vertexConsumer, int light, Matrix4f matrix, CallbackInfo ci) {
+    private void drawEffectFast(BakedSheetGlyph.EffectInstance effect, float offset, float depthOffset, int c, VertexConsumer vertexConsumer, int light, Matrix4fc matrix, CallbackInfo ci) {
         var writer = VertexConsumerUtils.convertOrLog(vertexConsumer);
 
         if (writer == null) {
@@ -137,7 +138,7 @@ public class BakedGlyphMixin {
 
     @Unique
     private static void write(long buffer,
-                              Matrix4f matrix, float x, float y, float z, int color, float u, float v, int light) {
+                              Matrix4fc matrix, float x, float y, float z, int color, float u, float v, int light) {
         float x2 = MatrixHelper.transformPositionX(matrix, x, y, z);
         float y2 = MatrixHelper.transformPositionY(matrix, x, y, z);
         float z2 = MatrixHelper.transformPositionZ(matrix, x, y, z);

@@ -14,7 +14,7 @@ import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.caffeinemc.mods.sodium.client.gui.options.control.AbstractScrollable;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.NonNull;
@@ -87,14 +87,14 @@ public class PageListWidget extends AbstractScrollable {
     }
 
     @Override
-    public void render(@NonNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         renderBackgroundGradient(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY());
         graphics.enableScissor(this.getX(), this.getY(), this.getLimitX(), this.getLimitY());
-        super.render(graphics, mouseX, mouseY, delta);
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
         graphics.disableScissor();
     }
 
-    public static void renderBackgroundGradient(GuiGraphics graphics, int x1, int y1, int x2, int y2) {
+    public static void renderBackgroundGradient(GuiGraphicsExtractor graphics, int x1, int y1, int x2, int y2) {
         graphics.fillGradient(x1, y1, x2, y2, Colors.BACKGROUND_LIGHT, Colors.BACKGROUND_DEFAULT);
     }
 
@@ -157,7 +157,7 @@ public class PageListWidget extends AbstractScrollable {
         }
 
         @Override
-        protected int renderIcon(GuiGraphics graphics, int textColor) {
+        protected int renderIcon(GuiGraphicsExtractor graphics, int textColor) {
             if (this.icon == null) {
                 return super.renderIcon(graphics, textColor);
             }
@@ -178,8 +178,8 @@ public class PageListWidget extends AbstractScrollable {
         }
 
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-            super.render(graphics, mouseX, mouseY, delta);
+        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+            super.extractRenderState(graphics, mouseX, mouseY, delta);
 
             if (this.isHovered()) {
                 graphics.requestCursor(CursorTypes.POINTING_HAND);

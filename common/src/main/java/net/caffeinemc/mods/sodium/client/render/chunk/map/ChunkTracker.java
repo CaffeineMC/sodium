@@ -26,7 +26,7 @@ public class ChunkTracker implements ClientChunkEventListener {
 
     @Override
     public void onChunkStatusAdded(int x, int z, int flags) {
-        var key = ChunkPos.asLong(x, z);
+        var key = ChunkPos.pack(x, z);
 
         var prev = this.chunkStatus.get(key);
         var cur = prev | flags;
@@ -42,7 +42,7 @@ public class ChunkTracker implements ClientChunkEventListener {
 
     @Override
     public void onChunkStatusRemoved(int x, int z, int flags) {
-        var key = ChunkPos.asLong(x, z);
+        var key = ChunkPos.pack(x, z);
 
         var prev = this.chunkStatus.get(key);
         int cur = prev & ~flags;
@@ -69,13 +69,13 @@ public class ChunkTracker implements ClientChunkEventListener {
     }
 
     private void updateMerged(int x, int z) {
-        long key = ChunkPos.asLong(x, z);
+        long key = ChunkPos.pack(x, z);
 
         int flags = this.chunkStatus.get(key);
 
         for (int ox = -1; ox <= 1; ox++) {
             for (int oz = -1; oz <= 1; oz++) {
-                flags &= this.chunkStatus.get(ChunkPos.asLong(ox + x, oz + z));
+                flags &= this.chunkStatus.get(ChunkPos.pack(ox + x, oz + z));
             }
         }
 

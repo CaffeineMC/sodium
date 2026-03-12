@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.*;
 
 public final class EntityVertex {
-    public static final VertexFormat FORMAT = DefaultVertexFormat.NEW_ENTITY;
+    public static final VertexFormat FORMAT = DefaultVertexFormat.ENTITY;
 
     public static final int STRIDE = 36;
 

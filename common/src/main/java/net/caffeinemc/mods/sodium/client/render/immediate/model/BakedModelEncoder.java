@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.immediate.model;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.QuadInstance;
 import net.caffeinemc.mods.sodium.api.util.ColorMixer;
 import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
 import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
@@ -24,7 +25,12 @@ public class BakedModelEncoder {
 
     private static final boolean MULTIPLY_ALPHA = PlatformRuntimeInformation.getInstance().usesAlphaMultiplication();
 
-    public static void writeQuadVertices(VertexBufferWriter writer, PoseStack.Pose matrices, ModelQuadView quad, int color, int light, int overlay, boolean colorize) {
+
+    public static boolean shouldMultiplyAlpha() {
+        return MULTIPLY_ALPHA;
+    }
+
+    public static void writeQuadVertices(VertexBufferWriter writer, PoseStack.Pose matrices, ModelQuadView quad, QuadInstance instance) {
         Matrix3f matNormal = matrices.normal();
         Matrix4f matPosition = matrices.pose();
 
@@ -38,13 +44,9 @@ public class BakedModelEncoder {
                 float y = quad.getY(i);
                 float z = quad.getZ(i);
 
-                int newLight = mergeLighting(quad.getMaxLightQuad(i), light);
+                int newLight = instance.getLightCoordsWithEmission(i, quad.getMaxLightQuad(i));
 
-                int newColor = color;
-
-                if (colorize) {
-                    newColor = ColorMixer.mulComponentWise(newColor, quad.getColor(i));
-                }
+                int newColor = instance.getColor(i);
 
                 // The packed transformed normal vector
                 int normal = MatrixHelper.transformNormal(matNormal, matrices.trustedNormals, quad.getAccurateNormal(i));
@@ -54,60 +56,11 @@ public class BakedModelEncoder {
                 float yt = MatrixHelper.transformPositionY(matPosition, x, y, z);
                 float zt = MatrixHelper.transformPositionZ(matPosition, x, y, z);
 
-                EntityVertex.write(ptr, xt, yt, zt, newColor, quad.getTexU(i), quad.getTexV(i), overlay, newLight, normal);
+                EntityVertex.write(ptr, xt, yt, zt, newColor, quad.getTexU(i), quad.getTexV(i), instance.overlayCoords(), newLight, normal);
                 ptr += EntityVertex.STRIDE;
             }
 
             writer.push(stack, buffer, 4, EntityVertex.FORMAT);
         }
-    }
-
-    public static void writeQuadVertices(VertexBufferWriter writer, PoseStack.Pose matrices, ModelQuadView quad, float r, float g, float b, float a, float[] brightnessTable, int[] light, int overlay) {
-        Matrix3f matNormal = matrices.normal();
-        Matrix4f matPosition = matrices.pose();
-
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            long buffer = stack.nmalloc(4 * EntityVertex.STRIDE);
-            long ptr = buffer;
-
-            for (int i = 0; i < 4; i++) {
-                // The position vector
-                float x = quad.getX(i);
-                float y = quad.getY(i);
-                float z = quad.getZ(i);
-
-                // The transformed position vector
-                float xt = MatrixHelper.transformPositionX(matPosition, x, y, z);
-                float yt = MatrixHelper.transformPositionY(matPosition, x, y, z);
-                float zt = MatrixHelper.transformPositionZ(matPosition, x, y, z);
-
-                float fR;
-                float fG;
-                float fB;
-                float fA;
-
-                var normal = MatrixHelper.transformNormal(matNormal, matrices.trustedNormals, quad.getAccurateNormal(i));
-
-                float brightness = brightnessTable[i];
-
-                fR = brightness * r;
-                fG = brightness * g;
-                fB = brightness * b;
-                fA = a;
-
-                int color = ColorABGR.pack(fR, fG, fB, fA);
-
-                int newLight = mergeLighting(quad.getMaxLightQuad(i), light[i]);
-
-                EntityVertex.write(ptr, xt, yt, zt, color, quad.getTexU(i), quad.getTexV(i), overlay, newLight, normal);
-                ptr += EntityVertex.STRIDE;
-            }
-
-            writer.push(stack, buffer, 4, EntityVertex.FORMAT);
-        }
-    }
-
-    public static boolean shouldMultiplyAlpha() {
-        return MULTIPLY_ALPHA;
     }
 }

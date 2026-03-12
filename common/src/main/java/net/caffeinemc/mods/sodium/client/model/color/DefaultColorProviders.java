@@ -3,7 +3,7 @@ package net.caffeinemc.mods.sodium.client.model.color;
 import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
 import net.caffeinemc.mods.sodium.client.model.quad.blender.BlendedColorProvider;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
-import net.minecraft.client.color.block.BlockColor;
+import net.minecraft.client.color.block.BlockTintSource;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
@@ -11,8 +11,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.Arrays;
 
 public class DefaultColorProviders {
-    public static ColorProvider<BlockState> adapt(BlockColor color) {
+    public static ColorProvider<BlockState> adapt(BlockTintSource color) {
         return new VanillaAdapter(color);
+    }
+
+    public static ColorProvider<BlockState> adapt(BlockTintSource[] colors) {
+        return new VanillaAdapter(colors);
     }
 
     public static class GrassColorProvider<T> extends BlendedColorProvider<T> {
@@ -42,15 +46,24 @@ public class DefaultColorProviders {
     }
 
     private static class VanillaAdapter implements ColorProvider<BlockState> {
-        private final BlockColor color;
+        private final BlockTintSource[] color;
 
-        private VanillaAdapter(BlockColor color) {
-            this.color = color;
+        private VanillaAdapter(BlockTintSource color) {
+            this.color = new BlockTintSource[] { color };
+        }
+
+        public VanillaAdapter(BlockTintSource[] colors) {
+            this.color = colors;
         }
 
         @Override
         public void getColors(LevelSlice slice, BlockPos pos, BlockPos.MutableBlockPos scratchPos, BlockState state, ModelQuadView quad, int[] output, boolean smooth) {
-            Arrays.fill(output, 0xFF000000 | this.color.getColor(state, slice, pos, quad.getTintIndex()));
+            if (quad.getTintIndex() >= color.length) {
+                Arrays.fill(output, -1);
+                return;
+            }
+
+            Arrays.fill(output, 0xFF000000 | this.color[quad.getTintIndex()].colorInWorld(state, slice, pos));
         }
     }
 }

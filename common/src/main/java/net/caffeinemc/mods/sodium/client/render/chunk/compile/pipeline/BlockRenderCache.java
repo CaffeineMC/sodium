@@ -8,7 +8,7 @@ import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.block.BlockModelShaper;
+import net.minecraft.client.renderer.block.BlockStateModelSet;
 
 public class BlockRenderCache {
     private final ArrayLightDataCache lightDataCache;
@@ -16,7 +16,7 @@ public class BlockRenderCache {
     private final BlockRenderer blockRenderer;
     private final FluidRenderer fluidRenderer;
 
-    private final BlockModelShaper blockModels;
+    private final BlockStateModelSet blockModels;
     private final LevelSlice levelSlice;
 
     public BlockRenderCache(Minecraft minecraft, ClientLevel level) {
@@ -30,10 +30,10 @@ public class BlockRenderCache {
         this.blockRenderer = new BlockRenderer(colorRegistry, lightPipelineProvider);
         this.fluidRenderer = FluidRendererFactory.getInstance().createPlatformFluidRenderer(colorRegistry, lightPipelineProvider);
 
-        this.blockModels = minecraft.getModelManager().getBlockModelShaper();
+        this.blockModels = minecraft.getModelManager().getBlockStateModelSet();
     }
 
-    public BlockModelShaper getBlockModels() {
+    public BlockStateModelSet getBlockModels() {
         return this.blockModels;
     }
 

@@ -4,7 +4,7 @@ import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.console.Console;
 import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -66,18 +66,18 @@ public class ConfigCorruptedScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-        super.render(graphics, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
 
-        graphics.drawString(this.font, Component.literal("Sodium Renderer"), 32, 32, 0xffffff);
-        graphics.drawString(this.font, Component.literal("Could not load the configuration file"), 32, 48, 0xff0000);
+        graphics.text(this.font, Component.literal("Sodium Renderer"), 32, 32, 0xffffff);
+        graphics.text(this.font, Component.literal("Could not load the configuration file"), 32, 48, 0xff0000);
 
         for (int i = 0; i < TEXT_BODY.size(); i++) {
             if (TEXT_BODY.get(i).getString().isEmpty()) {
                 continue;
             }
 
-            graphics.drawString(this.font, TEXT_BODY.get(i), 32, 68 + (i * 12), 0xffffff);
+            graphics.text(this.font, TEXT_BODY.get(i), 32, 68 + (i * 12), 0xffffff);
         }
     }
 }

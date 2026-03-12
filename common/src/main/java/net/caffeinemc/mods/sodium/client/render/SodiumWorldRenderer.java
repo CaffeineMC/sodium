@@ -32,7 +32,7 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.state.LevelRenderState;
+import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.BlockDestructionProgress;
@@ -65,7 +65,11 @@ public class SodiumWorldRenderer {
     private Vector3d lastCameraPos;
     private double lastCameraPitch, lastCameraYaw;
     private FogParameters lastFogParameters = FogParameters.NONE;
-    private Matrix4f lastProjectionMatrix;
+
+    /**
+     * This matrix is not the same one used for rendering! It does not correspond to anything specific, other than guaranteeing it'll change with rotation.
+     */
+    private Matrix4f cullMatrix;
 
     private boolean useEntityCulling;
 
@@ -167,7 +171,7 @@ public class SodiumWorldRenderer {
                              FogParameters fogParameters,
                              boolean spectator,
                              boolean updateChunksImmediately,
-                             ChunkRenderMatrices matrices) {
+                             Matrix4f cullMatrix) {
         NativeBuffer.reclaim(false);
 
         this.processChunkEvents();
@@ -195,15 +199,15 @@ public class SodiumWorldRenderer {
         if (this.lastCameraPos == null) {
             this.lastCameraPos = pos;
         }
-        if (this.lastProjectionMatrix == null) {
-            this.lastProjectionMatrix = new Matrix4f(matrices.projection());
+        if (this.cullMatrix == null) {
+            this.cullMatrix = new Matrix4f(cullMatrix);
         }
         boolean cameraLocationChanged = !pos.equals(this.lastCameraPos);
         boolean fogDistanceChanged = fogParameters.renderEnd() != this.lastFogParameters.renderEnd();
         boolean cameraAngleChanged = pitch != this.lastCameraPitch || yaw != this.lastCameraYaw;
-        boolean cameraProjectionChanged = !matrices.projection().equals(this.lastProjectionMatrix, 0.0001f);
+        boolean cameraProjectionChanged = !cullMatrix.equals(this.cullMatrix, 0.0001f);
 
-        this.lastProjectionMatrix.set(matrices.projection());
+        this.cullMatrix.set(cullMatrix);
 
         this.lastCameraPitch = pitch;
         this.lastCameraYaw = yaw;

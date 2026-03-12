@@ -6,7 +6,7 @@ import net.minecraft.client.InputType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -36,23 +36,23 @@ public abstract class AbstractWidget implements Renderable, GuiEventListener, Na
         return this.dim;
     }
 
-    protected void drawString(GuiGraphics graphics, String text, int x, int y, int color) {
-        graphics.drawString(this.font, text, x, y, color);
+    protected void drawString(GuiGraphicsExtractor graphics, String text, int x, int y, int color) {
+        graphics.text(this.font, text, x, y, color);
     }
 
-    protected void drawString(GuiGraphics graphics, Component text, int x, int y, int color) {
-        graphics.drawString(this.font, text, x, y, color);
+    protected void drawString(GuiGraphicsExtractor graphics, Component text, int x, int y, int color) {
+        graphics.text(this.font, text, x, y, color);
     }
 
-    protected void drawCenteredString(GuiGraphics graphics, Component text, int x, int y, int color) {
-        graphics.drawCenteredString(this.font, text, x, y, color);
+    protected void drawCenteredString(GuiGraphicsExtractor graphics, Component text, int x, int y, int color) {
+        graphics.centeredText(this.font, text, x, y, color);
     }
 
     public boolean isHovered() {
         return this.hovered;
     }
 
-    protected void drawRect(GuiGraphics graphics, int x1, int y1, int x2, int y2, int color) {
+    protected void drawRect(GuiGraphicsExtractor graphics, int x1, int y1, int x2, int y2, int color) {
         graphics.fill(x1, y1, x2, y2, color);
     }
 
@@ -145,7 +145,7 @@ public abstract class AbstractWidget implements Renderable, GuiEventListener, Na
         return name;
     }
 
-    protected void drawBorder(GuiGraphics graphics, int x1, int y1, int x2, int y2, int color) {
+    protected void drawBorder(GuiGraphicsExtractor graphics, int x1, int y1, int x2, int y2, int color) {
         graphics.fill(x1, y1, x2, y1 + 1, color);
         graphics.fill(x1, y2 - 1, x2, y2, color);
         graphics.fill(x1, y1, x1 + 1, y2, color);

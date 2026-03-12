@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.platform.windows.api.d3dkmt;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.Struct;
 import org.lwjgl.system.StructBuffer;
@@ -74,6 +75,10 @@ class D3DKMTAdapterInfoStruct extends Struct<D3DKMTAdapterInfoStruct> {
             super(address, null, -1, 0, capacity, capacity);
         }
 
+        protected Buffer(long address, @Nullable ByteBuffer container, int mark, int position, int limit, int capacity) {
+            super(address, container, mark, position, limit, capacity);
+        }
+
         @Override
         protected @NonNull D3DKMTAdapterInfoStruct getElementFactory() {
             return ELEMENT_FACTORY;
@@ -82,6 +87,11 @@ class D3DKMTAdapterInfoStruct extends Struct<D3DKMTAdapterInfoStruct> {
         @Override
         protected @NonNull Buffer self() {
             return this;
+        }
+
+        @Override
+        protected Buffer create(long address, @Nullable ByteBuffer container, int mark, int position, int limit, int capacity) {
+            return new Buffer(address, container, mark, position, limit, capacity);
         }
     }
 }

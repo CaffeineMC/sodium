@@ -2,7 +2,7 @@ package net.caffeinemc.mods.sodium.client.model.light.data;
 
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.core.SectionPos;
-import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import java.util.Arrays;
 
 /**

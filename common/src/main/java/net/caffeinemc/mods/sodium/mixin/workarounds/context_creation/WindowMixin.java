@@ -15,6 +15,7 @@ import net.caffeinemc.mods.sodium.client.platform.NativeWindowHandle;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWNativeWin32;
 import org.lwjgl.opengl.WGL;
 import org.lwjgl.system.MemoryUtil;
 import org.slf4j.Logger;
@@ -34,17 +35,21 @@ import java.util.function.Supplier;
 
 @Mixin(Window.class)
 public class WindowMixin {
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwCreateWindow(IILjava/lang/CharSequence;JJ)J"), expect = 0, require = 0)
-    private long wrapGlfwCreateWindow(int width, int height, CharSequence title, long monitor, long share) {
+    @Redirect(method = "createGlfwWindow", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwCreateWindow(IILjava/lang/CharSequence;JJ)J"), expect = 0, require = 0)
+    private static long wrapGlfwCreateWindow(int width, int height, CharSequence title, long monitor, long share) {
         NvidiaWorkarounds.applyEnvironmentChanges();
         AmdWorkarounds.applyEnvironmentChanges();
 
+        long handles;
+
         try {
-            return GLFW.glfwCreateWindow(width, height, title, monitor, share);
+            handles = GLFW.glfwCreateWindow(width, height, title, monitor, share);
         } finally {
             NvidiaWorkarounds.undoEnvironmentChanges();
             AmdWorkarounds.undoEnvironmentChanges();
         }
+
+        return handles;
     }
 
     @SuppressWarnings("all")

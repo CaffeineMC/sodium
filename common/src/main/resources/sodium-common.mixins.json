@@ -11,8 +11,10 @@
   },
   "client": [
     "core.GlCommandEncoderAccessor",
+    "core.CommandEncoderAccessor",
     "core.MinecraftMixin",
     "core.WindowMixin",
+    "core.GpuDeviceAccessor",
     "core.gui.LevelLoadTrackerMixin",
     "core.model.colors.BlockColorsMixin",
     "core.render.BlockEntityTypeMixin",
@@ -28,6 +30,7 @@
     "core.render.texture.TextureAtlasAccessor",
     "core.render.world.ChunkSectionsToRenderMixin",
     "core.render.world.EntityRendererAccessor",
+    "core.render.world.FrustumAccessor",
     "core.render.world.FogRendererMixin",
     "core.render.world.GameRendererMixin",
     "core.render.world.RenderBuffersMixin",
@@ -55,8 +58,6 @@
     "features.render.immediate.buffer_builder.sorting.MultiBufferSourceMixin",
     "features.render.immediate.buffer_builder.sorting.VertexSortingMixin",
     "features.render.immediate.matrix_stack.VertexConsumerMixin",
-    "features.render.model.ItemBlockRenderTypesMixin",
-    "features.render.model.item.ItemRendererMixin",
     "features.render.particle.QuadParticleRenderStateMixin",
     "features.render.world.sky.LevelRendererMixin",
     "features.render.world.clouds.CloudRendererMixin",
@@ -80,6 +81,6 @@
     "workarounds.context_creation.WindowMixin",
     "workarounds.context_creation.RenderSystemMixin",
     "workarounds.event_loop.RenderSystemMixin",
-    "workarounds.window_minimized_state.MinecraftMixin"
+    "workarounds.window_minimized_state.GameRendererMixin"
   ]
 }

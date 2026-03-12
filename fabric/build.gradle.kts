@@ -4,7 +4,7 @@ import net.fabricmc.loom.task.RemapSourcesJarTask
 plugins {
     id("multiloader-platform")
 
-    id("fabric-loom") version ("1.13.4")
+    id("net.fabricmc.fabric-loom") version ("1.15.4")
 }
 
 base {
@@ -63,25 +63,18 @@ sourceSets.apply {
 
 dependencies {
     minecraft("com.mojang:minecraft:${BuildConfig.MINECRAFT_VERSION}")
-    mappings(loom.layered {
-        officialMojangMappings()
 
-        if (BuildConfig.PARCHMENT_VERSION != null) {
-            parchment("org.parchmentmc.data:parchment-${BuildConfig.MINECRAFT_VERSION}:${BuildConfig.PARCHMENT_VERSION}@zip")
-        }
-    })
-
-    modImplementation("net.fabricmc:fabric-loader:${BuildConfig.FABRIC_LOADER_VERSION}")
+    implementation("net.fabricmc:fabric-loader:${BuildConfig.FABRIC_LOADER_VERSION}")
 
     fun addEmbeddedFabricModule(name: String) {
         val module = fabricApi.module(name, BuildConfig.FABRIC_API_VERSION)
-        modImplementation(module)
+        implementation(module)
         include(module)
     }
 
     // Fabric API modules
     addEmbeddedFabricModule("fabric-api-base")
-    addEmbeddedFabricModule("fabric-block-view-api-v2")
+    addEmbeddedFabricModule("fabric-block-getter-api-v2")
     addEmbeddedFabricModule("fabric-rendering-v1")
 
     if (BuildConfig.SUPPORT_FRAPI) {
@@ -153,7 +146,7 @@ tasks {
         inputFile.set(apiSourcesJar.flatMap { it.archiveFile })
     }
 
-    remapJar {
+    jar {
         destinationDirectory.set(file(rootProject.layout.buildDirectory).resolve("mods"))
     }
 

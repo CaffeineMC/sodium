@@ -15,7 +15,7 @@ import net.caffeinemc.mods.sodium.client.gui.widgets.*;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -312,13 +312,13 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
     }
 
     @Override
-    public void render(@NonNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         this.updateControls(mouseX, mouseY);
 
-        super.render(graphics, this.prompt != null ? -1 : mouseX, this.prompt != null ? -1 : mouseY, delta);
+        super.extractRenderState(graphics, this.prompt != null ? -1 : mouseX, this.prompt != null ? -1 : mouseY, delta);
 
         if (this.prompt != null) {
-            this.prompt.render(graphics, mouseX, mouseY, delta);
+            this.prompt.extractRenderState(graphics, mouseX, mouseY, delta);
         } else {
             this.tooltip.render(graphics);
         }
@@ -508,7 +508,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
         return this.dim;
     }
 
-    public static int renderIconWithSpacing(GuiGraphics graphics, Identifier icon, int color, boolean iconMonochrome, int x, int y, int height, int margin) {
+    public static int renderIconWithSpacing(GuiGraphicsExtractor graphics, Identifier icon, int color, boolean iconMonochrome, int x, int y, int height, int margin) {
         int iconSize = height - margin * 2;
 
         var texture = Minecraft.getInstance().getTextureManager().getTexture(icon);

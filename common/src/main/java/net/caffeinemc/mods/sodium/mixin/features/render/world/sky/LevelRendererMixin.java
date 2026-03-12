@@ -2,18 +2,20 @@ package net.caffeinemc.mods.sodium.mixin.features.render.world.sky;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.core.Holder;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.material.FogType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
 
-@Mixin(LevelRenderer.class)
+@Mixin(Camera.class)
 public abstract class LevelRendererMixin {
-    @Shadow
-    protected abstract boolean doesMobEffectBlockSky(Camera camera);
-
     /**
      * <p>Prevents the sky layer from rendering when the fog distance is reduced
      * from the default. This helps prevent situations where the sky can be seen
@@ -33,8 +35,8 @@ public abstract class LevelRendererMixin {
      *
      * @return
      */
-    @WrapMethod(method = "doesMobEffectBlockSky")
-    private boolean preRenderSky(Camera camera, Operation<Boolean> original) {
+    @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hasEffect(Lnet/minecraft/core/Holder;)Z", ordinal = 0))
+    private boolean preRenderSky(LivingEntity instance, Holder<MobEffect> effect, Operation<Boolean> original) {
         // Cancels sky rendering when the camera is submersed underwater.
         // This prevents the sky from being visible through chunks culled by Sodium's fog occlusion.
         // Fixes https://bugs.mojang.com/browse/MC-152504.
@@ -43,6 +45,6 @@ public abstract class LevelRendererMixin {
             return true;
         }
 
-        return original.call(camera);
+        return original.call(instance, effect);
     }
 }

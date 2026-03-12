@@ -2,7 +2,7 @@ plugins {
     id("multiloader-base")
     id("java-library")
 
-    id("fabric-loom") version ("1.13.4")
+    id("net.fabricmc.fabric-loom") version ("1.15.4")
 }
 
 base {
@@ -46,13 +46,6 @@ repositories {
 
 dependencies {
     minecraft(group = "com.mojang", name = "minecraft", version = BuildConfig.MINECRAFT_VERSION)
-    mappings(loom.layered {
-        officialMojangMappings()
-
-        if (BuildConfig.PARCHMENT_VERSION != null) {
-            parchment("org.parchmentmc.data:parchment-${BuildConfig.MINECRAFT_VERSION}:${BuildConfig.PARCHMENT_VERSION}@zip")
-        }
-    })
 
     compileOnly("io.github.llamalad7:mixinextras-common:0.5.0")
     annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0")
@@ -62,9 +55,9 @@ dependencies {
 
     // We need to be careful during pre-launch that we don't touch any Minecraft classes, since other mods
     // will not yet have an opportunity to apply transformations.
-    configurationPreLaunch("org.lwjgl:lwjgl:3.3.3")
-    configurationPreLaunch("org.lwjgl:lwjgl-opengl:3.3.3")
-    configurationPreLaunch("org.lwjgl:lwjgl-glfw:3.3.3")
+    configurationPreLaunch("org.lwjgl:lwjgl:3.4.1")
+    configurationPreLaunch("org.lwjgl:lwjgl-opengl:3.4.1")
+    configurationPreLaunch("org.lwjgl:lwjgl-glfw:3.4.1")
     configurationPreLaunch("net.java.dev.jna:jna:5.14.0")
     configurationPreLaunch("net.java.dev.jna:jna-platform:5.14.0")
     configurationPreLaunch("org.slf4j:slf4j-api:2.0.9")
@@ -136,4 +129,3 @@ exportSourceSet("commonBoot", sourceSets["boot"])
 exportSourceSet("commonDesktop", sourceSets["desktop"])
 
 tasks.jar { enabled = false }
-tasks.remapJar { enabled = false }

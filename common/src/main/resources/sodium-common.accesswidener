@@ -1,4 +1,4 @@
-accessWidener v1 named
+accessWidener v1 official
 
 accessible class net/minecraft/client/model/geom/ModelPart$Vertex
 accessible class net/minecraft/client/model/geom/ModelPart$Polygon
@@ -13,6 +13,7 @@ accessible method net/minecraft/client/renderer/SectionBufferBuilderPool <init> 
 accessible class net/minecraft/client/gui/font/glyphs/BakedSheetGlyph$EffectInstance
 accessible field com/mojang/blaze3d/vertex/PoseStack$Pose trustedNormals Z
 accessible class net/minecraft/client/renderer/CloudRenderer$RelativeCameraPos
+accessible class com/mojang/blaze3d/opengl/GlDevice
 
 accessible field net/minecraft/world/level/GrassColor pixels [I
 accessible field net/minecraft/world/level/FoliageColor pixels [I

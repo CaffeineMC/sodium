@@ -38,7 +38,7 @@ public class ClientChunkCacheMixin {
     )
     private void onChunkUnloaded(ChunkPos pos, CallbackInfo ci) {
         ChunkTrackerHolder.get(this.level)
-                .onChunkStatusRemoved(pos.x, pos.z, ChunkStatus.FLAG_HAS_BLOCK_DATA);
+                .onChunkStatusRemoved(pos.x(), pos.z(), ChunkStatus.FLAG_HAS_BLOCK_DATA);
     }
 
     @Inject(

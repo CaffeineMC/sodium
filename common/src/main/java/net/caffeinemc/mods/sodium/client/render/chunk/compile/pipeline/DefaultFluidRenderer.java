@@ -20,13 +20,13 @@ import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexE
 import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
 import net.caffeinemc.mods.sodium.client.util.DirectionUtil;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.block.FluidModel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -90,7 +90,7 @@ public class DefaultFluidRenderer {
         return true;
     }
 
-    public void render(LevelSlice level, BlockState blockState, FluidState fluidState, BlockPos blockPos, BlockPos offset, TranslucentGeometryCollector collector, ChunkModelBuilder meshBuilder, Material material, ColorProvider<FluidState> colorProvider, TextureAtlasSprite[] sprites) {
+    public void render(LevelSlice level, BlockState blockState, FluidState fluidState, BlockPos blockPos, BlockPos offset, TranslucentGeometryCollector collector, ChunkModelBuilder meshBuilder, Material material, ColorProvider<FluidState> colorProvider, FluidModel sprites) {
         int posX = blockPos.getX();
         int posY = blockPos.getY();
         int posZ = blockPos.getZ();
@@ -142,7 +142,7 @@ public class DefaultFluidRenderer {
 
         final ModelQuadViewMutable quad = this.quad;
 
-        LightMode lightMode = isWater && Minecraft.useAmbientOcclusion() ? LightMode.SMOOTH : LightMode.FLAT;
+        LightMode lightMode = isWater && level.useAmbientOcclusion() ? LightMode.SMOOTH : LightMode.FLAT;
         LightPipeline lighter = this.lighters.getLighter(lightMode);
 
         quad.setFlags(0);
@@ -160,7 +160,7 @@ public class DefaultFluidRenderer {
             float v1, v2, v3, v4;
 
             if (velocity.x == 0.0D && velocity.z == 0.0D) {
-                sprite = sprites[0];
+                sprite = sprites.stillMaterial().sprite();
                 u1 = sprite.getU(0.0f);
                 v1 = sprite.getV(0.0f);
                 u2 = u1;
@@ -170,7 +170,7 @@ public class DefaultFluidRenderer {
                 u4 = u3;
                 v4 = v1;
             } else {
-                sprite = sprites[1];
+                sprite = sprites.flowingMaterial().sprite();
                 float dir = (float) Mth.atan2(velocity.z, velocity.x) - (1.5707964f);
                 float sin = Mth.sin(dir) * 0.25F;
                 float cos = Mth.cos(dir) * 0.25F;
@@ -220,7 +220,7 @@ public class DefaultFluidRenderer {
         }
 
         if (!cullDown) {
-            TextureAtlasSprite sprite = sprites[0];
+            TextureAtlasSprite sprite = sprites.stillMaterial().sprite();
 
             float minU = sprite.getU0();
             float maxU = sprite.getU1();
@@ -302,16 +302,16 @@ public class DefaultFluidRenderer {
                 int adjY = posY + dir.getStepY();
                 int adjZ = posZ + dir.getStepZ();
 
-                TextureAtlasSprite sprite = sprites[1];
+                TextureAtlasSprite sprite = sprites.flowingMaterial().sprite();
 
                 boolean isOverlay = false;
 
-                if (sprites.length > 2 && sprites[2] != null) {
+                if (sprites.overlayMaterial() != null) {
                     BlockPos adjPos = this.scratchPos.set(adjX, adjY, adjZ);
                     BlockState adjBlock = level.getBlockState(adjPos);
 
                     if (PlatformBlockAccess.getInstance().shouldShowFluidOverlay(adjBlock, level, adjPos, fluidState)) {
-                        sprite = sprites[2];
+                        sprite = sprites.overlayMaterial().sprite();
                         isOverlay = true;
                     }
                 }

@@ -3,7 +3,6 @@ package net.caffeinemc.mods.sodium.mixin.features.render.immediate;
 import com.mojang.blaze3d.vertex.SheetedDecalTextureGenerator;
 import net.caffeinemc.mods.sodium.mixin.core.render.immediate.consumer.SheetedDecalTextureGeneratorMixin;
 import net.minecraft.client.renderer.block.model.BlockModel;
-import net.minecraft.client.renderer.block.model.FaceBakery;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.BlockHitResult;
 import org.spongepowered.asm.mixin.Mixin;

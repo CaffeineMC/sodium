@@ -27,6 +27,6 @@ public class ClientLevelMixin implements ChunkTrackerHolder {
     @Inject(method = "unload", at = @At("HEAD"))
     private void sodium$trackChunkUnload(LevelChunk levelChunk, CallbackInfo ci) {
         var pos = levelChunk.getPos();
-        this.chunkTracker.onChunkStatusRemoved(pos.x, pos.z, ChunkStatus.FLAG_ALL);
+        this.chunkTracker.onChunkStatusRemoved(pos.x(), pos.z(), ChunkStatus.FLAG_ALL);
     }
 }

@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.model.light.data;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 
 import java.util.Arrays;
 

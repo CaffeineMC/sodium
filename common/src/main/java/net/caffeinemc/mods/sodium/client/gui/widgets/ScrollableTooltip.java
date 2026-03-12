@@ -8,7 +8,7 @@ import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -206,7 +206,7 @@ public class ScrollableTooltip {
         return contentHeight > maxVisibleHeight;
     }
 
-    public void render(@NonNull GuiGraphics graphics) {
+    public void render(@NonNull GuiGraphicsExtractor graphics) {
         if (this.hoveredElement == null) {
             return;
         }
@@ -240,7 +240,7 @@ public class ScrollableTooltip {
         graphics.fill(this.visibleDim.x(), this.visibleDim.y(), this.visibleDim.getLimitX(), this.visibleDim.getLimitY(), backgroundColor);
         graphics.nextStratum();
         for (int i = 0; i < this.content.size(); i++) {
-            graphics.drawString(this.font, this.content.get(i),
+            graphics.text(this.font, this.content.get(i),
                     this.visibleDim.x() + TEXT_HORIZONTAL_PADDING, this.visibleDim.y() + TEXT_VERTICAL_PADDING + (i * lineHeight) - scrollAmount,
                     Colors.FOREGROUND);
         }

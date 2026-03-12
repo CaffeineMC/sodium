@@ -7,7 +7,7 @@ import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.util.ColorU8;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.StringSplitter;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
@@ -44,7 +44,7 @@ public class ConsoleRenderer {
         }
     }
 
-    public void draw(GuiGraphics context) {
+    public void draw(GuiGraphicsExtractor context) {
         var currentTime = GLFW.glfwGetTime();
 
         Minecraft minecraft = Minecraft.getInstance();
@@ -118,7 +118,7 @@ public class ConsoleRenderer {
 
             for (var line : render.lines()) {
                 // message text
-                context.drawString(minecraft.font, line, x + paddingWidth + 3, y + paddingHeight,
+                context.text(minecraft.font, line, x + paddingWidth + 3, y + paddingHeight,
                         ColorARGB.withAlpha(colors.text(), weightAlpha(opacity)), false);
 
                 y += minecraft.font.lineHeight;
