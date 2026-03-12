@@ -78,6 +78,8 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
 
     protected RandomSource random;
 
+    protected boolean forceOpaque;
+
     /**
      * Must be set by the subclass constructor.
      */

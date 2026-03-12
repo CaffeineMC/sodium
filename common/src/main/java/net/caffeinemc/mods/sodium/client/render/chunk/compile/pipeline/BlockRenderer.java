@@ -21,6 +21,8 @@ import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -44,12 +46,14 @@ public class BlockRenderer extends AbstractBlockRenderContext {
     @Nullable
     private ColorProvider<BlockState> colorProvider;
     private TranslucentGeometryCollector collector;
+    private boolean cutoutLeaves;
 
     public BlockRenderer(ColorProviderRegistry colorRegistry, LightPipelineProvider lighters) {
         this.colorProviderRegistry = colorRegistry;
         this.lighters = lighters;
 
         this.random = new SingleThreadedRandomSource(42L);
+        this.cutoutLeaves = Minecraft.getInstance().options.cutoutLeaves().get();
     }
 
     public void prepare(ChunkBuildBuffers buffers, LevelSlice level, TranslucentGeometryCollector collector) {
@@ -84,7 +88,12 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         this.prepareCulling(true);
 
         random.setSeed(state.getSeed(pos));
+
+        this.forceOpaque = ModelBlockRenderer.forceOpaque(this.cutoutLeaves, state);
+
         PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, getForEmitting(), random, level, pos, state, this::bufferDefaultModel);
+
+        this.forceOpaque = false;
     }
 
     /**
@@ -103,7 +112,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         final boolean emissive = quad.emissive();
 
         final ChunkSectionLayer blendMode = quad.getRenderType();
-        final Material material = DefaultMaterials.forChunkLayer(blendMode);
+        final Material material = DefaultMaterials.forChunkLayer(forceOpaque ? ChunkSectionLayer.SOLID : blendMode);
 
         this.tintQuad(quad);
         this.shadeQuad(quad, lightMode, emissive, shadeMode);
