@@ -264,6 +264,15 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setDefaultValue(60)
                                 .setBinding(this.vanillaOpts.framerateLimit()::set, this.vanillaOpts.framerateLimit()::get)
                 )
+                .addOption(
+                        builder.createBooleanOption(Identifier.parse("sodium:general.exclusive_fullscreen"))
+                                .setStorageHandler(this.vanillaStorage)
+                                .setName(Component.translatable("options.exclusiveFullscreen"))
+                                .setTooltip(Component.translatable("sodium.options.exclusive_fullscreen.tooltip"))
+                                .setDefaultValue(false)
+                                .setFlags(OptionFlag.REQUIRES_GAME_RESTART)
+                                .setBinding(this.vanillaOpts.exclusiveFullscreen()::set, this.vanillaOpts.exclusiveFullscreen()::get)
+                )
         );
         generalPage.addOptionGroup(builder.createOptionGroup()
                 .addOption(

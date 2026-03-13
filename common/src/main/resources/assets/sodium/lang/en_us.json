@@ -79,5 +79,6 @@
   "sodium.console.config_file_was_reset": "The config file has been reset to known-good defaults.",
   "sodium.options.search": "Search",
   "sodium.options.search.hint": "Search...",
-  "sodium.options.open_external_page_button": "Open"
+  "sodium.options.open_external_page_button": "Open",
+  "sodium.options.exclusive_fullscreen.tooltip": "Toggles exclusive fullscreen mode, which takes exclusive access of a monitor. This option can improve latency, but may prevent some input methods from working and slow down switching out of the game."
 }
