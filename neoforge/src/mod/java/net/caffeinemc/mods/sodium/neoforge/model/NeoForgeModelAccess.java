@@ -7,9 +7,9 @@ import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext
 import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
 import net.caffeinemc.mods.sodium.client.services.SodiumModelData;
 import net.caffeinemc.mods.sodium.client.services.SodiumModelDataContainer;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
-import net.minecraft.client.renderer.block.model.BlockModelPart;
-import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,7 +26,7 @@ import java.util.Set;
 
 public class NeoForgeModelAccess implements PlatformModelAccess {
     @Override
-    public List<BakedQuad> getQuads(BlockAndTintGetter level, BlockPos pos, BlockModelPart model, BlockState state, Direction face, RandomSource random, ChunkSectionLayer renderType) {
+    public List<BakedQuad> getQuads(BlockAndTintGetter level, BlockPos pos, BlockStateModelPart model, BlockState state, Direction face, RandomSource random) {
         return model.getQuads(face);
     }
 
@@ -43,8 +43,8 @@ public class NeoForgeModelAccess implements PlatformModelAccess {
     }
 
     @Override
-    public List<BlockModelPart> collectPartsOf(BlockStateModel blockStateModel, BlockAndTintGetter blockView, BlockPos pos, BlockState state, RandomSource random, ListStorage emitter) {
-        List<BlockModelPart> parts = emitter == null ? new ArrayList<>() : emitter.clearAndGet();
+    public List<BlockStateModelPart> collectPartsOf(BlockStateModel blockStateModel, BlockAndTintGetter blockView, BlockPos pos, BlockState state, RandomSource random, ListStorage emitter) {
+        List<BlockStateModelPart> parts = emitter == null ? new ArrayList<>() : emitter.clearAndGet();
         blockStateModel.collectParts(blockView, pos, state, random, parts);
         return parts;
     }
@@ -52,10 +52,5 @@ public class NeoForgeModelAccess implements PlatformModelAccess {
     @Override
     public SodiumModelData getEmptyModelData() {
         return (SodiumModelData) (Object) ModelData.EMPTY;
-    }
-
-    @Override
-    public ChunkSectionLayer getPartRenderType(BlockModelPart part, BlockState state, ChunkSectionLayer defaultType) {
-        return part.getRenderType(state);
     }
 }

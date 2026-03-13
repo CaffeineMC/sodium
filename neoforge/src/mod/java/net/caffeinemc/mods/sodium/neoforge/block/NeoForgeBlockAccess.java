@@ -6,7 +6,7 @@ import net.caffeinemc.mods.sodium.client.render.model.AmbientOcclusionMode;
 import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
 import net.caffeinemc.mods.sodium.client.util.DirectionUtil;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -27,6 +27,52 @@ public class NeoForgeBlockAccess implements PlatformBlockAccess {
         return selfState.supportsExternalFaceHiding() && (otherState.hidesNeighborFace(level, otherPos, selfState, DirectionUtil.getOpposite(facing)));
     }
 
+
+    /**
+     * Ported from Indigo.
+     * Finds mean of per-face shading factors weighted by normal components.
+     * Not how light actually works but the vanilla diffuse shading model is a hack to start with
+     * and this gives reasonable results for non-cubic surfaces in a vanilla-style renderer.
+     */
+    private float normalShade(BlockAndTintGetter blockView, float normalX, float normalY, float normalZ, boolean hasShade) {
+        float sum = 0;
+        float div = 0;
+
+        if (normalX > 0) {
+            sum += normalX * getShade(blockView, Direction.EAST, hasShade);
+            div += normalX;
+        } else if (normalX < 0) {
+            sum += -normalX * getShade(blockView, Direction.WEST, hasShade);
+            div -= normalX;
+        }
+
+        if (normalY > 0) {
+            sum += normalY * getShade(blockView, Direction.UP, hasShade);
+            div += normalY;
+        } else if (normalY < 0) {
+            sum += -normalY * getShade(blockView, Direction.DOWN, hasShade);
+            div -= normalY;
+        }
+
+        if (normalZ > 0) {
+            sum += normalZ * getShade(blockView, Direction.SOUTH, hasShade);
+            div += normalZ;
+        } else if (normalZ < 0) {
+            sum += -normalZ * getShade(blockView, Direction.NORTH, hasShade);
+            div -= normalZ;
+        }
+
+        return sum / div;
+    }
+
+    private float getShade(BlockAndTintGetter blockView, Direction direction, boolean hasShade) {
+        if (hasShade) {
+            return blockView.cardinalLighting().byFace(direction);
+        } else {
+            return blockView.cardinalLighting().up();
+        }
+    }
+
     @Override
     public boolean shouldShowFluidOverlay(BlockState block, BlockAndTintGetter level, BlockPos pos, FluidState fluidState) {
         return block.shouldDisplayFluidOverlay(level, pos, fluidState);
@@ -39,11 +85,11 @@ public class NeoForgeBlockAccess implements PlatformBlockAccess {
 
     @Override
     public float getNormalVectorShade(ModelQuadView quad, BlockAndTintGetter level, boolean shade) {
-        return level.getShade(NormI8.unpackX(quad.getFaceNormal()), NormI8.unpackY(quad.getFaceNormal()), NormI8.unpackZ(quad.getFaceNormal()), shade);
+        return normalShade(level, NormI8.unpackX(quad.getFaceNormal()), NormI8.unpackY(quad.getFaceNormal()), NormI8.unpackZ(quad.getFaceNormal()), shade);
     }
 
     @Override
-    public AmbientOcclusionMode usesAmbientOcclusion(BlockModelPart model, BlockState state, ChunkSectionLayer renderType, BlockAndTintGetter level, BlockPos pos) {
+    public AmbientOcclusionMode usesAmbientOcclusion(BlockStateModelPart model, BlockState state, ChunkSectionLayer renderType, BlockAndTintGetter level, BlockPos pos) {
         return switch (model.ambientOcclusion()) {
             case TRUE -> AmbientOcclusionMode.ENABLED;
             case FALSE -> AmbientOcclusionMode.DISABLED;

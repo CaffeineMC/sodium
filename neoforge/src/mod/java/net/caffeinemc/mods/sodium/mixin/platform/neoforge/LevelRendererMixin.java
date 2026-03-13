@@ -6,7 +6,7 @@ import net.caffeinemc.mods.sodium.client.world.LevelRendererExtension;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.culling.Frustum;
-import net.minecraft.client.renderer.state.LevelRenderState;
+import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.server.level.BlockDestructionProgress;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,7 +23,7 @@ public class LevelRendererMixin {
     @Final
     private Long2ObjectMap<SortedSet<BlockDestructionProgress>> destructionProgress;
 
-    @Inject(method = "extractVisibleBlockEntities(Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/state/LevelRenderState;Lnet/minecraft/client/renderer/culling/Frustum;)V", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "extractVisibleBlockEntities(Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/client/renderer/culling/Frustum;)V", at = @At("HEAD"), cancellable = true)
     private void extractVisibleBlockEntities$neoForge(Camera camera, float f, LevelRenderState levelRenderState, Frustum frustum, CallbackInfo ci) {
         ci.cancel();
 

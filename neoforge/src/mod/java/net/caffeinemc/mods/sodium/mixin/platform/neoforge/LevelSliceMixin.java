@@ -49,8 +49,8 @@ public abstract class LevelSliceMixin implements BlockAndTintGetter {
 
     @Override
     public @Nullable AuxiliaryLightManager getAuxLightManager(ChunkPos pos) {
-        int relChunkX = pos.x - (this.originBlockX >> 4);
-        int relChunkZ = pos.z - (this.originBlockZ >> 4);
+        int relChunkX = pos.x() - (this.originBlockX >> 4);
+        int relChunkZ = pos.z() - (this.originBlockZ >> 4);
 
         return (AuxiliaryLightManager) auxLightManager[getLocalSectionIndex(relChunkX, 0, relChunkZ)];
     }
@@ -62,10 +62,5 @@ public abstract class LevelSliceMixin implements BlockAndTintGetter {
         int relBlockZ = pos.getZ() - this.originBlockZ;
 
         return (AuxiliaryLightManager) auxLightManager[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
-    }
-
-    @Override
-    public float getShade(float normalX, float normalY, float normalZ, boolean shade) {
-        return this.level.getShade(normalX, normalY, normalZ, shade);
     }
 }

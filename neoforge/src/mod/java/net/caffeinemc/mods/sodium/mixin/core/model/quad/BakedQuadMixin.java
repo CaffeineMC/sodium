@@ -5,10 +5,10 @@ import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFlags;
 import net.caffeinemc.mods.sodium.client.util.ModelQuadUtil;
 import net.minecraft.client.model.geom.builders.UVPair;
-import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
+import net.minecraft.util.LightCoordsUtil;
 import net.neoforged.neoforge.client.model.quad.BakedColors;
 import net.neoforged.neoforge.client.model.quad.BakedNormals;
 import org.joml.Vector3fc;
@@ -23,39 +23,24 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(BakedQuad.class)
 public abstract class BakedQuadMixin implements BakedQuadView {
 
-
-    @Shadow
-    @Final
-    private boolean shade;
-
-    @Shadow
-    public abstract int lightEmission();
-
     @Shadow
     public abstract Vector3fc position(int i);
-
-    @Shadow
-    @Final
-    private TextureAtlasSprite sprite;
 
     @Shadow
     public abstract long packedUV(int i);
 
     @Shadow
     @Final
-    private int tintIndex;
-    @Shadow
-    @Final
     private Direction direction;
-    @Shadow
-    @Final
-    private boolean hasAmbientOcclusion;
     @Shadow
     @Final
     private BakedNormals bakedNormals;
     @Shadow
     @Final
     private BakedColors bakedColors;
+    @Shadow
+    @Final
+    private BakedQuad.MaterialInfo materialInfo;
     @Unique
     private int flags;
 
@@ -65,8 +50,8 @@ public abstract class BakedQuadMixin implements BakedQuadView {
     @Unique
     private ModelQuadFacing normalFace = null;
 
-    @Inject(method = "<init>(Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;JJJJILnet/minecraft/core/Direction;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;ZILnet/neoforged/neoforge/client/model/quad/BakedNormals;Lnet/neoforged/neoforge/client/model/quad/BakedColors;Z)V", at = @At("RETURN"))
-    private void init(Vector3fc position0, Vector3fc position1, Vector3fc position2, Vector3fc position3, long packedUV0, long packedUV1, long packedUV2, long packedUV3, int tintIndex, Direction direction, TextureAtlasSprite sprite, boolean shade, int lightEmission, BakedNormals bakedNormals, BakedColors bakedColors, boolean hasAmbientOcclusion, CallbackInfo ci) {
+    @Inject(method = "<init>(Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;JJJJLnet/minecraft/core/Direction;Lnet/minecraft/client/resources/model/geometry/BakedQuad$MaterialInfo;Lnet/neoforged/neoforge/client/model/quad/BakedNormals;Lnet/neoforged/neoforge/client/model/quad/BakedColors;)V", at = @At("RETURN"))
+    private void init(Vector3fc position0, Vector3fc position1, Vector3fc position2, Vector3fc position3, long packedUV0, long packedUV1, long packedUV2, long packedUV3, Direction direction, BakedQuad.MaterialInfo materialInfo, BakedNormals bakedNormals, BakedColors bakedColors, CallbackInfo ci) {
         this.normal = this.calculateNormal();
         this.normalFace = ModelQuadFacing.fromPackedNormal(this.normal);
 
@@ -105,7 +90,7 @@ public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Override
     public TextureAtlasSprite getSprite() {
-        return this.sprite;
+        return this.materialInfo.sprite();
     }
 
     @Override
@@ -125,7 +110,7 @@ public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Override
     public int getTintIndex() {
-        return this.tintIndex;
+        return this.materialInfo.tintIndex();
     }
 
     @Override
@@ -145,16 +130,16 @@ public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Override
     public int getMaxLightQuad(int idx) {
-        return LightTexture.lightCoordsWithEmission(getLight(idx), lightEmission());
+        return LightCoordsUtil.lightCoordsWithEmission(getLight(idx), this.materialInfo.lightEmission());
     }
 
     @Override
     public boolean hasShade() {
-        return this.shade;
+        return this.materialInfo.shade();
     }
 
     @Override
     public boolean hasAO() {
-        return this.hasAmbientOcclusion;
+        return this.materialInfo.ambientOcclusion();
     }
 }

@@ -45,9 +45,11 @@ public interface PlatformLevelRenderHooks {
 
     /**
      * Runs any NeoForge chunk renderers.
-     * @param renderers The list of chunk renderers to run.
+     *
+     * @param renderers      The list of chunk renderers to run.
      * @param typeToConsumer A consumer that converts render types to vertex consumers
-     * @param slice The current level slice
+     * @param slice          The current level slice
+     * @param origin
      */
-    void runChunkMeshAppenders(List<?> renderers, Function<ChunkSectionLayer, VertexConsumer> typeToConsumer, LevelSlice slice);
+    void runChunkMeshAppenders(List<?> renderers, Function<ChunkSectionLayer, VertexConsumer> typeToConsumer, LevelSlice slice, BlockPos origin);
 }

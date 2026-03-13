@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.client.render.immediate.model;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.QuadInstance;
+import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.util.ColorMixer;
 import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
 import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
@@ -46,7 +47,7 @@ public class BakedModelEncoder {
 
                 int newLight = instance.getLightCoordsWithEmission(i, quad.getMaxLightQuad(i));
 
-                int newColor = instance.getColor(i);
+                int newColor = ColorARGB.toABGR(instance.getColor(i));
 
                 // The packed transformed normal vector
                 int normal = MatrixHelper.transformNormal(matNormal, matrices.trustedNormals, quad.getAccurateNormal(i));

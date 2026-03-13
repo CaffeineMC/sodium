@@ -27,7 +27,7 @@ public class FabricLevelRenderHooks implements PlatformLevelRenderHooks {
     }
 
     @Override
-    public void runChunkMeshAppenders(List<?> renderers, Function<ChunkSectionLayer, VertexConsumer> typeToConsumer, LevelSlice slice) {
+    public void runChunkMeshAppenders(List<?> renderers, Function<ChunkSectionLayer, VertexConsumer> typeToConsumer, LevelSlice slice, BlockPos origin) {
 
     }
 }

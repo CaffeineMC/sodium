@@ -157,7 +157,7 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
         profiler.popPush("mesh appenders");
 
         PlatformLevelRenderHooks.INSTANCE.runChunkMeshAppenders(this.renderContext.getRenderers(), type -> buffers.get(DefaultMaterials.forChunkLayer(type)).asFallbackVertexConsumer(DefaultMaterials.forChunkLayer(type), collector),
-                slice);
+                slice, this.renderContext.getOrigin().origin());
 
         blockRenderer.release();
 
