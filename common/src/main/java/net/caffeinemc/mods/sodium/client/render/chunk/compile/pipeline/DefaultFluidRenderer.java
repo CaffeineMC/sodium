@@ -452,7 +452,7 @@ public class DefaultFluidRenderer implements SodiumFluidRenderer {
 
         // apply heuristic to not render up face it's in a flooded cave
         boolean inwardsUpFaceVisible = true;
-        if (upVisible) {
+        if (upVisible && fluidState.isSource()) {
             var exposureResult = getUpFaceExposureByNeighbors(level, blockPos, fluidState);
             if (this.hiddenFluidCulling) {
                 upVisible = exposureResult != NO_EXPOSURE;
@@ -753,11 +753,6 @@ public class DefaultFluidRenderer implements SodiumFluidRenderer {
                 this.stack.add(xOffset);
                 this.stack.add(zOffset);
             }
-        }
-
-        // if the block is not solid, and not the same fluid, render at least the outwards face, and the inwards face if the block shows them
-        else if (!PlatformBlockAccess.getInstance().shouldShowFluidOverlay(neighborBlockState, level, this.scratchPos, fluidState)) {
-            return BOTH_EXPOSED;
         } else {
             result = OUTWARDS_EXPOSED;
         }
