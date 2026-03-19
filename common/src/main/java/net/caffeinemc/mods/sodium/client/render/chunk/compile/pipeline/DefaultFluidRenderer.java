@@ -51,7 +51,10 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * <p>
  * The top fluid face is additionally culled if the flooded cave heuristic determines that the fluid is within a flooded cave. Within flooded caves the downward-facing top face isn't rendered for performance and because it would look ugly.
  */
-public class DefaultFluidRenderer implements SodiumFluidRenderer {
+public class DefaultFluidRenderer {
+    // TODO: allow this to be changed by vertex format, WARNING: make sure TQuad knows about EPSILON
+    // TODO: move fluid rendering to a separate render pass and control glPolygonOffset and glDepthFunc to fix this properly
+    public static final float EPSILON = 0.001f;
     private static final float ALIGNED_EQUALS_EPSILON = 0.011f;
 
     private static final float DISCARD_SAMPLE = -1.0f;
@@ -378,7 +381,6 @@ public class DefaultFluidRenderer implements SodiumFluidRenderer {
         return Float.NaN;
     }
 
-    @Override
     public void render(LevelSlice level, BlockState blockState, FluidState fluidState, BlockPos blockPos, BlockPos offset, TranslucentGeometryCollector collector, ChunkModelBuilder meshBuilder, Material material, ColorProvider<FluidState> colorProvider, TextureAtlasSprite[] sprites) {
         Fluid fluid = fluidState.getType();
 

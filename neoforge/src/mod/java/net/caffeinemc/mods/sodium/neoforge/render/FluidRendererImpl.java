@@ -8,7 +8,6 @@ import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.DefaultFluidRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.FluidRenderer;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.SodiumFluidRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
@@ -27,7 +26,7 @@ public class FluidRendererImpl extends FluidRenderer {
     private static final ThreadLocal<DefaultRenderContext> CURRENT_DEFAULT_CONTEXT = ThreadLocal.withInitial(DefaultRenderContext::new);
 
     private final ColorProviderRegistry colorProviderRegistry;
-    private final SodiumFluidRenderer defaultRenderer;
+    private final DefaultFluidRenderer defaultRenderer;
 
     public FluidRendererImpl(ColorProviderRegistry colorProviderRegistry, LightPipelineProvider lighters) {
         this.colorProviderRegistry = colorProviderRegistry;
@@ -74,7 +73,7 @@ public class FluidRendererImpl extends FluidRenderer {
     }
 
     private static class DefaultRenderContext {
-        private SodiumFluidRenderer renderer;
+        private DefaultFluidRenderer renderer;
         private LevelSlice level;
         private BlockState blockState;
         private FluidState fluidState;
@@ -86,7 +85,7 @@ public class FluidRendererImpl extends FluidRenderer {
         private IClientFluidTypeExtensions handler;
         private ColorProviderRegistry colorProviderRegistry;
 
-        public void setUp(ColorProviderRegistry colorProviderRegistry, SodiumFluidRenderer renderer, LevelSlice level, BlockState blockState, FluidState fluidState, BlockPos blockPos, BlockPos offset, TranslucentGeometryCollector collector, ChunkModelBuilder meshBuilder, Material material, IClientFluidTypeExtensions handler) {
+        public void setUp(ColorProviderRegistry colorProviderRegistry, DefaultFluidRenderer renderer, LevelSlice level, BlockState blockState, FluidState fluidState, BlockPos blockPos, BlockPos offset, TranslucentGeometryCollector collector, ChunkModelBuilder meshBuilder, Material material, IClientFluidTypeExtensions handler) {
             this.colorProviderRegistry = colorProviderRegistry;
             this.renderer = renderer;
             this.level = level;

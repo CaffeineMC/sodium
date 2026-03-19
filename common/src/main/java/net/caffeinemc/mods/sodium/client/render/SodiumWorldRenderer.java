@@ -46,7 +46,6 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
 import org.jspecify.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -278,17 +277,9 @@ public class SodiumWorldRenderer {
         }
     }
 
-    public static boolean useNewFluidRenderer = true;
-
     public void reload() {
         if (this.level == null) {
             return;
-        }
-
-        if (GLFW.glfwGetKey(this.client.getWindow().handle(), GLFW.GLFW_KEY_X) == GLFW.GLFW_PRESS) {
-            useNewFluidRenderer = false;
-        } else if (GLFW.glfwGetKey(this.client.getWindow().handle(), GLFW.GLFW_KEY_W) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(this.client.getWindow().handle(), GLFW.GLFW_KEY_C) == GLFW.GLFW_PRESS) {
-            useNewFluidRenderer = true;
         }
 
         try (CommandList commandList = RenderDevice.INSTANCE.createCommandList()) {
@@ -490,7 +481,7 @@ public class SodiumWorldRenderer {
             return null;
         }
 
-        return String.format("C: %d/%d D: %d, FR: %s", this.renderSectionManager.getVisibleChunkCount(), this.renderSectionManager.getTotalSections(), this.renderDistance, useNewFluidRenderer ? "new" : "old");
+        return String.format("C: %d/%d D: %d", this.renderSectionManager.getVisibleChunkCount(), this.renderSectionManager.getTotalSections(), this.renderDistance);
     }
 
     /**

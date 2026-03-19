@@ -2,7 +2,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad;
 
 import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.SodiumFluidRenderer;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.DefaultFluidRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
@@ -38,7 +38,7 @@ public abstract class TQuad {
     static {
         // ensure it fits with the fluid renderer epsilon and that it's a power-of-two
         // fraction
-        var targetEpsilon = SodiumFluidRenderer.EPSILON * 2.1f;
+        var targetEpsilon = DefaultFluidRenderer.EPSILON * 2.1f;
         if (QUANTIZE_EPSILON <= targetEpsilon && Integer.bitCount((int) INV_QUANTIZE_EPSILON) == 1) {
             throw new RuntimeException("epsilon is invalid: " + QUANTIZE_EPSILON);
         }
