@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.util;
 
-import net.caffeinemc.mods.sodium.mixin.features.textures.NativeImageAccessor;
 import com.mojang.blaze3d.platform.NativeImage;
+import net.caffeinemc.mods.sodium.mixin.features.textures.NativeImageAccessor;
 
 import java.util.Locale;
 
@@ -13,6 +13,6 @@ public class NativeImageHelper {
         }
 
         return ((NativeImageAccessor) (Object) nativeImage) // duck type since NativeImage is final
-                .getPixels();
+                .sodium$getPixels();
     }
 }

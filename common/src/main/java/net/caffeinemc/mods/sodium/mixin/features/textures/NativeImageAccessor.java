@@ -6,6 +6,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(NativeImage.class)
 public interface NativeImageAccessor {
-    @Accessor
-    long getPixels();
+    @Accessor("pixels")
+    long sodium$getPixels();
 }

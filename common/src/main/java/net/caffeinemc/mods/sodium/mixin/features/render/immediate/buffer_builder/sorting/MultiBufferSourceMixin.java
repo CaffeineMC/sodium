@@ -49,7 +49,7 @@ public class MultiBufferSourceMixin {
 
         var sortedPrimitiveIds = VertexSorters.sort(meshData.vertexBuffer(), drawState.vertexCount(), drawState.format().getVertexSize(), sorting);
         var sortedIndexBuffer = buildSortedIndexBuffer(meshData, bufferBuilder, sortedPrimitiveIds);
-        ((MeshDataAccessor) meshData).setIndexBuffer(sortedIndexBuffer);
+        ((MeshDataAccessor) meshData).sodium$setIndexBuffer(sortedIndexBuffer);
     }
 
     @Unique
