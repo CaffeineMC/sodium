@@ -379,7 +379,16 @@ public class GlBufferArena {
         } else {
             newCapacity = (long) (requiredTotalSize * FEW_SEGMENTS_GROWTH_FACTOR);
         }
-        return newCapacity;
+        // round up to the next multiple of 4
+        // since the new capacity is estimated using non-integers factors, it may end up not being a multiple of 4
+        // this causes three separate issues:
+        // 1. new segments are always allocated at the end of the free segment, but since the tail is calculated from the capacity,
+        //    segments may end up misaligned
+        // 2. terrain is rendered with glDrawElementsBaseCount, and since baseCount may not be even, gl_VertexID % 4 would
+        //    would not be reliable to detect quads as baseCount is added to the vertex ID
+        // 3. misaligned segments on NVIDIA GPUs seem to confuse the driver into splitting quads across workgroups,
+        //    possibly due to how the shared index buffer works
+        return (newCapacity + 3) & ~3;
     }
 
     private long getRequiredTotalSize(List<PendingUpload> queue) {
