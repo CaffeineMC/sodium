@@ -7,6 +7,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(MeshData.class)
 public interface MeshDataAccessor {
-    @Accessor
-    void setIndexBuffer(ByteBufferBuilder.Result buffer);
+    @Accessor("indexBuffer")
+    void sodium$setIndexBuffer(ByteBufferBuilder.Result buffer);
 }
