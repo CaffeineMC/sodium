@@ -3,10 +3,8 @@ package net.caffeinemc.mods.sodium.api.math;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.minecraft.core.Direction;
+import org.joml.*;
 import org.joml.Math;
-import org.joml.Matrix3f;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
 
 /**
  * Implements optimized utilities for transforming vectors with a given matrix.
@@ -110,7 +108,7 @@ public class MatrixHelper {
      * @param z The Z-coordinate of the vertex position
      * @return The transformed X-coordinate for the vertex position
      */
-    public static float transformPositionX(Matrix4f mat, float x, float y, float z) {
+    public static float transformPositionX(Matrix4fc mat, float x, float y, float z) {
         return (mat.m00() * x) + ((mat.m10() * y) + ((mat.m20() * z) + mat.m30()));
     }
 
@@ -121,7 +119,7 @@ public class MatrixHelper {
      * @param z The Z-coordinate of the vertex position
      * @return The transformed Y-coordinate for the vertex position
      */
-    public static float transformPositionY(Matrix4f mat, float x, float y, float z) {
+    public static float transformPositionY(Matrix4fc mat, float x, float y, float z) {
         return (mat.m01() * x) + ((mat.m11() * y) + ((mat.m21() * z) + mat.m31()));
     }
 
@@ -132,7 +130,7 @@ public class MatrixHelper {
      * @param z The Z-coordinate of the vertex position
      * @return The transformed Z-coordinate for the vertex position
      */
-    public static float transformPositionZ(Matrix4f mat, float x, float y, float z) {
+    public static float transformPositionZ(Matrix4fc mat, float x, float y, float z) {
         return (mat.m02() * x) + ((mat.m12() * y) + ((mat.m22() * z) + mat.m32()));
     }
 

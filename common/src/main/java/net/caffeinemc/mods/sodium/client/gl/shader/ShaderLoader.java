@@ -1,13 +1,22 @@
 package net.caffeinemc.mods.sodium.client.gl.shader;
 
+import com.google.common.base.Objects;
+import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ShaderLoader {
+    private static final Logger LOGGER = LoggerFactory.getLogger("Sodium-ShaderLoader");
+
+    private static final boolean OPTION_DEBUG_SHADERS =
+            Objects.equal(System.getProperty("sodium.debug.shaders.dump", "false"), "true");
+
     /**
      * Creates an OpenGL shader from GLSL sources. The GLSL source file should be made available on the classpath at the
      * path of `/assets/{namespace}/shaders/{path}`. User defines can be used to declare variables in the shader source
@@ -18,11 +27,18 @@ public class ShaderLoader {
      * @param constants A list of constants for shader specialization
      * @return An OpenGL shader object compiled with the given user defines
      */
-    public static GlShader loadShader(ShaderType type, ResourceLocation name, ShaderConstants constants) {
-        return new GlShader(type, name, ShaderParser.parseShader(getShaderSource(name), constants));
+    public static GlShader loadShader(ShaderType type, Identifier name, ShaderConstants constants) {
+        var parsedShader = ShaderParser.parseShader(getShaderSource(name), constants);
+
+        if (OPTION_DEBUG_SHADERS) {
+            LOGGER.info("Loaded shader {} with constants {}", name, constants);
+            LOGGER.info(parsedShader.src());
+        }
+
+        return new GlShader(type, name, parsedShader);
     }
 
-    public static String getShaderSource(ResourceLocation name) {
+    public static String getShaderSource(Identifier name) {
         String path = String.format("/assets/%s/shaders/%s", name.getNamespace(), name.getPath());
 
         try (InputStream in = ShaderLoader.class.getResourceAsStream(path)) {

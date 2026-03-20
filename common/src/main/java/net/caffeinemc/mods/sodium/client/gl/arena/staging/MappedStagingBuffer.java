@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MappedStagingBuffer implements StagingBuffer {
+    private static final float UPLOAD_LIMIT_MARGIN = 0.8f;
+
     private static final EnumBitField<GlBufferStorageFlags> STORAGE_FLAGS =
             EnumBitField.of(GlBufferStorageFlags.PERSISTENT, GlBufferStorageFlags.CLIENT_STORAGE, GlBufferStorageFlags.MAP_WRITE);
 
@@ -134,6 +136,13 @@ public class MappedStagingBuffer implements StagingBuffer {
 
     @Override
     public void delete(CommandList commandList) {
+        while (!this.fencedRegions.isEmpty()) {
+            var region = this.fencedRegions.dequeue();
+            var fence = region.fence();
+            fence.sync();
+            fence.delete();
+        }
+
         this.mappedBuffer.delete(commandList);
         this.fallbackStagingBuffer.delete(commandList);
         this.pendingCopies.clear();
@@ -154,6 +163,11 @@ public class MappedStagingBuffer implements StagingBuffer {
             this.fencedRegions.dequeue();
             this.remaining += region.length();
         }
+    }
+
+    @Override
+    public long getUploadSizeLimit(long frameDuration) {
+        return (long) (this.capacity * UPLOAD_LIMIT_MARGIN);
     }
 
     private static final class CopyCommand {

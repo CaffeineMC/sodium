@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
-import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.GeometryPlanes;
 import net.caffeinemc.mods.sodium.client.util.sorting.RadixSort;
 import net.minecraft.core.SectionPos;
@@ -9,7 +9,6 @@ import org.joml.Vector3dc;
 import org.joml.Vector3fc;
 
 import java.nio.IntBuffer;
-import java.util.Arrays;
 import java.util.function.IntConsumer;
 
 /**
@@ -43,24 +42,24 @@ public class DynamicTopoData extends DynamicData {
     private boolean pendingTriggerIsDirect;
 
     private final TQuad[] quads;
-    private final Object2ReferenceOpenHashMap<Vector3fc, float[]> distancesByNormal;
+    private final Object2ReferenceMap<Vector3fc, float[]> distancesByNormal;
 
-    private DynamicTopoData(SectionPos sectionPos, int vertexCount, TQuad[] quads,
+    private DynamicTopoData(SectionPos sectionPos, TQuad[] quads,
                             GeometryPlanes geometryPlanes, Vector3dc initialCameraPos,
-                            Object2ReferenceOpenHashMap<Vector3fc, float[]> distancesByNormal) {
-        super(sectionPos, vertexCount, quads.length, geometryPlanes, initialCameraPos);
+                            Object2ReferenceMap<Vector3fc, float[]> distancesByNormal) {
+        super(sectionPos, quads.length, geometryPlanes, initialCameraPos);
         this.quads = quads;
         this.distancesByNormal = distancesByNormal;
 
-        if (this.getQuadCount() > MAX_TOPO_SORT_QUADS) {
+        if (this.getInputQuadCount() > MAX_TOPO_SORT_QUADS) {
             this.directTrigger = true;
             this.GFNITrigger = false;
         }
     }
 
     @Override
-    public Sorter getSorter() {
-        return new DynamicTopoSorter(this.getQuadCount(), this, this.pendingTriggerIsDirect, this.consecutiveTopoSortFailures, this.GFNITrigger, this.directTrigger);
+    public DynamicSorter getSorter() {
+        return new DynamicTopoSorter(this.getInputQuadCount(), this, this.pendingTriggerIsDirect, this.consecutiveTopoSortFailures, this.GFNITrigger, this.directTrigger);
     }
 
     public boolean GFNITriggerEnabled() {
@@ -172,7 +171,7 @@ public class DynamicTopoData extends DynamicData {
             if (this.GFNITrigger && !this.isDirectTrigger) {
                 this.intBuffer = indexBuffer;
                 var sortStart = initial ? 0 : System.nanoTime();
-                var result = TopoGraphSorting.topoGraphSort(this, DynamicTopoData.this.quads, DynamicTopoData.this.distancesByNormal, cameraPos.getRelativeCameraPos());
+                var result = TopoGraphSorting.topoGraphSort(this, DynamicTopoData.this.quads, DynamicTopoData.this.distancesByNormal, cameraPos.getRelativeCameraPos(), false);
                 this.intBuffer = null;
 
                 var sortTime = initial ? 0 : System.nanoTime() - sortStart;
@@ -221,40 +220,29 @@ public class DynamicTopoData extends DynamicData {
      */
     static void distanceSortDirect(IntBuffer indexBuffer, TQuad[] quads, Vector3fc cameraPos) {
         if (quads.length <= 1) {
+            // Avoid allocations when there is nothing to sort.
             TranslucentData.writeQuadVertexIndexes(indexBuffer, 0);
-        } else if (RadixSort.useRadixSort(quads.length)) {
-            final var keys = new int[quads.length];
-
-            for (int q = 0; q < quads.length; q++) {
-                keys[q] = ~Float.floatToRawIntBits(quads[q].getCenter().distanceSquared(cameraPos));
-            }
-
-            var indices = RadixSort.sort(keys);
-
-            for (int i = 0; i < quads.length; i++) {
-                TranslucentData.writeQuadVertexIndexes(indexBuffer, indices[i]);
-            }
         } else {
-            final var data = new long[quads.length];
-            for (int q = 0; q < quads.length; q++) {
-                float distance = quads[q].getCenter().distanceSquared(cameraPos);
-                data[q] = (long) ~Float.floatToRawIntBits(distance) << 32 | q;
+            final var keys = new int[quads.length];
+            final var perm = new int[quads.length];
+
+            for (int idx = 0; idx < quads.length; idx++) {
+                var centroid = quads[idx].getCenter();
+                keys[idx] = ~Float.floatToRawIntBits(centroid.distanceSquared(cameraPos));
+                perm[idx] = idx;
             }
 
-            Arrays.sort(data);
+            RadixSort.sortIndirect(perm, keys, false);
 
-            for (int i = 0; i < quads.length; i++) {
-                TranslucentData.writeQuadVertexIndexes(indexBuffer, (int) data[i]);
+            for (int idx = 0; idx < quads.length; idx++) {
+                TranslucentData.writeQuadVertexIndexes(indexBuffer, perm[idx]);
             }
         }
     }
 
-    public static DynamicTopoData fromMesh(int vertexCount,
-                                           CombinedCameraPos cameraPos, TQuad[] quads, SectionPos sectionPos,
-                                           GeometryPlanes geometryPlanes) {
+    public static DynamicTopoData fromMesh(CombinedCameraPos cameraPos, TQuad[] quads, SectionPos sectionPos, GeometryPlanes geometryPlanes) {
         var distancesByNormal = geometryPlanes.prepareAndGetDistances();
 
-        return new DynamicTopoData(sectionPos, vertexCount, quads, geometryPlanes,
-                cameraPos.getAbsoluteCameraPos(), distancesByNormal);
+        return new DynamicTopoData(sectionPos, quads, geometryPlanes, cameraPos.getAbsoluteCameraPos(), distancesByNormal);
     }
 }

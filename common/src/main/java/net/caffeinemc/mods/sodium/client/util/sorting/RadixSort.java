@@ -1,7 +1,9 @@
 package net.caffeinemc.mods.sodium.client.util.sorting;
 
-public class RadixSort extends AbstractSort {
-    public static final int RADIX_SORT_THRESHOLD = 64;
+import it.unimi.dsi.fastutil.ints.IntArrays;
+
+public class RadixSort {
+    private static final int RADIX_SORT_THRESHOLD = 80;
 
     private static final int DIGIT_BITS = 8;
     private static final int RADIX_KEY_BITS = Integer.BYTES * 8;
@@ -9,27 +11,15 @@ public class RadixSort extends AbstractSort {
     private static final int DIGIT_COUNT = (RADIX_KEY_BITS + DIGIT_BITS - 1) / DIGIT_BITS;
     private static final int DIGIT_MASK = (1 << DIGIT_BITS) - 1;
 
-    public static int[] sort(int[] keys) {
-        if (keys.length <= 1) {
-            return new int[keys.length];
-        }
-
-        return radixSort(keys, createHistogram(keys));
-    }
-
-    private static int[][] createHistogram(int[] keys) {
-        var histogram = new int[DIGIT_COUNT][BUCKET_COUNT];
-
+    private static void getHistogram(int[][] histogram, int[] keys) {
         for (final int key : keys) {
             for (int digit = 0; digit < DIGIT_COUNT; digit++) {
                 histogram[digit][extractDigit(key, digit)] += 1;
             }
         }
-
-        return histogram;
     }
 
-    private static void prefixSum(int[][] offsets) {
+    private static void prefixSums(int[][] offsets) {
         for (int digit = 0; digit < DIGIT_COUNT; digit++) {
             final var buckets = offsets[digit];
             var sum = 0;
@@ -42,13 +32,65 @@ public class RadixSort extends AbstractSort {
         }
     }
 
-    private static int[] radixSort(int[] keys, int[][] offsets) {
-        prefixSum(offsets);
+    /**
+     * <p>Sorts the specified array according to the natural ascending order using an out-of-place, indirect,
+     * 256-way LSD radix sort. This algorithm is well suited for large arrays of integers, especially when they are
+     * uniformly distributed over the entire range of the data type.</p>
+     *
+     * <p>This method implements an <em>indirect</em> sort. The elements of {@param perm} (which must be
+     * exactly the numbers in the interval {@code [0..perm.length)}) will be permuted so that
+     * {@code x[perm[i]] < x[perm[i + 1]]}.</p>
+     *
+     * <p>While this implementation is very fast on larger arrays, there is a certain amount of fixed cost involved in
+     * computing the histogram and prefix sums. Because of this, a fallback algorithm (currently quick sort) is used
+     * for very small arrays to ensure this method performs well for all inputs of all sizes.</p>
+     *
+     * <p>If {@param stable} is true, the sorting algorithm is defined to be <i>stable</i>, and duplicate keys will be
+     * returned in the ordering given by {@param keys}. Using a stable sort is slower than an unstable sort, but the
+     * overall time complexity and memory requirements are the same.</p>
+     *
+     * @param perm a permutation array indexing {@param keys}.
+     * @param keys the array of elements to be sorted.
+     * @param stable whether the sort is allowed to re-order duplicate keys
+     */
+    public static void sortIndirect(final int[] perm, final int[] keys, boolean stable) {
+        if (perm.length <= RADIX_SORT_THRESHOLD) {
+            smallSort(perm, keys, stable);
+            return;
+        }
 
-        final var length = keys.length;
+        int[][] offsets;
+        int[] next;
 
-        int[] cur = createIndexBuffer(length);
-        int[] next = new int[length];
+        try {
+            offsets = new int[DIGIT_COUNT][BUCKET_COUNT];
+            next = new int[perm.length];
+
+            sortIndirect(perm, keys, offsets, next);
+        } catch (OutOfMemoryError oom) {
+            // Not enough memory to perform an out-of-place sort, so use an in-place alternative.
+            // If the array is very large (hence causing the memory allocation failure), the sort might take a while.
+            // We need to make sure the allocations are no longer reachable and can be immediately reclaimed.
+
+            // noinspection UnusedAssignment
+            offsets = null;
+            // noinspection UnusedAssignment
+            next = null;
+
+            fallbackSort(perm, keys, stable);
+        }
+    }
+
+    private static void sortIndirect(final int[] perm,
+                                     final int[] keys,
+                                     final int[][] offsets,
+                                     int[] next)
+    {
+        final int length = perm.length;
+        getHistogram(offsets, keys);
+        prefixSums(offsets);
+
+        int[] cur = perm;
 
         for (int digit = 0; digit < DIGIT_COUNT; digit++) {
             final var buckets = offsets[digit];
@@ -68,15 +110,26 @@ public class RadixSort extends AbstractSort {
                 cur = temp;
             }
         }
+    }
 
-        return cur;
+    private static void smallSort(int[] perm, int[] keys, boolean stable) {
+        if (perm.length <= 1) {
+            return;
+        }
+
+        fallbackSort(perm, keys, stable);
+    }
+
+    // Fallback sorting method which is guaranteed to be in-place and not require additional memory.
+    private static void fallbackSort(int[] perm, int[] keys, boolean stable) {
+        IntArrays.quickSortIndirect(perm, keys);
+
+        if (stable) {
+            IntArrays.stabilize(perm, keys);
+        }
     }
 
     private static int extractDigit(int key, int digit) {
         return ((key >>> (digit * DIGIT_BITS)) & DIGIT_MASK);
-    }
-
-    public static boolean useRadixSort(int length) {
-        return length >= RADIX_SORT_THRESHOLD;
     }
 }

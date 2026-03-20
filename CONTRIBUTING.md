@@ -3,6 +3,10 @@
 When submitting a pull request, you are granting [JellySquid](https://jellysquid.me) the right to license
 your contributions under the [Polyform Shield License (Version 1.0.0)](LICENSE.md).
 
+Without exception, it is required that all code being submitted to the project is of your original work. We
+will not accept pull requests which contain *any amount* of AI-generated code, regardless of the particular
+circumstances.
+
 If you have any questions about these terms, please [get in contact with us](https://caffeinemc.net/discord).
 
 ### Code Style

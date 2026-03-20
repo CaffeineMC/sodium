@@ -1,63 +1,39 @@
 package net.caffeinemc.mods.sodium.client.gui.options.control;
 
-import net.caffeinemc.mods.sodium.client.gui.options.Option;
-import net.caffeinemc.mods.sodium.client.gui.options.TextProvider;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
+import net.caffeinemc.mods.sodium.client.config.structure.EnumOption;
+import net.caffeinemc.mods.sodium.client.config.structure.Option;
+import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
+import net.caffeinemc.mods.sodium.client.gui.Colors;
+import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.navigation.CommonInputs;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.Validate;
 
-public class CyclingControl<T extends Enum<T>> implements Control<T> {
-    private final Option<T> option;
-    private final T[] allowedValues;
-    private final Component[] names;
+public class CyclingControl<T extends Enum<T>> implements Control {
+    private final EnumOption<T> option;
 
-    public CyclingControl(Option<T> option, Class<T> enumType) {
-        this(option, enumType, enumType.getEnumConstants());
-    }
-
-    public CyclingControl(Option<T> option, Class<T> enumType, Component[] names) {
+    public CyclingControl(EnumOption<T> option, Class<T> enumType) {
         T[] universe = enumType.getEnumConstants();
 
-        Validate.isTrue(universe.length == names.length, "Mismatch between universe length and names array length");
         Validate.notEmpty(universe, "The enum universe must contain at least one item");
 
         this.option = option;
-        this.allowedValues = universe;
-        this.names = names;
-    }
-
-    public CyclingControl(Option<T> option, Class<T> enumType, T[] allowedValues) {
-        T[] universe = enumType.getEnumConstants();
-
-        this.option = option;
-        this.allowedValues = allowedValues;
-        this.names = new Component[universe.length];
-
-        for (int i = 0; i < this.names.length; i++) {
-            Component name;
-            T value = universe[i];
-
-            if (value instanceof TextProvider) {
-                name = ((TextProvider) value).getLocalizedName();
-            } else {
-                name = Component.literal(value.name());
-            }
-
-            this.names[i] = name;
-        }
     }
 
     @Override
-    public Option<T> getOption() {
+    public Option getOption() {
         return this.option;
     }
 
     @Override
-    public ControlElement<T> createElement(Dim2i dim) {
-        return new CyclingControlElement<>(this.option, dim, this.allowedValues, this.names);
+    public ControlElement createElement(Screen screen, AbstractOptionList list, Dim2i dim, ColorTheme theme) {
+        return new CyclingControlElement<>(list, this.option, dim, theme);
     }
 
     @Override
@@ -65,43 +41,45 @@ public class CyclingControl<T extends Enum<T>> implements Control<T> {
         return 70;
     }
 
-    private static class CyclingControlElement<T extends Enum<T>> extends ControlElement<T> {
-        private final T[] allowedValues;
-        private final Component[] names;
-        private int currentIndex;
+    private static class CyclingControlElement<T extends Enum<T>> extends ControlElement {
+        private final EnumOption<T> option;
+        private final T[] baseValues;
 
-        public CyclingControlElement(Option<T> option, Dim2i dim, T[] allowedValues, Component[] names) {
-            super(option, dim);
+        public CyclingControlElement(AbstractOptionList list, EnumOption<T> option, Dim2i dim, ColorTheme theme) {
+            super(list, dim, theme);
 
-            this.allowedValues = allowedValues;
-            this.names = names;
-            this.currentIndex = 0;
+            this.option = option;
+            this.baseValues = option.enumClass.getEnumConstants();
+        }
 
-            for (int i = 0; i < allowedValues.length; i++) {
-                if (allowedValues[i] == option.getValue()) {
-                    this.currentIndex = i;
-                    break;
-                }
-            }
+        @Override
+        public Option getOption() {
+            return this.option;
         }
 
         @Override
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             super.render(graphics, mouseX, mouseY, delta);
 
-            Enum<T> value = this.option.getValue();
-            Component name = this.names[value.ordinal()];
+            if (!this.option.showControl()) {
+                return;
+            }
+
+            var value = this.option.getValidatedValue();
+            Component name = this.option.getElementName(value);
 
             int strWidth = this.getStringWidth(name);
-            this.drawString(graphics, name, this.dim.getLimitX() - strWidth - 6, this.dim.getCenterY() - 4, 0xFFFFFFFF);
+            this.drawString(graphics, name, this.getLimitX() - strWidth - 6, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
+
+            if (this.isHovered()) {
+                graphics.requestCursor(CursorTypes.POINTING_HAND);
+            }
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (this.option.isAvailable() && button == 0 && this.dim.containsCursor(mouseX, mouseY)) {
-                cycleControl(Screen.hasShiftDown());
-                this.playClickSound();
-
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+            if (this.option.isEnabled() && event.button() == 0 && this.isMouseOver(event.x(), event.y())) {
+                cycleControl(Minecraft.getInstance().hasShiftDown());
                 return true;
             }
 
@@ -109,24 +87,40 @@ public class CyclingControl<T extends Enum<T>> implements Control<T> {
         }
 
         @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        public boolean keyPressed(KeyEvent event) {
             if (!isFocused()) return false;
 
-            if (CommonInputs.selected(keyCode)) {
-                cycleControl(Screen.hasShiftDown());
+            if (event.isSelection()) {
+                cycleControl(Minecraft.getInstance().hasShiftDown());
                 return true;
             }
 
             return false;
         }
 
-        public void cycleControl(boolean reverse) {
-            if (reverse) {
-                this.currentIndex = (this.currentIndex + this.allowedValues.length - 1) % this.allowedValues.length;
-            } else {
-                this.currentIndex = (this.currentIndex + 1) % this.allowedValues.length;
+        private void cycleControl(boolean reverse) {
+            this.playClickSound();
+
+            var currentValue = this.option.getValidatedValue();
+            int startIndex = 0;
+            for (; startIndex < this.baseValues.length; startIndex++) {
+                if (this.baseValues[startIndex] == currentValue) {
+                    break;
+                }
             }
-            this.option.setValue(this.allowedValues[this.currentIndex]);
+
+            // step through values in the specified direction until a valid one is found
+            var currentIndex = startIndex;
+            do {
+                if (reverse) {
+                    currentIndex = (currentIndex + this.baseValues.length - 1) % this.baseValues.length;
+                } else {
+                    currentIndex = (currentIndex + 1) % this.baseValues.length;
+                }
+
+                currentValue = this.baseValues[currentIndex];
+            } while (!this.option.isValueAllowed(currentValue));
+            this.option.modifyValue(currentValue);
         }
     }
 }

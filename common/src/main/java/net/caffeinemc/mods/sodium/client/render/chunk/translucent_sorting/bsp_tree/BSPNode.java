@@ -1,9 +1,10 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree;
 
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import org.joml.Vector3fc;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TQuad;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TopoGraphSorting;
 import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
@@ -32,13 +33,13 @@ public abstract class BSPNode {
     }
 
     public static BSPResult buildBSP(TQuad[] quads, SectionPos sectionPos, BSPNode oldRoot,
-            boolean prepareNodeReuse) {
+            boolean prepareNodeReuse, QuadSplittingMode quadSplittingMode) {
         // throw if there's too many quads
         InnerPartitionBSPNode.validateQuadCount(quads.length);
 
         // create a workspace and then the nodes figure out the recursive building.
         // throws if the BSP can't be built, null if none is necessary
-        var workspace = new BSPWorkspace(quads, sectionPos, prepareNodeReuse);
+        var workspace = new BSPWorkspace(quads, sectionPos, prepareNodeReuse, quadSplittingMode);
 
         // initialize the indexes to all quads
         int[] initialIndexes = new int[quads.length];
@@ -50,10 +51,11 @@ public abstract class BSPNode {
         var rootNode = BSPNode.build(workspace, allIndexes, -1, oldRoot);
         var result = workspace.result;
         result.setRootNode(rootNode);
+        result.setUpdatedQuadIndexes(workspace.getFinalizedUpdatedQuads());
         return result;
     }
 
-    private static boolean doubleLeafPossible(TQuad quadA, TQuad quadB) {
+    private static boolean doubleLeafPossible(TQuad quadA, TQuad quadB, boolean failOnIntersection) {
         // check for coplanar or mutually invisible quads
         var facingA = quadA.getFacing();
         var facingB = quadB.getFacing();
@@ -82,8 +84,8 @@ public abstract class BSPNode {
 
         // aligned otherwise mutually invisible
         else {
-            return !TopoGraphSorting.orthogonalQuadVisibleThrough(quadA, quadB)
-                    && !TopoGraphSorting.orthogonalQuadVisibleThrough(quadB, quadA);
+            return !TopoGraphSorting.orthogonalQuadVisibleThrough(quadA, quadB, failOnIntersection)
+                    && !TopoGraphSorting.orthogonalQuadVisibleThrough(quadB, quadA, failOnIntersection);
         }
 
         return false;
@@ -100,10 +102,10 @@ public abstract class BSPNode {
         } else if (indexes.size() == 2) {
             var quadIndexA = indexes.getInt(0);
             var quadIndexB = indexes.getInt(1);
-            var quadA = workspace.quads[quadIndexA];
-            var quadB = workspace.quads[quadIndexB];
+            var quadA = workspace.get(quadIndexA);
+            var quadB = workspace.get(quadIndexB);
 
-            if (doubleLeafPossible(quadA, quadB)) {
+            if (doubleLeafPossible(quadA, quadB, workspace.canSplitQuads())) {
                 return new LeafDoubleBSPNode(quadIndexA, quadIndexB);
             }
         }

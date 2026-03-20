@@ -27,8 +27,6 @@ public class MixinConfig {
         // You must manually add a rule for any new mixins not covered by an existing package rule.
         this.addMixinRule("core", true); // TODO: Don't actually allow the user to disable this
 
-        this.addMixinRule("debug.checks", false);
-
         this.addMixinRule("features", true);
 
         this.addMixinRule("features.gui", true);
@@ -42,11 +40,6 @@ public class MixinConfig {
 
         this.addMixinRule("features.model", true);
 
-        this.addMixinRule("features.options", true);
-        this.addMixinRule("features.options.overlays", true);
-        this.addMixinRule("features.options.render_layers", true);
-        this.addMixinRule("features.options.weather", true);
-
         this.addMixinRule("features.render", true);
 
         this.addMixinRule("features.render.compositing", true);
@@ -54,8 +47,6 @@ public class MixinConfig {
         this.addMixinRule("features.render.entity", true);
         this.addMixinRule("features.render.entity.cull", true);
         this.addMixinRule("features.render.entity.shadow", true);
-
-        this.addMixinRule("features.render.frapi", true);
 
         this.addMixinRule("features.render.gui", true);
         this.addMixinRule("features.render.gui.font", true);
@@ -75,12 +66,8 @@ public class MixinConfig {
         this.addMixinRule("features.render.world.clouds", true);
         this.addMixinRule("features.render.world.sky", true);
 
-        this.addMixinRule("features.shader", true);
-        this.addMixinRule("features.shader.uniform", true);
-
         this.addMixinRule("features.textures", true);
         this.addMixinRule("features.textures.animations", true);
-        this.addMixinRule("features.textures.mipmaps", true);
 
         this.addMixinRule("features.world", true);
         this.addMixinRule("features.world.biome", true);
@@ -88,6 +75,7 @@ public class MixinConfig {
         this.addMixinRule("workarounds", true);
         this.addMixinRule("workarounds.context_creation", true);
         this.addMixinRule("workarounds.event_loop", true);
+        this.addMixinRule("workarounds.window_minimized_state", true);
     }
 
     /**
@@ -153,7 +141,7 @@ public class MixinConfig {
      * Returns the effective option for the specified class name. This traverses the package path of the given mixin
      * and checks each root for configuration rules. If a configuration rule disables a package, all mixins located in
      * that package and its children will be disabled. The effective option is that of the highest-priority rule, either
-     * a enable rule at the end of the chain or a disable rule at the earliest point in the chain.
+     * an enable rule at the end of the chain or a disable rule at the earliest point in the chain.
      *
      * @return Null if no options matched the given mixin name, otherwise the effective option for this Mixin
      */

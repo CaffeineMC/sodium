@@ -5,5 +5,18 @@ public class RenderSectionFlags {
     public static final int HAS_BLOCK_ENTITIES      = 1;
     public static final int HAS_ANIMATED_SPRITES    = 2;
 
+    public static final int MASK_HAS_BLOCK_GEOMETRY      = 1 << HAS_BLOCK_GEOMETRY;
+    public static final int MASK_HAS_BLOCK_ENTITIES      = 1 << HAS_BLOCK_ENTITIES;
+    public static final int MASK_HAS_ANIMATED_SPRITES    = 1 << HAS_ANIMATED_SPRITES;
+    public static final int MASK_NEEDS_RENDER            = MASK_HAS_BLOCK_GEOMETRY | MASK_HAS_BLOCK_ENTITIES | MASK_HAS_ANIMATED_SPRITES;
+
     public static final int NONE = 0;
+
+    public static boolean needsRender(int flags) {
+        return (flags & MASK_NEEDS_RENDER) != 0;
+    }
+
+    public static int getNewRenderFlags(int prevFlags, int newFlags) {
+        return ((newFlags & MASK_NEEDS_RENDER) & ~(prevFlags & MASK_NEEDS_RENDER));
+    }
 }

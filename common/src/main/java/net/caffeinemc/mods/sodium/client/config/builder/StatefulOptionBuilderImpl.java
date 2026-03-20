@@ -1,0 +1,197 @@
+package net.caffeinemc.mods.sodium.client.config.builder;
+
+import net.caffeinemc.mods.sodium.api.config.ConfigState;
+import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
+import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
+import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
+import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
+import net.caffeinemc.mods.sodium.api.config.structure.StatefulOptionBuilder;
+import net.caffeinemc.mods.sodium.client.config.AnonymousOptionBinding;
+import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
+import net.caffeinemc.mods.sodium.client.config.value.ConstantValue;
+import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
+import net.caffeinemc.mods.sodium.client.config.value.DynamicValue;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import org.apache.commons.lang3.Validate;
+
+import java.util.Collection;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends OptionBuilderImpl<O> implements StatefulOptionBuilder<V> {
+    private StorageEventHandler storage;
+    private Function<V, Component> tooltipProvider;
+    private OptionImpact impact;
+    private Set<Identifier> flags;
+    private DependentValue<V> defaultValue;
+    private Boolean controlHiddenWhenDisabled;
+    private OptionBinding<V> binding;
+    private Consumer<ConfigState> applyHook;
+
+    StatefulOptionBuilderImpl(Identifier id) {
+        super(id);
+    }
+
+    @Override
+    void validateData() {
+        super.validateData();
+
+        Validate.notNull(this.getStorage(), "Storage handler must be set");
+        Validate.notNull(this.getTooltipProvider(), "Tooltip provider must be set");
+        Validate.notNull(this.getDefaultValue(), "Default value must be set");
+
+        Validate.notNull(this.getBinding(), "Binding must be set");
+    }
+
+    Collection<Identifier> getDependencies() {
+        var dependencies = super.getDependencies();
+        dependencies.addAll(this.getDefaultValue().getDependencies());
+        return dependencies;
+    }
+
+    StorageEventHandler getStorage() {
+        return getFirstNotNull(this.storage, StatefulOption::getStorage);
+    }
+
+    Function<V, Component> getTooltipProvider() {
+        return getFirstNotNull(this.tooltipProvider, StatefulOption::getTooltipProvider);
+    }
+
+    OptionImpact getImpact() {
+        return getFirstNotNull(this.impact, StatefulOption::getImpact);
+    }
+
+    Set<Identifier> getFlags() {
+        return getFirstNotNull(this.flags, StatefulOption::getFlags);
+    }
+
+    DependentValue<V> getDefaultValue() {
+        return getFirstNotNull(this.defaultValue, StatefulOption::getDefaultValue);
+    }
+
+    Boolean getControlHiddenWhenDisabled() {
+        return getFirstNotNull(this.controlHiddenWhenDisabled, StatefulOption::getControlHiddenWhenDisabled);
+    }
+
+    OptionBinding<V> getBinding() {
+        return getFirstNotNull(this.binding, StatefulOption::getBinding);
+    }
+
+    Consumer<ConfigState> getApplyHook() {
+        return getFirstNotNull(this.applyHook, StatefulOption::getApplyHook);
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setStorageHandler(StorageEventHandler storage) {
+        Validate.notNull(storage, "Argument must not be null");
+
+        this.storage = storage;
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setTooltip(Component tooltip) {
+        Validate.notNull(tooltip, "Argument must not be null");
+        Validate.notBlank(tooltip.getString(), "Tooltip must not be blank");
+
+        this.tooltipProvider = v -> tooltip;
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setTooltip(Function<V, Component> tooltip) {
+        Validate.notNull(tooltip, "Argument must not be null");
+
+        this.tooltipProvider = tooltip;
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setImpact(OptionImpact impact) {
+        Validate.notNull(impact, "Argument must not be null");
+
+        this.impact = impact;
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setFlags(OptionFlag... flags) {
+        var idFlags = new Identifier[flags.length];
+        for (int i = 0; i < flags.length; i++) {
+            idFlags[i] = flags[i].getId();
+        }
+        return this.setFlags(idFlags);
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setFlags(Identifier... flags) {
+        this.flags = Set.of(flags);
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setDefaultValue(V value) {
+        Validate.notNull(value, "Argument must not be null");
+
+        this.defaultValue = new ConstantValue<>(value);
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setDefaultProvider(Function<ConfigState, V> provider, Identifier... dependencies) {
+        Validate.notNull(provider, "Argument must not be null");
+
+        this.defaultValue = new DynamicValue<>(provider, dependencies);
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setBinding(Consumer<V> save, Supplier<V> load) {
+        Validate.notNull(save, "Setter must not be null");
+        Validate.notNull(load, "Getter must not be null");
+
+        this.binding = new AnonymousOptionBinding<>(save, load);
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setBinding(OptionBinding<V> binding) {
+        Validate.notNull(binding, "Argument must not be null");
+
+        this.binding = binding;
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setName(Component name) {
+        super.setName(name);
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setEnabled(boolean available) {
+        super.setEnabled(available);
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies) {
+        super.setEnabledProvider(provider, dependencies);
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setControlHiddenWhenDisabled(boolean hidden) {
+        this.controlHiddenWhenDisabled = hidden;
+        return this;
+    }
+
+    @Override
+    public StatefulOptionBuilder<V> setApplyHook(Consumer<ConfigState> hook) {
+        this.applyHook = hook;
+        return this;
+    }
+}

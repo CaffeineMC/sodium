@@ -7,8 +7,6 @@ import net.caffeinemc.mods.sodium.client.world.biome.LevelBiomeSlice;
 import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSection;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
-import net.fabricmc.fabric.api.blockview.v2.FabricBlockView;
-import net.fabricmc.fabric.api.rendering.data.v1.RenderAttachedBlockView;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -30,8 +28,8 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.FluidState;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -47,7 +45,7 @@ import java.util.Objects;
  *
  * <p>Object pooling should be used to avoid huge allocations as this class contains many large arrays.</p>
  */
-public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlockView, FabricBlockView {
+public final class LevelSlice implements BlockAndTintGetter {
     private static final LightLayer[] LIGHT_TYPES = LightLayer.values();
 
     // The number of blocks in a section.
@@ -94,6 +92,8 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
     private final @Nullable Int2ReferenceMap<BlockEntity>[] blockEntityArrays;
 
     // (Local Section -> Block Entity Render Data) table.
+    // This is accessed by a self-mixin in the Fabric package.
+    @SuppressWarnings("MismatchedReadAndWriteOfArray")
     private final @Nullable Int2ReferenceMap<Object>[] blockEntityRenderDataArrays;
 
     // (Local Section -> Model Data) table.
@@ -246,7 +246,7 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
     }
 
     @Override
-    public @NotNull BlockState getBlockState(BlockPos pos) {
+    public @NonNull BlockState getBlockState(BlockPos pos) {
         return this.getBlockState(pos.getX(), pos.getY(), pos.getZ());
     }
 
@@ -264,7 +264,7 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
     }
 
     @Override
-    public @NotNull FluidState getFluidState(BlockPos pos) {
+    public @NonNull FluidState getFluidState(BlockPos pos) {
         return this.getBlockState(pos)
                 .getFluidState();
     }
@@ -275,7 +275,7 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
     }
 
     @Override
-    public @NotNull LevelLightEngine getLightEngine() {
+    public @NonNull LevelLightEngine getLightEngine() {
         // Not thread-safe to access lighting data from off-thread, even if Minecraft allows it.
         throw new UnsupportedOperationException();
     }
@@ -353,6 +353,10 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
         return this.biomeColors.getColor(resolver, pos.getX(), pos.getY(), pos.getZ());
     }
 
+    public boolean hasBiomeBlend() {
+        return this.biomeColors.getBlendRadius() > 0;
+    }
+
     @Override
     public int getHeight() {
         return this.level.getHeight();
@@ -363,24 +367,6 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
         return this.level.getMinY();
     }
 
-    @Override
-    public @Nullable Object getBlockEntityRenderData(BlockPos pos) {
-        if (!this.volume.isInside(pos.getX(), pos.getY(), pos.getZ())) {
-            return null;
-        }
-
-        int relBlockX = pos.getX() - this.originBlockX;
-        int relBlockY = pos.getY() - this.originBlockY;
-        int relBlockZ = pos.getZ() - this.originBlockZ;
-
-        var blockEntityRenderDataMap = this.blockEntityRenderDataArrays[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
-
-        if (blockEntityRenderDataMap == null) {
-            return null;
-        }
-
-        return blockEntityRenderDataMap.get(getLocalBlockIndex(relBlockX & 15, relBlockY & 15, relBlockZ & 15));
-    }
 
     public SodiumModelData getPlatformModelData(BlockPos pos) {
         if (!this.volume.isInside(pos.getX(), pos.getY(), pos.getZ())) {
@@ -400,40 +386,11 @@ public final class LevelSlice implements BlockAndTintGetter, RenderAttachedBlock
         return modelMap.getModelData(pos);
     }
 
-    @Override
-    public boolean hasBiomes() {
-        return true;
-    }
-
-    @Override
-    public Holder<Biome> getBiomeFabric(BlockPos pos) {
-        return this.biomeSlice.getBiome(pos.getX(), pos.getY(), pos.getZ());
-    }
-
     public static int getLocalBlockIndex(int blockX, int blockY, int blockZ) {
         return (blockY << LOCAL_XYZ_BITS << LOCAL_XYZ_BITS) | (blockZ << LOCAL_XYZ_BITS) | blockX;
     }
 
     public static int getLocalSectionIndex(int sectionX, int sectionY, int sectionZ) {
         return (sectionY * SECTION_ARRAY_LENGTH * SECTION_ARRAY_LENGTH) + (sectionZ * SECTION_ARRAY_LENGTH) + sectionX;
-    }
-
-    @Override
-    public @Nullable Object getBlockEntityRenderAttachment(BlockPos pos) {
-        if (!this.volume.isInside(pos.getX(), pos.getY(), pos.getZ())) {
-            return null;
-        }
-
-        int relBlockX = pos.getX() - this.originBlockX;
-        int relBlockY = pos.getY() - this.originBlockY;
-        int relBlockZ = pos.getZ() - this.originBlockZ;
-
-        var blockEntityRenderDataMap = this.blockEntityRenderDataArrays[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
-
-        if (blockEntityRenderDataMap == null) {
-            return null;
-        }
-
-        return blockEntityRenderDataMap.get(getLocalBlockIndex(relBlockX & 15, relBlockY & 15, relBlockZ & 15));
     }
 }

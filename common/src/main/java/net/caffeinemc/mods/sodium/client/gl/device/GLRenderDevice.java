@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gl.device;
 
+import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.caffeinemc.mods.sodium.client.gl.array.GlVertexArray;
 import net.caffeinemc.mods.sodium.client.gl.buffer.*;
 import net.caffeinemc.mods.sodium.client.gl.functions.DeviceFunctions;
@@ -8,7 +9,6 @@ import net.caffeinemc.mods.sodium.client.gl.sync.GlFence;
 import net.caffeinemc.mods.sodium.client.gl.tessellation.*;
 import net.caffeinemc.mods.sodium.client.gl.util.EnumBitField;
 import org.lwjgl.opengl.*;
-import com.mojang.blaze3d.vertex.BufferUploader;
 import java.nio.ByteBuffer;
 
 public class GLRenderDevice implements RenderDevice {
@@ -34,8 +34,6 @@ public class GLRenderDevice implements RenderDevice {
             return;
         }
 
-        BufferUploader.reset();
-
         this.stateTracker.clear();
         this.isActive = true;
     }
@@ -58,6 +56,19 @@ public class GLRenderDevice implements RenderDevice {
     @Override
     public DeviceFunctions getDeviceFunctions() {
         return this.functions;
+    }
+
+    @Override
+    public int getSubTexelPrecisionBits() {
+        // OpenGL only specifies "at least" 4 bits of sub-texel precision for texture fetches. Thankfully, nearly every
+        // graphics card is Direct3D-compatible and capable of providing 8 bits of precision. The only exception to this
+        // rule seems to be when using OpenGL on macOS, where it appears to arbitrarily limit the precision to 4 bits
+        // *even if* the hardware is capable of better.
+        if (OsUtils.getOs() == OsUtils.OperatingSystem.MAC) {
+            return 4;
+        }
+
+        return 8;
     }
 
     private void checkDeviceActive() {
@@ -86,6 +97,13 @@ public class GLRenderDevice implements RenderDevice {
 
             GL20C.glBufferData(GlBufferTarget.ARRAY_BUFFER.getTargetParameter(), byteBuffer, usage.getId());
             glBuffer.setSize(byteBuffer.remaining());
+        }
+
+        @Override
+        public void uploadDataToOffset(GlMutableBuffer glBuffer, int offset, long pointer, int size) {
+            this.bindBuffer(GlBufferTarget.ARRAY_BUFFER, glBuffer);
+
+            GL20C.nglBufferSubData(GlBufferTarget.ARRAY_BUFFER.getTargetParameter(), offset, size, pointer);
         }
 
         @Override
@@ -274,7 +292,7 @@ public class GLRenderDevice implements RenderDevice {
                     batch.pElementCount,
                     indexType.getFormatId(),
                     batch.pElementPointer,
-                    batch.size(),
+                    batch.size,
                     batch.pBaseVertex);
         }
 

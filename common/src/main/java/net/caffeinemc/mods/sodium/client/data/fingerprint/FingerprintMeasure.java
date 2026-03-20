@@ -3,8 +3,8 @@ package net.caffeinemc.mods.sodium.client.data.fingerprint;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.minecraft.client.Minecraft;
 import org.apache.commons.codec.binary.Hex;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -12,7 +12,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Objects;
 
-public record FingerprintMeasure(@NotNull String uuid, @NotNull String path) {
+public record FingerprintMeasure(@NonNull String uuid, @NonNull String path) {
     private static final int SALT_LENGTH = 64;
 
     public static @Nullable FingerprintMeasure create() {
@@ -43,7 +43,7 @@ public record FingerprintMeasure(@NotNull String uuid, @NotNull String path) {
         return Objects.equals(uuidHashHex, hashed.uuidHashHex()) || Objects.equals(pathHashHex, hashed.pathHashHex());
     }
 
-    private static String sha512(@NotNull String salt, @NotNull String message) {
+    private static String sha512(@NonNull String salt, @NonNull String message) {
         MessageDigest md;
 
         try {

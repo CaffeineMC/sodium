@@ -1,5 +1,11 @@
 package net.caffeinemc.mods.sodium.client.util;
 
+
+import org.joml.Vector3dc;
+import org.joml.Vector3fc;
+
+import static org.joml.Math.fma;
+
 public class MathUtil {
     /**
      * @return True if the specified number is greater than zero and is a power of two, otherwise false
@@ -10,6 +16,20 @@ public class MathUtil {
 
     public static long toMib(long bytes) {
         return bytes / (1024L * 1024L); // 1 MiB = 1048576 (2^20) bytes
+    }
+
+    /**
+     * <p>Rounds the integer {@param num} up to the next multiple of {@param alignment}. This multiple *MUST* be
+     * a power-of-two, or undefined behavior will occur.</p>
+     *
+     * @param num The number to round up
+     * @param alignment The power-of-two multiple to round to
+     * @return The rounded number
+     */
+    public static int align(int num, int alignment) {
+        int additive = alignment - 1;
+        int mask = ~additive;
+        return (num + additive) & mask;
     }
 
     /**
@@ -28,5 +48,21 @@ public class MathUtil {
 
     public static float comparableIntToFloat(int i) {
         return Float.intBitsToFloat(i ^ ((i >> 31) & 0x7FFFFFFF));
+    }
+
+    public static double exponentialMovingAverage(double oldValue, double newValue, double newValueContribution) {
+        return newValueContribution * newValue + (1 - newValueContribution) * oldValue;
+    }
+
+    public static long exponentialMovingAverage(long oldValue, long newValue, float newValueContribution) {
+        return (long) (newValueContribution * newValue) + (long) ((1 - newValueContribution) * oldValue);
+    }
+
+    public static double floatDoubleDot(Vector3fc a, Vector3dc b) {
+        return fma(a.x(), b.x(), fma(a.y(), b.y(), a.z() * b.z()));
+    }
+
+    public static double floatDoubleDot(Vector3fc a, double bx, double by, double bz) {
+        return fma(a.x(), bx, fma(a.y(), by, a.z() * bz));
     }
 }

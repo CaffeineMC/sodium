@@ -16,7 +16,7 @@ tasks {
         inputs.property("version", version)
 
         filesMatching(listOf("fabric.mod.json", "META-INF/neoforge.mods.toml")) {
-            expand(mapOf("version" to version))
+            expand(mapOf("version" to inputs.properties["version"]))
         }
     }
 
@@ -31,13 +31,23 @@ tasks {
 }
 
 publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = project.group as String
-            artifactId = project.name as String
-            version = version
+    // Each platform is responsible for their own "publications".
 
-            from(components["java"])
+    repositories {
+        val isReleaseBuild = project.hasProperty("build.release")
+        val caffeineMCMavenUsername: String? by project // reads from ORG_GRADLE_PROJECT_caffeineMCMavenUsername
+        val caffeineMCMavenPassword: String? by project // reads from ORG_GRADLE_PROJECT_caffeineMCMavenPassword
+
+        maven {
+            name = "CaffeineMC"
+            url = uri("https://maven.caffeinemc.net".let {
+                if (isReleaseBuild) "$it/releases" else "$it/snapshots"
+            })
+
+            credentials {
+                username = caffeineMCMavenUsername
+                password = caffeineMCMavenPassword
+            }
         }
     }
 }

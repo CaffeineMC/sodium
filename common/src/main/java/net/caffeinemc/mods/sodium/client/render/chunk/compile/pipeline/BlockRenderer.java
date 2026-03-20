@@ -21,26 +21,22 @@ import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.parameter
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
-import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
-import net.caffeinemc.mods.sodium.client.render.frapi.render.AbstractBlockRenderContext;
+import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
+import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
+import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
-import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
-import net.caffeinemc.mods.sodium.client.services.SodiumModelData;
+import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
-import net.fabricmc.fabric.api.renderer.v1.material.BlendMode;
-import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
-import net.fabricmc.fabric.api.renderer.v1.material.ShadeMode;
-import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
-import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.TriState;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.joml.Vector3f;
 
 public class BlockRenderer extends AbstractBlockRenderContext {
@@ -77,11 +73,12 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         this.slice = null;
     }
 
-    public void renderModel(BakedModel model, BlockState state, BlockPos pos, BlockPos origin) {
+    public void renderModel(BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin) {
         this.state = state;
         this.pos = pos;
 
-        this.randomSeed = state.getSeed(pos);
+        this.prepareAoInfo(true);
+
 
         this.posOffset.set(origin.getX(), origin.getY(), origin.getZ());
         if (state.hasOffsetFunction()) {
@@ -91,22 +88,16 @@ public class BlockRenderer extends AbstractBlockRenderContext {
 
         this.colorProvider = this.colorProviderRegistry.getColorProvider(state.getBlock());
 
-        type = ItemBlockRenderTypes.getChunkRenderType(state);
-
         this.prepareCulling(true);
-        this.prepareAoInfo(model.useAmbientOcclusion());
 
-        modelData = PlatformModelAccess.getInstance().getModelData(slice, model, state, pos, slice.getPlatformModelData(pos));
+        this.defaultRenderType = ItemBlockRenderTypes.getChunkRenderType(state);
+        this.allowDowngrade = true;
 
-        Iterable<RenderType> renderTypes = PlatformModelAccess.getInstance().getModelRenderTypes(level, model, state, pos, random, modelData);
 
-        for (RenderType type : renderTypes) {
-            this.type = type;
-            ((FabricBakedModel) model).emitBlockQuads(this.level, state, pos, this.randomSupplier, this);
-        }
+        random.setSeed(state.getSeed(pos));
+        PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, getForEmitting(), random, level, pos, state, this::bufferDefaultModel);
 
-        type = null;
-        modelData = SodiumModelData.EMPTY;
+        this.defaultRenderType = null;
     }
 
     /**
@@ -114,42 +105,36 @@ public class BlockRenderer extends AbstractBlockRenderContext {
      */
     @Override
     protected void processQuad(MutableQuadViewImpl quad) {
-        final RenderMaterial mat = quad.material();
-        final int colorIndex = mat.disableColorIndex() ? -1 : quad.colorIndex();
-        final TriState aoMode = mat.ambientOcclusion();
-        final ShadeMode shadeMode = mat.shadeMode();
+        final TriState aoMode = quad.ambientOcclusion();
+        final SodiumShadeMode shadeMode = quad.getShadeMode();
         final LightMode lightMode;
         if (aoMode == TriState.DEFAULT) {
             lightMode = this.defaultLightMode;
         } else {
-            lightMode = this.useAmbientOcclusion && aoMode.get() ? LightMode.SMOOTH : LightMode.FLAT;
+            lightMode = this.useAmbientOcclusion && aoMode != TriState.FALSE ? LightMode.SMOOTH : LightMode.FLAT;
         }
-        final boolean emissive = mat.emissive();
+        final boolean emissive = quad.emissive();
 
-        Material material;
+        final ChunkSectionLayer blendMode = quad.getRenderType();
+        final Material material = DefaultMaterials.forChunkLayer(blendMode == null ? defaultRenderType : blendMode);
 
-        final BlendMode blendMode = mat.blendMode();
-        if (blendMode == BlendMode.DEFAULT) {
-            material = DefaultMaterials.forRenderLayer(type);
-        } else {
-            material = DefaultMaterials.forRenderLayer(blendMode.blockRenderLayer == null ? type : blendMode.blockRenderLayer);
-        }
-
-        this.colorizeQuad(quad, colorIndex);
+        this.tintQuad(quad);
         this.shadeQuad(quad, lightMode, emissive, shadeMode);
         this.bufferQuad(quad, this.quadLightData.br, material);
     }
 
-    private void colorizeQuad(MutableQuadViewImpl quad, int colorIndex) {
-        if (colorIndex != -1) {
+    private void tintQuad(MutableQuadViewImpl quad) {
+        int tintIndex = quad.getTintIndex();
+
+        if (tintIndex != -1) {
             ColorProvider<BlockState> colorProvider = this.colorProvider;
 
             if (colorProvider != null) {
                 int[] vertexColors = this.vertexColors;
-                colorProvider.getColors(this.slice, this.pos, this.scratchPos, this.state, quad, vertexColors);
+                colorProvider.getColors(this.slice, this.pos, this.scratchPos, this.state, quad, vertexColors, slice.hasBiomeBlend());
 
                 for (int i = 0; i < 4; i++) {
-                    quad.color(i, ColorMixer.mulComponentWise(vertexColors[i], quad.color(i)));
+                    quad.setColor(i, ColorMixer.mulComponentWise(vertexColors[i], quad.baseColor(i)));
                 }
             }
         }
@@ -165,18 +150,18 @@ public class BlockRenderer extends AbstractBlockRenderContext {
             int srcIndex = orientation.getVertexIndex(dstIndex);
 
             ChunkVertexEncoder.Vertex out = vertices[dstIndex];
-            out.x = quad.x(srcIndex) + offset.x;
-            out.y = quad.y(srcIndex) + offset.y;
-            out.z = quad.z(srcIndex) + offset.z;
+            out.x = quad.getX(srcIndex) + offset.x;
+            out.y = quad.getY(srcIndex) + offset.y;
+            out.z = quad.getZ(srcIndex) + offset.z;
 
             // FRAPI uses ARGB color format; convert to ABGR.
-            out.color = ColorARGB.toABGR(quad.color(srcIndex));
+            out.color = ColorARGB.toABGR(quad.baseColor(srcIndex));
             out.ao = brightnesses[srcIndex];
 
-            out.u = quad.u(srcIndex);
-            out.v = quad.v(srcIndex);
+            out.u = quad.getTexU(srcIndex);
+            out.v = quad.getTexV(srcIndex);
 
-            out.light = quad.lightmap(srcIndex);
+            out.light = quad.getLight(srcIndex);
         }
 
         var atlasSprite = quad.sprite(SpriteFinderCache.forBlockAtlas());
@@ -191,22 +176,25 @@ public class BlockRenderer extends AbstractBlockRenderContext {
             pass = downgradedPass;
         }
 
-        // collect all translucent quads into the translucency sorting system if enabled
-        if (pass.isTranslucent() && this.collector != null) {
-            this.collector.appendQuad(quad.getFaceNormal(), vertices, normalFace);
+        // collect all translucent quads into the translucency sorting system if enabled,
+        // and discard the quad if it's invalid (i.e. not visible)
+        if (pass.isTranslucent() && this.collector != null &&
+                this.collector.appendQuad(vertices, normalFace, quad.getFaceNormal())) {
+            return;
         }
 
         // if there was a downgrade from translucent to cutout, the material bits' alpha cutoff needs to be updated
         if (downgradedPass != null && material == DefaultMaterials.TRANSLUCENT && pass == DefaultTerrainRenderPasses.CUTOUT) {
-            // ONE_TENTH and HALF are functionally the same so it doesn't matter which one we take here
-            materialBits = MaterialParameters.pack(AlphaCutoffParameter.ONE_TENTH, material.mipped);
+            materialBits = MaterialParameters.pack(AlphaCutoffParameter.HALF, material.mipped);
         }
 
         ChunkModelBuilder builder = this.buffers.get(pass);
         ChunkMeshBufferBuilder vertexBuffer = builder.getVertexBuffer(normalFace);
         vertexBuffer.push(vertices, materialBits);
 
-        builder.addSprite(atlasSprite);
+        if (atlasSprite != null) {
+            builder.addSprite(atlasSprite);
+        }
     }
 
     private boolean validateQuadUVs(TextureAtlasSprite atlasSprite) {
@@ -228,7 +216,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
     }
 
     private @Nullable TerrainRenderPass attemptPassDowngrade(TextureAtlasSprite sprite, TerrainRenderPass pass) {
-        if (Workarounds.isWorkaroundEnabled(Workarounds.Reference.INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE)) {
+        if (!allowDowngrade || Workarounds.isWorkaroundEnabled(Workarounds.Reference.INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE)) {
             return null;
         }
 
@@ -256,14 +244,23 @@ public class BlockRenderer extends AbstractBlockRenderContext {
     }
 
     private static TerrainRenderPass getDowngradedPass(TextureAtlasSprite sprite, TerrainRenderPass pass) {
-        if (sprite.contents() instanceof SpriteContentsExtension contents) {
-            if (pass == DefaultTerrainRenderPasses.TRANSLUCENT && !contents.sodium$hasTranslucentPixels()) {
-                pass = DefaultTerrainRenderPasses.CUTOUT;
+        if (sprite instanceof TextureAtlasSpriteExtension spriteExt) {
+            // Some mods may use a custom ticker which we cannot look into. To avoid problems with these mods,
+            // do not attempt to downgrade the render pass.
+            if (spriteExt.sodium$hasUnknownImageContents()) {
+                return pass;
             }
-            if (pass == DefaultTerrainRenderPasses.CUTOUT && !contents.sodium$hasTransparentPixels()) {
-                pass = DefaultTerrainRenderPasses.SOLID;
+
+            if (sprite.contents() instanceof SpriteContentsExtension contentsExt) {
+                if (pass == DefaultTerrainRenderPasses.TRANSLUCENT && !contentsExt.sodium$hasTranslucentPixels()) {
+                    pass = DefaultTerrainRenderPasses.CUTOUT;
+                }
+                if (pass == DefaultTerrainRenderPasses.CUTOUT && !contentsExt.sodium$hasTransparentPixels()) {
+                    pass = DefaultTerrainRenderPasses.SOLID;
+                }
             }
         }
+
         return pass;
     }
 }

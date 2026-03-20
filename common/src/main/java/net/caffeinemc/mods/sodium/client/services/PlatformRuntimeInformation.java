@@ -29,7 +29,7 @@ public interface PlatformRuntimeInformation {
     Path getConfigDirectory();
 
     /**
-     * Returns if the platform has a early loading screen.
+     * Returns if the platform has an early loading screen.
      */
     boolean platformHasEarlyLoadingScreen();
 

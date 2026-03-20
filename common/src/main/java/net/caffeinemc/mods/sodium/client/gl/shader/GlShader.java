@@ -1,11 +1,13 @@
 package net.caffeinemc.mods.sodium.client.gl.shader;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import net.caffeinemc.mods.sodium.client.gl.GlObject;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL20C;
+
+import java.util.Arrays;
 
 /**
  * A compiled OpenGL shader object.
@@ -13,19 +15,20 @@ import org.lwjgl.opengl.GL20C;
 public class GlShader extends GlObject {
     private static final Logger LOGGER = LogManager.getLogger(GlShader.class);
 
-    private final ResourceLocation name;
+    private final Identifier name;
 
-    public GlShader(ShaderType type, ResourceLocation name, String src) {
+    public GlShader(ShaderType type, Identifier name, ShaderParser.ParsedShader parsedShader) {
         this.name = name;
 
         int handle = GL20C.glCreateShader(type.id);
-        ShaderWorkarounds.safeShaderSource(handle, src);
+        ShaderWorkarounds.safeShaderSource(handle, parsedShader.src());
         GL20C.glCompileShader(handle);
 
         String log = GL20C.glGetShaderInfoLog(handle);
 
         if (!log.isEmpty()) {
-            LOGGER.warn("Shader compilation log for " + this.name + ": " + log);
+            LOGGER.warn("Shader compilation log for {}: {}", this.name, log);
+            LOGGER.warn("Include table: {}", Arrays.toString(parsedShader.includeIds()));
         }
 
         int result = GlStateManager.glGetShaderi(handle, GL20C.GL_COMPILE_STATUS);
@@ -37,7 +40,7 @@ public class GlShader extends GlObject {
         this.setHandle(handle);
     }
 
-    public ResourceLocation getName() {
+    public Identifier getName() {
         return this.name;
     }
 

@@ -7,6 +7,12 @@ public interface ChunkJob extends CancellationToken {
     void execute(ChunkBuildContext context);
 
     boolean isStarted();
+    
+    boolean isBlocking();
 
-    int getEffort();
+    long getEstimatedSize();
+
+    long getEstimatedDuration();
+    
+    long getEstimatedUploadDuration();
 }

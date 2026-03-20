@@ -45,7 +45,7 @@ public abstract class BiomeMixin {
     private void setupColors() {
         this.cachedSpecialEffects = specialEffects;
 
-        var grassColor = this.cachedSpecialEffects.getGrassColorOverride();
+        var grassColor = this.cachedSpecialEffects.grassColorOverride();
 
         if (grassColor.isPresent()) {
             this.hasCustomGrassColor = true;
@@ -54,7 +54,7 @@ public abstract class BiomeMixin {
             this.hasCustomGrassColor = false;
         }
 
-        var foliageColor = this.cachedSpecialEffects.getFoliageColorOverride();
+        var foliageColor = this.cachedSpecialEffects.foliageColorOverride();
 
         if (foliageColor.isPresent()) {
             this.hasCustomFoliageColor = true;
@@ -84,7 +84,7 @@ public abstract class BiomeMixin {
             color = BiomeColorMaps.getGrassColor(this.defaultColorIndex);
         }
 
-        var modifier = this.cachedSpecialEffects.getGrassColorModifier();
+        var modifier = this.cachedSpecialEffects.grassColorModifier();
 
         if (modifier != BiomeSpecialEffects.GrassColorModifier.NONE) {
             color = modifier.modifyColor(x, z, color);

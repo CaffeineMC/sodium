@@ -1,21 +1,27 @@
 package net.caffeinemc.mods.sodium.client.gui.options.control;
 
-import net.caffeinemc.mods.sodium.client.gui.options.Option;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
+import net.caffeinemc.mods.sodium.client.config.structure.BooleanOption;
+import net.caffeinemc.mods.sodium.client.config.structure.Option;
+import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
+import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
+import net.caffeinemc.mods.sodium.client.gui.Colors;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.navigation.CommonInputs;
-import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 
-public class TickBoxControl implements Control<Boolean> {
-    private final Option<Boolean> option;
+public class TickBoxControl implements Control {
+    private final BooleanOption option;
 
-    public TickBoxControl(Option<Boolean> option) {
+    public TickBoxControl(BooleanOption option) {
         this.option = option;
     }
 
     @Override
-    public ControlElement<Boolean> createElement(Dim2i dim) {
-        return new TickBoxControlElement(this.option, dim);
+    public ControlElement createElement(Screen screen, AbstractOptionList list, Dim2i dim, ColorTheme theme) {
+        return new TickBoxControlElement(list, this.option, dim, theme);
     }
 
     @Override
@@ -24,52 +30,78 @@ public class TickBoxControl implements Control<Boolean> {
     }
 
     @Override
-    public Option<Boolean> getOption() {
+    public StatefulOption<Boolean> getOption() {
         return this.option;
     }
 
-    private static class TickBoxControlElement extends ControlElement<Boolean> {
-        private final Rect2i button;
+    private static class TickBoxControlElement extends ControlElement {
+        private final BooleanOption option;
 
-        public TickBoxControlElement(Option<Boolean> option, Dim2i dim) {
-            super(option, dim);
+        public TickBoxControlElement(AbstractOptionList list, BooleanOption option, Dim2i dim, ColorTheme theme) {
+            super(list, dim, theme);
 
-            this.button = new Rect2i(dim.getLimitX() - 16, dim.getCenterY() - 5, 10, 10);
+            this.option = option;
+        }
+
+        @Override
+        public Option getOption() {
+            return this.option;
         }
 
         @Override
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             super.render(graphics, mouseX, mouseY, delta);
 
-            final int x = this.button.getX();
-            final int y = this.button.getY();
-            final int w = x + this.button.getWidth();
-            final int h = y + this.button.getHeight();
+            if (!this.option.showControl()) {
+                return;
+            }
 
-            final boolean enabled = this.option.isAvailable();
-            final boolean ticked = enabled && this.option.getValue();
+            final int x = this.getLimitX() - 16;
+            final int y = this.getCenterY() - 5;
+            final int xEnd = x + 10;
+            final int yEnd = y + 10;
+
+            final boolean enabled = this.option.isEnabled();
+            final boolean ticked = this.option.getValidatedValue();
 
             final int color;
 
             if (enabled) {
-                color = ticked ? 0xFF94E4D3 : 0xFFFFFFFF;
+                color = ticked ? this.theme.theme : Colors.FOREGROUND;
             } else {
-                color = 0xFFAAAAAA;
+                color = Colors.FOREGROUND_DISABLED;
             }
 
             if (ticked) {
-                this.drawRect(graphics, x + 2, y + 2, w - 2, h - 2, color);
+                this.drawRect(graphics, x + 2, y + 2, xEnd - 2, yEnd - 2, color);
             }
 
-            this.drawBorder(graphics, x, y, w, h, color);
+            if (enabled) {
+                this.drawBorder(graphics, x, y, xEnd, yEnd, color);
+            } else {
+                var size = 3;
+                graphics.fill(x, y, x + size, y + 1, color);
+                graphics.fill(x, y, x + 1, y + size, color);
+
+                graphics.fill(xEnd - size, y, xEnd, y + 1, color);
+                graphics.fill(xEnd - 1, y, xEnd, y + size, color);
+
+                graphics.fill(x, yEnd - 1, x + size, yEnd, color);
+                graphics.fill(x, yEnd - size, x + 1, yEnd, color);
+
+                graphics.fill(xEnd - size, yEnd - 1, xEnd, yEnd, color);
+                graphics.fill(xEnd - 1, yEnd - size, xEnd, yEnd, color);
+            }
+
+            if (this.isHovered()) {
+                graphics.requestCursor(CursorTypes.POINTING_HAND);
+            }
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (this.option.isAvailable() && button == 0 && this.dim.containsCursor(mouseX, mouseY)) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+            if (this.option.isEnabled() && event.button() == 0 && this.isMouseOver(event.x(), event.y())) {
                 toggleControl();
-                this.playClickSound();
-
                 return true;
             }
 
@@ -77,21 +109,21 @@ public class TickBoxControl implements Control<Boolean> {
         }
 
         @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        public boolean keyPressed(KeyEvent event) {
             if (!isFocused()) return false;
 
-            if (CommonInputs.selected(keyCode)) {
+            if (event.isSelection()) {
                 toggleControl();
-                this.playClickSound();
-
                 return true;
             }
 
             return false;
         }
 
-        public void toggleControl() {
-            this.option.setValue(!this.option.getValue());
+        private void toggleControl() {
+            this.playClickSound();
+
+            this.option.modifyValue(!this.option.getValidatedValue());
         }
     }
 }

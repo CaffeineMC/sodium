@@ -533,7 +533,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
      * </p>
      * <p>
      * To ensure that this comparator can also be used in sets it considers the end points of the intervals, if the
-     * start points are the same. Otherwise the set will not be able to handle two different intervals, sharing
+     * start points are the same. Otherwise, the set will not be able to handle two different intervals, sharing
      * the same starting point, and omit one of the intervals.
      * </p>
      * <p>
@@ -562,7 +562,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
      * </p>
      * <p>
      * To ensure that this comparator can also be used in sets it considers the start points of the intervals, if the
-     * end points are the same. Otherwise the set will not be able to handle two different intervals, sharing
+     * end points are the same. Otherwise, the set will not be able to handle two different intervals, sharing
      * the same end point, and omit one of the intervals.
      * </p>
      * <p>

@@ -10,6 +10,7 @@ import net.minecraft.client.StringSplitter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
@@ -47,11 +48,6 @@ public class ConsoleRenderer {
         var currentTime = GLFW.glfwGetTime();
 
         Minecraft minecraft = Minecraft.getInstance();
-
-        var matrices = context.pose();
-        matrices.pushPose();
-        matrices.translate(0.0f, 0.0f, 1000.0f);
-
 
         var paddingWidth = 3;
         var paddingHeight = 1;
@@ -129,7 +125,6 @@ public class ConsoleRenderer {
             }
         }
 
-        matrices.popPose();
     }
 
     private static double getMessageOpacity(ActiveMessage message, double time) {
@@ -172,11 +167,12 @@ public class ConsoleRenderer {
     }
 
     private record ActiveMessage(MessageLevel level, Component text, double duration, double timestamp) {
+        private static final FontDescription UNIFORM = new FontDescription.Resource(Minecraft.UNIFORM_FONT);
 
         public static ActiveMessage create(Message message, double timestamp) {
             var text = (message.translated() ? Component.translatable(message.text()) : Component.literal(message.text()))
                     .copy()
-                    .withStyle((style) -> style.withFont(Minecraft.UNIFORM_FONT));
+                    .withStyle((style) -> style.withFont(UNIFORM));
 
             return new ActiveMessage(message.level(), text, message.duration(), timestamp);
         }

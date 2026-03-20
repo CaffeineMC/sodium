@@ -29,3 +29,6 @@ neoforge/runs
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Kotlin compiler working directory
+.kotlin

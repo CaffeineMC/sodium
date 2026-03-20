@@ -3,9 +3,11 @@ package net.caffeinemc.mods.sodium.client.render.chunk.region;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.gl.arena.GlBufferArena;
 import net.caffeinemc.mods.sodium.client.gl.arena.staging.StagingBuffer;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer;
+import net.caffeinemc.mods.sodium.client.gl.buffer.*;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
+import net.caffeinemc.mods.sodium.client.gl.device.MultiDrawBatch;
 import net.caffeinemc.mods.sodium.client.gl.tessellation.GlTessellation;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.data.SectionRenderDataStorage;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.ChunkRenderList;
@@ -20,6 +22,10 @@ import java.util.Arrays;
 import java.util.Map;
 
 public class RenderRegion {
+    public static final int SECTION_VERTEX_COUNT_ESTIMATE = 756;
+    public static final int SECTION_INDEX_COUNT_ESTIMATE = (SECTION_VERTEX_COUNT_ESTIMATE / DefaultTerrainRenderPasses.ALL.length / 4) * 6;
+    public static final int SECTION_BUFFER_ESTIMATE = SECTION_VERTEX_COUNT_ESTIMATE * ChunkMeshFormats.COMPACT.getVertexFormat().getStride() + SECTION_INDEX_COUNT_ESTIMATE * Integer.BYTES;
+
     public static final int REGION_WIDTH = 8;
     public static final int REGION_HEIGHT = 4;
     public static final int REGION_LENGTH = 8;
@@ -46,15 +52,19 @@ public class RenderRegion {
     private final ChunkRenderList renderList;
 
     private final RenderSection[] sections = new RenderSection[RenderRegion.REGION_SIZE];
+    private final long creationTime;
     private int sectionCount;
 
     private final Map<TerrainRenderPass, SectionRenderDataStorage> sectionRenderData = new Reference2ReferenceOpenHashMap<>();
     private DeviceResources resources;
 
+    private final Map<TerrainRenderPass, MultiDrawBatch> cachedBatches = new Reference2ReferenceOpenHashMap<>();
+
     public RenderRegion(int x, int y, int z, StagingBuffer stagingBuffer) {
         this.x = x;
         this.y = y;
         this.z = z;
+        this.creationTime = System.currentTimeMillis();
 
         this.stagingBuffer = stagingBuffer;
         this.renderList = new ChunkRenderList(this);
@@ -74,6 +84,10 @@ public class RenderRegion {
 
     public int getZ() {
         return this.z;
+    }
+
+    public long getCreationTime() {
+        return creationTime;
     }
 
     public int getChunkX() {
@@ -113,6 +127,35 @@ public class RenderRegion {
         }
 
         Arrays.fill(this.sections, null);
+
+        for (var batch : this.cachedBatches.values()) {
+            batch.delete();
+        }
+        this.cachedBatches.clear();
+    }
+
+    public void clearAllCachedBatches() {
+        for (var batch : this.cachedBatches.values()) {
+            batch.clear();
+        }
+    }
+
+    public void clearCachedBatchFor(TerrainRenderPass pass) {
+        var batch = this.cachedBatches.get(pass);
+        if (batch != null) {
+            batch.clear();
+        }
+    }
+
+    public MultiDrawBatch getCachedBatch(TerrainRenderPass pass) {
+        MultiDrawBatch batch = this.cachedBatches.get(pass);
+        if (batch != null) {
+            return batch;
+        }
+
+        batch = new MultiDrawBatch((ModelQuadFacing.COUNT * RenderRegion.REGION_SIZE) + 1);
+        this.cachedBatches.put(pass, batch);
+        return batch;
     }
 
     public boolean isEmpty() {
@@ -182,6 +225,10 @@ public class RenderRegion {
         this.sections[sectionIndex] = null;
         this.sectionCount--;
     }
+    
+    public float getFillFractionInv() {
+        return (float) RenderRegion.REGION_SIZE / (float) this.sectionCount;
+    }
 
     public RenderSection getSection(int id) {
         return this.sections[id];
@@ -213,6 +260,7 @@ public class RenderRegion {
     public static class DeviceResources {
         private final GlBufferArena geometryArena;
         private final GlBufferArena indexArena;
+        private final GlBufferStreamer chunkFades;
         private GlTessellation tessellation;
         private GlTessellation indexedTessellation;
 
@@ -227,11 +275,13 @@ public class RenderRegion {
         public DeviceResources(CommandList commandList, StagingBuffer stagingBuffer) {
             int stride = ChunkMeshFormats.COMPACT.getVertexFormat().getStride();
 
-            // the magic number 756 for the initial size is arbitrary, it was made up.
-            var initialVertices = 756;
-            this.geometryArena = new GlBufferArena(commandList, REGION_SIZE * initialVertices, stride, stagingBuffer);
-            var initialIndices = (initialVertices / 4) * 6;
-            this.indexArena = new GlBufferArena(commandList, REGION_SIZE * initialIndices, Integer.BYTES, stagingBuffer);
+            this.geometryArena = new GlBufferArena(commandList, REGION_SIZE * SECTION_VERTEX_COUNT_ESTIMATE, stride, stagingBuffer);
+            this.chunkFades = new GlBufferStreamer(commandList, REGION_SIZE, Integer.BYTES);
+            this.indexArena = new GlBufferArena(commandList, REGION_SIZE * SECTION_INDEX_COUNT_ESTIMATE, Integer.BYTES, stagingBuffer);
+        }
+
+        public void writeMeshTimes(int sectionIndex, int millisecondToCompare) {
+            chunkFades.writeData(sectionIndex, millisecondToCompare);
         }
 
         public void updateTessellation(CommandList commandList, GlTessellation tessellation) {
@@ -256,6 +306,10 @@ public class RenderRegion {
 
         public GlTessellation getIndexedTessellation() {
             return this.indexedTessellation;
+        }
+
+        public GlBuffer prepareChunkData(CommandList commandList) {
+            return chunkFades.prepare(commandList);
         }
 
         public void deleteTessellation(CommandList commandList) {
@@ -285,6 +339,7 @@ public class RenderRegion {
             this.deleteIndexedTessellation(commandList);
             this.geometryArena.delete(commandList);
             this.indexArena.delete(commandList);
+            this.chunkFades.delete(commandList);
         }
 
         public GlBufferArena getGeometryArena() {

@@ -6,14 +6,13 @@
     "defaultRequire": 1
   },
   "overwrites": {
-    "conformVisibility": true
+    "conformVisibility": true,
+    "requireAnnotations": true
   },
   "client": [
-      "core.model.quad.BakedQuadMixin",
-      "features.model.MultiPartBakedModelMixin",
-      "features.model.WeightedBakedModelMixin",
-      "features.model.WeightedRandomListMixin",
-      "features.render.model.block.ModelBlockRendererMixin",
-      "features.world.biome.BiomeMixin"
+    "core.model.quad.BakedQuadMixin",
+    "features.render.model.block.ModelBlockRendererMixin",
+    "features.world.biome.BiomeMixin",
+    "fabric.LevelSliceMixin"
   ]
 }

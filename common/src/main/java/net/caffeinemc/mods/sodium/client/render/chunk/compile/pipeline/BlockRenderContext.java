@@ -2,7 +2,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Vector3f;
@@ -17,7 +17,7 @@ public class BlockRenderContext {
     private final Vector3f origin = new Vector3f();
 
     private BlockState state;
-    private BakedModel model;
+    private BlockStateModel model;
 
     private long seed;
 
@@ -27,7 +27,7 @@ public class BlockRenderContext {
         this.collector = collector;
     }
 
-    public void update(BlockPos pos, BlockPos origin, BlockState state, BakedModel model, long seed) {
+    public void update(BlockPos pos, BlockPos origin, BlockState state, BlockStateModel model, long seed) {
         this.pos.set(pos);
         this.origin.set(origin.getX(), origin.getY(), origin.getZ());
 
@@ -68,7 +68,7 @@ public class BlockRenderContext {
     /**
      * @return The model used for this block
      */
-    public BakedModel model() {
+    public BlockStateModel model() {
         return this.model;
     }
 

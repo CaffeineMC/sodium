@@ -4,7 +4,6 @@ package net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
-import net.caffeinemc.mods.sodium.client.model.color.ColorProviderRegistry;
 import net.caffeinemc.mods.sodium.client.model.light.LightMode;
 import net.caffeinemc.mods.sodium.client.model.light.LightPipeline;
 import net.caffeinemc.mods.sodium.client.model.light.LightPipelineProvider;
@@ -28,8 +27,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.block.LiquidBlock;
-import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -40,7 +37,7 @@ import org.apache.commons.lang3.mutable.MutableFloat;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 public class DefaultFluidRenderer {
-    // TODO: allow this to be changed by vertex format, WARNING: make sure TranslucentGeometryCollector knows about EPSILON
+    // TODO: allow this to be changed by vertex format, WARNING: make sure TQuad knows about EPSILON
     // TODO: move fluid rendering to a separate render pass and control glPolygonOffset and glDepthFunc to fix this properly
     public static final float EPSILON = 0.001f;
     private static final float ALIGNED_EQUALS_EPSILON = 0.011f;
@@ -48,6 +45,8 @@ public class DefaultFluidRenderer {
     private final BlockPos.MutableBlockPos scratchPos = new BlockPos.MutableBlockPos();
     private final MutableFloat scratchHeight = new MutableFloat(0);
     private final MutableInt scratchSamples = new MutableInt();
+
+    private final BlockOcclusionCache occlusionCache = new BlockOcclusionCache();
 
     private final ModelQuadViewMutable quad = new ModelQuad();
 
@@ -65,21 +64,10 @@ public class DefaultFluidRenderer {
         this.lighters = lighters;
     }
 
-    private boolean isFluidOccluded(BlockAndTintGetter world, int x, int y, int z, Direction dir, BlockState blockState, FluidState fluid) {
-        //Test own block state first, this prevents waterlogged blocks from having hidden internal geometry
-        // which can result in z-fighting
-        var pos = this.scratchPos.set(x, y, z);
-        if (blockState.canOcclude() && blockState.isFaceSturdy(world, pos, dir, SupportType.FULL)) {
-            return true;
-        }
-
-        //Test neighboring block state
-        var adjPos = this.scratchPos.set(x + dir.getStepX(), y + dir.getStepY(), z + dir.getStepZ());
-        BlockState adjBlockState = world.getBlockState(adjPos);
-        if (PlatformBlockAccess.getInstance().shouldOccludeFluid(dir.getOpposite(), adjBlockState, fluid)) {
-            return true;
-        }
-        return adjBlockState.canOcclude() && dir != Direction.UP && adjBlockState.isFaceSturdy(world, adjPos, dir.getOpposite(), SupportType.FULL);
+    private boolean isFullBlockFluidOccluded(BlockAndTintGetter world, BlockPos pos, Direction dir, BlockState blockState, FluidState fluid) {
+        // check if this face of the fluid, assuming a full-block cull shape, is occluded by the block it's in or a neighboring block.
+        // it doesn't do a voxel shape comparison with the neighboring blocks since that is already done by isSideExposed
+        return !this.occlusionCache.shouldDrawFullBlockFluidSide(blockState, world, pos, dir, fluid, Shapes.block());
     }
 
     private boolean isSideExposed(BlockAndTintGetter world, int x, int y, int z, Direction dir, float height) {
@@ -96,7 +84,7 @@ public class DefaultFluidRenderer {
 
             VoxelShape threshold = Shapes.box(0.0D, 0.0D, 0.0D, 1.0D, height, 1.0D);
 
-            return !Shapes.blockOccudes(threshold, shape, dir);
+            return !Shapes.blockOccludes(threshold, shape, dir);
         }
 
         return true;
@@ -109,15 +97,16 @@ public class DefaultFluidRenderer {
 
         Fluid fluid = fluidState.getType();
 
-        boolean sfUp = this.isFluidOccluded(level, posX, posY, posZ, Direction.UP, blockState, fluidState);
-        boolean sfDown = this.isFluidOccluded(level, posX, posY, posZ, Direction.DOWN, blockState, fluidState) ||
+        boolean cullUp = this.isFullBlockFluidOccluded(level, blockPos, Direction.UP, blockState, fluidState);
+        boolean cullDown = this.isFullBlockFluidOccluded(level, blockPos, Direction.DOWN, blockState, fluidState) ||
                 !this.isSideExposed(level, posX, posY, posZ, Direction.DOWN, 0.8888889F);
-        boolean sfNorth = this.isFluidOccluded(level, posX, posY, posZ, Direction.NORTH, blockState, fluidState);
-        boolean sfSouth = this.isFluidOccluded(level, posX, posY, posZ, Direction.SOUTH, blockState, fluidState);
-        boolean sfWest = this.isFluidOccluded(level, posX, posY, posZ, Direction.WEST, blockState, fluidState);
-        boolean sfEast = this.isFluidOccluded(level, posX, posY, posZ, Direction.EAST, blockState, fluidState);
+        boolean cullNorth = this.isFullBlockFluidOccluded(level, blockPos, Direction.NORTH, blockState, fluidState);
+        boolean cullSouth = this.isFullBlockFluidOccluded(level, blockPos, Direction.SOUTH, blockState, fluidState);
+        boolean cullWest = this.isFullBlockFluidOccluded(level, blockPos, Direction.WEST, blockState, fluidState);
+        boolean cullEast = this.isFullBlockFluidOccluded(level, blockPos, Direction.EAST, blockState, fluidState);
 
-        if (sfUp && sfDown && sfEast && sfWest && sfNorth && sfSouth) {
+        // stop rendering if all faces of the fluid are occluded
+        if (cullUp && cullDown && cullEast && cullWest && cullNorth && cullSouth) {
             return;
         }
 
@@ -149,7 +138,7 @@ public class DefaultFluidRenderer {
                     .move(Direction.NORTH)
                     .move(Direction.EAST));
         }
-        float yOffset = sfDown ? 0.0F : EPSILON;
+        float yOffset = cullDown ? 0.0F : EPSILON;
 
         final ModelQuadViewMutable quad = this.quad;
 
@@ -158,7 +147,7 @@ public class DefaultFluidRenderer {
 
         quad.setFlags(0);
 
-        if (!sfUp && this.isSideExposed(level, posX, posY, posZ, Direction.UP, Math.min(Math.min(northWestHeight, southWestHeight), Math.min(southEastHeight, northEastHeight)))) {
+        if (!cullUp && this.isSideExposed(level, posX, posY, posZ, Direction.UP, Math.min(Math.min(northWestHeight, southWestHeight), Math.min(southEastHeight, northEastHeight)))) {
             northWestHeight -= EPSILON;
             southWestHeight -= EPSILON;
             southEastHeight -= EPSILON;
@@ -195,19 +184,6 @@ public class DefaultFluidRenderer {
                 v4 = sprite.getV(0.5F + (-cos - sin));
             }
 
-            float uAvg = (u1 + u2 + u3 + u4) / 4.0F;
-            float vAvg = (v1 + v2 + v3 + v4) / 4.0F;
-            float s3 = sprites[0].uvShrinkRatio();
-
-            u1 = Mth.lerp(s3, u1, uAvg);
-            u2 = Mth.lerp(s3, u2, uAvg);
-            u3 = Mth.lerp(s3, u3, uAvg);
-            u4 = Mth.lerp(s3, u4, uAvg);
-            v1 = Mth.lerp(s3, v1, vAvg);
-            v2 = Mth.lerp(s3, v2, vAvg);
-            v3 = Mth.lerp(s3, v3, vAvg);
-            v4 = Mth.lerp(s3, v4, vAvg);
-
             quad.setSprite(sprite);
 
             // top surface alignedness is calculated with a more relaxed epsilon
@@ -243,7 +219,7 @@ public class DefaultFluidRenderer {
             }
         }
 
-        if (!sfDown) {
+        if (!cullDown) {
             TextureAtlasSprite sprite = sprites[0];
 
             float minU = sprite.getU0();
@@ -273,7 +249,7 @@ public class DefaultFluidRenderer {
 
             switch (dir) {
                 case NORTH -> {
-                    if (sfNorth) {
+                    if (cullNorth) {
                         continue;
                     }
                     c1 = northWestHeight;
@@ -284,7 +260,7 @@ public class DefaultFluidRenderer {
                     z2 = z1;
                 }
                 case SOUTH -> {
-                    if (sfSouth) {
+                    if (cullSouth) {
                         continue;
                     }
                     c1 = southEastHeight;
@@ -295,7 +271,7 @@ public class DefaultFluidRenderer {
                     z2 = z1;
                 }
                 case WEST -> {
-                    if (sfWest) {
+                    if (cullWest) {
                         continue;
                     }
                     c1 = southWestHeight;
@@ -306,7 +282,7 @@ public class DefaultFluidRenderer {
                     z2 = 0.0f;
                 }
                 case EAST -> {
-                    if (sfEast) {
+                    if (cullEast) {
                         continue;
                     }
                     c1 = northEastHeight;
@@ -340,11 +316,11 @@ public class DefaultFluidRenderer {
                     }
                 }
 
-                float u1 = sprite.getU(0.0F);
-                float u2 = sprite.getU(0.5F);
-                float v1 = sprite.getV((1.0F - c1) * 0.5F);
-                float v2 = sprite.getV((1.0F - c2) * 0.5F);
-                float v3 = sprite.getV(0.5F);
+                float u1 = sprite.getU(0.75F);
+                float u2 = sprite.getU(0.25F);
+                float v1 = sprite.getV(0.25F + (1.0F - c1) * 0.5F);
+                float v2 = sprite.getV(0.25F + (1.0F - c2) * 0.5F);
+                float v3 = sprite.getV(0.75F);
 
                 quad.setSprite(sprite);
 
@@ -388,7 +364,7 @@ public class DefaultFluidRenderer {
 
         lighter.calculate(quad, pos, light, null, dir, false, false);
 
-        colorProvider.getColors(level, pos, scratchPos, fluidState, quad, this.quadColors);
+        colorProvider.getColors(level, pos, scratchPos, fluidState, quad, this.quadColors, level.hasBiomeBlend());
 
         // multiply the per-vertex color against the combined brightness
         // the combined brightness is the per-vertex brightness multiplied by the block's brightness
@@ -435,7 +411,10 @@ public class DefaultFluidRenderer {
                 normal = NormI8.flipPacked(normal);
             }
 
-            collector.appendQuad(normal, vertices, facing);
+            // discard the quad if it's invalid (i.e. not visible)
+            if (collector.appendQuad(vertices, facing, normal)) {
+                return;
+            }
         }
 
         var vertexBuffer = builder.getVertexBuffer(facing);

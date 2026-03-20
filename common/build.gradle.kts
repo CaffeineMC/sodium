@@ -2,7 +2,7 @@ plugins {
     id("multiloader-base")
     id("java-library")
 
-    id("fabric-loom") version ("1.8.9")
+    id("fabric-loom") version ("1.13.4")
 }
 
 base {
@@ -16,7 +16,7 @@ val configurationPreLaunch = configurations.create("preLaunchDeps") {
 sourceSets {
     val main = getByName("main")
     val api = create("api")
-    val workarounds = create("workarounds")
+    val boot = create("boot")
 
     api.apply {
         java {
@@ -24,7 +24,7 @@ sourceSets {
         }
     }
 
-    workarounds.apply {
+    boot.apply {
         java {
             compileClasspath += configurationPreLaunch
         }
@@ -33,11 +33,15 @@ sourceSets {
     main.apply {
         java {
             compileClasspath += api.output
-            compileClasspath += workarounds.output
+            compileClasspath += boot.output
         }
     }
 
     create("desktop")
+}
+
+repositories {
+    mavenLocal()
 }
 
 dependencies {
@@ -50,31 +54,21 @@ dependencies {
         }
     })
 
-    compileOnly("io.github.llamalad7:mixinextras-common:0.3.5")
-    annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5")
+    compileOnly("io.github.llamalad7:mixinextras-common:0.5.0")
+    annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0")
 
     compileOnly("net.fabricmc:sponge-mixin:0.13.2+mixin.0.8.5")
     compileOnly("net.fabricmc:fabric-loader:${BuildConfig.FABRIC_LOADER_VERSION}")
-
-    fun addDependentFabricModule(name: String) {
-        modCompileOnly(fabricApi.module(name, BuildConfig.FABRIC_API_VERSION))
-    }
-
-    addDependentFabricModule("fabric-api-base")
-    addDependentFabricModule("fabric-block-view-api-v2")
-    addDependentFabricModule("fabric-renderer-api-v1")
-    addDependentFabricModule("fabric-rendering-data-attachment-v1")
-
-    modCompileOnly("net.fabricmc.fabric-api:fabric-renderer-api-v1:3.2.9+1172e897d7")
 
     // We need to be careful during pre-launch that we don't touch any Minecraft classes, since other mods
     // will not yet have an opportunity to apply transformations.
     configurationPreLaunch("org.lwjgl:lwjgl:3.3.3")
     configurationPreLaunch("org.lwjgl:lwjgl-opengl:3.3.3")
+    configurationPreLaunch("org.lwjgl:lwjgl-glfw:3.3.3")
     configurationPreLaunch("net.java.dev.jna:jna:5.14.0")
     configurationPreLaunch("net.java.dev.jna:jna-platform:5.14.0")
     configurationPreLaunch("org.slf4j:slf4j-api:2.0.9")
-    configurationPreLaunch("org.jetbrains:annotations:25.0.0")
+    configurationPreLaunch("org.jspecify:jspecify:1.0.0")
 }
 
 loom {
@@ -93,6 +87,21 @@ fun exportSourceSetJava(name: String, sourceSet: SourceSet) {
 
     val compileTask = tasks.getByName<JavaCompile>(sourceSet.compileJavaTaskName)
     artifacts.add(configuration.name, compileTask.destinationDirectory) {
+        builtBy(compileTask)
+    }
+}
+
+fun exportSourceSetSources(name: String, sourceSet: SourceSet) {
+    val configuration = configurations.create("${name}Sources") {
+        isCanBeResolved = true
+        isCanBeConsumed = true
+    }
+
+    val compileTask = tasks.register<Copy>(sourceSet.getTaskName("process", "sources")) {
+        from(sourceSet.allSource)
+        into(file(project.layout.buildDirectory).resolve("sources").resolve(sourceSet.name))
+    }.get()
+    artifacts.add(configuration.name, compileTask.destinationDir) {
         builtBy(compileTask)
     }
 }
@@ -117,12 +126,13 @@ fun exportSourceSetResources(name: String, sourceSet: SourceSet) {
 // Exports the compiled output of the source set to the named configuration.
 fun exportSourceSet(name: String, sourceSet: SourceSet) {
     exportSourceSetJava(name, sourceSet)
+    exportSourceSetSources(name, sourceSet)
     exportSourceSetResources(name, sourceSet)
 }
 
 exportSourceSet("commonMain", sourceSets["main"])
 exportSourceSet("commonApi", sourceSets["api"])
-exportSourceSet("commonEarlyLaunch", sourceSets["workarounds"])
+exportSourceSet("commonBoot", sourceSets["boot"])
 exportSourceSet("commonDesktop", sourceSets["desktop"])
 
 tasks.jar { enabled = false }

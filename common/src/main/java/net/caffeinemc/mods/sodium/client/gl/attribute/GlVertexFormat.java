@@ -75,7 +75,7 @@ public class GlVertexFormat {
         }
 
         /**
-         * Adds an vertex attribute which will be bound to the given generic attribute type.
+         * Adds a vertex attribute which will be bound to the given generic attribute type.
          *
          * @param type The generic attribute type
          * @param attribute The attribute to bind

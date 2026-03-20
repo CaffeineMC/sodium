@@ -2,15 +2,10 @@ package net.caffeinemc.mods.sodium.client.checks;
 
 import net.caffeinemc.mods.sodium.client.console.Console;
 import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.FilePackResources;
-import net.minecraft.server.packs.PackResources;
-import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.PathPackResources;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.resources.ResourceManager;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +33,9 @@ public class ResourcePackScanner {
             "rendertype_translucent.json",
             "rendertype_tripwire.vsh",
             "rendertype_tripwire.fsh",
-            "rendertype_tripwire.json"
+            "rendertype_tripwire.json",
+            "terrain.vsh",
+            "terrain.fsh"
     );
 
     private static final Set<String> SHADER_INCLUDE_BLACKLIST = Set.of(
@@ -143,7 +140,7 @@ public class ResourcePackScanner {
         }
     }
 
-    @NotNull
+    @NonNull
     private static ScannedResourcePack scanResources(PackResources resourcePack) {
         final var ignoredShaders = determineIgnoredShaders(resourcePack);
 
@@ -155,7 +152,7 @@ public class ResourcePackScanner {
         final var unsupportedShaderPrograms = new ArrayList<String>();
         final var unsupportedShaderIncludes = new ArrayList<String>();
 
-        resourcePack.listResources(PackType.CLIENT_RESOURCES, ResourceLocation.DEFAULT_NAMESPACE, "shaders", (identifier, supplier) -> {
+        resourcePack.listResources(PackType.CLIENT_RESOURCES, Identifier.DEFAULT_NAMESPACE, "shaders", (identifier, supplier) -> {
             // Trim full shader file path to only contain the filename
             final var path = identifier.getPath();
             final var name = path.substring(path.lastIndexOf('/') + 1);
@@ -178,7 +175,7 @@ public class ResourcePackScanner {
     }
 
     private static boolean isExternalResourcePack(PackResources pack) {
-        return pack instanceof PathPackResources || pack instanceof FilePackResources;
+        return pack instanceof PathPackResources || pack instanceof FilePackResources || pack instanceof CompositePackResources;
     }
 
     private static String getResourcePackName(PackResources pack) {

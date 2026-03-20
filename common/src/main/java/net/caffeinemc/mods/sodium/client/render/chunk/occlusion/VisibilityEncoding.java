@@ -2,12 +2,12 @@ package net.caffeinemc.mods.sodium.client.render.chunk.occlusion;
 
 
 import net.minecraft.client.renderer.chunk.VisibilitySet;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public class VisibilityEncoding {
     public static final long NULL = 0L;
 
-    public static long encode(@NotNull VisibilitySet occlusionData) {
+    public static long encode(@NonNull VisibilitySet occlusionData) {
         long visibilityData = 0;
 
         for (int from = 0; from < GraphDirection.COUNT; from++) {

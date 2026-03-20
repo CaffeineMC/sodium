@@ -1,19 +1,18 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger;
 
-import java.util.List;
-import java.util.function.BiConsumer;
-
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicData;
-import org.joml.Vector3dc;
-
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.AlignableNormal;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicData;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicTopoData;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
 import net.minecraft.core.SectionPos;
+import org.joml.Vector3dc;
+import org.joml.Vector3fc;
+
+import java.util.List;
+import java.util.function.BiConsumer;
 
 /**
  * This class is a central point in translucency sorting. It counts the number
@@ -30,7 +29,7 @@ public class SortTriggering {
      * To avoid generating a collection of the triggered sections, this callback is
      * used to process the triggered sections directly as they are queried from the
      * normal lists' interval trees. The callback is given the section coordinates,
-     * and a boolean indicating if the trigger was an direct trigger.
+     * and a boolean indicating if the trigger was a direct trigger.
      */
     private BiConsumer<Long, Boolean> triggerSectionCallback;
 
@@ -39,7 +38,7 @@ public class SortTriggering {
      * later) it might not have the required trigger data registered yet so that it
      * might miss being triggered between being scheduled for rebuild and being
      * integrated. This is solved by catching up the section being integrated with
-     * the movement that has happened in the mean time.
+     * the movement that has happened in the meantime.
      */
     private DynamicData catchupData = null;
 
@@ -49,7 +48,7 @@ public class SortTriggering {
      */
     private int gfniTriggerCount = 0;
     private int directTriggerCount = 0;
-    private final ObjectOpenHashSet<AlignableNormal> triggeredNormals = new ObjectOpenHashSet<>();
+    private final ObjectOpenHashSet<Vector3fc> triggeredNormals = new ObjectOpenHashSet<>();
     private int triggeredNormalCount = 0;
 
     /**
@@ -99,7 +98,7 @@ public class SortTriggering {
         return this.catchupData != null;
     }
 
-    void triggerSectionGFNI(long sectionPos, AlignableNormal normal) {
+    void triggerSectionGFNI(long sectionPos, Vector3fc normal) {
         if (this.isCatchingUp()) {
             this.triggerSectionCatchup(sectionPos, false);
             return;
@@ -124,7 +123,7 @@ public class SortTriggering {
         // catchup triggering might be disabled
         if (this.triggerSectionCallback != null) {
             // do prepareTrigger here since it can't be done through the render section as
-            // it hasn't been put there yet or it contains an old data object
+            // it hasn't been put there yet, or it contains an old data object
             this.catchupData.prepareTrigger(isDirectTrigger);
 
             // schedule the section to be re-sorted
@@ -223,13 +222,13 @@ public class SortTriggering {
         }
     }
 
-    public void addDebugStrings(List<String> list) {
-        var sortBehavior = SodiumClientMod.options().performance.getSortBehavior();
-        if (sortBehavior.getSortMode() == SortBehavior.SortMode.NONE) {
-            list.add("TS OFF");
-        } else {
-            list.add("TS (%s) NL=%02d TrN=%02d TrS=G%03d/D%03d".formatted(
+    public void addDebugStrings(List<String> list, SortBehavior sortBehavior, boolean verbose) {
+        var splittingMode = SodiumClientMod.options().performance.quadSplittingMode;
+
+        if (verbose) {
+            list.add("TS (%s,%s) NL=%02d TrN=%02d TrS=G%03d/D%03d".formatted(
                     sortBehavior.getShortName(),
+                    splittingMode.getShortName(),
                     this.gfni.getUniqueNormalCount(),
                     this.triggeredNormalCount,
                     this.gfniTriggerCount,
@@ -240,6 +239,13 @@ public class SortTriggering {
                     this.sortTypeCounters[SortType.STATIC_TOPO.ordinal()],
                     this.sortTypeCounters[SortType.DYNAMIC.ordinal()],
                     this.direct.getDirectTriggerCount()));
+        } else {
+            list.add("TS (%s,%s) St=%d Dy=%d".formatted(
+                    sortBehavior.getShortName(),
+                    splittingMode.getShortName(),
+                    this.sortTypeCounters[SortType.STATIC_NORMAL_RELATIVE.ordinal()] + this.sortTypeCounters[SortType.STATIC_TOPO.ordinal()],
+                    this.sortTypeCounters[SortType.DYNAMIC.ordinal()]
+            ));
         }
     }
 }

@@ -4,7 +4,7 @@ import net.caffeinemc.mods.sodium.client.world.SodiumAuxiliaryLightManager;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.chunk.LevelChunk;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public interface PlatformLevelAccess {
     PlatformLevelAccess INSTANCE = Services.load(PlatformLevelAccess.class);

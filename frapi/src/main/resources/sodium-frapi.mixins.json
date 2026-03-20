@@ -1,0 +1,28 @@
+{
+  "package": "net.caffeinemc.mods.sodium.mixin.frapi",
+  "required": true,
+  "compatibilityLevel": "JAVA_17",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "conformVisibility": true,
+    "requireAnnotations": true
+  },
+  "client": [
+    "BakedModelMixin",
+    "BlockModelPartMixin",
+    "BlockRenderDispatcherAccessor",
+    "BlockRenderDispatcherMixin",
+    "ItemFeatureRendererMixin",
+    "ItemLayerRenderStateMixin",
+    "ItemRendererAccessor",
+    "ItemRenderStateMixin",
+    "ModelBlockRendererAccessor",
+    "ModelBlockRendererMixin",
+    "QuadViewImplMixin",
+    "MutableQuadViewImplMixin",
+    "SubmitNodeCollectionMixin",
+    "SubmitNodeStorageMixin"
+  ]
+}

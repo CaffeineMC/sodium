@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.occlusion;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
+import net.caffeinemc.mods.sodium.client.render.chunk.lists.RenderSectionVisitor;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.util.collections.DoubleBufferedQueue;
@@ -10,7 +11,7 @@ import net.caffeinemc.mods.sodium.client.util.collections.WriteQueue;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public class OcclusionCuller {
     private final Long2ReferenceMap<RenderSection> sections;
@@ -18,12 +19,16 @@ public class OcclusionCuller {
 
     private final DoubleBufferedQueue<RenderSection> queue = new DoubleBufferedQueue<>();
 
+    private int outOfWorldRadius;
+    private int outOfWorldHeight;
+    private int outOfWorldDirection;
+
     public OcclusionCuller(Long2ReferenceMap<RenderSection> sections, Level level) {
         this.sections = sections;
         this.level = level;
     }
 
-    public void findVisible(Visitor visitor,
+    public void findVisible(RenderSectionVisitor visitor,
                             Viewport viewport,
                             float searchDistance,
                             boolean useOcclusionCulling,
@@ -32,14 +37,29 @@ public class OcclusionCuller {
         final var queues = this.queue;
         queues.reset();
 
-        this.init(visitor, queues.write(), viewport, searchDistance, useOcclusionCulling, frame);
+        var initWriteQueue = this.queue.write();
+        this.init(visitor, initWriteQueue, viewport, useOcclusionCulling, frame);
+
+        // initial write so that the first flip doesn't stop the loop
+        if (this.outOfWorldRadius == 0) {
+            while (initWriteQueue.isEmpty() && this.initOutsideWorldHeight(initWriteQueue, viewport, searchDistance, frame)) {
+                this.outOfWorldRadius++;
+            }
+        }
 
         while (queues.flip()) {
+            if (this.outOfWorldRadius > 0) {
+                this.initOutsideWorldHeight(queues.write(), viewport, searchDistance, frame);
+                this.outOfWorldRadius++;
+            }
+
             processQueue(visitor, viewport, searchDistance, useOcclusionCulling, frame, queues.read(), queues.write());
         }
+
+        this.addNearbySections(visitor, viewport, frame);
     }
 
-    private static void processQueue(Visitor visitor,
+    private static void processQueue(RenderSectionVisitor visitor,
                                      Viewport viewport,
                                      float searchDistance,
                                      boolean useOcclusionCulling,
@@ -151,7 +171,7 @@ public class OcclusionCuller {
         }
     }
 
-    private static void visitNode(final WriteQueue<RenderSection> queue, @NotNull RenderSection render, int incoming, int frame) {
+    private static void visitNode(final WriteQueue<RenderSection> queue, @NonNull RenderSection render, int incoming, int frame) {
         if (render.getLastVisibleFrame() != frame) {
             // This is the first time we are visiting this section during the given frame, so we must
             // reset the state.
@@ -187,9 +207,10 @@ public class OcclusionCuller {
 
         // coordinates of the point to compare (in view space)
         // this is the closest point within the bounding box to the center (0, 0, 0)
-        float dx = nearestToZero(ox, ox + 16) - camera.fracX;
-        float dy = nearestToZero(oy, oy + 16) - camera.fracY;
-        float dz = nearestToZero(oz, oz + 16) - camera.fracZ;
+        // the bounding box is expanded by 1 block in each direction due to the maximum allowed size of block models.
+        float dx = nearestToZero(ox - 1, ox + 17) - camera.fracX;
+        float dy = nearestToZero(oy - 1, oy + 17) - camera.fracY;
+        float dz = nearestToZero(oz - 1, oz + 17) - camera.fracZ;
 
         // vanilla's "cylindrical fog" algorithm
         // max(length(distance.xz), abs(distance.y))
@@ -205,20 +226,50 @@ public class OcclusionCuller {
         return clamped;
     }
 
-    // The bounding box of a chunk section must be large enough to contain all possible geometry within it. Block models
-    // can extend outside a block volume by +/- 1.0 blocks on all axis. Additionally, we make use of a small epsilon
-    // to deal with floating point imprecision during a frustum check (see GH#2132).
-    private static final float CHUNK_SECTION_SIZE = 8.0f /* chunk bounds */ + 1.0f /* maximum model extent */ + 0.125f /* epsilon */;
-
     public static boolean isWithinFrustum(Viewport viewport, RenderSection section) {
-        return viewport.isBoxVisible(section.getCenterX(), section.getCenterY(), section.getCenterZ(),
-                CHUNK_SECTION_SIZE, CHUNK_SECTION_SIZE, CHUNK_SECTION_SIZE);
+        return viewport.isBoxVisible(section.getCenterX(), section.getCenterY(), section.getCenterZ());
     }
 
-    private void init(Visitor visitor,
+    // Only used for nearby sections with large models
+    public static boolean isWithinNearbySectionFrustum(Viewport viewport, RenderSection section) {
+        return viewport.isBoxVisibleLooser(section.getCenterX(), section.getCenterY(), section.getCenterZ());
+    }
+
+    // This method visits sections near the origin that are not in the path of the graph traversal
+    // but have bounding boxes that may intersect with the frustum. It does this additional check
+    // for all neighboring, even diagonally neighboring, sections around the origin to render them
+    // if their extended bounding box is visible, and they may render large models that extend
+    // outside the 16x16x16 base volume of the section.
+    private void addNearbySections(RenderSectionVisitor visitor, Viewport viewport, int frame) {
+        var origin = viewport.getChunkCoord();
+        var originX = origin.getX();
+        var originY = origin.getY();
+        var originZ = origin.getZ();
+
+        for (var dx = -1; dx <= 1; dx++) {
+            for (var dy = -1; dy <= 1; dy++) {
+                for (var dz = -1; dz <= 1; dz++) {
+                    if (dx == 0 && dy == 0 && dz == 0) {
+                        continue;
+                    }
+
+                    var section = this.getRenderSection(originX + dx, originY + dy, originZ + dz);
+
+                    // additionally render not yet visited but visible sections
+                    if (section != null && section.getLastVisibleFrame() != frame && isWithinNearbySectionFrustum(viewport, section)) {
+                        // reset state on first visit, but don't enqueue
+                        section.setLastVisibleFrame(frame);
+
+                        visitor.visit(section);
+                    }
+                }
+            }
+        }
+    }
+
+    private void init(RenderSectionVisitor visitor,
                       WriteQueue<RenderSection> queue,
                       Viewport viewport,
-                      float searchDistance,
                       boolean useOcclusionCulling,
                       int frame)
     {
@@ -226,18 +277,21 @@ public class OcclusionCuller {
 
         if (origin.getY() < this.level.getMinSectionY()) {
             // below the level
-            this.initOutsideWorldHeight(queue, viewport, searchDistance, frame,
-                    this.level.getMinSectionY(), GraphDirection.DOWN);
+            this.outOfWorldRadius = 0;
+            this.outOfWorldHeight = this.level.getMinSectionY();
+            this.outOfWorldDirection = GraphDirection.DOWN;
         } else if (origin.getY() > this.level.getMaxSectionY()) {
             // above the level
-            this.initOutsideWorldHeight(queue, viewport, searchDistance, frame,
-                    this.level.getMaxSectionY(), GraphDirection.UP);
+            this.outOfWorldRadius = 0;
+            this.outOfWorldHeight = this.level.getMaxSectionY();
+            this.outOfWorldDirection = GraphDirection.UP;
         } else {
+            this.outOfWorldRadius = -1;
             this.initWithinWorld(visitor, queue, viewport, useOcclusionCulling, frame);
         }
     }
 
-    private void initWithinWorld(Visitor visitor, WriteQueue<RenderSection> queue, Viewport viewport, boolean useOcclusionCulling, int frame) {
+    private void initWithinWorld(RenderSectionVisitor visitor, WriteQueue<RenderSection> queue, Viewport viewport, boolean useOcclusionCulling, int frame) {
         var origin = viewport.getChunkCoord();
         var section = this.getRenderSection(origin.getX(), origin.getY(), origin.getZ());
 
@@ -267,21 +321,23 @@ public class OcclusionCuller {
     // Enqueues sections that are inside the viewport using diamond spiral iteration to avoid sorting and ensure a
     // consistent order. Innermost layers are enqueued first. Within each layer, iteration starts at the northernmost
     // section and proceeds counterclockwise (N->W->S->E).
-    private void initOutsideWorldHeight(WriteQueue<RenderSection> queue,
+    private boolean initOutsideWorldHeight(WriteQueue<RenderSection> queue,
                                         Viewport viewport,
                                         float searchDistance,
-                                        int frame,
-                                        int height,
-                                        int direction)
-    {
+                                        int frame) {
         var origin = viewport.getChunkCoord();
         var radius = Mth.floor(searchDistance / 16.0f);
+        var height = this.outOfWorldHeight;
+        var direction = this.outOfWorldDirection;
+        var layer = this.outOfWorldRadius;
 
         // Layer 0
-        this.tryVisitNode(queue, origin.getX(), height, origin.getZ(), direction, frame, viewport);
+        if (layer == 0) {
+            this.tryVisitNode(queue, origin.getX(), height, origin.getZ(), direction, frame, viewport);
+        }
 
         // Complete layers, excluding layer 0
-        for (int layer = 1; layer <= radius; layer++) {
+        else if (layer <= radius) {
             for (int z = -layer; z < layer; z++) {
                 int x = Math.abs(z) - layer;
                 this.tryVisitNode(queue, origin.getX() + x, height, origin.getZ() + z, direction, frame, viewport);
@@ -294,7 +350,7 @@ public class OcclusionCuller {
         }
 
         // Incomplete layers
-        for (int layer = radius + 1; layer <= 2 * radius; layer++) {
+        else if (layer <= 2 * radius) {
             int l = layer - radius;
 
             for (int z = -radius; z <= -l; z++) {
@@ -317,6 +373,12 @@ public class OcclusionCuller {
                 this.tryVisitNode(queue, origin.getX() + x, height, origin.getZ() + z, direction, frame, viewport);
             }
         }
+
+        // nothing more to init
+        else {
+            return false;
+        }
+        return true;
     }
 
     private void tryVisitNode(WriteQueue<RenderSection> queue, int x, int y, int z, int direction, int frame, Viewport viewport) {
@@ -333,7 +395,4 @@ public class OcclusionCuller {
         return this.sections.get(SectionPos.asLong(x, y, z));
     }
 
-    public interface Visitor {
-        void visit(RenderSection section);
-    }
 }

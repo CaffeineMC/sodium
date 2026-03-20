@@ -1,16 +1,16 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.data;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionFlags;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.VisibilityEncoding;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
-import net.caffeinemc.mods.sodium.client.render.texture.SpriteUtil;
 import net.minecraft.client.renderer.chunk.VisibilitySet;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.IntFunction;
@@ -29,11 +29,11 @@ public class BuiltSectionInfo {
     public final BlockEntity @Nullable[] culledBlockEntities;
     public final TextureAtlasSprite @Nullable[] animatedSprites;
 
-    private BuiltSectionInfo(@NotNull Collection<TerrainRenderPass> blockRenderPasses,
-                             @NotNull Collection<BlockEntity> globalBlockEntities,
-                             @NotNull Collection<BlockEntity> culledBlockEntities,
-                             @NotNull Collection<TextureAtlasSprite> animatedSprites,
-                             @NotNull VisibilitySet occlusionData) {
+    private BuiltSectionInfo(@NonNull Collection<TerrainRenderPass> blockRenderPasses,
+                             @NonNull Collection<BlockEntity> globalBlockEntities,
+                             @NonNull Collection<BlockEntity> culledBlockEntities,
+                             @NonNull Collection<TextureAtlasSprite> animatedSprites,
+                             @NonNull VisibilitySet occlusionData) {
         this.globalBlockEntities = toArray(globalBlockEntities, BlockEntity[]::new);
         this.culledBlockEntities = toArray(culledBlockEntities, BlockEntity[]::new);
         this.animatedSprites = toArray(animatedSprites, TextureAtlasSprite[]::new);
@@ -78,8 +78,8 @@ public class BuiltSectionInfo {
          * before rendering as necessary.
          * @param sprite The sprite
          */
-        public void addSprite(TextureAtlasSprite sprite) {
-            if (SpriteUtil.hasAnimation(sprite)) {
+        public void addSprite(@NonNull TextureAtlasSprite sprite) {
+            if (SpriteUtil.INSTANCE.hasAnimation(sprite)) {
                 this.animatedSprites.add(sprite);
             }
         }

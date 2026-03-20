@@ -8,6 +8,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigge
  */
 public class BSPResult extends GeometryPlanes {
     private BSPNode rootNode;
+    private UpdatedQuadsList updatedQuadsList;
 
     public BSPNode getRootNode() {
         return this.rootNode;
@@ -15,5 +16,13 @@ public class BSPResult extends GeometryPlanes {
 
     public void setRootNode(BSPNode rootNode) {
         this.rootNode = rootNode;
+    }
+
+    public UpdatedQuadsList getUpdatedQuadsList() {
+        return this.updatedQuadsList;
+    }
+
+    public void setUpdatedQuadIndexes(UpdatedQuadsList updatedQuadsList) {
+        this.updatedQuadsList = updatedQuadsList;
     }
 }

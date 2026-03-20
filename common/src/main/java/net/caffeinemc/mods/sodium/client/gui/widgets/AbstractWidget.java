@@ -1,5 +1,7 @@
 package net.caffeinemc.mods.sodium.client.gui.widgets;
 
+import net.caffeinemc.mods.sodium.client.gui.Dimensioned;
+import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.InputType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
@@ -11,20 +13,27 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.sounds.SoundEvents;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
-public abstract class AbstractWidget implements Renderable, GuiEventListener, NarratableEntry {
-    protected final Font font;
+public abstract class AbstractWidget implements Renderable, GuiEventListener, NarratableEntry, Dimensioned {
+    protected final Font font = Minecraft.getInstance().font;
+    private final Dim2i dim;
     protected boolean focused;
     protected boolean hovered;
 
-    protected AbstractWidget() {
-        this.font = Minecraft.getInstance().font;
+    protected AbstractWidget(Dim2i dim) {
+        this.dim = dim;
+    }
+
+    @Override
+    public Dim2i getDimensions() {
+        return this.dim;
     }
 
     protected void drawString(GuiGraphics graphics, String text, int x, int y, int color) {
@@ -33,6 +42,10 @@ public abstract class AbstractWidget implements Renderable, GuiEventListener, Na
 
     protected void drawString(GuiGraphics graphics, Component text, int x, int y, int color) {
         graphics.drawString(this.font, text, x, y, color);
+    }
+
+    protected void drawCenteredString(GuiGraphics graphics, Component text, int x, int y, int color) {
+        graphics.drawCenteredString(this.font, text, x, y, color);
     }
 
     public boolean isHovered() {
@@ -48,12 +61,22 @@ public abstract class AbstractWidget implements Renderable, GuiEventListener, Na
                 .play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F));
     }
 
+    @Override
+    public @NonNull ScreenRectangle getRectangle() {
+        return new ScreenRectangle(this.getX(), this.getY(), this.getWidth(), this.getHeight());
+    }
+
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return mouseX >= this.getX() && mouseX < this.getLimitX() && mouseY >= this.getY() && mouseY < this.getLimitY();
+    }
+
     protected int getStringWidth(FormattedText text) {
         return this.font.width(text);
     }
 
     @Override
-    public NarratableEntry.@NotNull NarrationPriority narrationPriority() {
+    public NarratableEntry.@NonNull NarrationPriority narrationPriority() {
         if (this.focused) {
             return NarratableEntry.NarrationPriority.FOCUSED;
         }
@@ -94,6 +117,32 @@ public abstract class AbstractWidget implements Renderable, GuiEventListener, Na
                 this.focused = true;
             }
         }
+    }
+
+    protected String truncateTextToFit(String name, int targetWidth) {
+        var suffix = "...";
+        var suffixWidth = this.font.width(suffix);
+        var nameFontWidth = this.font.width(name);
+        if (nameFontWidth > targetWidth) {
+            targetWidth -= suffixWidth;
+            int maxLabelChars = name.length() - 3;
+            int minLabelChars = 1;
+
+            // binary search on how many chars fit
+            while (maxLabelChars - minLabelChars > 1) {
+                var mid = (maxLabelChars + minLabelChars) / 2;
+                var midName = name.substring(0, mid);
+                var midWidth = this.font.width(midName);
+                if (midWidth > targetWidth) {
+                    maxLabelChars = mid;
+                } else {
+                    minLabelChars = mid;
+                }
+            }
+
+            name = name.substring(0, minLabelChars).trim() + suffix;
+        }
+        return name;
     }
 
     protected void drawBorder(GuiGraphics graphics, int x1, int y1, int x2, int y2, int color) {

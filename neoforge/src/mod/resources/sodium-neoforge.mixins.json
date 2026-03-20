@@ -1,0 +1,25 @@
+{
+  "package" : "net.caffeinemc.mods.sodium.mixin",
+  "required" : true,
+  "compatibilityLevel" : "JAVA_17",
+  "injectors" : {
+    "defaultRequire" : 1
+  },
+  "overwrites" : {
+    "conformVisibility" : true,
+    "requireAnnotations": true
+  },
+  "client" : [
+    "core.model.quad.BakedQuadMixin",
+    "features.render.model.block.ModelBlockRendererMixin",
+    "features.world.biome.BiomeMixin",
+    "platform.neoforge.AbstractBlockRenderContextMixin",
+    "platform.neoforge.AuxiliaryLightManagerMixin",
+    "platform.neoforge.ClientHooksMixin",
+    "platform.neoforge.EntrypointMixin",
+    "platform.neoforge.LevelRendererMixin",
+    "platform.neoforge.LevelSliceMixin",
+    "platform.neoforge.ModelDataMixin",
+    "platform.neoforge.ResourcePackLoaderMixin"
+  ]
+}
