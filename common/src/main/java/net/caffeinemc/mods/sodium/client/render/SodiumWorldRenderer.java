@@ -233,11 +233,7 @@ public class SodiumWorldRenderer {
 
             profiler.popPush("chunk_render_lists");
 
-            if (updateChunksImmediately) {
-                this.renderSectionManager.renderSync(camera, viewport, fogParameters, spectator);
-            } else {
-                this.renderSectionManager.prepareRenderTrees(camera, viewport, fogParameters, spectator);
-            }
+            this.renderSectionManager.prepareRenderTrees(camera, viewport, fogParameters, spectator);
 
             profiler.popPush("chunk_update");
 
@@ -255,7 +251,7 @@ public class SodiumWorldRenderer {
 
         profiler.popPush("chunk_render_lists");
 
-        this.renderSectionManager.finalizeRenderLists(viewport, fogParameters);
+        this.renderSectionManager.finalizeRenderLists(camera, viewport, fogParameters, updateChunksImmediately);
 
         profiler.popPush("chunk_render_tick");
 
@@ -425,7 +421,7 @@ public class SodiumWorldRenderer {
 
     /**
      * Returns whether the entity intersects with any visible chunks in the graph.
-     *
+     * <p>
      * Note that this method assumes the entity is within the frustum. It does not perform a frustum check.
      *
      * @return True if the entity is visible, otherwise false

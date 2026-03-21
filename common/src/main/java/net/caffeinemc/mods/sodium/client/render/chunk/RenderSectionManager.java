@@ -41,7 +41,6 @@ import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.client.util.MathUtil;
-import net.caffeinemc.mods.sodium.client.util.task.CancellationToken;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
@@ -188,13 +187,6 @@ public class RenderSectionManager {
     }
 
     public void prepareRenderTrees(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
-        // do sync bfs based on update immediately (flawless frames) or if the camera moved too much
-        var shouldRenderSync = this.cameraTimingControl.getShouldRenderSync(camera);
-        if (shouldRenderSync && (this.needsGraphUpdate || this.needsRenderListUpdate)) {
-            renderSync(camera, viewport, fogParameters, spectator);
-            return;
-        }
-
         if (this.needsGraphUpdate) {
             this.lastGraphDirtyFrame = this.frame;
         }
@@ -225,49 +217,18 @@ public class RenderSectionManager {
             this.updateFrustumTaskList(viewport, fogParameters);
             this.needsFrustumTaskListUpdate = false;
         }
-
-        this.needsGraphUpdate = false;
     }
 
-    public void finalizeRenderLists(Viewport viewport, FogParameters fogParameters) {
-        if (this.needsRenderListUpdate) {
-            readRenderListFromTree(viewport, fogParameters);
-
-            this.needsRenderListUpdate = false;
+    public void finalizeRenderLists(Camera camera, Viewport viewport, FogParameters fogParameters, boolean updateChunksImmediately) {
+        var syncRender = this.cameraTimingControl.getShouldRenderSync(camera);
+        if (updateChunksImmediately || syncRender && (this.needsGraphUpdate || this.needsRenderListUpdate)) {
+            this.renderOutOfGraph(viewport, fogParameters);
+        } else if (this.needsRenderListUpdate) {
+            this.readRenderListFromTree(viewport, fogParameters);
         }
-    }
-
-    public void renderSync(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
-        final var searchDistance = this.getSearchDistance(fogParameters);
-        final var useOcclusionCulling = this.shouldUseOcclusionCulling(camera, spectator);
-
-        // cancel running tasks to prevent two bfs running at the same time, which will cause race conditions
-        for (var task : this.pendingTasks) {
-            task.setCancelled();
-            task.getResult();
-        }
-        this.pendingTasks.clear();
-        this.pendingGlobalCullTask = null;
-        this.concurrentlySubmittedTasks.clear();
-
-        var tree = new VisibleChunkCollectorSync(viewport, searchDistance, this.frame, CullType.FRUSTUM, this.level);
-        this.occlusionCuller.findVisible(tree, viewport, searchDistance, useOcclusionCulling, CancellationToken.NEVER_CANCELLED);
-        tree.prepareForTraversal();
-
-        this.frustumTaskLists = tree.getPendingTaskLists();
-        this.globalTaskLists = null;
-        this.cullResults.put(CullType.FRUSTUM, tree);
-        this.renderTree = tree;
-
-        this.renderLists = tree.createRenderLists(viewport);
-
-        // remove the other trees, they're very wrong by now
-        this.cullResults.remove(CullType.WIDE);
-        this.cullResults.remove(CullType.REGULAR);
 
         this.needsRenderListUpdate = false;
         this.needsGraphUpdate = false;
-        this.cameraChanged = false;
     }
 
     private SectionTree consumeTaskResults(Viewport waitingViewport, FogParameters fogParameters) {
