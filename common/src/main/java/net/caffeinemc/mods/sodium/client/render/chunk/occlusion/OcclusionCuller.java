@@ -34,13 +34,6 @@ public class OcclusionCuller {
     private float searchDistance;
     private boolean useOcclusionCulling;
 
-    // The bounding box of a chunk section must be large enough to contain all possible geometry within it. Block models
-    // can extend outside a block volume by +/- 1.0 blocks on all axis. Additionally, we make use of a small epsilon
-    // to deal with floating point imprecision during a frustum check (see GH#2132).
-    public static final float CHUNK_SECTION_RADIUS = 8.0f /* chunk bounds */;
-    public static final float CHUNK_SECTION_MARGIN = 1.0f /* maximum model extent */ + 0.125f /* epsilon */;
-    public static final float CHUNK_SECTION_PADDED_RADIUS = CHUNK_SECTION_RADIUS + CHUNK_SECTION_MARGIN;
-
     public interface GraphOcclusionVisitor {
         default boolean visitTestVisible(RenderSection section) {
             return true;
