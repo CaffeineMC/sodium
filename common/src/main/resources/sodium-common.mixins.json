@@ -7,7 +7,8 @@
     "defaultRequire": 1
   },
   "overwrites": {
-    "conformVisibility": true
+    "conformVisibility": true,
+    "requireAnnotations": true
   },
   "client": [
     "core.GlCommandEncoderAccessor",
@@ -67,15 +68,10 @@
     "features.textures.animations.tracking.TextureAtlasMixin",
     "features.textures.animations.tracking.TextureAtlasSpriteMixin",
     "features.textures.animations.tracking.TextureSheetParticleMixin",
-    "features.textures.animations.tracking.AnimatedTextureAccessor",
     "features.textures.animations.tracking.AtlasManagerMixin",
-    "features.textures.animations.tracking.SpriteContentsFrameInfoAccessor",
     "features.textures.animations.tracking.SpriteContentsTickerMixin",
     "features.textures.animations.tracking.SpriteContentsMixin",
     "features.textures.animations.tracking.AtlasGlyphProviderMixin",
-    "features.textures.animations.upload.SpriteContentsAccessor",
-    "features.textures.animations.upload.SpriteContentsAnimatedTextureAccessor",
-    "features.textures.animations.upload.SpriteContentsFrameInfoAccessor",
     "features.textures.scan.SpriteContentsMixin",
     "features.textures.scan.TextureAtlasSpriteMixin",
     "workarounds.context_creation.WindowMixin",

@@ -7,6 +7,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ModelBlockRenderer.class)
 public interface ModelBlockRendererAccessor {
-    @Accessor
-    BlockColors getBlockColors();
+    @Accessor("blockColors")
+    BlockColors sodium$getBlockColors();
 }

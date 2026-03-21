@@ -814,7 +814,8 @@ public class RenderSectionManager {
 
     private float getEffectiveRenderDistance(FogParameters fogParameters) {
         var alpha = fogParameters.alpha();
-        var distance = Math.min(fogParameters.renderEnd(), fogParameters.environmentalEnd());
+        var environmentalEnd = fogParameters.environmentalEnd();
+        var distance = Float.isNaN(environmentalEnd) ? fogParameters.renderEnd() : Math.min(fogParameters.renderEnd(), environmentalEnd);
 
         var renderDistance = this.getRenderDistance();
 
