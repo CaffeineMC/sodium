@@ -14,6 +14,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.Transl
 import net.caffeinemc.mods.sodium.client.services.FluidRendererFactory;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.block.FluidModel;
 import net.minecraft.client.renderer.block.FluidStateModelSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
@@ -21,6 +22,7 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
+import net.neoforged.neoforge.client.fluid.FluidTintSource;
 
 import java.util.Objects;
 
@@ -68,10 +70,11 @@ public class FluidRendererImpl extends FluidRenderer {
         // parameters are bundled into a DefaultRenderContext which is stored in a ThreadLocal.
 
         DefaultRenderContext defaultContext = CURRENT_DEFAULT_CONTEXT.get();
-        defaultContext.setUp(this.colorProviderRegistry, this.defaultRenderer, level, blockState, fluidState, blockPos, offset, collector, meshBuilder, material, handler, fluidStates);
+        var model = fluidStates.get(fluidState);
+        defaultContext.setUp(this.colorProviderRegistry, this.defaultRenderer, level, blockState, fluidState, blockPos, offset, collector, meshBuilder, material, handler, model);
 
         try {
-            if (!handler.renderFluid(fluidRenderer, fluidState, level, blockPos, i -> meshBuilder.asFallbackVertexConsumer(DefaultMaterials.forChunkLayer(i), collector), blockState)) {
+            if (model.customRenderer() == null || !model.customRenderer().renderFluid(fluidRenderer, fluidState, level, blockPos, i -> meshBuilder.asFallbackVertexConsumer(DefaultMaterials.forChunkLayer(i), collector), blockState)) {
                 defaultContext.render();
             }
         } finally {
@@ -91,9 +94,9 @@ public class FluidRendererImpl extends FluidRenderer {
         private Material material;
         private IClientFluidTypeExtensions handler;
         private ColorProviderRegistry colorProviderRegistry;
-        private FluidStateModelSet modelSet;
+        private FluidModel model;
 
-        public void setUp(ColorProviderRegistry colorProviderRegistry, DefaultFluidRenderer renderer, LevelSlice level, BlockState blockState, FluidState fluidState, BlockPos blockPos, BlockPos offset, TranslucentGeometryCollector collector, ChunkModelBuilder meshBuilder, Material material, IClientFluidTypeExtensions handler, FluidStateModelSet modelSet) {
+        public void setUp(ColorProviderRegistry colorProviderRegistry, DefaultFluidRenderer renderer, LevelSlice level, BlockState blockState, FluidState fluidState, BlockPos blockPos, BlockPos offset, TranslucentGeometryCollector collector, ChunkModelBuilder meshBuilder, Material material, IClientFluidTypeExtensions handler, FluidModel modelSet) {
             this.colorProviderRegistry = colorProviderRegistry;
             this.renderer = renderer;
             this.level = level;
@@ -105,7 +108,7 @@ public class FluidRendererImpl extends FluidRenderer {
             this.meshBuilder = meshBuilder;
             this.material = material;
             this.handler = handler;
-            this.modelSet = modelSet;
+            this.model = modelSet;
         }
 
         public void clear() {
@@ -119,6 +122,7 @@ public class FluidRendererImpl extends FluidRenderer {
             this.meshBuilder = null;
             this.material = null;
             this.handler = null;
+            this.model = null;
         }
 
         public ColorProvider<FluidState> getColorProvider(Fluid fluid) {
@@ -128,12 +132,12 @@ public class FluidRendererImpl extends FluidRenderer {
                 return override;
             }
 
-            return ForgeColorProviders.adapt(handler);
+            return ForgeColorProviders.adapt(model.fluidTintSource());
         }
 
         public void render() {
             this.renderer.render(this.level, this.blockState, this.fluidState, this.blockPos, this.offset, this.collector, this.meshBuilder, this.material,
-                    getColorProvider(fluidState.getType()), modelSet.get(fluidState));
+                    getColorProvider(fluidState.getType()), model);
         }
     }
 
@@ -145,24 +149,30 @@ public class FluidRendererImpl extends FluidRenderer {
 
         @Override
         public BlendedColorProvider<FluidState> getWaterColorProvider() {
-            final IClientFluidTypeExtensions ext = IClientFluidTypeExtensions.of(Fluids.WATER);
-
             return new BlendedColorProvider<>() {
                 @Override
                 protected int getColor(LevelSlice slice, FluidState state, BlockPos pos) {
-                    return ext.getTintColor(state, slice, pos);
+                    FluidTintSource tintSource = Minecraft.getInstance()
+                            .getModelManager()
+                            .getFluidStateModelSet()
+                            .get(state)
+                            .fluidTintSource();
+                    return tintSource != null ? tintSource.colorInWorld(state, state.createLegacyBlock(), slice, pos) : -1;
                 }
             };
         }
 
         @Override
         public BlendedColorProvider<BlockState> getWaterBlockColorProvider() {
-            final IClientFluidTypeExtensions ext = IClientFluidTypeExtensions.of(Fluids.WATER);
-
             return new BlendedColorProvider<>() {
                 @Override
                 protected int getColor(LevelSlice slice, BlockState state, BlockPos pos) {
-                    return ext.getTintColor(state.getFluidState().isEmpty() ? Fluids.WATER.defaultFluidState() : state.getFluidState(), slice, pos);
+                    FluidTintSource tintSource = Minecraft.getInstance()
+                            .getModelManager()
+                            .getFluidStateModelSet()
+                            .get(state.getFluidState().isEmpty() ? Fluids.WATER.defaultFluidState() : state.getFluidState())
+                            .fluidTintSource();
+                    return tintSource != null ? tintSource.colorInWorld(state, slice, pos) : -1;
                 }
             };
         }
