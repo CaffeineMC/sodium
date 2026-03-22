@@ -1,14 +1,13 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad;
 
-import java.util.Arrays;
-
+import net.caffeinemc.mods.sodium.api.util.NormI8;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.DefaultFluidRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
-import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
-import net.caffeinemc.mods.sodium.api.util.NormI8;
+import java.util.Arrays;
 
 /**
  * Represents a quad for the purposes of translucency sorting. Called TQuad to
