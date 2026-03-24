@@ -62,87 +62,6 @@ public class PendingTaskCollector implements OcclusionCuller.GraphOcclusionVisit
         this.checkForTask(section);
     }
 
-    @Override
-    public long getAngleVisibilityMask(Viewport viewport, RenderSection section) {
-        if (this.isFrustumTested) {
-            return OcclusionCuller.GraphOcclusionVisitor.super.getAngleVisibilityMask(viewport, section);
-        }
-
-        return calculateSectionAngleVisibilityMask(viewport, section, 1);
-    }
-
-    protected static long calculateSectionAngleVisibilityMask(Viewport viewport, RenderSection section, int width) {
-        // compare the origin and the section centers
-        var origin = viewport.getChunkCoord();
-        var dx = Math.abs(origin.minBlockX() + 8 - section.getCenterX());
-        var dy = Math.abs(origin.minBlockY() + 8 - section.getCenterY());
-        var dz = Math.abs(origin.minBlockZ() + 8 - section.getCenterZ());
-
-        // in a pair da > db both distances can be up to 8 greater or 8 smaller.
-        // since we only want to apply occlusion if every combination satisfies the occlusion condition,
-        // we would need to do combinations of da -/+ 8 > db -/+ 8, which is equivalent to the worst case da > db + 16
-        var margin = 32 * width - 16;
-        var angleOcclusionMask = 0L;
-        if (dx > dy + margin || dz > dy + margin) {
-            angleOcclusionMask |= UP_DOWN_OCCLUDED;
-        }
-        if (dx > dz + margin || dy > dz + margin) {
-            angleOcclusionMask |= NORTH_SOUTH_OCCLUDED;
-        }
-        if (dy > dx + margin || dz > dx + margin) {
-            angleOcclusionMask |= WEST_EAST_OCCLUDED;
-        }
-
-        return ~angleOcclusionMask;
-    }
-
-    @Override
-    public int getDirectionSets(Viewport viewport, RenderSection section) {
-        if (this.isFrustumTested) {
-            return OcclusionCuller.GraphOcclusionVisitor.super.getDirectionSets(viewport, section);
-        }
-
-        return calculateDirectionSets(viewport, section, 1);
-    }
-
-    protected static int calculateDirectionSets(Viewport viewport, RenderSection section, int width) {
-        var origin = viewport.getChunkCoord();
-        var minX = origin.minBlockX();
-        var minY = origin.minBlockY();
-        var minZ = origin.minBlockZ();
-
-        var posMargin = 16 * width;
-        var negMargin = 16 * (width - 1);
-
-        // determine which base perspectives need to be combined based on the camera position relative to the section.
-        // these bitmasks correspond to the base directions in DirectionalVisGraph.DIRECTION_SETS
-        int directionSetsX = 0;
-        if (minX + posMargin >= section.getOriginX()) {
-            directionSetsX = 0b00001111;
-        }
-        if (minX - negMargin <= section.getOriginX() + 16) {
-            directionSetsX |= 0b11110000;
-        }
-
-        int directionSetsZ = 0;
-        if (minZ + posMargin >= section.getOriginZ()) {
-            directionSetsZ = 0b00110011;
-        }
-        if (minZ - negMargin <= section.getOriginZ() + 16) {
-            directionSetsZ |= 0b11001100;
-        }
-
-        int directionSetsY = 0;
-        if (minY + posMargin >= section.getOriginY()) {
-            directionSetsY = 0b01010101;
-        }
-        if (minY - negMargin <= section.getOriginY() + 16) {
-            directionSetsY |= 0b10101010;
-        }
-
-        return directionSetsX & directionSetsY & directionSetsZ;
-    }
-
     protected void checkForTask(RenderSection section) {
         int type = section.getPendingUpdate();
 
@@ -198,5 +117,4 @@ public class PendingTaskCollector implements OcclusionCuller.GraphOcclusionVisit
     public DeferredTaskList getPendingTaskLists() {
         return DeferredTaskList.createHeapCopyOf(this.pendingTasks, this.creationTime, this.isFrustumTested, this.baseOffsetX, this.baseOffsetZ);
     }
-
 }

@@ -1,14 +1,13 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
 import com.mojang.blaze3d.textures.GpuSampler;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.*;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
-import net.caffeinemc.mods.sodium.client.render.chunk.async.*;
+import net.caffeinemc.mods.sodium.client.render.chunk.async.CullTask;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkSortOutput;
@@ -63,7 +62,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 public class RenderSectionManager {
     private static final float NEARBY_REBUILD_DISTANCE = Mth.square(16.0f);
@@ -110,7 +108,6 @@ public class RenderSectionManager {
     private final EnumMap<DeferMode, ReferenceLinkedOpenHashSet<RenderSection>> importantTasks;
 
     private int frame;
-    private int lastGraphDirtyFrame;
     private long lastFrameDuration = -1;
     private long averageFrameDuration = -1;
     private long lastFrameAtTime = System.nanoTime();
@@ -119,17 +116,13 @@ public class RenderSectionManager {
     private boolean needsGraphUpdate = true;
     private boolean needsRenderListUpdate = true;
     private boolean cameraChanged = false;
-    private boolean needsFrustumTaskListUpdate = true;
 
     private @Nullable Vector3dc cameraPosition;
 
     private final ExecutorService asyncCullExecutor = Executors.newSingleThreadExecutor(RenderSectionManager::makeAsyncCullThread);
-    private final ObjectArrayList<AsyncRenderTask<?>> pendingTasks = new ObjectArrayList<>();
-    private GlobalCullTask pendingGlobalCullTask = null;
-    private final IntArrayList concurrentlySubmittedTasks = new IntArrayList();
+    private CullTask pendingTask = null;
 
     private SectionTree renderTree = null;
-    private TaskSectionTree globalTaskTree = null;
     private final Map<CullType, SectionTree> cullResults = new EnumMap<>(CullType.class);
     private final RemovableMultiForest renderableSectionTree;
 
@@ -183,39 +176,26 @@ public class RenderSectionManager {
     public void prepareRender() {
         this.frame += 1;
         this.needsRenderListUpdate |= this.cameraChanged;
-        this.needsFrustumTaskListUpdate |= this.needsRenderListUpdate;
     }
 
     public void prepareRenderTrees(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
-        if (this.needsGraphUpdate) {
-            this.lastGraphDirtyFrame = this.frame;
-        }
-
         // discard unusable present and pending frustum-tested trees
         if (this.cameraChanged) {
-            this.cullResults.remove(CullType.FRUSTUM);
-
-            this.pendingTasks.removeIf(task -> {
-                if (task instanceof FrustumCullTask cullTask) {
-                    cullTask.setCancelled();
-                    return true;
-                }
-                return false;
-            });
+            this.cullResults.remove(CullType.LOCAL);
 
             this.cameraChanged = false;
         }
 
         // remove all tasks that aren't in progress yet
-        this.pendingTasks.removeIf(AsyncRenderTask::cancelIfNotStarted);
+        if (this.pendingTask != null && this.pendingTask.cancelIfNotStarted()) {
+            this.pendingTask = null;
+        }
 
-        this.consumeTaskResults(null, fogParameters);
+        this.consumeTaskResults(false);
 
-        this.scheduleAsyncWork(camera, viewport, fogParameters, spectator);
-
-        if (this.needsFrustumTaskListUpdate) {
-            this.updateFrustumTaskList(viewport, fogParameters);
-            this.needsFrustumTaskListUpdate = false;
+        // if the origin section doesn't exist, cull tasks won't produce any useful results
+        if (!this.isOutOfGraph(viewport.getChunkCoord())) {
+            this.scheduleAsyncWork(camera, viewport, fogParameters, spectator);
         }
     }
 
@@ -231,73 +211,25 @@ public class RenderSectionManager {
         this.needsGraphUpdate = false;
     }
 
-    private SectionTree consumeTaskResults(Viewport waitingViewport, FogParameters fogParameters) {
-        SectionTree latestTree = null;
-        CullType latestTreeCullType = null;
-
-        var it = this.pendingTasks.iterator();
-        while (it.hasNext()) {
-            // wait for task to complete if a viewport was given that's waiting for any result to become available
-            var task = it.next();
-            if (waitingViewport == null && !task.isDone()) {
-                continue;
-            }
-            it.remove();
-
-            // unpack the task and its result based on its type
-            switch (task) {
-                case FrustumCullTask frustumCullTask -> {
-                    var result = frustumCullTask.getResult();
-                    this.frustumTaskLists = result.getFrustumTaskLists();
-
-                    // ensure no useless frustum tree is accepted
-                    if (!this.cameraChanged) {
-                        var tree = result.getTree();
-                        this.cullResults.put(CullType.FRUSTUM, tree);
-                        latestTree = tree;
-                        latestTreeCullType = CullType.FRUSTUM;
-
-                        this.needsRenderListUpdate = true;
-                    }
-                }
-                case GlobalCullTask globalCullTask -> {
-                    var result = globalCullTask.getResult();
-                    var tree = result.getTaskTree();
-                    this.globalTaskLists = result.getGlobalTaskLists();
-                    this.frustumTaskLists = result.getFrustumTaskLists();
-                    this.globalTaskTree = tree;
-                    var cullType = globalCullTask.getCullType();
-                    this.cullResults.put(cullType, tree);
-                    latestTree = tree;
-                    latestTreeCullType = cullType;
-
-                    this.needsRenderListUpdate = true;
-                    this.pendingGlobalCullTask = null;
-
-                    // mark changes on the global task tree if they were scheduled while the task was already running
-                    for (int i = 0, length = this.concurrentlySubmittedTasks.size(); i < length; i += 3) {
-                        var x = this.concurrentlySubmittedTasks.getInt(i);
-                        var y = this.concurrentlySubmittedTasks.getInt(i + 1);
-                        var z = this.concurrentlySubmittedTasks.getInt(i + 2);
-                        tree.markSectionTask(x, y, z);
-                    }
-                    this.concurrentlySubmittedTasks.clear();
-                }
-                case FrustumTaskCollectionTask collectionTask ->
-                        this.frustumTaskLists = collectionTask.getResult().getFrustumTaskLists();
-                default -> {
-                    throw new IllegalStateException("Unexpected task type: " + task);
-                }
-            }
+    private void consumeTaskResults(boolean waitForCompletion) {
+        if (this.pendingTask == null) {
+            return;
         }
 
-        if (waitingViewport != null && latestTree != null) {
-            var searchDistance = this.getSearchDistanceForCullType(latestTreeCullType, fogParameters);
-            if (latestTree.isValidFor(waitingViewport, searchDistance)) {
-                return latestTree;
-            }
+        // if there's a waiting viewport, don't skip unfinished task
+        if (!waitForCompletion && !this.pendingTask.isDone()) {
+            return;
         }
-        return null;
+
+        var result = this.pendingTask.getResult();
+        this.cullResults.put(CullType.LOCAL, result.getCullTreeLocal());
+        this.cullResults.put(CullType.REGULAR, result.getCullTreeRegular());
+        this.cullResults.put(CullType.WIDE, result.getCullTreeWide());
+
+        this.globalTaskLists = result.getGlobalTaskLists();
+        this.frustumTaskLists = result.getFrustumTaskLists();
+
+        this.needsRenderListUpdate = true;
     }
 
     private static Thread makeAsyncCullThread(Runnable runnable) {
@@ -307,140 +239,57 @@ public class RenderSectionManager {
     }
 
     private void scheduleAsyncWork(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
-        // if the origin section doesn't exist, cull tasks won't produce any useful results
-        if (this.isOutOfGraph(viewport.getChunkCoord())) {
+        // TODO: greatly simplify this logic as we only have one task type now
+
+        if (this.pendingTask != null) {
             return;
         }
 
-        // submit tasks of types that are applicable and not yet running
-        AsyncRenderTask<?> currentRunningTask = null;
-        if (!this.pendingTasks.isEmpty()) {
-            currentRunningTask = this.pendingTasks.getFirst();
-        }
+        // submit cull task if there's none running currently
+        var searchDistanceRegular = this.getSearchDistanceForCullType(CullType.REGULAR, fogParameters);
+        var searchDistanceLocal = this.getSearchDistanceForCullType(CullType.LOCAL, fogParameters);
 
-        // pick a scheduling order based on if there's been a graph update and if the render list is dirty
-        var scheduleOrder = getScheduleOrder();
-
-        for (var type : scheduleOrder) {
-            var tree = this.cullResults.get(type);
-
-            // don't schedule frustum tasks if the camera just changed to prevent throwing them away constantly
-            // since they're going to be invalid by the time they're completed in the next frame
-            if (type == CullType.FRUSTUM && this.cameraChanged) {
-                continue;
-            }
-
-            // schedule a task of this type if there's no valid and current result for it yet
-            var searchDistance = this.getSearchDistanceForCullType(type, fogParameters);
-            if ((tree == null || tree.getFrame() < this.lastGraphDirtyFrame || !tree.isValidFor(viewport, searchDistance)) &&
-                    // and if there's no currently running task that will produce a valid and current result
-                    (currentRunningTask == null ||
-                            currentRunningTask instanceof CullTask<?> cullTask && cullTask.getCullType() != type ||
-                            currentRunningTask.getFrame() < this.lastGraphDirtyFrame)) {
-                var useOcclusionCulling = this.shouldUseOcclusionCulling(camera, spectator);
-
-                // use the last dirty frame as the frame timestamp to avoid wrongly marking task results as more recent if they're simply scheduled later but did work on the same state of the graph if there's been no graph invalidation since
-                var task = switch (type) {
-                    case WIDE, REGULAR ->
-                            new GlobalCullTask(viewport, searchDistance, this.lastGraphDirtyFrame, this.occlusionCuller, useOcclusionCulling, this.sectionByPosition, type, this.level);
-                    case FRUSTUM ->
-                        // note that there is some danger with only giving the frustum tasks the last graph dirty frame and not the real current frame, but these are mitigated by deleting the frustum result when the camera changes.
-                            new FrustumCullTask(viewport, searchDistance, this.lastGraphDirtyFrame, this.occlusionCuller, useOcclusionCulling, this.level);
-                };
-                task.submitTo(this.asyncCullExecutor);
-                this.pendingTasks.add(task);
-
-                if (task instanceof GlobalCullTask globalCullTask) {
-                    this.pendingGlobalCullTask = globalCullTask;
-                }
-            }
-        }
+        var useOcclusionCulling = this.shouldUseOcclusionCulling(camera, spectator);
+        this.pendingTask = new CullTask(viewport, searchDistanceRegular, searchDistanceLocal, this.frame, this.occlusionCuller, useOcclusionCulling, this.level);
+        this.pendingTask.submitTo(this.asyncCullExecutor);
     }
 
-    private static final CullType[] WIDE_TO_NARROW = { CullType.WIDE, CullType.REGULAR, CullType.FRUSTUM };
-    private static final CullType[] NARROW_TO_WIDE = { CullType.FRUSTUM, CullType.REGULAR, CullType.WIDE };
-    private static final CullType[] COMPROMISE = { CullType.REGULAR, CullType.FRUSTUM, CullType.WIDE };
-
-    private CullType[] getScheduleOrder() {
-        // if the camera is stationary, do the FRUSTUM update first to prevent the rendered section count from oscillating
-        if (!this.cameraChanged) {
-            return NARROW_TO_WIDE;
-        }
-
-        // if only the render list is dirty but there's no graph update, do REGULAR first and potentially do FRUSTUM opportunistically
-        if (!this.needsGraphUpdate) {
-            return COMPROMISE;
-        }
-
-        // if both are dirty, the camera is moving and loading new sections, do WIDE first to ensure there's any correct result
-        return WIDE_TO_NARROW;
-    }
 
     private static final LongArrayList timings = new LongArrayList();
 
-    private void updateFrustumTaskList(Viewport viewport, FogParameters fogParameters) {
-        // schedule generating a frustum task list if there's no frustum tree task running
-        if (this.globalTaskTree != null) {
-            var frustumTaskListPending = false;
-            for (var task : this.pendingTasks) {
-                if (task instanceof CullTask<?> cullTask && cullTask.getCullType() == CullType.FRUSTUM ||
-                        task instanceof FrustumTaskCollectionTask) {
-                    frustumTaskListPending = true;
-                    break;
-                }
-            }
-            if (!frustumTaskListPending) {
-                var searchDistance = this.getSearchDistance(fogParameters);
-                var task = new FrustumTaskCollectionTask(viewport, searchDistance, this.frame, this.sectionByPosition, this.globalTaskTree);
-                task.submitTo(this.asyncCullExecutor);
-                this.pendingTasks.add(task);
-            }
-        }
-    }
-
-    private void readRenderListFromTree(Viewport viewport, FogParameters fogParameters) {
-        // pick the narrowest valid tree. This tree is either up-to-date or the origin is out of the graph as otherwise sync bfs would have been triggered (in graph but moving rapidly)
-        SectionTree bestValidTree = null;
-        SectionTree bestAnyTree = null;
-        for (var type : NARROW_TO_WIDE) {
+    private SectionTree findBestTree(Viewport viewport, FogParameters fogParameters) {
+        for (var type : CullType.NARROW_TO_WIDE) {
             var tree = this.cullResults.get(type);
             if (tree == null) {
                 continue;
             }
 
-            // pick the most recent and most valid tree
             float searchDistance = this.getSearchDistanceForCullType(type, fogParameters);
-            int treeFrame = tree.getFrame();
-            if (bestAnyTree == null || treeFrame > bestAnyTree.getFrame()) {
-                bestAnyTree = tree;
-            }
-            if (!tree.isValidFor(viewport, searchDistance)) {
-                continue;
-            }
-            if (bestValidTree == null || treeFrame > bestValidTree.getFrame()) {
-                bestValidTree = tree;
+            if (tree.isValidFor(viewport, searchDistance)) {
+                return tree;
             }
         }
 
+        return null;
+    }
+
+    private void readRenderListFromTree(Viewport viewport, FogParameters fogParameters) {
+        // pick the narrowest available tree
+        var bestTree = this.findBestTree(viewport, fogParameters);
+
         // use out-of-graph fallback if the origin section is not loaded and there's no valid tree (missing origin section, empty world)
-        if (bestValidTree == null && this.isOutOfGraph(viewport.getChunkCoord())) {
+        if (bestTree == null && this.isOutOfGraph(viewport.getChunkCoord())) {
             this.renderOutOfGraph(viewport, fogParameters);
             return;
         }
 
         // wait for pending tasks to maybe supply a valid tree if there's no current tree (first frames after initial load/reload)
-        if (bestAnyTree == null) {
-            var result = this.consumeTaskResults(viewport, fogParameters);
-            if (result != null) {
-                bestValidTree = result;
-            }
+        if (bestTree == null) {
+            this.consumeTaskResults(true);
+            bestTree = this.findBestTree(viewport, fogParameters);
         }
 
-        // use the best valid tree, or even invalid tree if necessary
-        if (bestValidTree != null) {
-            bestAnyTree = bestValidTree;
-        }
-        if (bestAnyTree == null) {
+        if (bestTree == null) {
             this.renderOutOfGraph(viewport, fogParameters);
             return;
         }
@@ -448,7 +297,7 @@ public class RenderSectionManager {
         var start = System.nanoTime();
 
         var visibleCollector = new VisibleChunkCollectorAsync(this.regions, this.frame);
-        bestAnyTree.traverse(visibleCollector, viewport, this.getSearchDistance(fogParameters));
+        bestTree.traverse(visibleCollector, viewport, this.getSearchDistance(fogParameters));
         this.renderLists = visibleCollector.createRenderLists(viewport);
 
         var end = System.nanoTime();
@@ -472,7 +321,7 @@ public class RenderSectionManager {
             timings.clear();
         }
 
-        this.renderTree = bestAnyTree;
+        this.renderTree = bestTree;
     }
 
     private void renderOutOfGraph(Viewport viewport, FogParameters fogParameters) {
@@ -712,7 +561,7 @@ public class RenderSectionManager {
 
         // prepare list of pending present patches if there are pending tasks that will need patches
         List<RenderSection> pendingPresentPatches = null;
-        if (!this.pendingTasks.isEmpty()) {
+        if (this.pendingTask != null) {
             pendingPresentPatches = new ReferenceArrayList<>();
         }
 
@@ -762,10 +611,9 @@ public class RenderSectionManager {
             this.jobUploadDurationEstimator.updateModels();
         }
 
-        if (pendingPresentPatches != null && !pendingPresentPatches.isEmpty()) {
-            for (var task : this.pendingTasks) {
-                task.registerPresentPatches(pendingPresentPatches);
-            }
+        if (pendingPresentPatches != null && !pendingPresentPatches.isEmpty() &&
+                this.pendingTask != null) {
+            this.pendingTask.registerPresentPatches(pendingPresentPatches);
         }
 
         return touchedSectionInfo;
@@ -1183,21 +1031,6 @@ public class RenderSectionManager {
         // when the pending task type changes, and it's important, add it to the list of important tasks
         if (ChunkUpdateTypes.isImportant(joined)) {
             this.importantTasks.get(this.getDeferModeForPendingUpdate(joined)).add(section);
-        } else {
-            // if the section received a new task, mark in the task tree so an update can happen before a global cull task runs
-            if (this.globalTaskTree != null && current == 0) {
-                this.globalTaskTree.markSectionTask(section);
-                this.needsFrustumTaskListUpdate = true;
-
-                // when a global cull task is already running and has already processed the section, and we mark it with a pending task,
-                // the section will not be marked as having a task in the then replaced global tree and the derivative frustum tree also won't have it.
-                // Sections that are marked with a pending task while a task that may replace the global task tree is running are a added to a list from which the new global task tree is populated once it's done.
-                if (this.pendingGlobalCullTask != null) {
-                    this.concurrentlySubmittedTasks.add(section.getChunkX());
-                    this.concurrentlySubmittedTasks.add(section.getChunkY());
-                    this.concurrentlySubmittedTasks.add(section.getChunkZ());
-                }
-            }
         }
 
         return true;
@@ -1369,15 +1202,9 @@ public class RenderSectionManager {
             list.add("TS OFF");
         }
 
-        var taskSlots = new String[AsyncTaskType.VALUES.length];
-        for (var task : this.pendingTasks) {
-            var type = task.getTaskType();
-            taskSlots[type.ordinal()] = type.abbreviation;
-        }
-        list.add("Tree Builds: " + Arrays
-                .stream(taskSlots)
-                .map(slot -> slot == null ? "_" : slot)
-                .collect(Collectors.joining(" ")));
+
+        list.add("Async Culling: " + (this.pendingTask == null ?
+                "Idle" : this.pendingTask.isDone() ? "Done" : "Running"));
 
         return list;
     }

@@ -41,46 +41,6 @@ public class SectionTree extends PendingTaskCollector {
     }
 
     @Override
-    public boolean isWithinFrustum(Viewport viewport, RenderSection section) {
-        return !this.isFrustumTested || super.isWithinFrustum(viewport, section);
-    }
-
-    @Override
-    public int getOutwardDirections(SectionPos origin, RenderSection section) {
-        int planes = 0;
-
-        planes |= section.getChunkX() <= origin.getX() + this.bfsWidth ? 1 << GraphDirection.WEST : 0;
-        planes |= section.getChunkX() >= origin.getX() - this.bfsWidth ? 1 << GraphDirection.EAST : 0;
-
-        planes |= section.getChunkY() <= origin.getY() + this.bfsWidth ? 1 << GraphDirection.DOWN : 0;
-        planes |= section.getChunkY() >= origin.getY() - this.bfsWidth ? 1 << GraphDirection.UP : 0;
-
-        planes |= section.getChunkZ() <= origin.getZ() + this.bfsWidth ? 1 << GraphDirection.NORTH : 0;
-        planes |= section.getChunkZ() >= origin.getZ() - this.bfsWidth ? 1 << GraphDirection.SOUTH : 0;
-
-        return planes;
-    }
-
-    @Override
-    public long getAngleVisibilityMask(Viewport viewport, RenderSection section) {
-        if (this.bfsWidth <= 1) { // bfsWidth > 1 implies !isFrustumTested
-            return super.getAngleVisibilityMask(viewport, section);
-        }
-
-        // +1 since at width 0 the margin is 16, and at width 1 the margin is 48
-        return calculateSectionAngleVisibilityMask(viewport, section, this.bfsWidth + 1);
-    }
-
-    @Override
-    public int getDirectionSets(Viewport viewport, RenderSection section) {
-        if (this.bfsWidth <= 1) {
-            return super.getDirectionSets(viewport, section);
-        }
-
-        return calculateDirectionSets(viewport, section, this.bfsWidth + 1);
-    }
-
-    @Override
     public void visit(RenderSection section) {
         super.visit(section);
 
@@ -142,6 +102,10 @@ public class SectionTree extends PendingTaskCollector {
     @FunctionalInterface
     public interface NotInTreePredicate {
         boolean isEmpty(int x, int y, int z);
+    }
+
+    private boolean isWithinFrustum(Viewport viewport, RenderSection section) {
+        return !this.isFrustumTested || viewport.isBoxVisible(section.getCenterX(), section.getCenterY(), section.getCenterZ());
     }
 
     public boolean isSectionVisible(Viewport viewport, RenderSection section) {

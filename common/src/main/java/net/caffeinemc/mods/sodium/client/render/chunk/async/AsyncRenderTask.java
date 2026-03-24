@@ -12,7 +12,6 @@ import java.util.concurrent.Future;
 
 public abstract class AsyncRenderTask<T> implements Callable<T>, CancellationToken {
     protected final Viewport viewport;
-    protected final float buildDistance;
     protected final int frame;
 
     private Future<T> future;
@@ -22,9 +21,8 @@ public abstract class AsyncRenderTask<T> implements Callable<T>, CancellationTok
     private static final int RUNNING = 1;
     private static final int CANCELLED = 2;
 
-    protected AsyncRenderTask(Viewport viewport, float buildDistance, int frame) {
+    protected AsyncRenderTask(Viewport viewport, int frame) {
         this.viewport = viewport;
-        this.buildDistance = buildDistance;
         this.frame = frame;
     }
 
@@ -75,8 +73,6 @@ public abstract class AsyncRenderTask<T> implements Callable<T>, CancellationTok
     }
 
     protected abstract T runTask();
-
-    public abstract AsyncTaskType getTaskType();
 
     public void registerPresentPatches(Collection<RenderSection> presentPatches) {
         // does nothing by default

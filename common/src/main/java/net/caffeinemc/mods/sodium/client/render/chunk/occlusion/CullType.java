@@ -3,7 +3,9 @@ package net.caffeinemc.mods.sodium.client.render.chunk.occlusion;
 public enum CullType {
     WIDE("W", 1, false, false),
     REGULAR("R", 0, false, false),
-    FRUSTUM("F", 0, true, true);
+    LOCAL("F", 0, true, true);
+
+    public static final CullType[] NARROW_TO_WIDE = { CullType.LOCAL, CullType.REGULAR, CullType.WIDE };
 
     public final String abbreviation;
     public final int bfsWidth;

@@ -27,8 +27,10 @@ public class RenderSection {
     // Occlusion Culling State
     private long[] visibilityData = null;
 
-    private int incomingDirections;
-    private int lastVisibleSearchToken = -1;
+    private int incomingDirectionsWide;
+    private int incomingDirectionsRegular;
+    private int incomingDirectionsLocal;
+    private int searchToken = -1;
     private long allowedAngles; // 60-bit packed quantized min/max allowed angles, 0-9 minXY, 10-19 maxXY, etc.
 
     private int adjacentMask;
@@ -272,24 +274,39 @@ public class RenderSection {
         return this.region.sectionNeedsRender(this.sectionIndex);
     }
 
-    public void setLastVisibleSearchToken(int frame) {
-        this.lastVisibleSearchToken = frame;
+    public void resetOnFirstVisit(int token) {
+        this.searchToken = token;
+        this.incomingDirectionsWide = 0;
+        this.incomingDirectionsRegular = 0;
+        this.incomingDirectionsLocal = 0;
     }
 
-    public int getLastVisibleSearchToken() {
-        return this.lastVisibleSearchToken;
+    public int getSearchToken() {
+        return this.searchToken;
     }
 
-    public int getIncomingDirections() {
-        return this.incomingDirections;
+    public int getIncomingDirectionsWide() {
+        return this.incomingDirectionsWide;
     }
 
-    public void addIncomingDirections(int directions) {
-        this.incomingDirections |= directions;
+    public int getIncomingDirectionsRegular() {
+        return this.incomingDirectionsRegular;
     }
 
-    public void setIncomingDirections(int directions) {
-        this.incomingDirections = directions;
+    public int getIncomingDirectionsLocal() {
+        return this.incomingDirectionsLocal;
+    }
+
+    public void addIncomingDirectionsWide(int directions) {
+        this.incomingDirectionsWide |= directions;
+    }
+
+    public void addIncomingDirectionsRegular(int directions) {
+        this.incomingDirectionsRegular |= directions;
+    }
+
+    public void addIncomingDirectionsLocal(int directions) {
+        this.incomingDirectionsLocal |= directions;
     }
 
     private static final int ANGLE_BITS = 10;
@@ -366,8 +383,8 @@ public class RenderSection {
             return false;
         }
 
-        if (this.lastVisibleSearchToken == token) {
-            // This section has been visited before *this frame*.
+        if (this.searchToken == token) {
+            // This section has been visited before in *this search*.
             // Union the angles: [min(oldMin, newMin), max(oldMax, newMax)]
             pathAngles = parallel_unsigned_min_max(pathAngles, this.allowedAngles);
         }

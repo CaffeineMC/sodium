@@ -14,6 +14,9 @@ import net.minecraft.world.level.Level;
 
 /*
  * TODO idea: traverse octants of the world with separate threads for better performance?
+ *
+ * Frustum visible implies regular visible implies wide visible.
+ * Not wide visible implies not regular visible implies not frustum visible.
  */
 public class OcclusionCuller {
     private final Long2ReferenceMap<RenderSection> sections;
@@ -27,109 +30,202 @@ public class OcclusionCuller {
     private volatile int tokenSource = 0;
 
     private int token;
-    private GraphOcclusionVisitor visitor;
+    private GraphOcclusionVisitor visitorWide;
+    private GraphOcclusionVisitor visitorRegular;
+    private VisibilityTestingVisitor visitorLocal;
     private Viewport viewport;
     private SectionPos origin;
     private SectionPos inBoundsOrigin;
-    private float searchDistance;
+    private float searchDistanceRegular;
+    private float searchDistanceLocal;
     private boolean useOcclusionCulling;
 
     public interface GraphOcclusionVisitor {
+        void visit(RenderSection visit);
+    }
+
+    public interface VisibilityTestingVisitor extends GraphOcclusionVisitor {
         default boolean visitTestVisible(RenderSection section) {
             return true;
         }
-
-        void visit(RenderSection section);
-
-        default boolean isWithinFrustum(Viewport viewport, RenderSection section) {
-            return viewport.isBoxVisible(section.getCenterX(), section.getCenterY(), section.getCenterZ());
-        }
-
-        default int getOutwardDirections(SectionPos origin, RenderSection section) {
-            int planes = 0;
-
-            planes |= section.getChunkX() <= origin.getX() ? 1 << GraphDirection.WEST : 0;
-            planes |= section.getChunkX() >= origin.getX() ? 1 << GraphDirection.EAST : 0;
-
-            planes |= section.getChunkY() <= origin.getY() ? 1 << GraphDirection.DOWN : 0;
-            planes |= section.getChunkY() >= origin.getY() ? 1 << GraphDirection.UP : 0;
-
-            planes |= section.getChunkZ() <= origin.getZ() ? 1 << GraphDirection.NORTH : 0;
-            planes |= section.getChunkZ() >= origin.getZ() ? 1 << GraphDirection.SOUTH : 0;
-
-            return planes;
-        }
-
-        long UP_DOWN_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.DOWN, GraphDirection.UP)) | (1L << VisibilityEncoding.bit(GraphDirection.UP, GraphDirection.DOWN));
-        long NORTH_SOUTH_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.NORTH, GraphDirection.SOUTH)) | (1L << VisibilityEncoding.bit(GraphDirection.SOUTH, GraphDirection.NORTH));
-        long WEST_EAST_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.WEST, GraphDirection.EAST)) | (1L << VisibilityEncoding.bit(GraphDirection.EAST, GraphDirection.WEST));
-
-        default long getAngleVisibilityMask(Viewport viewport, RenderSection section) {
-            var transform = viewport.getTransform();
-            var dx = Math.abs(transform.x - section.getCenterX());
-            var dy = Math.abs(transform.y - section.getCenterY());
-            var dz = Math.abs(transform.z - section.getCenterZ());
-
-            var angleOcclusionMask = 0L;
-            if (dx > dy || dz > dy) {
-                angleOcclusionMask |= UP_DOWN_OCCLUDED;
-            }
-            if (dx > dz || dy > dz) {
-                angleOcclusionMask |= NORTH_SOUTH_OCCLUDED;
-            }
-            if (dy > dx || dz > dx) {
-                angleOcclusionMask |= WEST_EAST_OCCLUDED;
-            }
-
-            return ~angleOcclusionMask;
-        }
-
-        default int getDirectionSets(Viewport viewport, RenderSection section) {
-            var transform = viewport.getTransform();
-
-            // determine which base perspectives need to be combined based on the camera position relative to the section.
-            // these bitmasks correspond to the base directions in DirectionalVisGraph.DIRECTION_SETS
-            int directionSetsX = 0;
-            if (transform.x >= section.getOriginX()) {
-                directionSetsX = 0b00001111;
-            }
-            if (transform.x <= section.getOriginX() + 16) {
-                directionSetsX |= 0b11110000;
-            }
-
-            int directionSetsZ = 0;
-            if (transform.z >= section.getOriginZ()) {
-                directionSetsZ = 0b00110011;
-            }
-            if (transform.z <= section.getOriginZ() + 16) {
-                directionSetsZ |= 0b11001100;
-            }
-
-            int directionSetsY = 0;
-            if (transform.y >= section.getOriginY()) {
-                directionSetsY = 0b01010101;
-            }
-            if (transform.y <= section.getOriginY() + 16) {
-                directionSetsY |= 0b10101010;
-            }
-
-            return directionSetsX & directionSetsY & directionSetsZ;
-        }
     }
+
+    private static boolean isWithinFrustum(Viewport viewport, RenderSection section) {
+        return viewport.isBoxVisible(section.getCenterX(), section.getCenterY(), section.getCenterZ());
+    }
+
+    private static final long UP_DOWN_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.DOWN, GraphDirection.UP)) | (1L << VisibilityEncoding.bit(GraphDirection.UP, GraphDirection.DOWN));
+    private static final long NORTH_SOUTH_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.NORTH, GraphDirection.SOUTH)) | (1L << VisibilityEncoding.bit(GraphDirection.SOUTH, GraphDirection.NORTH));
+    private static final long WEST_EAST_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.WEST, GraphDirection.EAST)) | (1L << VisibilityEncoding.bit(GraphDirection.EAST, GraphDirection.WEST));
+
+    private static long getAngleVisibilityMaskLocal(Viewport viewport, RenderSection section) {
+        var transform = viewport.getTransform();
+        var dx = Math.abs(transform.x - section.getCenterX());
+        var dy = Math.abs(transform.y - section.getCenterY());
+        var dz = Math.abs(transform.z - section.getCenterZ());
+
+        var angleOcclusionMask = 0L;
+        if (dx > dy || dz > dy) {
+            angleOcclusionMask |= UP_DOWN_OCCLUDED;
+        }
+        if (dx > dz || dy > dz) {
+            angleOcclusionMask |= NORTH_SOUTH_OCCLUDED;
+        }
+        if (dy > dx || dz > dx) {
+            angleOcclusionMask |= WEST_EAST_OCCLUDED;
+        }
+
+        return ~angleOcclusionMask;
+    }
+
+    // width is 1 for regular (anywhere in current chunk) and 2 for wide (anywhere in neighboring chunks)
+    private static long getAngleVisibilityMaskWide(Viewport viewport, RenderSection section, int width) {
+        // compare the origin and the section centers
+        var origin = viewport.getChunkCoord();
+        var dx = Math.abs(origin.minBlockX() + 8 - section.getCenterX());
+        var dy = Math.abs(origin.minBlockY() + 8 - section.getCenterY());
+        var dz = Math.abs(origin.minBlockZ() + 8 - section.getCenterZ());
+
+        // in a pair da > db both distances can be up to 8 greater or 8 smaller.
+        // since we only want to apply occlusion if every combination satisfies the occlusion condition,
+        // we would need to do combinations of da -/+ 8 > db -/+ 8, which is equivalent to the worst case da > db + 16
+        var margin = 32 * width - 16;
+        var angleOcclusionMask = 0L;
+        if (dx > dy + margin || dz > dy + margin) {
+            angleOcclusionMask |= UP_DOWN_OCCLUDED;
+        }
+        if (dx > dz + margin || dy > dz + margin) {
+            angleOcclusionMask |= NORTH_SOUTH_OCCLUDED;
+        }
+        if (dy > dx + margin || dz > dx + margin) {
+            angleOcclusionMask |= WEST_EAST_OCCLUDED;
+        }
+
+        return ~angleOcclusionMask;
+    }
+
+    private static int getDirectionSetsLocal(Viewport viewport, RenderSection section) {
+        var transform = viewport.getTransform();
+
+        // determine which base perspectives need to be combined based on the camera position relative to the section.
+        // these bitmasks correspond to the base directions in DirectionalVisGraph.DIRECTION_SETS
+        int directionSetsX = 0;
+        if (transform.x >= section.getOriginX()) {
+            directionSetsX = 0b00001111;
+        }
+        if (transform.x <= section.getOriginX() + 16) {
+            directionSetsX |= 0b11110000;
+        }
+
+        int directionSetsZ = 0;
+        if (transform.z >= section.getOriginZ()) {
+            directionSetsZ = 0b00110011;
+        }
+        if (transform.z <= section.getOriginZ() + 16) {
+            directionSetsZ |= 0b11001100;
+        }
+
+        int directionSetsY = 0;
+        if (transform.y >= section.getOriginY()) {
+            directionSetsY = 0b01010101;
+        }
+        if (transform.y <= section.getOriginY() + 16) {
+            directionSetsY |= 0b10101010;
+        }
+
+        return directionSetsX & directionSetsY & directionSetsZ;
+    }
+
+    // width is 1 for regular (anywhere in current chunk) and 2 for wide (anywhere in neighboring chunks)
+    private static int getDirectionSetsWide(Viewport viewport, RenderSection section, int width) {
+        var origin = viewport.getChunkCoord();
+        var minX = origin.minBlockX();
+        var minY = origin.minBlockY();
+        var minZ = origin.minBlockZ();
+
+        var posMargin = 16 * width;
+        var negMargin = 16 * (width - 1);
+
+        // determine which base perspectives need to be combined based on the camera position relative to the section.
+        // these bitmasks correspond to the base directions in DirectionalVisGraph.DIRECTION_SETS
+        int directionSetsX = 0;
+        if (minX + posMargin >= section.getOriginX()) {
+            directionSetsX = 0b00001111;
+        }
+        if (minX - negMargin <= section.getOriginX() + 16) {
+            directionSetsX |= 0b11110000;
+        }
+
+        int directionSetsZ = 0;
+        if (minZ + posMargin >= section.getOriginZ()) {
+            directionSetsZ = 0b00110011;
+        }
+        if (minZ - negMargin <= section.getOriginZ() + 16) {
+            directionSetsZ |= 0b11001100;
+        }
+
+        int directionSetsY = 0;
+        if (minY + posMargin >= section.getOriginY()) {
+            directionSetsY = 0b01010101;
+        }
+        if (minY - negMargin <= section.getOriginY() + 16) {
+            directionSetsY |= 0b10101010;
+        }
+
+        return directionSetsX & directionSetsY & directionSetsZ;
+    }
+
+    private static int getOutwardDirectionsRegular(SectionPos origin, RenderSection section) {
+        int planes = 0;
+
+        planes |= section.getChunkX() <= origin.getX() ? 1 << GraphDirection.WEST : 0;
+        planes |= section.getChunkX() >= origin.getX() ? 1 << GraphDirection.EAST : 0;
+
+        planes |= section.getChunkY() <= origin.getY() ? 1 << GraphDirection.DOWN : 0;
+        planes |= section.getChunkY() >= origin.getY() ? 1 << GraphDirection.UP : 0;
+
+        planes |= section.getChunkZ() <= origin.getZ() ? 1 << GraphDirection.NORTH : 0;
+        planes |= section.getChunkZ() >= origin.getZ() ? 1 << GraphDirection.SOUTH : 0;
+
+        return planes;
+    }
+
+    private static int getOutwardDirectionsWide(SectionPos origin, RenderSection section) {
+        int planes = 0;
+
+        planes |= section.getChunkX() <= origin.getX() + 1 ? 1 << GraphDirection.WEST : 0;
+        planes |= section.getChunkX() >= origin.getX() - 1 ? 1 << GraphDirection.EAST : 0;
+
+        planes |= section.getChunkY() <= origin.getY() + 1 ? 1 << GraphDirection.DOWN : 0;
+        planes |= section.getChunkY() >= origin.getY() - 1 ? 1 << GraphDirection.UP : 0;
+
+        planes |= section.getChunkZ() <= origin.getZ() + 1 ? 1 << GraphDirection.NORTH : 0;
+        planes |= section.getChunkZ() >= origin.getZ() - 1 ? 1 << GraphDirection.SOUTH : 0;
+
+        return planes;
+    }
+
 
     public OcclusionCuller(Long2ReferenceMap<RenderSection> sections, Level level) {
         this.sections = sections;
         this.level = level;
     }
 
-    public int findVisible(GraphOcclusionVisitor visitor,
-                           Viewport viewport,
-                           float searchDistance,
-                           boolean useOcclusionCulling,
-                           CancellationToken cancellationToken) {
-        this.visitor = visitor;
+    public void findVisible(GraphOcclusionVisitor visitorWide,
+                            GraphOcclusionVisitor visitorRegular,
+                            VisibilityTestingVisitor visitorLocal,
+                            Viewport viewport,
+                            float searchDistanceRegular,
+                            float searchDistanceLocal,
+                            boolean useOcclusionCulling,
+                            CancellationToken cancellationToken) {
+        this.visitorWide = visitorWide;
+        this.visitorRegular = visitorRegular;
+        this.visitorLocal = visitorLocal;
+
         this.viewport = viewport;
-        this.searchDistance = searchDistance;
+        this.searchDistanceRegular = searchDistanceRegular;
+        this.searchDistanceLocal = searchDistanceLocal;
         this.useOcclusionCulling = useOcclusionCulling;
 
         this.queue.reset();
@@ -170,12 +266,12 @@ public class OcclusionCuller {
             processQueue(this.queue.read(), this.queue.write());
         }
 
-        this.addNearbySections(visitor, viewport);
+        this.addNearbySections(viewport);
 
-        this.visitor = null;
+        this.visitorWide = null;
+        this.visitorRegular = null;
+        this.visitorLocal = null;
         this.viewport = null;
-
-        return this.token;
     }
 
     private void processQueue(ReadQueue<RenderSection> readQueue,
@@ -185,47 +281,63 @@ public class OcclusionCuller {
 
         // only visible sections are entered into the queue
         while ((section = readQueue.dequeue()) != null) {
-            int connections;
-
-            {
-                if (this.useOcclusionCulling) {
-                    var visibilityDataSet = section.getVisibilityData();
-                    if (visibilityDataSet == null) {
-                        // No visibility data, so we can't traverse into any neighbors.
-                        continue;
-                    }
-
-                    // get the visibility data for the camera perspective relative to this section
-                    var visibilityData = this.joinVisibilityData(visibilityDataSet, section, this.viewport);
-
-                    // occlude paths through the section if it's being viewed at an angle where
-                    // the other side can't possibly be seen
-                    visibilityData &= this.visitor.getAngleVisibilityMask(this.viewport, section);
-
-                    // When using occlusion culling, we can only traverse into neighbors for which there is a path of
-                    // visibility through this chunk. This is determined by taking all the incoming paths to this chunk and
-                    // creating a union of the outgoing paths from those.
-                    connections = VisibilityEncoding.getConnections(visibilityData, section.getIncomingDirections());
-                } else {
-                    // Not using any occlusion culling, so traversing in any direction is legal.
-                    connections = GraphDirectionSet.ALL;
-                }
-
-                // We can only traverse *outwards* from the center of the graph search, so mask off any invalid
-                // directions.
-                connections &= this.visitor.getOutwardDirections(origin, section);
-            }
-
-            visitNeighbors(writeQueue, section, connections, this.inBoundsOrigin);
+            processItem(writeQueue, section, origin);
         }
     }
 
-    private long joinVisibilityData(long[] visibilityDataSet, RenderSection section, Viewport viewport) {
+    private void processItem(WriteQueue<RenderSection> writeQueue, RenderSection section, SectionPos origin) {
+        int outgoingWide, outgoingRegular, outgoingLocal;
+
+        if (this.useOcclusionCulling) {
+            var visibilityDataSet = section.getVisibilityData();
+            if (visibilityDataSet == null) {
+                // No visibility data, so we can't traverse into any neighbors.
+                return;
+            }
+
+            // get the visibility data for the camera perspective relative to this section
+            var visibilityDataWide = this.joinVisibilityData(visibilityDataSet, section, this.viewport, 2);
+            var visibilityDataRegular = this.joinVisibilityData(visibilityDataSet, section, this.viewport, 1);
+            var visibilityDataLocal = this.joinVisibilityData(visibilityDataSet, section, this.viewport, 0);
+
+            // occlude paths through the section if it's being viewed at an angle where
+            // the other side can't possibly be seen
+            visibilityDataWide &= getAngleVisibilityMaskWide(this.viewport, section, 2);
+            visibilityDataRegular &= getAngleVisibilityMaskWide(this.viewport, section, 1);
+            visibilityDataLocal &= getAngleVisibilityMaskLocal(this.viewport, section);
+
+            // When using occlusion culling, we can only traverse into neighbors for which there is a path of
+            // visibility through this chunk. This is determined by taking all the incoming paths to this chunk and
+            // creating a union of the outgoing paths from those.
+            outgoingWide = VisibilityEncoding.getConnections(visibilityDataWide, section.getIncomingDirectionsWide());
+            outgoingRegular = VisibilityEncoding.getConnections(visibilityDataRegular, section.getIncomingDirectionsRegular());
+            outgoingLocal = VisibilityEncoding.getConnections(visibilityDataLocal, section.getIncomingDirectionsLocal());
+        } else {
+            // Not using any occlusion culling, so traversing in any direction is legal.
+            outgoingWide = GraphDirectionSet.ALL;
+            outgoingRegular = GraphDirectionSet.ALL;
+            outgoingLocal = GraphDirectionSet.ALL;
+        }
+
+        // We can only traverse *outwards* from the center of the graph search, so mask off any invalid directions.
+        outgoingWide &= getOutwardDirectionsWide(origin, section);
+        outgoingRegular &= getOutwardDirectionsRegular(origin, section);
+        outgoingLocal &= getOutwardDirectionsRegular(origin, section);
+
+        visitNeighbors(writeQueue, section, outgoingWide, outgoingRegular, outgoingLocal, this.inBoundsOrigin);
+    }
+
+    private long joinVisibilityData(long[] visibilityDataSet, RenderSection section, Viewport viewport, int width) {
         if (visibilityDataSet.length == 1) {
             return visibilityDataSet[0];
         }
 
-        int directionSets = this.visitor.getDirectionSets(viewport, section);
+        int directionSets;
+        if (width == 0) {
+            directionSets = getDirectionSetsLocal(viewport, section);
+        } else {
+            directionSets = getDirectionSetsWide(viewport, section, width);
+        }
 
         // Combine the relevant visibility data sets.
         // Since each perspective can be seen from two opposite sides, two bits in each mask are set.
@@ -246,89 +358,105 @@ public class OcclusionCuller {
         return visibilityData;
     }
 
-    private static boolean isWithinRenderDistance(CameraTransform camera, RenderSection section, float maxDistance) {
-        // origin point of the chunk's bounding box (in view space)
-        int ox = section.getOriginX() - camera.intX;
-        int oy = section.getOriginY() - camera.intY;
-        int oz = section.getOriginZ() - camera.intZ;
-
-        // coordinates of the point to compare (in view space)
-        // this is the closest point within the bounding box to the center (0, 0, 0)
-        float dx = nearestToZero(ox - 1, ox + 17) - camera.fracX;
-        float dy = nearestToZero(oy - 1, oy + 17) - camera.fracY;
-        float dz = nearestToZero(oz - 1, oz + 17) - camera.fracZ;
-
-        // vanilla's "cylindrical fog" algorithm
-        // max(length(distance.xz), abs(distance.y))
-        return (((dx * dx) + (dz * dz)) < (maxDistance * maxDistance)) && (Math.abs(dy) < maxDistance);
-    }
-
-    private void visitNeighbors(WriteQueue<RenderSection> queue, RenderSection section, int outgoing, SectionPos origin) {
-        // Only traverse into neighbors which are actually present.
-        // This avoids a null-check on each invocation to enqueue, and since the compiler will see that a null
-        // is never encountered (after profiling), it will optimize it away.
-        outgoing &= section.getAdjacentMask();
+    private void visitNeighbors(WriteQueue<RenderSection> queue, RenderSection section, int outgoingWide, int outgoingRegular, int outgoingLocal, SectionPos origin) {
+        var adjacentMask = section.getAdjacentMask();
+        outgoingWide &= adjacentMask;
 
         // Check if there are any valid connections left, and if not, early-exit.
-        if (outgoing == GraphDirectionSet.NONE) {
+        // if wide doesn't have any connections, the others won't either
+        if (outgoingWide == GraphDirectionSet.NONE) {
             return;
         }
+        outgoingRegular &= adjacentMask;
+        outgoingLocal &= adjacentMask;
 
         var originSection = origin == null ? null : section;
 
         // the viewpoint is outside the world, so the angle computations relying on propagating angle information
         // from the origin section to the others won't work.
-        if (GraphDirectionSet.contains(outgoing, GraphDirection.DOWN)) {
-            visitNode(queue, originSection, section.adjacentDown, GraphDirection.UP);
-        }
-
-        if (GraphDirectionSet.contains(outgoing, GraphDirection.UP)) {
-            visitNode(queue, originSection, section.adjacentUp, GraphDirection.DOWN);
-        }
-
-        if (GraphDirectionSet.contains(outgoing, GraphDirection.NORTH)) {
-            visitNode(queue, originSection, section.adjacentNorth, GraphDirection.SOUTH);
-        }
-
-        if (GraphDirectionSet.contains(outgoing, GraphDirection.SOUTH)) {
-            visitNode(queue, originSection, section.adjacentSouth, GraphDirection.NORTH);
-        }
-
-        if (GraphDirectionSet.contains(outgoing, GraphDirection.WEST)) {
-            visitNode(queue, originSection, section.adjacentWest, GraphDirection.EAST);
-        }
-
-        if (GraphDirectionSet.contains(outgoing, GraphDirection.EAST)) {
-            visitNode(queue, originSection, section.adjacentEast, GraphDirection.WEST);
-        }
+        tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentDown, GraphDirection.DOWN);
+        tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentUp, GraphDirection.UP);
+        tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentNorth, GraphDirection.NORTH);
+        tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentSouth, GraphDirection.SOUTH);
+        tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentWest, GraphDirection.WEST);
+        tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentEast, GraphDirection.EAST);
     }
 
-    private void visitNode(WriteQueue<RenderSection> queue, RenderSection originSection, RenderSection section, int incomingDirection) {
+    private void tryVisitNode(WriteQueue<RenderSection> queue, RenderSection originSection, int outgoingWide, int outgoingRegular, int outgoingLocal, RenderSection section, int outgoingDirection) {
         // isn't usually null, but can be null if the bfs is happening during loading or unloading of chunks
         if (section == null) {
             return;
         }
 
-        // perform angular occlusion culling if enabled in general and locally
-        if (originSection != null && !section.intersectSlopes(this.inBoundsOrigin, originSection, this.token)) {
+        var hasWidePath = GraphDirectionSet.contains(outgoingWide, outgoingDirection);
+        var hasRegularPath = GraphDirectionSet.contains(outgoingRegular, outgoingDirection);
+        var hasLocalPath = GraphDirectionSet.contains(outgoingLocal, outgoingDirection);
+        if (!(hasWidePath || hasRegularPath || hasLocalPath)) {
+            // no path to this neighbor from the current section, so skip it
             return;
         }
 
-        if (section.getLastVisibleSearchToken() != this.token) {
+        // perform angular occlusion culling if enabled in general and locally
+//        if (originSection != null && !section.intersectSlopes(this.inBoundsOrigin, originSection, this.token)) {
+//            return;
+//        }
+
+        visitNode(queue, section, outgoingDirection, hasLocalPath, hasRegularPath, hasWidePath);
+    }
+
+    private void visitNode(WriteQueue<RenderSection> queue, RenderSection section, int outgoingDirection, boolean hasLocalPath, boolean hasRegularPath, boolean hasWidePath) {
+        if (section.getSearchToken() != this.token) {
             // This is the first time we are visiting this section during the given token, so we must
             // reset the state.
-            section.setLastVisibleSearchToken(this.token);
-            section.setIncomingDirections(GraphDirectionSet.NONE);
+            section.resetOnFirstVisit(this.token);
 
-            if (isWithinRenderDistance(this.viewport.getTransform(), section, this.searchDistance) &&
-                    this.visitor.isWithinFrustum(this.viewport, section) &&
-                    this.visitor.visitTestVisible(section)) {
-                this.visitor.visit(section);
+            // origin point of the chunk's bounding box (in view space)
+            CameraTransform camera = this.viewport.getTransform();
+            int ox = section.getOriginX() - camera.intX;
+            int oy = section.getOriginY() - camera.intY;
+            int oz = section.getOriginZ() - camera.intZ;
+
+            // coordinates of the point to compare (in view space)
+            // this is the closest point within the bounding box to the center (0, 0, 0)
+            float dx = nearestToZero(ox - 1, ox + 17) - camera.fracX;
+            float dy = nearestToZero(oy - 1, oy + 17) - camera.fracY;
+            float dz = nearestToZero(oz - 1, oz + 17) - camera.fracZ;
+            float xzThreshold = (dx * dx) + (dz * dz);
+            float yThreshold = Math.abs(dy);
+
+            // vanilla's "cylindrical fog" algorithm
+            // max(length(distance.xz), abs(distance.y))
+            if (testDistance(xzThreshold, yThreshold, this.searchDistanceRegular)) {
+                this.visitorWide.visit(section);
+
+                // TODO: also do ray test on regular path?
+                if (hasRegularPath) {
+                    this.visitorRegular.visit(section);
+                    if (hasLocalPath &&
+                            testDistance(xzThreshold, yThreshold, this.searchDistanceLocal) &&
+                            isWithinFrustum(this.viewport, section) &&
+                            this.visitorLocal.visitTestVisible(section)) {
+                        this.visitorLocal.visit(section);
+                    }
+                }
                 queue.enqueue(section);
             }
         }
 
-        section.addIncomingDirections(GraphDirectionSet.of(incomingDirection));
+        var incomingSet = GraphDirectionSet.of(GraphDirection.opposite(outgoingDirection));
+        if (hasWidePath) {
+            section.addIncomingDirectionsWide(incomingSet);
+            if (hasRegularPath) {
+                section.addIncomingDirectionsRegular(incomingSet);
+                if (hasLocalPath) {
+                    section.addIncomingDirectionsLocal(incomingSet);
+                }
+            }
+        }
+    }
+
+    private static boolean testDistance(float xzThreshold, float yThreshold, float maxDistance) {
+        return (xzThreshold < (maxDistance * maxDistance)) && (yThreshold < maxDistance);
     }
 
     @SuppressWarnings("ManualMinMaxCalculation") // we know what we are doing.
@@ -348,12 +476,18 @@ public class OcclusionCuller {
         return viewport.isBoxVisibleLooser(section.getCenterX(), section.getCenterY(), section.getCenterZ());
     }
 
+    private void visitAll(RenderSection section) {
+        this.visitorWide.visit(section);
+        this.visitorRegular.visit(section);
+        this.visitorLocal.visit(section);
+    }
+
     // This method visits sections near the origin that are not in the path of the graph traversal
     // but have bounding boxes that may intersect with the frustum. It does this additional check
     // for all neighboring, even diagonally neighboring, sections around the origin to render them
     // if their extended bounding box is visible, and they may render large models that extend
     // outside the 16x16x16 base volume of the section.
-    private void addNearbySections(GraphOcclusionVisitor visitor, Viewport viewport) {
+    private void addNearbySections(Viewport viewport) {
         var origin = viewport.getChunkCoord();
         var originX = origin.getX();
         var originY = origin.getY();
@@ -369,11 +503,11 @@ public class OcclusionCuller {
                     var section = this.getRenderSection(originX + dx, originY + dy, originZ + dz);
 
                     // additionally render not yet visited but visible sections
-                    if (section != null && section.getLastVisibleSearchToken() != this.token && isWithinNearbySectionFrustum(viewport, section)) {
+                    if (section != null && section.getSearchToken() != this.token && isWithinNearbySectionFrustum(viewport, section)) {
                         // reset state on first visit, but don't enqueue
-                        section.setLastVisibleSearchToken(this.token);
+                        section.resetOnFirstVisit(this.token);
 
-                        visitor.visit(section);
+                        this.visitAll(section);
                     }
                 }
             }
@@ -381,14 +515,12 @@ public class OcclusionCuller {
     }
 
     private void init(WriteQueue<RenderSection> queue) {
-        var origin = this.viewport.getChunkCoord();
-
-        if (origin.getY() < this.level.getMinSectionY()) {
+        if (this.origin.getY() < this.level.getMinSectionY()) {
             // below the level
             this.outOfWorldRadius = 0;
             this.outOfWorldHeight = this.level.getMinSectionY();
             this.outOfWorldDirection = GraphDirection.DOWN;
-        } else if (origin.getY() > this.level.getMaxSectionY()) {
+        } else if (this.origin.getY() > this.level.getMaxSectionY()) {
             // above the level
             this.outOfWorldRadius = 0;
             this.outOfWorldHeight = this.level.getMaxSectionY();
@@ -400,45 +532,50 @@ public class OcclusionCuller {
     }
 
     private void initWithinWorld(WriteQueue<RenderSection> queue) {
-        var origin = this.viewport.getChunkCoord();
-        var section = this.getRenderSection(origin.getX(), origin.getY(), origin.getZ());
+        var originSection = this.getRenderSection(this.origin.getX(), this.origin.getY(), this.origin.getZ());
 
-        if (section == null) {
+        if (originSection == null) {
             return;
         }
 
-        section.setOriginAngles();
-        section.setLastVisibleSearchToken(this.token);
-        section.setIncomingDirections(GraphDirectionSet.NONE);
+//        originSection.setOriginAngles();
+        originSection.resetOnFirstVisit(this.token);
 
-        this.visitor.visit(section);
+        this.visitAll(originSection);
 
-        int outgoing;
+        int outgoingWide, outgoingRegular, outgoingLocal;
 
         if (this.useOcclusionCulling) {
             // Since the camera is located inside this chunk, there are no "incoming" directions. So we need to instead
             // find any possible paths out of this chunk and enqueue those neighbors.
-            var visibilityDataSet = section.getVisibilityData();
+            var visibilityDataSet = originSection.getVisibilityData();
             if (visibilityDataSet == null) {
                 // No visibility data, so we can't traverse into any neighbors.
                 return;
             }
 
-            outgoing = VisibilityEncoding.getConnections(
-                    this.joinVisibilityData(visibilityDataSet, section, this.viewport));
+            var visibilityDataWide = this.joinVisibilityData(visibilityDataSet, originSection, this.viewport, 2);
+            var visibilityDataRegular = this.joinVisibilityData(visibilityDataSet, originSection, this.viewport, 1);
+            var visibilityDataLocal = this.joinVisibilityData(visibilityDataSet, originSection, this.viewport, 0);
+
+            outgoingWide = VisibilityEncoding.getConnections(visibilityDataWide);
+            outgoingRegular = VisibilityEncoding.getConnections(visibilityDataRegular);
+            outgoingLocal = VisibilityEncoding.getConnections(visibilityDataLocal);
         } else {
             // Occlusion culling is disabled, so we can traverse into any neighbor.
-            outgoing = GraphDirectionSet.ALL;
+            outgoingWide = GraphDirectionSet.ALL;
+            outgoingRegular = GraphDirectionSet.ALL;
+            outgoingLocal = GraphDirectionSet.ALL;
         }
 
-        visitNeighbors(queue, section, outgoing, this.origin);
+        visitNeighbors(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, this.origin);
     }
 
     // Enqueues sections that are inside the viewport using diamond spiral iteration to avoid sorting and ensure a
     // consistent order. Innermost layers are enqueued first. Within each layer, iteration starts at the northernmost
     // section and proceeds counterclockwise (N->W->S->E).
     private boolean initOutsideWorldHeight(WriteQueue<RenderSection> queue) {
-        var radius = Mth.floor(this.searchDistance / 16.0f);
+        var radius = Mth.floor(this.searchDistanceRegular / 16.0f);
         var height = this.outOfWorldHeight;
         var direction = this.outOfWorldDirection;
         var layer = this.outOfWorldRadius;
@@ -498,7 +635,11 @@ public class OcclusionCuller {
     private void tryInitNode(WriteQueue<RenderSection> queue, int x, int y, int z, int direction) {
         var section = this.getRenderSection(x, y, z);
 
-        visitNode(queue, null, section, direction);
+        if (section == null) {
+            return;
+        }
+
+        this.visitNode(queue, section, direction, true, true, true);
     }
 
     private RenderSection getRenderSection(int x, int y, int z) {

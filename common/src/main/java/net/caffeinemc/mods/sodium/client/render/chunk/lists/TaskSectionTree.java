@@ -4,11 +4,12 @@ import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.CullType;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.RayOcclusionSectionTree;
 import net.caffeinemc.mods.sodium.client.render.chunk.tree.TraversableForest;
+import net.caffeinemc.mods.sodium.client.render.chunk.tree.TraversableTree;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.minecraft.world.level.Level;
 
 public class TaskSectionTree extends RayOcclusionSectionTree {
-    private final TraversableForest taskTree;
+    private final TraversableForest<TraversableTree> taskTree;
     private boolean taskTreeFinalized = false;
 
     public TaskSectionTree(Viewport viewport, float buildDistance, int frame, CullType cullType, Level level) {

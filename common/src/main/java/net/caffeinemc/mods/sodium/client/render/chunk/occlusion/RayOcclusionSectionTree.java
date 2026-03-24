@@ -9,7 +9,7 @@ import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.minecraft.world.level.Level;
 
-public class RayOcclusionSectionTree extends SectionTree {
+public class RayOcclusionSectionTree extends SectionTree implements OcclusionCuller.VisibilityTestingVisitor {
     private static final float SECTION_HALF_DIAGONAL = (float) Math.sqrt(8 * 8 * 3);
     private static final float RAY_MIN_STEP_SIZE_INV = 1.0f / (SECTION_HALF_DIAGONAL * 2);
     private static final int RAY_TEST_MAX_STEPS = 12;
@@ -18,7 +18,7 @@ public class RayOcclusionSectionTree extends SectionTree {
     private final CameraTransform transform;
     private final int minSection, maxSection;
 
-    private final Forest portalTree;
+    private final Forest<FlatTree> portalTree;
 
     public RayOcclusionSectionTree(Viewport viewport, float buildDistance, int frame, CullType cullType, Level level) {
         super(viewport, buildDistance, frame, cullType, level);
@@ -41,7 +41,7 @@ public class RayOcclusionSectionTree extends SectionTree {
             this.lastSectionKnownEmpty = true;
         }
 
-        return super.visitTestVisible(section);
+        return OcclusionCuller.VisibilityTestingVisitor.super.visitTestVisible(section);
     }
 
     @Override
@@ -125,7 +125,7 @@ public class RayOcclusionSectionTree extends SectionTree {
         return this.portalTree.getPresence(x, y, z);
     }
 
-    private static Forest createPortalTree(int baseOffsetX, int baseOffsetY, int baseOffsetZ, float buildDistance, Level level) {
+    private static Forest<FlatTree> createPortalTree(int baseOffsetX, int baseOffsetY, int baseOffsetZ, float buildDistance, Level level) {
         if (BaseBiForest.checkApplicable(buildDistance, level)) {
             return new PortalBiForest(baseOffsetX, baseOffsetY, baseOffsetZ, buildDistance);
         }
