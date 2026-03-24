@@ -69,6 +69,12 @@ public class SodiumOptions {
         public boolean hasSeenDonationPrompt = false;
     }
 
+    public enum FullscreenMode {
+        OFF,
+        EXCLUSIVE,
+        BORDERLESS
+    }
+
     private static final Gson GSON = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setPrettyPrinting()

@@ -194,21 +194,57 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setBinding(this.vanillaOpts.guiScale()::set, this.vanillaOpts.guiScale()::get)
                 )
                 .addOption(
-                        builder.createBooleanOption(Identifier.parse("sodium:general.fullscreen"))
+                        builder.createEnumOption(Identifier.parse("sodium:general.fullscreen_mode"), SodiumOptions.FullscreenMode.class)
                                 .setStorageHandler(this.vanillaStorage)
-                                .setName(Component.translatable("options.fullscreen"))
-                                .setTooltip(Component.translatable("sodium.options.fullscreen.tooltip"))
-                                .setDefaultValue(false)
-                                .setBinding(value -> {
-                                    this.vanillaOpts.fullscreen().set(value);
+                                .setName(Component.translatable("sodium.options.fullscreen_mode.name"))
+                                .setTooltip(Component.translatable("sodium.options.fullscreen_mode.tooltip"))
+                                .setElementNameProvider(mode -> switch (mode) {
+                                    case OFF -> Component.translatable("sodium.options.fullscreen_mode.off");
+                                    case EXCLUSIVE ->
+                                            Component.translatable("sodium.options.fullscreen_mode.exclusive");
+                                    case BORDERLESS ->
+                                            Component.translatable("sodium.options.fullscreen_mode.borderless");
+                                })
+                                .setDefaultValue(SodiumOptions.FullscreenMode.OFF)
+                                .setFlags(OptionFlag.REQUIRES_GAME_RESTART) // TODO: needs to be conditional
+                                .setImpact(OptionImpact.HIGH)
+                                .setBinding(
+                                        // modifies fullscreen and exclusive fullscreen together since they are interdependent in Vanilla's implementation
+                                        value -> {
+                                            switch (value) {
+                                                case OFF -> {
+                                                    this.vanillaOpts.fullscreen().set(false);
+                                                    this.vanillaOpts.exclusiveFullscreen().set(false);
+                                                }
+                                                case EXCLUSIVE -> {
+                                                    this.vanillaOpts.fullscreen().set(true);
+                                                    this.vanillaOpts.exclusiveFullscreen().set(true);
+                                                }
+                                                case BORDERLESS -> {
+                                                    this.vanillaOpts.fullscreen().set(true);
+                                                    this.vanillaOpts.exclusiveFullscreen().set(false);
+                                                }
+                                            }
 
-                                    if (this.window.isFullscreen() != this.vanillaOpts.fullscreen().get()) {
-                                        this.window.toggleFullScreen();
+                                            // apply the fullscreen state
+                                            if (this.window.isFullscreen() != this.vanillaOpts.fullscreen().get()) {
+                                                this.window.toggleFullScreen();
 
-                                        // The client might not be able to enter full-screen mode
-                                        this.vanillaOpts.fullscreen().set(this.window.isFullscreen());
-                                    }
-                                }, this.vanillaOpts.fullscreen()::get)
+                                                // The client might not be able to enter full-screen mode
+                                                this.vanillaOpts.fullscreen().set(this.window.isFullscreen());
+                                            }
+                                        },
+                                        () -> {
+                                            boolean fullscreen = this.vanillaOpts.fullscreen().get();
+                                            boolean exclusive = this.vanillaOpts.exclusiveFullscreen().get();
+                                            if (fullscreen && exclusive) {
+                                                return SodiumOptions.FullscreenMode.EXCLUSIVE;
+                                            } else if (fullscreen) {
+                                                return SodiumOptions.FullscreenMode.BORDERLESS;
+                                            } else {
+                                                return SodiumOptions.FullscreenMode.OFF;
+                                            }
+                                        })
                 )
                 .addOption(
                         builder.createIntegerOption(Identifier.parse("sodium:general.fullscreen_resolution"))
@@ -240,10 +276,11 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                                 return false;
                                             }
                                             var os = OsUtils.getOs();
+                                            var fullscreenMode = state.readEnumOption(Identifier.parse("sodium:general.fullscreen_mode"), SodiumOptions.FullscreenMode.class);
                                             return (os == OsUtils.OperatingSystem.WIN || os == OsUtils.OperatingSystem.MAC) &&
-                                                    state.readBooleanOption(Identifier.parse("sodium:general.fullscreen"));
+                                                    fullscreenMode == SodiumOptions.FullscreenMode.EXCLUSIVE;
                                         },
-                                        Identifier.parse("sodium:general.fullscreen"))
+                                        Identifier.parse("sodium:general.fullscreen_mode"))
                                 .setFlags(OptionFlag.REQUIRES_VIDEOMODE_RELOAD)
                 )
                 .addOption(
@@ -263,16 +300,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setRange(10, 260, 10)
                                 .setDefaultValue(60)
                                 .setBinding(this.vanillaOpts.framerateLimit()::set, this.vanillaOpts.framerateLimit()::get)
-                )
-                .addOption(
-                        builder.createBooleanOption(Identifier.parse("sodium:general.exclusive_fullscreen"))
-                                .setStorageHandler(this.vanillaStorage)
-                                .setName(Component.translatable("options.exclusiveFullscreen"))
-                                .setTooltip(Component.translatable("sodium.options.exclusive_fullscreen.tooltip"))
-                                .setDefaultValue(false)
-                                .setFlags(OptionFlag.REQUIRES_GAME_RESTART)
-                                .setImpact(OptionImpact.HIGH)
-                                .setBinding(this.vanillaOpts.exclusiveFullscreen()::set, this.vanillaOpts.exclusiveFullscreen()::get)
                 )
         );
         generalPage.addOptionGroup(builder.createOptionGroup()
