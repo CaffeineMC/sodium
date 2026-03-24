@@ -16,11 +16,13 @@ import net.caffeinemc.mods.sodium.api.config.structure.*;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
+import net.caffeinemc.mods.sodium.client.config.structure.Config;
 import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
+import net.caffeinemc.mods.sodium.mixin.features.gui.OptionsAccessor;
 import net.minecraft.client.*;
 import net.minecraft.client.renderer.texture.MipmapStrategy;
 import net.minecraft.client.renderer.texture.ReloadableTexture;
@@ -80,6 +82,12 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
             return null;
         }
         return this.window.findBestMonitor();
+    }
+
+    public enum FullscreenMode {
+        OFF,
+        EXCLUSIVE,
+        BORDERLESS
     }
 
     public static void registerIcon(TextureManager textureManager) {
@@ -194,7 +202,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setBinding(this.vanillaOpts.guiScale()::set, this.vanillaOpts.guiScale()::get)
                 )
                 .addOption(
-                        builder.createEnumOption(Identifier.parse("sodium:general.fullscreen_mode"), SodiumOptions.FullscreenMode.class)
+                        builder.createEnumOption(Identifier.parse("sodium:general.fullscreen_mode"), FullscreenMode.class)
                                 .setStorageHandler(this.vanillaStorage)
                                 .setName(Component.translatable("sodium.options.fullscreen_mode.name"))
                                 .setTooltip(Component.translatable("sodium.options.fullscreen_mode.tooltip"))
@@ -205,17 +213,13 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                     case BORDERLESS ->
                                             Component.translatable("sodium.options.fullscreen_mode.borderless");
                                 })
-                                .setDefaultValue(SodiumOptions.FullscreenMode.OFF)
-                                .setFlags(OptionFlag.REQUIRES_GAME_RESTART) // TODO: needs to be conditional
+                                .setDefaultValue(FullscreenMode.OFF)
                                 .setImpact(OptionImpact.HIGH)
                                 .setBinding(
                                         // modifies fullscreen and exclusive fullscreen together since they are interdependent in Vanilla's implementation
                                         value -> {
                                             switch (value) {
-                                                case OFF -> {
-                                                    this.vanillaOpts.fullscreen().set(false);
-                                                    this.vanillaOpts.exclusiveFullscreen().set(false);
-                                                }
+                                                case OFF -> this.vanillaOpts.fullscreen().set(false);
                                                 case EXCLUSIVE -> {
                                                     this.vanillaOpts.fullscreen().set(true);
                                                     this.vanillaOpts.exclusiveFullscreen().set(true);
@@ -238,13 +242,21 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                             boolean fullscreen = this.vanillaOpts.fullscreen().get();
                                             boolean exclusive = this.vanillaOpts.exclusiveFullscreen().get();
                                             if (fullscreen && exclusive) {
-                                                return SodiumOptions.FullscreenMode.EXCLUSIVE;
+                                                return FullscreenMode.EXCLUSIVE;
                                             } else if (fullscreen) {
-                                                return SodiumOptions.FullscreenMode.BORDERLESS;
+                                                return FullscreenMode.BORDERLESS;
                                             } else {
-                                                return SodiumOptions.FullscreenMode.OFF;
+                                                return FullscreenMode.OFF;
                                             }
                                         })
+                                .setApplyHook((_) -> {
+                                    // check for a change in the exclusivity of the fullscreen mode (though don't care if fullscreen mode has been turned off)
+                                    var initialExclusiveFullscreen = ((OptionsAccessor) Minecraft.getInstance().options).sodium$initialExclusiveFullscreen();
+                                    var currentExclusiveFullscreen = this.vanillaOpts.exclusiveFullscreen().get();
+                                    if (initialExclusiveFullscreen != currentExclusiveFullscreen) {
+                                        Config.onGameNeedsRestart();
+                                    }
+                                })
                 )
                 .addOption(
                         builder.createIntegerOption(Identifier.parse("sodium:general.fullscreen_resolution"))
@@ -276,9 +288,9 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                                 return false;
                                             }
                                             var os = OsUtils.getOs();
-                                            var fullscreenMode = state.readEnumOption(Identifier.parse("sodium:general.fullscreen_mode"), SodiumOptions.FullscreenMode.class);
+                                            var fullscreenMode = state.readEnumOption(Identifier.parse("sodium:general.fullscreen_mode"), FullscreenMode.class);
                                             return (os == OsUtils.OperatingSystem.WIN || os == OsUtils.OperatingSystem.MAC) &&
-                                                    fullscreenMode == SodiumOptions.FullscreenMode.EXCLUSIVE;
+                                                    fullscreenMode == FullscreenMode.EXCLUSIVE;
                                         },
                                         Identifier.parse("sodium:general.fullscreen_mode"))
                                 .setFlags(OptionFlag.REQUIRES_VIDEOMODE_RELOAD)

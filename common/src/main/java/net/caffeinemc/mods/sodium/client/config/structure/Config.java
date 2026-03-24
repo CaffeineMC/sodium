@@ -342,28 +342,22 @@ public class Config implements ConfigState {
     }
 
     private void processFlags(Set<Identifier> flags) {
-        Minecraft client = Minecraft.getInstance();
-
-        if (client.level != null) {
-            if (flags.contains(OptionFlag.REQUIRES_RENDERER_RELOAD.getId())) {
-                client.levelRenderer.allChanged();
-            } else if (flags.contains(OptionFlag.REQUIRES_RENDERER_UPDATE.getId())) {
-                client.levelRenderer.needsUpdate();
-            }
+        if (flags.contains(OptionFlag.REQUIRES_RENDERER_RELOAD.getId())) {
+            onRendererReload();
+        } else if (flags.contains(OptionFlag.REQUIRES_RENDERER_UPDATE.getId())) {
+            onRendererUpdate();
         }
 
         if (flags.contains(OptionFlag.REQUIRES_ASSET_RELOAD.getId())) {
-            client.updateMaxMipLevel(client.options.mipmapLevels().get());
-            client.delayTextureReload();
+            onAssetReload();
         }
 
         if (flags.contains(OptionFlag.REQUIRES_VIDEOMODE_RELOAD.getId())) {
-            client.getWindow().changeFullscreenVideoMode();
+            onVideoModeReload();
         }
 
         if (flags.contains(OptionFlag.REQUIRES_GAME_RESTART.getId())) {
-            Console.instance().logMessage(MessageLevel.WARN,
-                    "sodium.console.game_restart", true, 10.0);
+            onGameNeedsRestart();
         }
 
         // process the registered flag hooks
@@ -379,6 +373,36 @@ public class Config implements ConfigState {
                 }
             }
         }
+    }
+
+    public static void onRendererUpdate() {
+        var client = Minecraft.getInstance();
+        if (client.level != null) {
+            client.levelRenderer.needsUpdate();
+        }
+    }
+
+    public static void onRendererReload() {
+        var client = Minecraft.getInstance();
+        if (client.level != null) {
+            client.levelRenderer.allChanged();
+        }
+    }
+
+    public static void onAssetReload() {
+        var client = Minecraft.getInstance();
+        client.updateMaxMipLevel(client.options.mipmapLevels().get());
+        client.delayTextureReload();
+    }
+
+    public static void onVideoModeReload() {
+        var client = Minecraft.getInstance();
+        client.getWindow().changeFullscreenVideoMode();
+    }
+
+    public static void onGameNeedsRestart() {
+        Console.instance().logMessage(MessageLevel.WARN,
+                "sodium.console.game_restart", true, 10.0);
     }
 
     public boolean readBooleanOption(Identifier id, boolean appliedValue) {
