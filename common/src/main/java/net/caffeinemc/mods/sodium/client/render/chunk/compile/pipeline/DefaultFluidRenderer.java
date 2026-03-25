@@ -23,13 +23,13 @@ import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexE
 import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
 import net.caffeinemc.mods.sodium.client.util.DirectionUtil;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.client.renderer.block.FluidModel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
@@ -553,9 +553,17 @@ public class DefaultFluidRenderer {
 
             // render inwards facing down fluid face using the same heuristic as the side faces.
             // this fixes a number of inconsistencies between the top and side faces
-            var blockStateBelow = level.getBlockState(this.scratchPos.setWithOffset(blockPos, Direction.DOWN));
+            var below = this.secondScratchPos.setWithOffset(blockPos, Direction.DOWN);
+            var blockStateBelow = level.getBlockState(below);
             if (!PlatformBlockAccess.getInstance().shouldShowFluidOverlay(blockStateBelow, level, this.scratchPos, fluidState)) {
-                this.writeQuad(meshBuilder, collector, material, offset, quad, ModelQuadFacing.POS_Y, true);
+                // additionally check the fluid state of the blocks below to prevent rendering the down face if there's no side fluid faces
+                var northIsFluid = level.getFluidState(this.scratchPos.setWithOffset(below, Direction.NORTH)).getType().isSame(fluid);
+                var southIsFluid = level.getFluidState(this.scratchPos.setWithOffset(below, Direction.SOUTH)).getType().isSame(fluid);
+                var westIsFluid = level.getFluidState(this.scratchPos.setWithOffset(below, Direction.WEST)).getType().isSame(fluid);
+                var eastIsFluid = level.getFluidState(this.scratchPos.setWithOffset(below, Direction.EAST)).getType().isSame(fluid);
+                if (northIsFluid || southIsFluid || westIsFluid || eastIsFluid) {
+                    this.writeQuad(meshBuilder, collector, material, offset, quad, ModelQuadFacing.POS_Y, true);
+                }
             }
         }
 
