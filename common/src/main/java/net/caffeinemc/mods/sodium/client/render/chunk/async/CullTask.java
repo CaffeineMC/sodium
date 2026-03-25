@@ -52,6 +52,10 @@ public class CullTask extends AsyncRenderTask<CullResult> {
             timings.clear();
         }
 
+        wideTree.prepareForTraversal();
+        regularTree.prepareForTraversal();
+        localTree.prepareForTraversal();
+
         var globalTaskLists = wideTree.getPendingTaskLists();
         var frustumTaskLists = localTree.getPendingTaskLists();
 

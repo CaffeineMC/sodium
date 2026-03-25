@@ -179,23 +179,23 @@ public class RenderSectionManager {
     }
 
     public void prepareRenderTrees(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
-        // discard unusable present and pending frustum-tested trees
-        if (this.cameraChanged) {
-            this.cullResults.remove(CullType.LOCAL);
-
-            this.cameraChanged = false;
-        }
-
-        // remove all tasks that aren't in progress yet
+        // cancel task if not in progress
         if (this.pendingTask != null && this.pendingTask.cancelIfNotStarted()) {
             this.pendingTask = null;
         }
 
+        // consume the results of completed tasks
         this.consumeTaskResults(false);
 
-        // if the origin section doesn't exist, cull tasks won't produce any useful results
-        if (!this.isOutOfGraph(viewport.getChunkCoord())) {
+        // discard unusable present and pending frustum-tested trees
+        if (this.cameraChanged) {
+            this.cullResults.remove(CullType.LOCAL);
+        }
+
+        // if the origin exists in the graph, schedule new async culling task
+        if (!this.isOutOfGraph(viewport.getChunkCoord()) && (this.cameraChanged || this.needsGraphUpdate)) {
             this.scheduleAsyncWork(camera, viewport, fogParameters, spectator);
+            this.needsGraphUpdate = false;
         }
     }
 
@@ -208,7 +208,7 @@ public class RenderSectionManager {
         }
 
         this.needsRenderListUpdate = false;
-        this.needsGraphUpdate = false;
+        this.cameraChanged = false;
     }
 
     private void consumeTaskResults(boolean waitForCompletion) {
@@ -222,14 +222,18 @@ public class RenderSectionManager {
         }
 
         var result = this.pendingTask.getResult();
-        this.cullResults.put(CullType.LOCAL, result.getCullTreeLocal());
-        this.cullResults.put(CullType.REGULAR, result.getCullTreeRegular());
-        this.cullResults.put(CullType.WIDE, result.getCullTreeWide());
+        var treeLocal = result.getCullTreeLocal();
+        var treeRegular = result.getCullTreeRegular();
+        var treeWide = result.getCullTreeWide();
+        this.cullResults.put(CullType.LOCAL, treeLocal);
+        this.cullResults.put(CullType.REGULAR, treeRegular);
+        this.cullResults.put(CullType.WIDE, treeWide);
 
         this.globalTaskLists = result.getGlobalTaskLists();
         this.frustumTaskLists = result.getFrustumTaskLists();
 
         this.needsRenderListUpdate = true;
+        this.pendingTask = null;
     }
 
     private static Thread makeAsyncCullThread(Runnable runnable) {
@@ -239,8 +243,6 @@ public class RenderSectionManager {
     }
 
     private void scheduleAsyncWork(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
-        // TODO: greatly simplify this logic as we only have one task type now
-
         if (this.pendingTask != null) {
             return;
         }
@@ -253,7 +255,6 @@ public class RenderSectionManager {
         this.pendingTask = new CullTask(viewport, searchDistanceRegular, searchDistanceLocal, this.frame, this.occlusionCuller, useOcclusionCulling, this.level);
         this.pendingTask.submitTo(this.asyncCullExecutor);
     }
-
 
     private static final LongArrayList timings = new LongArrayList();
 
