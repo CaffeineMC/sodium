@@ -197,7 +197,6 @@ public class RenderSectionManager {
         // if the origin exists in the graph, schedule new async culling task
         if (!this.isOutOfGraph(viewport.getChunkCoord()) && (this.cameraChanged || this.needsGraphUpdate)) {
             this.scheduleAsyncWork(camera, viewport, fogParameters, spectator);
-            this.needsGraphUpdate = false;
         }
     }
 
@@ -255,6 +254,9 @@ public class RenderSectionManager {
         var useOcclusionCulling = this.shouldUseOcclusionCulling(camera, spectator);
         this.pendingTask = new CullTask(viewport, searchDistanceRegular, searchDistanceLocal, this.frame, this.occlusionCuller, useOcclusionCulling, this.level);
         this.pendingTask.submitTo(this.asyncCullExecutor);
+
+        // only clear the graph update if we actually scheduled a task. Otherwise, the currently running task might not pick up on the change and no additional task would have been scheduled.
+        this.needsGraphUpdate = false;
     }
 
     private static final LongArrayList timings = new LongArrayList();
