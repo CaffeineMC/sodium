@@ -1,15 +1,15 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.occlusion;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
-import net.caffeinemc.mods.sodium.client.render.chunk.lists.PendingTaskCollector;
-import net.caffeinemc.mods.sodium.client.render.chunk.lists.VisibleChunkCollectorAsync;
+import net.caffeinemc.mods.sodium.client.render.chunk.lists.AbstractSectionVisitor;
+import net.caffeinemc.mods.sodium.client.render.chunk.lists.VisibleChunkCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.tree.TraversableForest;
 import net.caffeinemc.mods.sodium.client.render.chunk.tree.TraversableTree;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.Level;
 
-public class SectionTree extends PendingTaskCollector {
+public class SectionTree extends AbstractSectionVisitor {
     public final TraversableForest<TraversableTree> tree;
 
     private final int bfsWidth;
@@ -41,9 +41,7 @@ public class SectionTree extends PendingTaskCollector {
     }
 
     @Override
-    public void visit(RenderSection section) {
-        super.visit(section);
-
+    public void visit(RenderSection section, boolean inFrustum) {
         // discard invisible or sections that don't need to be rendered,
         // only perform this test if it hasn't already been done before
         if (this.lastSectionKnownEmpty || !section.needsRender()) {
@@ -114,7 +112,7 @@ public class SectionTree extends PendingTaskCollector {
                 this.isWithinFrustum(viewport, section);
     }
 
-    public void traverse(VisibleChunkCollectorAsync visitor, Viewport viewport, float distanceLimit) {
+    public void traverse(VisibleChunkCollector visitor, Viewport viewport, float distanceLimit) {
         this.tree.traverse(visitor, viewport, distanceLimit);
     }
 }

@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.async;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.DeferredTaskList;
+import net.caffeinemc.mods.sodium.client.render.chunk.lists.TaskCollectingTree;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.CullType;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.RayOcclusionSectionTree;
@@ -34,8 +35,7 @@ public class CullTask extends AsyncRenderTask<CullResult> {
 
     @Override
     protected CullResult runTask() {
-        // TODO: make sure we have three trees for the regular collection, and then two task trees (one wide, one local)
-        var wideTree = new SectionTree(this.viewport, this.searchDistanceRegular, this.frame, CullType.WIDE, this.level);
+        var wideTree = new TaskCollectingTree(this.viewport, this.searchDistanceRegular, this.frame, CullType.WIDE, this.level);
         var regularTree = new SectionTree(this.viewport, this.searchDistanceRegular, this.frame, CullType.REGULAR, this.level);
         var localTree = new RayOcclusionSectionTree(this.viewport, this.searchDistanceLocal, this.frame, CullType.LOCAL, this.level);
 
@@ -56,8 +56,7 @@ public class CullTask extends AsyncRenderTask<CullResult> {
         regularTree.prepareForTraversal();
         localTree.prepareForTraversal();
 
-        var globalTaskLists = wideTree.getPendingTaskLists();
-        var frustumTaskLists = localTree.getPendingTaskLists();
+        var taskLists = wideTree.getPendingTaskLists();
 
         return new CullResult() {
             @Override
@@ -79,13 +78,8 @@ public class CullTask extends AsyncRenderTask<CullResult> {
             }
 
             @Override
-            public DeferredTaskList getFrustumTaskLists() {
-                return frustumTaskLists;
-            }
-
-            @Override
-            public DeferredTaskList getGlobalTaskLists() {
-                return globalTaskLists;
+            public DeferredTaskList getPendingTaskLists() {
+                return taskLists;
             }
         };
     }

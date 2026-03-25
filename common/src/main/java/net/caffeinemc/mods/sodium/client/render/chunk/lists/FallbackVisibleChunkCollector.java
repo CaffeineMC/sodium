@@ -2,15 +2,20 @@ package net.caffeinemc.mods.sodium.client.render.chunk.lists;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
+import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.CullType;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegionManager;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
+import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.Level;
 
-public class FallbackVisibleChunkCollector extends FrustumTaskCollector {
-    private final VisibleChunkCollectorAsync renderListCollector;
+public class FallbackVisibleChunkCollector extends TaskCollectingTree implements CoordinateSectionVisitor {
+    private final Long2ReferenceMap<RenderSection> sectionByPosition;
+    private final VisibleChunkCollector renderListCollector;
 
-    public FallbackVisibleChunkCollector(Viewport viewport, float buildDistance, Long2ReferenceMap<RenderSection> sectionByPosition, RenderRegionManager regions, int frame) {
-        super(viewport, buildDistance, sectionByPosition);
-        this.renderListCollector = new VisibleChunkCollectorAsync(regions, frame);
+    public FallbackVisibleChunkCollector(Viewport viewport, float buildDistance, int frame, Long2ReferenceMap<RenderSection> sectionByPosition, RenderRegionManager regions, Level level) {
+        super(viewport, buildDistance, frame, CullType.LOCAL, level);
+        this.sectionByPosition = sectionByPosition;
+        this.renderListCollector = new VisibleChunkCollector(regions, frame);
     }
 
     public SortedRenderLists createRenderLists(Viewport viewport) {
@@ -19,7 +24,14 @@ public class FallbackVisibleChunkCollector extends FrustumTaskCollector {
 
     @Override
     public void visit(int x, int y, int z) {
-        super.visit(x, y, z);
         this.renderListCollector.visit(x, y, z);
+
+        var section = this.sectionByPosition.get(SectionPos.asLong(x, y, z));
+
+        if (section == null) {
+            return;
+        }
+
+        this.visit(section, true);
     }
 }

@@ -3,12 +3,13 @@ package net.caffeinemc.mods.sodium.client.render.chunk.lists;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import net.caffeinemc.mods.sodium.client.render.chunk.ChunkUpdateTypes;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
-import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
+import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.CullType;
+import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.SectionTree;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.util.MathUtil;
-import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 
-public class PendingTaskCollector implements OcclusionCuller.GraphOcclusionVisitor {
+public class TaskCollectingTree extends SectionTree {
     public static final int SECTION_Y_MIN = -128; // used instead of baseOffsetY to accommodate all permissible y values (-2048 to 2048 blocks)
 
     // tunable parameters for the priority calculation.
@@ -21,59 +22,29 @@ public class PendingTaskCollector implements OcclusionCuller.GraphOcclusionVisit
     static final float INV_MAX_DISTANCE_CLOSE = CLOSE_PROXIMITY_FACTOR / CLOSE_DISTANCE;
 
     private final LongArrayList pendingTasks = new LongArrayList();
-
-    protected final boolean isFrustumTested;
-    protected final int baseOffsetX, baseOffsetY, baseOffsetZ;
-
-    protected final int cameraX, cameraY, cameraZ;
     private final float invMaxDistance;
     private final long creationTime;
 
-    public PendingTaskCollector(Viewport viewport, float buildDistance, boolean frustumTested) {
+    public TaskCollectingTree(Viewport viewport, float buildDistance, int frame, CullType cullType, Level level) {
+        super(viewport, buildDistance, frame, cullType, level);
+
         this.creationTime = System.nanoTime();
-        this.isFrustumTested = frustumTested;
-        var offsetDistance = Mth.ceil(buildDistance / 16.0f) + 1;
-
-        // the offset applied to section coordinates to encode their position in the octree
-        var sectionPos = viewport.getChunkCoord();
-        var cameraSectionX = sectionPos.getX();
-        var cameraSectionY = sectionPos.getY();
-        var cameraSectionZ = sectionPos.getZ();
-        this.baseOffsetX = cameraSectionX - offsetDistance;
-        this.baseOffsetY = cameraSectionY - offsetDistance;
-        this.baseOffsetZ = cameraSectionZ - offsetDistance;
-
         this.invMaxDistance = PROXIMITY_FACTOR / buildDistance;
-
-        if (frustumTested) {
-            var blockPos = viewport.getBlockCoord();
-            this.cameraX = blockPos.getX();
-            this.cameraY = blockPos.getY();
-            this.cameraZ = blockPos.getZ();
-        } else {
-            this.cameraX = (cameraSectionX << 4);
-            this.cameraY = (cameraSectionY << 4);
-            this.cameraZ = (cameraSectionZ << 4);
-        }
     }
 
     @Override
-    public void visit(RenderSection section) {
-        this.checkForTask(section);
-    }
-
-    protected void checkForTask(RenderSection section) {
+    public void visit(RenderSection section, boolean inFrustum) {
         int type = section.getPendingUpdate();
 
         // collect tasks even if they're important, whether they're actually important is decided later
         if (type != 0) {
-            this.addPendingSection(section, type);
+            this.addPendingSection(section, type, inFrustum);
         }
     }
 
-    protected void addPendingSection(RenderSection section, int type) {
+    protected void addPendingSection(RenderSection section, int type, boolean inFrustum) {
         // start with a base priority value, lowest priority of task gets processed first
-        float priority = getSectionPriority(section, type);
+        float priority = getSectionPriority(section, type, inFrustum);
 
         // encode the absolute position of the section
         var localX = section.getChunkX() - this.baseOffsetX;
@@ -85,7 +56,7 @@ public class PendingTaskCollector implements OcclusionCuller.GraphOcclusionVisit
         this.pendingTasks.add((long) MathUtil.floatToComparableInt(priority) << 32 | taskCoordinate);
     }
 
-    private float getSectionPriority(RenderSection section, int type) {
+    private float getSectionPriority(RenderSection section, int type, boolean inFrustum) {
         float priority = ChunkUpdateTypes.getPriorityValue(type);
 
         // calculate the relative distance to the camera
@@ -101,6 +72,10 @@ public class PendingTaskCollector implements OcclusionCuller.GraphOcclusionVisit
         var taskPendingTimeNanos = this.creationTime - section.getPendingUpdateSince();
         priority += taskPendingTimeNanos * PENDING_TIME_FACTOR; // upgraded by one point every second
 
+        if (inFrustum) {
+            priority += WITHIN_FRUSTUM_BIAS;
+        }
+
         // explain how priority was calculated
 //        System.out.println("Priority " + priority + " from: distance " + distance + " = " + (distance * this.invMaxDistance) +
 //                ", time " + taskPendingTimeNanos + " = " + (taskPendingTimeNanos * PENDING_TIME_FACTOR) +
@@ -115,6 +90,6 @@ public class PendingTaskCollector implements OcclusionCuller.GraphOcclusionVisit
     }
 
     public DeferredTaskList getPendingTaskLists() {
-        return DeferredTaskList.createHeapCopyOf(this.pendingTasks, this.creationTime, this.isFrustumTested, this.baseOffsetX, this.baseOffsetZ);
+        return DeferredTaskList.createHeapCopyOf(this.pendingTasks, this.baseOffsetX, this.baseOffsetZ);
     }
 }

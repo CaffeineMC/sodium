@@ -1,7 +1,10 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
 import com.mojang.blaze3d.textures.GpuSampler;
-import it.unimi.dsi.fastutil.longs.*;
+import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
+import it.unimi.dsi.fastutil.longs.Long2ReferenceMaps;
+import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.*;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
@@ -103,8 +106,7 @@ public class RenderSectionManager {
     @NonNull
     private SortedRenderLists renderLists;
 
-    private DeferredTaskList frustumTaskLists;
-    private DeferredTaskList globalTaskLists;
+    private DeferredTaskList taskLists;
     private final EnumMap<DeferMode, ReferenceLinkedOpenHashSet<RenderSection>> importantTasks;
 
     private int frame;
@@ -229,8 +231,7 @@ public class RenderSectionManager {
         this.cullResults.put(CullType.REGULAR, treeRegular);
         this.cullResults.put(CullType.WIDE, treeWide);
 
-        this.globalTaskLists = result.getGlobalTaskLists();
-        this.frustumTaskLists = result.getFrustumTaskLists();
+        this.taskLists = result.getPendingTaskLists();
 
         this.needsRenderListUpdate = true;
         this.pendingTask = null;
@@ -297,7 +298,7 @@ public class RenderSectionManager {
 
         var start = System.nanoTime();
 
-        var visibleCollector = new VisibleChunkCollectorAsync(this.regions, this.frame);
+        var visibleCollector = new VisibleChunkCollector(this.regions, this.frame);
         bestTree.traverse(visibleCollector, viewport, this.getSearchDistance(fogParameters));
         this.renderLists = visibleCollector.createRenderLists(viewport);
 
@@ -327,15 +328,16 @@ public class RenderSectionManager {
 
     private void renderOutOfGraph(Viewport viewport, FogParameters fogParameters) {
         var searchDistance = this.getSearchDistance(fogParameters);
-        var visitor = new FallbackVisibleChunkCollector(viewport, searchDistance, this.sectionByPosition, this.regions, this.frame);
+        var visitor = new FallbackVisibleChunkCollector(viewport, searchDistance, this.frame, this.sectionByPosition, this.regions, this.level);
 
         this.renderableSectionTree.prepareForTraversal();
         this.renderableSectionTree.traverse(visitor, viewport, searchDistance);
 
         this.renderLists = visitor.createRenderLists(viewport);
-        this.frustumTaskLists = visitor.getPendingTaskLists();
-        this.globalTaskLists = null;
-        this.renderTree = null;
+        this.taskLists = visitor.getPendingTaskLists();
+
+        visitor.prepareForTraversal();
+        this.renderTree = visitor;
     }
 
     private boolean isOutOfGraph(SectionPos pos) {
@@ -763,92 +765,13 @@ public class RenderSectionManager {
         submitDeferredSectionTasks(deferredCollector, uploadBudget);
     }
 
-    private static final LongPriorityQueue EMPTY_TASK_QUEUE = new LongPriorityQueue() {
-        @Override
-        public void enqueue(long x) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public long dequeueLong() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public long firstLong() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public LongComparator comparator() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public int size() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return true;
-        }
-
-        @Override
-        public void clear() {
-            throw new UnsupportedOperationException();
-        }
-    };
-
     private void submitDeferredSectionTasks(ChunkJobCollector collector, UploadResourceBudget uploadBudget) {
-        LongPriorityQueue frustumQueue = this.frustumTaskLists;
-        LongPriorityQueue globalQueue = this.globalTaskLists;
-        float frustumPriorityBias = 0;
-        float globalPriorityBias = 0;
-
-        if (frustumQueue != null) {
-            frustumPriorityBias = this.frustumTaskLists.getCollectorPriorityBias(this.lastFrameAtTime);
-        } else {
-            frustumQueue = EMPTY_TASK_QUEUE;
+        if (this.taskLists == null) {
+            return;
         }
 
-        if (globalQueue != null) {
-            globalPriorityBias = this.globalTaskLists.getCollectorPriorityBias(this.lastFrameAtTime);
-        } else {
-            globalQueue = EMPTY_TASK_QUEUE;
-        }
-
-        float frustumPriority = Float.POSITIVE_INFINITY;
-        float globalPriority = Float.POSITIVE_INFINITY;
-        long frustumItem = 0;
-        long globalItem = 0;
-
-        while ((!frustumQueue.isEmpty() || !globalQueue.isEmpty()) && collector.hasBudgetRemaining() && uploadBudget.isAvailable()) {
-            // get the first item from the non-empty queues and see which one has higher priority.
-            // if the priority is not infinity, then the item priority was fetched the last iteration and doesn't need updating.
-            if (!frustumQueue.isEmpty() && Float.isInfinite(frustumPriority)) {
-                frustumItem = frustumQueue.firstLong();
-                frustumPriority = PendingTaskCollector.decodePriority(frustumItem) + frustumPriorityBias;
-            }
-            if (!globalQueue.isEmpty() && Float.isInfinite(globalPriority)) {
-                globalItem = globalQueue.firstLong();
-                globalPriority = PendingTaskCollector.decodePriority(globalItem) + globalPriorityBias;
-            }
-
-            // pick the task with the higher priority, decode the section, and schedule its task if it exists
-            RenderSection section;
-            if (frustumPriority < globalPriority) {
-                frustumQueue.dequeueLong();
-                frustumPriority = Float.POSITIVE_INFINITY;
-
-                section = this.frustumTaskLists.decodeAndFetchSection(this.sectionByPosition, frustumItem);
-            } else {
-                globalQueue.dequeueLong();
-                globalPriority = Float.POSITIVE_INFINITY;
-
-                section = this.globalTaskLists.decodeAndFetchSection(this.sectionByPosition, globalItem);
-            }
-
+        while (!this.taskLists.isEmpty() && collector.hasBudgetRemaining() && uploadBudget.isAvailable()) {
+            var section = this.sectionByPosition.get(this.taskLists.dequeueNextSectionPos());
             if (section != null) {
                 submitSectionTask(collector, section, uploadBudget);
             }

@@ -10,7 +10,5 @@ public interface CullResult {
 
     SectionTree getCullTreeLocal();
 
-    DeferredTaskList getFrustumTaskLists();
-
-    DeferredTaskList getGlobalTaskLists();
+    DeferredTaskList getPendingTaskLists();
 }

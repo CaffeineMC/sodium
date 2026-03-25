@@ -41,7 +41,7 @@ public class OcclusionCuller {
     private boolean useOcclusionCulling;
 
     public interface GraphOcclusionVisitor {
-        void visit(RenderSection visit);
+        void visit(RenderSection visit, boolean inFrustum);
     }
 
     public interface VisibilityTestingVisitor extends GraphOcclusionVisitor {
@@ -427,18 +427,21 @@ public class OcclusionCuller {
             // vanilla's "cylindrical fog" algorithm
             // max(length(distance.xz), abs(distance.y))
             if (testDistance(xzThreshold, yThreshold, this.searchDistanceRegular)) {
-                this.visitorWide.visit(section);
-
                 // TODO: also do ray test on regular path?
+                boolean wasInFrustum = false;
                 if (hasRegularPath) {
-                    this.visitorRegular.visit(section);
+                    this.visitorRegular.visit(section, false);
                     if (hasLocalPath &&
                             testDistance(xzThreshold, yThreshold, this.searchDistanceLocal) &&
                             isWithinFrustum(this.viewport, section) &&
                             this.visitorLocal.visitTestVisible(section)) {
-                        this.visitorLocal.visit(section);
+                        this.visitorLocal.visit(section, true);
+                        wasInFrustum = true;
                     }
                 }
+
+                this.visitorWide.visit(section, wasInFrustum);
+
                 queue.enqueue(section);
             }
         }
@@ -477,9 +480,9 @@ public class OcclusionCuller {
     }
 
     private void visitAll(RenderSection section) {
-        this.visitorWide.visit(section);
-        this.visitorRegular.visit(section);
-        this.visitorLocal.visit(section);
+        this.visitorWide.visit(section, true);
+        this.visitorRegular.visit(section, true);
+        this.visitorLocal.visit(section, true);
     }
 
     // This method visits sections near the origin that are not in the path of the graph traversal

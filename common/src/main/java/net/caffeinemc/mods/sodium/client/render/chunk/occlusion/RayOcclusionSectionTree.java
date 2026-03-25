@@ -45,8 +45,8 @@ public class RayOcclusionSectionTree extends SectionTree implements OcclusionCul
     }
 
     @Override
-    public void visit(RenderSection section) {
-        super.visit(section);
+    public void visit(RenderSection section, boolean inFrustum) {
+        super.visit(section, inFrustum);
         this.lastSectionKnownEmpty = false;
 
         // mark all traversed sections as portals, even if they don't have terrain that needs rendering
