@@ -18,30 +18,19 @@ import org.joml.Vector3f;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
+import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.LAYERS;
+import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.TEXTURE_SLOTS;
+import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.SOUTH_FACE_UVS;
+import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.NORTH_FACE_UVS;
+import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.MIN_Z;
+import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.MAX_Z;
+import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.UV_SHRINK;
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.SideDirection;
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.isTransparent;
 
 public class ImprovedItemModelBuilder implements UnbakedModel {
-	public static final List<String> LAYERS = List.of(
-			"layer0",
-			"layer1",
-			"layer2",
-			"layer3",
-			"layer4"
-	);
-
-	private	static final TextureSlots.Data TEXTURE_SLOTS = new TextureSlots.Data.Builder().addReference("particle", "layer0").build();
-
-	private	static final CuboidFace.UVs SOUTH_FACE_UVS = new CuboidFace.UVs(0.0F, 0.0F, 16.0F, 16.0F);
-	private	static final CuboidFace.UVs NORTH_FACE_UVS = new CuboidFace.UVs(16.0F, 0.0F, 0.0F, 16.0F);
-
-	private	static final float MIN_Z = 7.5F;
-	private	static final float MAX_Z = 8.5F;
-	private	static final float UV_SHRINK = 0.1F;
-
 	@Override
 	public TextureSlots.@NotNull Data textureSlots() {
 		return TEXTURE_SLOTS;
@@ -249,7 +238,7 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 			int width,
 			int height
 	) {
-		var nneighborTansparent = isTransparent(
+		var neighborTransparent = isTransparent(
 				sprite,
 				frame,
 				pixelX - sideFacing.getDirection().getStepX(),
@@ -258,7 +247,7 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 				height
 		);
 
-		if (nneighborTansparent) {
+		if (neighborTransparent) {
 			insertOrMergeFace(
 					sideFaces,
 					sideFacing,
