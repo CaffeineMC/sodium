@@ -34,6 +34,8 @@ public class TaskCollectingTree extends SectionTree {
 
     @Override
     public void visit(RenderSection section, boolean inFrustum) {
+        super.visit(section, inFrustum);
+
         int type = section.getPendingUpdate();
 
         // collect tasks even if they're important, whether they're actually important is decided later
