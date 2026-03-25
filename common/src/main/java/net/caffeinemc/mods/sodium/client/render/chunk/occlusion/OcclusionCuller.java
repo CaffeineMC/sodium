@@ -45,9 +45,7 @@ public class OcclusionCuller {
     }
 
     public interface VisibilityTestingVisitor extends GraphOcclusionVisitor {
-        default boolean visitTestVisible(RenderSection section) {
-            return true;
-        }
+        boolean visitTestVisible(RenderSection section);
     }
 
     private static boolean isWithinFrustum(Viewport viewport, RenderSection section) {
@@ -433,10 +431,8 @@ public class OcclusionCuller {
                     this.visitorRegular.visit(section, false);
                     if (hasLocalPath &&
                             testDistance(xzThreshold, yThreshold, this.searchDistanceLocal) &&
-                            isWithinFrustum(this.viewport, section) &&
-                            this.visitorLocal.visitTestVisible(section)) {
-                        this.visitorLocal.visit(section, true);
-                        wasInFrustum = true;
+                            isWithinFrustum(this.viewport, section)) {
+                        wasInFrustum = this.visitorLocal.visitTestVisible(section);
                     }
                 }
 

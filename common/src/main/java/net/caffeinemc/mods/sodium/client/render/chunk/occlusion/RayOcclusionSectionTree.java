@@ -33,21 +33,19 @@ public class RayOcclusionSectionTree extends SectionTree implements OcclusionCul
     @Override
     public boolean visitTestVisible(RenderSection section) {
         if (section.needsRender()) {
-            this.lastSectionKnownEmpty = false;
             if (this.isRayBlockedStepped(section)) {
                 return false;
+            } else {
+                this.visit(section, true);
             }
-        } else {
-            this.lastSectionKnownEmpty = true;
         }
 
-        return OcclusionCuller.VisibilityTestingVisitor.super.visitTestVisible(section);
+        return true;
     }
 
     @Override
     public void visit(RenderSection section, boolean inFrustum) {
         super.visit(section, inFrustum);
-        this.lastSectionKnownEmpty = false;
 
         // mark all traversed sections as portals, even if they don't have terrain that needs rendering
         this.portalTree.add(section);

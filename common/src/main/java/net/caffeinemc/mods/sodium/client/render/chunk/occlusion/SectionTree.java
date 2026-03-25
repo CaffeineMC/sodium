@@ -16,7 +16,6 @@ public class SectionTree extends AbstractSectionVisitor {
 
     public final float buildDistance;
     protected final int frame;
-    protected boolean lastSectionKnownEmpty = false;
 
     public SectionTree(Viewport viewport, float buildDistance, int frame, CullType cullType, Level level) {
         super(viewport, buildDistance, cullType.isFrustumTested);
@@ -44,7 +43,7 @@ public class SectionTree extends AbstractSectionVisitor {
     public void visit(RenderSection section, boolean inFrustum) {
         // discard invisible or sections that don't need to be rendered,
         // only perform this test if it hasn't already been done before
-        if (this.lastSectionKnownEmpty || !section.needsRender()) {
+        if (!section.needsRender()) {
             return;
         }
 
