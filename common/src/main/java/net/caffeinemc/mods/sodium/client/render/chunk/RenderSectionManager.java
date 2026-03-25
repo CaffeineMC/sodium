@@ -177,7 +177,9 @@ public class RenderSectionManager {
 
     public void prepareRender() {
         this.frame += 1;
-        this.needsRenderListUpdate |= this.cameraChanged;
+        if (this.cameraChanged) {
+            this.invalidateRenderLists();
+        }
     }
 
     public void prepareRenderTrees(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
@@ -232,7 +234,7 @@ public class RenderSectionManager {
 
         this.taskLists = result.getPendingTaskLists();
 
-        this.needsRenderListUpdate = true;
+        this.invalidateRenderLists();
         this.pendingTask = null;
     }
 
@@ -357,6 +359,10 @@ public class RenderSectionManager {
 
     public boolean needsUpdate() {
         return this.needsGraphUpdate;
+    }
+
+    private void invalidateRenderLists() {
+        this.needsRenderListUpdate = true;
     }
 
     private float getSearchDistanceForCullType(CullType cullType, FogParameters fogParameters) {
@@ -641,7 +647,7 @@ public class RenderSectionManager {
 
             for (var tree : this.cullResults.values()) {
                 if (tree.patchMarkPresent(chunkX, chunkY, chunkZ)) {
-                    this.needsRenderListUpdate = true;
+                    this.invalidateRenderLists();
                 }
             }
 
@@ -958,6 +964,8 @@ public class RenderSectionManager {
         if (ChunkUpdateTypes.isImportant(joined)) {
             this.importantTasks.get(this.getDeferModeForPendingUpdate(joined)).add(section);
         }
+
+        this.markGraphDirty();
 
         return true;
     }
