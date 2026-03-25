@@ -32,13 +32,11 @@ public class RayOcclusionSectionTree extends SectionTree implements OcclusionCul
 
     @Override
     public boolean visitTestVisible(RenderSection section) {
-        if (section.needsRender()) {
-            if (this.isRayBlockedStepped(section)) {
-                return false;
-            } else {
-                this.visit(section, true);
-            }
+        if (this.isRayBlockedStepped(section)) {
+            return false;
         }
+
+        this.visit(section, true);
 
         return true;
     }

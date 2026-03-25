@@ -279,50 +279,62 @@ public class OcclusionCuller {
 
         // only visible sections are entered into the queue
         while ((section = readQueue.dequeue()) != null) {
-            processItem(writeQueue, section, origin);
-        }
-    }
+            var incomingDirectionsWide = section.getIncomingDirectionsWide();
+            var incomingDirectionsRegular = section.getIncomingDirectionsRegular();
+            var incomingDirectionsLocal = section.getIncomingDirectionsLocal();
 
-    private void processItem(WriteQueue<RenderSection> writeQueue, RenderSection section, SectionPos origin) {
-        int outgoingWide, outgoingRegular, outgoingLocal;
+            // visit queued sections here instead of before they are queued to get correct path information as visibility of different types may be added to a section at different times.
+            // TODO: also do ray test on regular path?
+            boolean wasInFrustum = false;
+            if (incomingDirectionsRegular != 0) {
+                if (incomingDirectionsLocal != 0) {
+                    wasInFrustum = this.visitorLocal.visitTestVisible(section);
+                }
+                this.visitorRegular.visit(section, wasInFrustum);
+            }
+            this.visitorWide.visit(section, wasInFrustum);
 
-        if (this.useOcclusionCulling) {
-            var visibilityDataSet = section.getVisibilityData();
-            if (visibilityDataSet == null) {
-                // No visibility data, so we can't traverse into any neighbors.
-                return;
+            int outgoingWide, outgoingRegular, outgoingLocal;
+
+            if (this.useOcclusionCulling) {
+                var visibilityDataSet = section.getVisibilityData();
+                if (visibilityDataSet == null) {
+                    // No visibility data, so we can't traverse into any neighbors.
+                    continue;
+                }
+
+                // get the visibility data for the camera perspective relative to this section
+                var visibilityDataWide = this.joinVisibilityData(visibilityDataSet, section, this.viewport, 2);
+                var visibilityDataRegular = this.joinVisibilityData(visibilityDataSet, section, this.viewport, 1);
+                var visibilityDataLocal = this.joinVisibilityData(visibilityDataSet, section, this.viewport, 0);
+
+                // occlude paths through the section if it's being viewed at an angle where
+                // the other side can't possibly be seen
+                visibilityDataWide &= getAngleVisibilityMaskWide(this.viewport, section, 2);
+                visibilityDataRegular &= getAngleVisibilityMaskWide(this.viewport, section, 1);
+                visibilityDataLocal &= getAngleVisibilityMaskLocal(this.viewport, section);
+
+                // When using occlusion culling, we can only traverse into neighbors for which there is a path of
+                // visibility through this chunk. This is determined by taking all the incoming paths to this chunk and
+                // creating a union of the outgoing paths from those.
+
+                outgoingWide = VisibilityEncoding.getConnections(visibilityDataWide, incomingDirectionsWide);
+                outgoingRegular = VisibilityEncoding.getConnections(visibilityDataRegular, incomingDirectionsRegular);
+                outgoingLocal = VisibilityEncoding.getConnections(visibilityDataLocal, incomingDirectionsLocal);
+            } else {
+                // Not using any occlusion culling, so traversing in any direction is legal.
+                outgoingWide = GraphDirectionSet.ALL;
+                outgoingRegular = GraphDirectionSet.ALL;
+                outgoingLocal = GraphDirectionSet.ALL;
             }
 
-            // get the visibility data for the camera perspective relative to this section
-            var visibilityDataWide = this.joinVisibilityData(visibilityDataSet, section, this.viewport, 2);
-            var visibilityDataRegular = this.joinVisibilityData(visibilityDataSet, section, this.viewport, 1);
-            var visibilityDataLocal = this.joinVisibilityData(visibilityDataSet, section, this.viewport, 0);
+            // We can only traverse *outwards* from the center of the graph search, so mask off any invalid directions.
+            outgoingWide &= getOutwardDirectionsWide(origin, section);
+            outgoingRegular &= getOutwardDirectionsRegular(origin, section);
+            outgoingLocal &= getOutwardDirectionsRegular(origin, section);
 
-            // occlude paths through the section if it's being viewed at an angle where
-            // the other side can't possibly be seen
-            visibilityDataWide &= getAngleVisibilityMaskWide(this.viewport, section, 2);
-            visibilityDataRegular &= getAngleVisibilityMaskWide(this.viewport, section, 1);
-            visibilityDataLocal &= getAngleVisibilityMaskLocal(this.viewport, section);
-
-            // When using occlusion culling, we can only traverse into neighbors for which there is a path of
-            // visibility through this chunk. This is determined by taking all the incoming paths to this chunk and
-            // creating a union of the outgoing paths from those.
-            outgoingWide = VisibilityEncoding.getConnections(visibilityDataWide, section.getIncomingDirectionsWide());
-            outgoingRegular = VisibilityEncoding.getConnections(visibilityDataRegular, section.getIncomingDirectionsRegular());
-            outgoingLocal = VisibilityEncoding.getConnections(visibilityDataLocal, section.getIncomingDirectionsLocal());
-        } else {
-            // Not using any occlusion culling, so traversing in any direction is legal.
-            outgoingWide = GraphDirectionSet.ALL;
-            outgoingRegular = GraphDirectionSet.ALL;
-            outgoingLocal = GraphDirectionSet.ALL;
+            visitNeighbors(writeQueue, section, outgoingWide, outgoingRegular, outgoingLocal, this.inBoundsOrigin);
         }
-
-        // We can only traverse *outwards* from the center of the graph search, so mask off any invalid directions.
-        outgoingWide &= getOutwardDirectionsWide(origin, section);
-        outgoingRegular &= getOutwardDirectionsRegular(origin, section);
-        outgoingLocal &= getOutwardDirectionsRegular(origin, section);
-
-        visitNeighbors(writeQueue, section, outgoingWide, outgoingRegular, outgoingLocal, this.inBoundsOrigin);
     }
 
     private long joinVisibilityData(long[] visibilityDataSet, RenderSection section, Viewport viewport, int width) {
@@ -425,20 +437,12 @@ public class OcclusionCuller {
             // vanilla's "cylindrical fog" algorithm
             // max(length(distance.xz), abs(distance.y))
             if (testDistance(xzThreshold, yThreshold, this.searchDistanceRegular)) {
-                // TODO: also do ray test on regular path?
-                boolean wasInFrustum = false;
-                if (hasRegularPath) {
-                    this.visitorRegular.visit(section, false);
-                    if (hasLocalPath &&
-                            testDistance(xzThreshold, yThreshold, this.searchDistanceLocal) &&
-                            isWithinFrustum(this.viewport, section)) {
-                        wasInFrustum = this.visitorLocal.visitTestVisible(section);
-                    }
-                }
-
-                this.visitorWide.visit(section, wasInFrustum);
-
                 queue.enqueue(section);
+
+                if (!(testDistance(xzThreshold, yThreshold, this.searchDistanceLocal) && isWithinFrustum(this.viewport, section))) {
+                    section.blockLocalIncoming();
+                    hasLocalPath = false;
+                }
             }
         }
 

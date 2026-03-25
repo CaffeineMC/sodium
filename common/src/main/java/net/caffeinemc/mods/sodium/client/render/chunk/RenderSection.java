@@ -294,6 +294,10 @@ public class RenderSection {
     }
 
     public int getIncomingDirectionsLocal() {
+        if (this.incomingDirectionsLocal == -1) {
+            return 0;
+        }
+
         return this.incomingDirectionsLocal;
     }
 
@@ -306,7 +310,15 @@ public class RenderSection {
     }
 
     public void addIncomingDirectionsLocal(int directions) {
+        if (this.incomingDirectionsLocal == -1) {
+            return;
+        }
+
         this.incomingDirectionsLocal |= directions;
+    }
+
+    public void blockLocalIncoming() {
+        this.incomingDirectionsLocal = -1;
     }
 
     private static final int ANGLE_BITS = 10;
