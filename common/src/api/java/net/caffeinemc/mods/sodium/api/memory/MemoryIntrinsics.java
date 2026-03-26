@@ -85,7 +85,7 @@ public class MemoryIntrinsics {
 
     public static long getAddress(long address) {
         if (BITS32) {
-            return UNSAFE.getInt(address);
+            return UNSAFE.getInt(address) & 0xFFFF_FFFFL;
         } else {
             return UNSAFE.getLong(address);
         }
