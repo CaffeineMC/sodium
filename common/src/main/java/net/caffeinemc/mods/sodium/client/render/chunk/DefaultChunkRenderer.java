@@ -24,7 +24,7 @@ import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.util.BitwiseMath;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.client.util.UInt32;
-import org.lwjgl.system.MemoryUtil;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.lwjgl.system.Pointer;
 
 import java.util.Iterator;
@@ -184,11 +184,11 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
             final long vertexCount = SectionRenderDataUnsafe.getVertexCount(pMeshData, facing);
             final long elementCount = (vertexCount >> 2) * 6;
 
-            MemoryUtil.memPutInt(pElementCount + (size << 2), UInt32.uncheckedDowncast(elementCount));
-            MemoryUtil.memPutInt(pBaseVertex + (size << 2), UInt32.uncheckedDowncast(baseVertex));
+            MemoryIntrinsics.putInt(pElementCount + (size << 2), UInt32.uncheckedDowncast(elementCount));
+            MemoryIntrinsics.putInt(pBaseVertex + (size << 2), UInt32.uncheckedDowncast(baseVertex));
 
             // * 4 to convert to bytes (the index buffer contains integers)
-            MemoryUtil.memPutAddress(pElementPointer + (size << Pointer.POINTER_SHIFT), elementOffset << 2);
+            MemoryIntrinsics.putAddress(pElementPointer + (size << Pointer.POINTER_SHIFT), elementOffset << 2);
 
             baseVertex += vertexCount;
             elementOffset += elementCount;
@@ -237,9 +237,9 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                         continue;
                     }
 
-                    MemoryUtil.memPutInt(pElementCount + (size << 2), UInt32.uncheckedDowncast((groupVertexCount >> 2) * 6));
-                    MemoryUtil.memPutInt(pBaseVertex + (size << 2), UInt32.uncheckedDowncast(baseVertex));
-                    MemoryUtil.memPutAddress(pElementPointer + (size << Pointer.POINTER_SHIFT), elementOffsetBytes);
+                    MemoryIntrinsics.putInt(pElementCount + (size << 2), UInt32.uncheckedDowncast((groupVertexCount >> 2) * 6));
+                    MemoryIntrinsics.putInt(pBaseVertex + (size << 2), UInt32.uncheckedDowncast(baseVertex));
+                    MemoryIntrinsics.putAddress(pElementPointer + (size << Pointer.POINTER_SHIFT), elementOffsetBytes);
                     size++;
                     baseVertex += groupVertexCount;
                     groupVertexCount = 0;

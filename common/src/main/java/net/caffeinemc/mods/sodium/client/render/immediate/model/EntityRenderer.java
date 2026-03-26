@@ -8,7 +8,7 @@ import net.caffeinemc.mods.sodium.client.util.Int2;
 import net.minecraft.core.Direction;
 import org.joml.Matrix3f;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 
 import static net.caffeinemc.mods.sodium.client.render.immediate.model.ModelCuboid.*;
 
@@ -68,11 +68,11 @@ public class EntityRenderer {
     }
 
     private static long writeVertex(long ptr, int vertexIndex, long packedUv, long packedOverlayLight, int packedNormal) {
-        MemoryUtil.memPutLong(ptr + 0L, CUBE_VERTEX_XY[vertexIndex]);
-        MemoryUtil.memPutLong(ptr + 8L, CUBE_VERTEX_ZW[vertexIndex]); // overlaps with color attribute
-        MemoryUtil.memPutLong(ptr + 16L, packedUv);
-        MemoryUtil.memPutLong(ptr + 24L, packedOverlayLight);
-        MemoryUtil.memPutInt(ptr + 32L, packedNormal);
+        MemoryIntrinsics.putLong(ptr + 0L, CUBE_VERTEX_XY[vertexIndex]);
+        MemoryIntrinsics.putLong(ptr + 8L, CUBE_VERTEX_ZW[vertexIndex]); // overlaps with color attribute
+        MemoryIntrinsics.putLong(ptr + 16L, packedUv);
+        MemoryIntrinsics.putLong(ptr + 24L, packedOverlayLight);
+        MemoryIntrinsics.putInt(ptr + 32L, packedNormal);
 
         return ptr + EntityVertex.STRIDE;
     }

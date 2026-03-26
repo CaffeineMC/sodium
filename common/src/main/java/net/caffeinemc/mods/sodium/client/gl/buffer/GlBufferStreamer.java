@@ -6,6 +6,7 @@ import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gl.util.EnumBitField;
 import org.lwjgl.opengl.*;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.lwjgl.system.MemoryUtil;
 
 public class GlBufferStreamer {
@@ -45,7 +46,7 @@ public class GlBufferStreamer {
             throw new IndexOutOfBoundsException("Attempted to write beyond the end of the buffer streamer");
         }
 
-        MemoryUtil.memPutInt(this.writeAddress + offset, value);
+        MemoryIntrinsics.putInt(this.writeAddress + offset, value);
         this.requiresFlush = true;
     }
 

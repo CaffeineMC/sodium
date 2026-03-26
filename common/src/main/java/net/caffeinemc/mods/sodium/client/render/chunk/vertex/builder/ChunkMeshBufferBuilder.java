@@ -3,8 +3,10 @@ package net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.lwjgl.system.MemoryUtil;
 
+import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
 
 public class ChunkMeshBufferBuilder {
@@ -13,7 +15,7 @@ public class ChunkMeshBufferBuilder {
 
     private final int initialCapacity;
 
-    private ByteBuffer buffer;
+    private MemorySegment buffer;
     private int vertexCount;
     private int vertexCapacity;
 
@@ -40,7 +42,7 @@ public class ChunkMeshBufferBuilder {
 
         this.ensureCapacity(4);
 
-        this.encoder.write(MemoryUtil.memAddress(this.buffer, this.vertexCount * this.stride),
+        this.encoder.write(this.buffer.address() + ((long) this.vertexCount * this.stride),
                 materialBits, vertices, this.sectionIndex);
         this.vertexCount += 4;
     }
@@ -64,7 +66,7 @@ public class ChunkMeshBufferBuilder {
     }
 
     private void reallocate(int vertexCount) {
-        this.buffer = MemoryUtil.memRealloc(this.buffer, vertexCount * this.stride);
+        this.buffer = MemorySegment.ofAddress(MemoryUtil.nmemRealloc(this.buffer == null ? 0L : this.buffer.address(), vertexCount * this.stride)).reinterpret(vertexCount * this.stride);
         this.vertexCapacity = vertexCount;
     }
 
@@ -77,7 +79,7 @@ public class ChunkMeshBufferBuilder {
 
     public void destroy() {
         if (this.buffer != null) {
-            MemoryUtil.memFree(this.buffer);
+            MemoryUtil.nmemFree(this.buffer.address());
         }
 
         this.buffer = null;
@@ -92,7 +94,7 @@ public class ChunkMeshBufferBuilder {
             throw new IllegalStateException("No vertex data in buffer");
         }
 
-        return MemoryUtil.memSlice(this.buffer, 0, this.stride * this.vertexCount);
+        return this.buffer.asSlice(0, this.stride * this.vertexCount).asByteBuffer();
     }
 
     public int count() {

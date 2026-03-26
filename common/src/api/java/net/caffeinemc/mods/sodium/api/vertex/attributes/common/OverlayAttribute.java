@@ -1,13 +1,13 @@
 package net.caffeinemc.mods.sodium.api.vertex.attributes.common;
 
-import org.lwjgl.system.MemoryUtil;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 
 public class OverlayAttribute {
     public static void set(long ptr, int overlay) {
-        MemoryUtil.memPutInt(ptr + 0, overlay);
+        MemoryIntrinsics.putInt(ptr + 0, overlay);
     }
 
     public static int get(long ptr) {
-        return MemoryUtil.memGetInt(ptr);
+        return MemoryIntrinsics.getInt(ptr);
     }
 }

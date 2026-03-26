@@ -15,7 +15,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -90,12 +90,12 @@ public class SheetedDecalTextureGeneratorMixin implements VertexBufferWriter {
         var position = new Vector4f(Float.NaN);
 
         for (int vertexIndex = 0; vertexIndex < count; vertexIndex++) {
-            position.x = MemoryUtil.memGetFloat(ptr + offsetPosition + 0);
-            position.y = MemoryUtil.memGetFloat(ptr + offsetPosition + 4);
-            position.z = MemoryUtil.memGetFloat(ptr + offsetPosition + 8);
+            position.x = MemoryIntrinsics.getFloat(ptr + offsetPosition + 0);
+            position.y = MemoryIntrinsics.getFloat(ptr + offsetPosition + 4);
+            position.z = MemoryIntrinsics.getFloat(ptr + offsetPosition + 8);
             position.w = 1.0f;
 
-            int packedNormal = MemoryUtil.memGetInt(ptr + offsetNormal);
+            int packedNormal = MemoryIntrinsics.getInt(ptr + offsetNormal);
             normal.x = NormI8.unpackX(packedNormal);
             normal.y = NormI8.unpackY(packedNormal);
             normal.z = NormI8.unpackZ(packedNormal);

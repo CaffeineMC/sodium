@@ -1,23 +1,23 @@
 package net.caffeinemc.mods.sodium.api.vertex.attributes.common;
 
-import org.lwjgl.system.MemoryUtil;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 
 public class PositionAttribute {
     public static void put(long ptr, float x, float y, float z) {
-        MemoryUtil.memPutFloat(ptr + 0L, x);
-        MemoryUtil.memPutFloat(ptr + 4L, y);
-        MemoryUtil.memPutFloat(ptr + 8L, z);
+        MemoryIntrinsics.putFloat(ptr + 0L, x);
+        MemoryIntrinsics.putFloat(ptr + 4L, y);
+        MemoryIntrinsics.putFloat(ptr + 8L, z);
     }
 
     public static float getX(long ptr) {
-        return MemoryUtil.memGetFloat(ptr + 0L);
+        return MemoryIntrinsics.getFloat(ptr + 0L);
     }
 
     public static float getY(long ptr) {
-        return MemoryUtil.memGetFloat(ptr + 4L);
+        return MemoryIntrinsics.getFloat(ptr + 4L);
     }
 
     public static float getZ(long ptr) {
-        return MemoryUtil.memGetFloat(ptr + 8L);
+        return MemoryIntrinsics.getFloat(ptr + 8L);
     }
 }

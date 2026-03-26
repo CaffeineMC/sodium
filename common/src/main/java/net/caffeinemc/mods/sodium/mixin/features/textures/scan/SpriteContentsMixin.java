@@ -7,7 +7,7 @@ import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.SpriteContentsExtension;
 import net.caffeinemc.mods.sodium.client.util.NativeImageHelper;
 import net.minecraft.client.renderer.texture.SpriteContents;
-import org.lwjgl.system.MemoryUtil;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
@@ -46,7 +46,7 @@ public class SpriteContentsMixin implements SpriteContentsExtension {
         final int pixelCount = nativeImage.getHeight() * nativeImage.getWidth();
 
         for (int pixelIndex = 0; pixelIndex < pixelCount; pixelIndex++) {
-            int color = MemoryUtil.memGetInt(ppPixel + (pixelIndex * 4L));
+            int color = MemoryIntrinsics.getInt(ppPixel + (pixelIndex * 4L));
             int alpha = ColorABGR.unpackAlpha(color);
 
             // 25 is used as the threshold since the alpha cutoff is 0.1

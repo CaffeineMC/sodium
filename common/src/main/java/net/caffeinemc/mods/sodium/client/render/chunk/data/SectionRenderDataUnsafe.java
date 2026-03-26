@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.data;
 
 import net.caffeinemc.mods.sodium.client.util.UInt32;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.lwjgl.system.MemoryUtil;
 
 // This code is a terrible hack to get around the fact that we are so incredibly memory bound, and that we
@@ -60,19 +61,19 @@ public class SectionRenderDataUnsafe {
 
     public static void clearVertexData(long ptr) {
         // save the base element and the local indexing flag
-        int baseElement = MemoryUtil.memGetInt(ptr + OFFSET_BASE_ELEMENT);
-        byte isLocalIndexByte = MemoryUtil.memGetByte(ptr + OFFSET_IS_LOCAL_INDEX);
+        int baseElement = MemoryIntrinsics.getInt(ptr + OFFSET_BASE_ELEMENT);
+        byte isLocalIndexByte = MemoryIntrinsics.getByte(ptr + OFFSET_IS_LOCAL_INDEX);
 
         clearFull(ptr);
 
         // restore the base element and the local indexing flag
-        MemoryUtil.memPutInt(ptr + OFFSET_BASE_ELEMENT, baseElement);
-        MemoryUtil.memPutByte(ptr + OFFSET_IS_LOCAL_INDEX, isLocalIndexByte);
+        MemoryIntrinsics.putInt(ptr + OFFSET_BASE_ELEMENT, baseElement);
+        MemoryIntrinsics.putByte(ptr + OFFSET_IS_LOCAL_INDEX, isLocalIndexByte);
     }
 
     public static void clearIndexData(long ptr) {
-        MemoryUtil.memPutInt(ptr + OFFSET_BASE_ELEMENT, 0);
-        MemoryUtil.memPutByte(ptr + OFFSET_IS_LOCAL_INDEX, (byte)0);
+        MemoryIntrinsics.putInt(ptr + OFFSET_BASE_ELEMENT, 0);
+        MemoryIntrinsics.putByte(ptr + OFFSET_IS_LOCAL_INDEX, (byte)0);
     }
 
     public static long heapPointer(long ptr, int index) {
@@ -80,55 +81,55 @@ public class SectionRenderDataUnsafe {
     }
 
     public static void setLocalBaseElement(long ptr, long value /* Uint32 */) {
-        MemoryUtil.memPutInt(ptr + OFFSET_BASE_ELEMENT, UInt32.downcast(value));
-        MemoryUtil.memPutByte(ptr + OFFSET_IS_LOCAL_INDEX, (byte) 1);
+        MemoryIntrinsics.putInt(ptr + OFFSET_BASE_ELEMENT, UInt32.downcast(value));
+        MemoryIntrinsics.putByte(ptr + OFFSET_IS_LOCAL_INDEX, (byte) 1);
     }
 
     public static void setSharedBaseElement(long ptr, long value /* Uint32 */) {
-        MemoryUtil.memPutInt(ptr + OFFSET_BASE_ELEMENT, UInt32.downcast(value));
-        MemoryUtil.memPutByte(ptr + OFFSET_IS_LOCAL_INDEX, (byte) 0);
+        MemoryIntrinsics.putInt(ptr + OFFSET_BASE_ELEMENT, UInt32.downcast(value));
+        MemoryIntrinsics.putByte(ptr + OFFSET_IS_LOCAL_INDEX, (byte) 0);
     }
 
     public static long getBaseElement(long ptr) {
-        return Integer.toUnsignedLong(MemoryUtil.memGetInt(ptr + OFFSET_BASE_ELEMENT));
+        return Integer.toUnsignedLong(MemoryIntrinsics.getInt(ptr + OFFSET_BASE_ELEMENT));
     }
 
     public static void setSliceMask(long ptr, int value) {
-        MemoryUtil.memPutInt(ptr + OFFSET_SLICE_MASK, value);
+        MemoryIntrinsics.putInt(ptr + OFFSET_SLICE_MASK, value);
     }
 
     public static int getSliceMask(long ptr) {
-        return MemoryUtil.memGetInt(ptr + OFFSET_SLICE_MASK);
+        return MemoryIntrinsics.getInt(ptr + OFFSET_SLICE_MASK);
     }
 
     public static void setFacingList(long ptr, long facingList) {
         // rescue and re-write the local indexing flag to prevent it from being lost when a whole long is written for the facing list
-        byte isLocalIndexByte = MemoryUtil.memGetByte(ptr + OFFSET_IS_LOCAL_INDEX);
-        MemoryUtil.memPutLong(ptr + OFFSET_FACING_LIST, facingList);
-        MemoryUtil.memPutByte(ptr + OFFSET_IS_LOCAL_INDEX, isLocalIndexByte);
+        byte isLocalIndexByte = MemoryIntrinsics.getByte(ptr + OFFSET_IS_LOCAL_INDEX);
+        MemoryIntrinsics.putLong(ptr + OFFSET_FACING_LIST, facingList);
+        MemoryIntrinsics.putByte(ptr + OFFSET_IS_LOCAL_INDEX, isLocalIndexByte);
     }
 
     public static long getFacingList(long ptr) {
-        return MemoryUtil.memGetLong(ptr + OFFSET_FACING_LIST);
+        return MemoryIntrinsics.getLong(ptr + OFFSET_FACING_LIST);
     }
 
     public static boolean isLocalIndex(long ptr) {
-        return MemoryUtil.memGetByte(ptr + OFFSET_IS_LOCAL_INDEX) != 0;
+        return MemoryIntrinsics.getByte(ptr + OFFSET_IS_LOCAL_INDEX) != 0;
     }
 
     public static void setBaseVertex(long ptr, long value /* Uint32 */) {
-        MemoryUtil.memPutInt(ptr + OFFSET_BASE_VERTEX, UInt32.downcast(value));
+        MemoryIntrinsics.putInt(ptr + OFFSET_BASE_VERTEX, UInt32.downcast(value));
     }
 
     public static long /* Uint32 */ getBaseVertex(long ptr) {
-        return UInt32.upcast(MemoryUtil.memGetInt(ptr + OFFSET_BASE_VERTEX));
+        return UInt32.upcast(MemoryIntrinsics.getInt(ptr + OFFSET_BASE_VERTEX));
     }
 
     public static void setVertexCount(long ptr, int index, long count /* Uint32 */) {
-        MemoryUtil.memPutInt(ptr + OFFSET_ELEMENT_COUNTS + (index * 4), UInt32.downcast(count));
+        MemoryIntrinsics.putInt(ptr + OFFSET_ELEMENT_COUNTS + (index * 4), UInt32.downcast(count));
     }
 
     public static long /* Uint32 */ getVertexCount(long ptr, int index) {
-        return UInt32.upcast(MemoryUtil.memGetInt(ptr + OFFSET_ELEMENT_COUNTS + (index * 4)));
+        return UInt32.upcast(MemoryIntrinsics.getInt(ptr + OFFSET_ELEMENT_COUNTS + (index * 4)));
     }
 }

@@ -9,7 +9,7 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 import net.caffeinemc.mods.sodium.client.util.sorting.VertexSorters;
 import net.caffeinemc.mods.sodium.client.util.sorting.VertexSortingExtended;
 import net.minecraft.client.renderer.MultiBufferSource;
-import org.lwjgl.system.MemoryUtil;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -71,12 +71,12 @@ public class MultiBufferSourceMixin {
     @Unique
     private static void writeIndexBufferInt(long ptr, int[] primitiveIds) {
         for (int primitiveId : primitiveIds) {
-            MemoryUtil.memPutInt(ptr +  0L, (primitiveId * 4) + 0);
-            MemoryUtil.memPutInt(ptr +  4L, (primitiveId * 4) + 1);
-            MemoryUtil.memPutInt(ptr +  8L, (primitiveId * 4) + 2);
-            MemoryUtil.memPutInt(ptr + 12L, (primitiveId * 4) + 2);
-            MemoryUtil.memPutInt(ptr + 16L, (primitiveId * 4) + 3);
-            MemoryUtil.memPutInt(ptr + 20L, (primitiveId * 4) + 0);
+            MemoryIntrinsics.putInt(ptr +  0L, (primitiveId * 4) + 0);
+            MemoryIntrinsics.putInt(ptr +  4L, (primitiveId * 4) + 1);
+            MemoryIntrinsics.putInt(ptr +  8L, (primitiveId * 4) + 2);
+            MemoryIntrinsics.putInt(ptr + 12L, (primitiveId * 4) + 2);
+            MemoryIntrinsics.putInt(ptr + 16L, (primitiveId * 4) + 3);
+            MemoryIntrinsics.putInt(ptr + 20L, (primitiveId * 4) + 0);
             ptr += 24L;
         }
     }
@@ -84,12 +84,12 @@ public class MultiBufferSourceMixin {
     @Unique
     private static void writeIndexBufferShort(long ptr, int[] primitiveIds) {
         for (int primitiveId : primitiveIds) {
-            MemoryUtil.memPutShort(ptr +  0L, (short) ((primitiveId * 4) + 0));
-            MemoryUtil.memPutShort(ptr +  2L, (short) ((primitiveId * 4) + 1));
-            MemoryUtil.memPutShort(ptr +  4L, (short) ((primitiveId * 4) + 2));
-            MemoryUtil.memPutShort(ptr +  6L, (short) ((primitiveId * 4) + 2));
-            MemoryUtil.memPutShort(ptr +  8L, (short) ((primitiveId * 4) + 3));
-            MemoryUtil.memPutShort(ptr + 10L, (short) ((primitiveId * 4) + 0));
+            MemoryIntrinsics.putShort(ptr +  0L, (short) ((primitiveId * 4) + 0));
+            MemoryIntrinsics.putShort(ptr +  2L, (short) ((primitiveId * 4) + 1));
+            MemoryIntrinsics.putShort(ptr +  4L, (short) ((primitiveId * 4) + 2));
+            MemoryIntrinsics.putShort(ptr +  6L, (short) ((primitiveId * 4) + 2));
+            MemoryIntrinsics.putShort(ptr +  8L, (short) ((primitiveId * 4) + 3));
+            MemoryIntrinsics.putShort(ptr + 10L, (short) ((primitiveId * 4) + 0));
             ptr += 12L;
         }
     }

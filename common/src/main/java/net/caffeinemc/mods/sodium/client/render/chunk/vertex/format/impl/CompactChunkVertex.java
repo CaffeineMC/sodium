@@ -6,7 +6,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderBindingP
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.minecraft.util.Mth;
-import org.lwjgl.system.MemoryUtil;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 
 public class CompactChunkVertex implements ChunkVertexType {
     public static final int STRIDE = 20;
@@ -56,11 +56,11 @@ public class CompactChunkVertex implements ChunkVertexType {
 
                 int light = encodeLight(vertex.light);
 
-                MemoryUtil.memPutInt(ptr +  0L, packPositionHi(x, y, z));
-                MemoryUtil.memPutInt(ptr +  4L, packPositionLo(x, y, z));
-                MemoryUtil.memPutInt(ptr +  8L, ColorARGB.mulRGB(vertex.color, vertex.ao));
-                MemoryUtil.memPutInt(ptr + 12L, packTexture(u, v));
-                MemoryUtil.memPutInt(ptr + 16L, packLightAndData(light, materialBits, section));
+                MemoryIntrinsics.putInt(ptr +  0L, packPositionHi(x, y, z));
+                MemoryIntrinsics.putInt(ptr +  4L, packPositionLo(x, y, z));
+                MemoryIntrinsics.putInt(ptr +  8L, ColorARGB.mulRGB(vertex.color, vertex.ao));
+                MemoryIntrinsics.putInt(ptr + 12L, packTexture(u, v));
+                MemoryIntrinsics.putInt(ptr + 16L, packLightAndData(light, materialBits, section));
 
                 ptr += STRIDE;
             }

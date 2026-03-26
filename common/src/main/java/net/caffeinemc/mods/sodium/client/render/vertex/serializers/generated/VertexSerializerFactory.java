@@ -3,7 +3,7 @@ package net.caffeinemc.mods.sodium.client.render.vertex.serializers.generated;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
-import org.lwjgl.system.MemoryUtil;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.objectweb.asm.*;
 
 import java.lang.invoke.MethodHandles;
@@ -102,23 +102,23 @@ public class VertexSerializerFactory {
                     methodVisitor.visitInsn(Opcodes.LADD);
 
                     if (remaining >= 8) {
-                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryUtil.class), "memGetLong", "(J)J", false);
-                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryUtil.class), "memPutLong", "(JJ)V", false);
+                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryIntrinsics.class), "getLong", "(J)J", false);
+                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryIntrinsics.class), "putLong", "(JJ)V", false);
 
                         i += 8;
                     } else if (remaining >= 4) {
-                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryUtil.class), "memGetInt", "(J)I", false);
-                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryUtil.class), "memPutInt", "(JI)V", false);
+                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryIntrinsics.class), "getInt", "(J)I", false);
+                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryIntrinsics.class), "putInt", "(JI)V", false);
 
                         i += 4;
                     } else if (remaining >= 2) {
-                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryUtil.class), "memGetShort", "(J)S", false);
-                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryUtil.class), "memPutShort", "(JS)V", false);
+                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryIntrinsics.class), "getShort", "(J)S", false);
+                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryIntrinsics.class), "putShort", "(JS)V", false);
 
                         i += 2;
                     } else {
-                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryUtil.class), "memGetByte", "(J)B", false);
-                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryUtil.class), "memPutByte", "(JB)V", false);
+                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryIntrinsics.class), "getByte", "(J)B", false);
+                        methodVisitor.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MemoryIntrinsics.class), "putByte", "(JB)V", false);
 
                         i += 1;
                     }

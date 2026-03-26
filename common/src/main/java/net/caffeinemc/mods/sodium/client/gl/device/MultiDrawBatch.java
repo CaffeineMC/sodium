@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.gl.device;
 
 import org.lwjgl.PointerBuffer;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.Pointer;
 import java.nio.IntBuffer;
@@ -44,7 +45,7 @@ public final class MultiDrawBatch {
         int elements = 0;
 
         for (var index = 0; index < this.size; index++) {
-            elements = Math.max(elements, MemoryUtil.memGetInt(this.pElementCount + ((long) index * Integer.BYTES)));
+            elements = Math.max(elements, MemoryIntrinsics.getInt(this.pElementCount + ((long) index * Integer.BYTES)));
         }
 
         return elements;

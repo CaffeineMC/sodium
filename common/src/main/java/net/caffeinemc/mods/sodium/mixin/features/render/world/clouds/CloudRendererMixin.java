@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.mixin.features.render.world.clouds;
 import net.minecraft.client.renderer.CloudRenderer;
 import net.minecraft.core.Direction;
 import org.jspecify.annotations.Nullable;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.lwjgl.system.MemoryUtil;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -127,9 +128,9 @@ public abstract class CloudRendererMixin {
 
         long ptrIndex = ptr + (index * 3);
 
-        MemoryUtil.memPutByte(ptrIndex, (byte) (x >> 1));
-        MemoryUtil.memPutByte(ptrIndex + 1, (byte) (z >> 1));
-        MemoryUtil.memPutByte(ptrIndex + 2, (byte) flags);
+        MemoryIntrinsics.putByte(ptrIndex, (byte) (x >> 1));
+        MemoryIntrinsics.putByte(ptrIndex + 1, (byte) (z >> 1));
+        MemoryIntrinsics.putByte(ptrIndex + 2, (byte) flags);
     }
 
     private static int sodium$emitCellGeometryExterior(long ptr, int index, long faces, CloudRenderer.@Nullable RelativeCameraPos orientation, int x, int z) {

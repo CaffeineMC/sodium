@@ -6,6 +6,7 @@ import net.caffeinemc.mods.sodium.client.util.MathUtil;
 import org.apache.commons.lang3.Validate;
 import org.jspecify.annotations.NonNull;
 import org.joml.Vector3f;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -112,14 +113,14 @@ public class VertexSorters {
 
         for (int primitiveId = 0; primitiveId < primitiveCount; primitiveId++) {
             // Position of vertex[0]
-            float v0x = MemoryUtil.memGetFloat(pVertex0 + 0L);
-            float v0y = MemoryUtil.memGetFloat(pVertex0 + 4L);
-            float v0z = MemoryUtil.memGetFloat(pVertex0 + 8L);
+            float v0x = MemoryIntrinsics.getFloat(pVertex0 + 0L);
+            float v0y = MemoryIntrinsics.getFloat(pVertex0 + 4L);
+            float v0z = MemoryIntrinsics.getFloat(pVertex0 + 8L);
 
             // Position of vertex[2]
-            float v2x = MemoryUtil.memGetFloat(pVertex2 + 0L);
-            float v2y = MemoryUtil.memGetFloat(pVertex2 + 4L);
-            float v2z = MemoryUtil.memGetFloat(pVertex2 + 8L);
+            float v2x = MemoryIntrinsics.getFloat(pVertex2 + 0L);
+            float v2y = MemoryIntrinsics.getFloat(pVertex2 + 4L);
+            float v2z = MemoryIntrinsics.getFloat(pVertex2 + 8L);
 
             // The centroid of the quad is calculated using the mid-point of the diagonal edge. This will not work
             // for degenerate quads, but those are not sortable anyway.
