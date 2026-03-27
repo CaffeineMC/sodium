@@ -41,7 +41,7 @@ public class Workarounds {
             workarounds.add(Reference.NVIDIA_THREADED_OPTIMIZATIONS_BROKEN);
         }
 
-        if (AmdWorkarounds.isAmdGraphicsCardPresent()) {
+        if (AmdWorkarounds.isAmdGraphicsCardPresent() && operatingSystem == OsUtils.OperatingSystem.WIN) {
             workarounds.add(Reference.AMD_GAME_OPTIMIZATION_BROKEN);
         }
 

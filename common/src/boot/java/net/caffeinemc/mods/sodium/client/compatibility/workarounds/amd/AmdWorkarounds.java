@@ -41,10 +41,10 @@ public class AmdWorkarounds {
             return;
         }
 
-        LOGGER.info("Modifying process environment to apply workarounds for the AMD graphics driver...");
-
         try {
             if (OsUtils.getOs() == OsUtils.OperatingSystem.WIN) {
+                LOGGER.info("Modifying process environment to apply workarounds for the AMD graphics driver...");
+
                 applyEnvironmentChanges$Windows();
             }
         } catch (Throwable t) {
