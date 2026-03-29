@@ -54,7 +54,6 @@
     "features.render.entity.cull.EntityRendererMixin",
     "features.render.entity.shadows.ShadowFeatureRendererMixin",
     "features.render.gui.font.BakedGlyphMixin",
-    "features.render.model.ModelManagerMixin",
     "features.render.immediate.DirectionMixin",
     "features.render.immediate.buffer_builder.intrinsics.BufferBuilderMixin",
     "features.render.immediate.buffer_builder.sorting.MeshDataAccessor",
