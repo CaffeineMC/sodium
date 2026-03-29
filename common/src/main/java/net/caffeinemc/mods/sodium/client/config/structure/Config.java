@@ -90,8 +90,9 @@ public class Config implements ConfigState {
                     throw new IllegalArgumentException("Override by mod '" + modConfig.configId() + "' targets its own option '" + override.target() + "'");
                 }
 
-                if (overrides.put(override.target(), override) != null) {
-                    throw new IllegalArgumentException("Multiple overrides for option '" + override.target() + "'");
+                var oldOverride = overrides.put(override.target(), override);
+                if (oldOverride != null) {
+                    throw new IllegalArgumentException("Multiple overrides for option '" + override.target() + "'! Sources: " + oldOverride.source() + " and " + override.source());
                 }
             }
 
@@ -100,8 +101,9 @@ public class Config implements ConfigState {
                     throw new IllegalArgumentException("Overlay by mod '" + modConfig.configId() + "' targets its own option '" + overlay.target() + "'");
                 }
 
-                if (overlays.put(overlay.target(), overlay) != null) {
-                    throw new IllegalArgumentException("Multiple overlays for option '" + overlay.target() + "'");
+                var oldOverlay = overlays.put(overlay.target(), overlay);
+                if (oldOverlay != null) {
+                    throw new IllegalArgumentException("Multiple overlays for option '" + overlay.target() + "'! Sources: " + oldOverlay.source() + " and " + overlay.source());
                 }
             }
         }
