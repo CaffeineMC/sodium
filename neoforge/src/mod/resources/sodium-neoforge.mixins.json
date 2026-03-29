@@ -11,6 +11,7 @@
   },
   "client" : [
     "core.model.quad.BakedQuadMixin",
+    "features.render.model.ModelManagerMixin",
     "features.render.model.block.ModelBlockRendererMixin",
     "features.world.biome.BiomeMixin",
     "platform.neoforge.AbstractBlockRenderContextMixin",
