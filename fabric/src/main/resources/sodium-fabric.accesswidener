@@ -16,3 +16,13 @@ accessible class net/minecraft/client/renderer/CloudRenderer$RelativeCameraPos
 
 accessible field net/minecraft/world/level/GrassColor pixels [I
 accessible field net/minecraft/world/level/FoliageColor pixels [I
+
+accessible field net/minecraft/client/renderer/block/model/ItemModelGenerator MIN_Z F
+accessible field net/minecraft/client/renderer/block/model/ItemModelGenerator MAX_Z F
+accessible field net/minecraft/client/renderer/block/model/ItemModelGenerator TEXTURE_SLOTS Lnet/minecraft/client/renderer/block/model/TextureSlots$Data;
+accessible field net/minecraft/client/renderer/block/model/ItemModelGenerator SOUTH_FACE_UVS Lnet/minecraft/client/renderer/block/model/BlockElementFace$UVs;
+accessible field net/minecraft/client/renderer/block/model/ItemModelGenerator NORTH_FACE_UVS Lnet/minecraft/client/renderer/block/model/BlockElementFace$UVs;
+accessible field net/minecraft/client/renderer/block/model/ItemModelGenerator UV_SHRINK F
+accessible method net/minecraft/client/renderer/block/model/ItemModelGenerator isTransparent (Lnet/minecraft/client/renderer/texture/SpriteContents;IIIII)Z
+accessible class net/minecraft/client/renderer/block/model/ItemModelGenerator$SideDirection
+accessible method net/minecraft/client/renderer/block/model/ItemModelGenerator$SideDirection isHorizontal ()Z
