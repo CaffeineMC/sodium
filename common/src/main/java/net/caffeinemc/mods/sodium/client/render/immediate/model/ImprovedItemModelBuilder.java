@@ -1,34 +1,32 @@
 package net.caffeinemc.mods.sodium.client.render.immediate.model;
 
 import com.mojang.math.Quadrant;
-import net.minecraft.client.renderer.block.dispatch.ModelState;
+import net.minecraft.client.renderer.block.model.BlockElement;
+import net.minecraft.client.renderer.block.model.BlockElementFace;
+import net.minecraft.client.renderer.block.model.SimpleUnbakedGeometry;
+import net.minecraft.client.renderer.block.model.TextureSlots;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.resources.model.ModelBaker;
 import net.minecraft.client.resources.model.ModelDebugName;
+import net.minecraft.client.resources.model.ModelState;
+import net.minecraft.client.resources.model.QuadCollection;
+import net.minecraft.client.resources.model.UnbakedGeometry;
 import net.minecraft.client.resources.model.UnbakedModel;
-import net.minecraft.client.resources.model.cuboid.CuboidFace;
-import net.minecraft.client.resources.model.cuboid.FaceBakery;
-import net.minecraft.client.resources.model.geometry.BakedQuad;
-import net.minecraft.client.resources.model.geometry.QuadCollection;
-import net.minecraft.client.resources.model.geometry.UnbakedGeometry;
-import net.minecraft.client.resources.model.sprite.TextureSlots;
 import net.minecraft.core.Direction;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.LAYERS;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.TEXTURE_SLOTS;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.SOUTH_FACE_UVS;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.NORTH_FACE_UVS;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.MIN_Z;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.MAX_Z;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.UV_SHRINK;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.SideDirection;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.isTransparent;
+import static net.minecraft.client.renderer.block.model.ItemModelGenerator.LAYERS;
+import static net.minecraft.client.renderer.block.model.ItemModelGenerator.TEXTURE_SLOTS;
+import static net.minecraft.client.renderer.block.model.ItemModelGenerator.SOUTH_FACE_UVS;
+import static net.minecraft.client.renderer.block.model.ItemModelGenerator.NORTH_FACE_UVS;
+import static net.minecraft.client.renderer.block.model.ItemModelGenerator.MIN_Z;
+import static net.minecraft.client.renderer.block.model.ItemModelGenerator.MAX_Z;
+import static net.minecraft.client.renderer.block.model.ItemModelGenerator.UV_SHRINK;
+import static net.minecraft.client.renderer.block.model.ItemModelGenerator.SideDirection;
+import static net.minecraft.client.renderer.block.model.ItemModelGenerator.isTransparent;
 
 public class ImprovedItemModelBuilder implements UnbakedModel {
 	@Override
@@ -52,60 +50,56 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 			ModelState modelState,
 			ModelDebugName debugName
 	) {
-		var builder	= new QuadCollection.Builder();
+        var blockElements = new ArrayList<BlockElement>();
 
 		for (var index = 0; index < LAYERS.size(); index ++) {
-			var material = textureSlots.getMaterial(LAYERS.get(index));
+            var layer = LAYERS.get(index);
+			var material = textureSlots.getMaterial(layer);
 
 			if (material == null) {
 				break;
 			}
 
-			var bakedMaterial = modelBaker.materials().get(material, debugName);
-			var quadMaterial = BakedQuad.MaterialInfo.of(
-					bakedMaterial,
-					bakedMaterial.sprite().transparency(),
-					index,
-					true,
-					0
-			);
-
-			builder.addAll(modelBaker.compute(new ItemLayerKey(quadMaterial, modelState)));
+            bakeItemQuads(
+                    blockElements,
+                    modelBaker.sprites().get(material, debugName).contents(),
+                    layer,
+                    index
+            );
 		}
 
-		return builder.build();
+		return SimpleUnbakedGeometry.bake(blockElements, textureSlots, modelBaker, modelState, debugName);
 	}
 
 	private static void bakeItemQuads(
-			QuadCollection.Builder builder,
-			ModelBaker.Interner interner,
-			BakedQuad.MaterialInfo materialInfo,
-			ModelState modelState
+            List<BlockElement> blockElements,
+			SpriteContents sprite,
+            String layer,
+            int index
 	) {
-		var material = interner.materialInfo(materialInfo);
-
-		var from = new Vector3f(0.0F, 0.0F, MIN_Z);
-		var to = new Vector3f(16.0F, 16.0F, MAX_Z);
-
-		builder.addUnculledFace(FaceBakery.bakeQuad(interner, from, to, SOUTH_FACE_UVS, Quadrant.R0, material, Direction.SOUTH, modelState, null));
-		builder.addUnculledFace(FaceBakery.bakeQuad(interner, from, to, NORTH_FACE_UVS, Quadrant.R0, material, Direction.NORTH, modelState, null));
+       blockElements.add(new BlockElement(
+                new Vector3f(0.0F, 0.0F, 7.5F),
+                new Vector3f(16.0F, 16.0F, 8.5F),
+                Map.of(
+                        Direction.SOUTH, new BlockElementFace(null, index, layer, SOUTH_FACE_UVS, Quadrant.R0),
+                        Direction.NORTH, new BlockElementFace(null, index, layer, NORTH_FACE_UVS, Quadrant.R0)
+                )
+        ));
 
 		bakeSideQuads(
-				material,
-				interner,
-				builder,
-				modelState
+				blockElements,
+				sprite,
+				layer,
+				index
 		);
 	}
 
 	private static void bakeSideQuads(
-			BakedQuad.MaterialInfo materialInfo,
-			ModelBaker.Interner interner,
-			QuadCollection.Builder builder,
-			ModelState modelState
+            List<BlockElement> blockElements,
+            SpriteContents sprite,
+            String layer,
+            int index
 	) {
-		var sprite = materialInfo.sprite().contents();
-
 		var xScale = 16.0F / sprite.width();
 		var yScale = 16.0F / sprite.height();
 
@@ -177,24 +171,22 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 				default -> throw new UnsupportedOperationException();
 			}
 
-			builder.addUnculledFace(
-					FaceBakery.bakeQuad(
-							interner,
-							new Vector3f(fromX, fromY, MIN_Z),
-							new Vector3f(toX, toY, MAX_Z),
-							new CuboidFace.UVs(
-									u0 * xScale,
-									v0 * yScale,
-									u1 * xScale,
-									v1 * yScale
-							),
-							Quadrant.R0,
-							materialInfo,
-							faceFacing.getDirection(),
-							modelState,
-							null
-					)
-			);
+            blockElements.add(new BlockElement(
+                    new Vector3f(fromX, fromY, MIN_Z),
+                    new Vector3f(toX, toY, MAX_Z),
+                    Map.of(faceFacing.getDirection(), new BlockElementFace(
+                            null,
+                            index,
+                            layer,
+                            new BlockElementFace.UVs(
+                                    u0 * xScale,
+                                    v0 * yScale,
+                                    u1 * xScale,
+                                    v1 * yScale
+                            ),
+                            Quadrant.R0
+                    ))
+            ));
 		}
 	}
 
@@ -321,22 +313,6 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 				sideFaces.add(newFace);
 				break;
 			}
-		}
-	}
-
-	private record ItemLayerKey(BakedQuad.MaterialInfo quadMaterial, ModelState modelState) implements ModelBaker.SharedOperationKey<@NotNull QuadCollection> {
-        @Override
-		public QuadCollection compute(ModelBaker modelBakery) {
-			var builder = new QuadCollection.Builder();
-
-			bakeItemQuads(
-					builder,
-					modelBakery.interner(),
-					this.quadMaterial,
-					this.modelState
-			);
-
-			return builder.build();
 		}
 	}
 
