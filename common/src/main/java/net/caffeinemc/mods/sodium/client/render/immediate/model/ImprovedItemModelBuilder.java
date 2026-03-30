@@ -1,6 +1,9 @@
 package net.caffeinemc.mods.sodium.client.render.immediate.model;
 
 import com.mojang.math.Quadrant;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.renderer.block.dispatch.ModelState;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.resources.model.ModelBaker;
@@ -15,10 +18,9 @@ import net.minecraft.client.resources.model.sprite.TextureSlots;
 import net.minecraft.core.Direction;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
+import org.jspecify.annotations.NonNull;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.LAYERS;
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.TEXTURE_SLOTS;
@@ -201,132 +203,29 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 	private static Collection<SideFace> buildSideFaces(SpriteContents sprite) {
 		var width = sprite.width();
 		var height = sprite.height();
-		var sideFaces = new HashSet<SideFace>();
+		var storage = new FaceStorage();
 
 		sprite.getUniqueFrames().forEach(frame -> {
 			for (var pixelY = 0; pixelY < height; pixelY ++) {
 				for (var pixelX = 0; pixelX < width; pixelX ++) {
-					var opaque = !isTransparent(
-							sprite,
-							frame,
-							pixelX,
-							pixelY,
-							width,
-							height
-					);
-
-					if (opaque) {
-						tryInsertFace(SideDirection.UP, sideFaces, sprite, frame, pixelX, pixelY, width, height);
-						tryInsertFace(SideDirection.DOWN, sideFaces, sprite, frame, pixelX, pixelY, width, height);
-						tryInsertFace(SideDirection.LEFT, sideFaces, sprite, frame, pixelX, pixelY, width, height);
-						tryInsertFace(SideDirection.RIGHT, sideFaces, sprite, frame, pixelX, pixelY, width, height);
-					}
+					storage.tryInsertPixel(
+                            sprite,
+                            frame,
+                            pixelX,
+                            pixelY,
+                            width,
+                            height
+                    );
 				}
 			}
 		});
 
-		return sideFaces;
-	}
-
-	private static void tryInsertFace(
-			SideDirection sideFacing,
-			Set<SideFace> sideFaces,
-			SpriteContents sprite,
-			int frame,
-			int pixelX,
-			int pixelY,
-			int width,
-			int height
-	) {
-		var neighborTransparent = isTransparent(
-				sprite,
-				frame,
-				pixelX - sideFacing.getDirection().getStepX(),
-				pixelY - sideFacing.getDirection().getStepY(),
-				width,
-				height
-		);
-
-		if (neighborTransparent) {
-			insertOrMergeFace(
-					sideFaces,
-					sideFacing,
-					pixelX,
-					pixelY
-			);
-		}
-	}
-
-	private static void insertOrMergeFace(
-			Set<SideFace> sideFaces,
-			SideDirection sideFacing,
-			int pixelX,
-			int pixelY
-	) {
-		var newFace = new SideFace(
-				sideFacing,
-				sideFacing.isHorizontal() ? pixelX : pixelY,
-				sideFacing.isHorizontal() ? pixelY : pixelX
-		);
-
-		while (true) {
-			var newAnchor = newFace.anchor();
-			var newMin = newFace.min();
-			var newMax = newFace.max();
-			var merged = false;
-
-			for (var oldFace : sideFaces) {
-				var oldFacing = oldFace.facing();
-
-                if (oldFacing != sideFacing) {
-                    continue;
-                }
-
-				var oldAnchor = oldFace.anchor();
-
-                if (newAnchor != oldAnchor) {
-                    continue;
-                }
-
-				var oldMin = oldFace.min();
-				var oldMax = oldFace.max();
-
-				if (newMin == oldMax + 1) {
-					merged = true;
-					newFace = new SideFace(
-							sideFacing,
-							oldMin,
-							newMax,
-							newAnchor
-					);
-				}
-
-				if (newMax == oldMin - 1) {
-					merged = true;
-					newFace = new SideFace(
-							sideFacing,
-							newMin,
-							oldMax,
-							newAnchor
-					);
-				}
-
-				if (merged) {
-					sideFaces.remove(oldFace);
-					break;
-				}
-			}
-
-			if (!merged) {
-				sideFaces.add(newFace);
-				break;
-			}
-		}
+		return storage.buildSideFaces();
 	}
 
 	private record ItemLayerKey(BakedQuad.MaterialInfo quadMaterial, ModelState modelState) implements ModelBaker.SharedOperationKey<@NotNull QuadCollection> {
         @Override
-		public QuadCollection compute(ModelBaker modelBakery) {
+		public @NonNull QuadCollection compute(ModelBaker modelBakery) {
 			var builder = new QuadCollection.Builder();
 
 			bakeItemQuads(
@@ -340,23 +239,119 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 		}
 	}
 
+    public record FaceStorage(
+            Int2ObjectMap<BitSet> up,
+            Int2ObjectMap<BitSet> down,
+            Int2ObjectMap<BitSet> left,
+            Int2ObjectMap<BitSet> right
+    ) {
+        public FaceStorage() {
+            this(
+                    new Int2ObjectOpenHashMap<>(),
+                    new Int2ObjectOpenHashMap<>(),
+                    new Int2ObjectOpenHashMap<>(),
+                    new Int2ObjectOpenHashMap<>()
+            );
+        }
+
+        public void tryInsertPixel(
+                SpriteContents sprite,
+                int frame,
+                int pixelX,
+                int pixelY,
+                int width,
+                int height
+        ) {
+            var opaque = !isTransparent(
+                    sprite,
+                    frame,
+                    pixelX,
+                    pixelY,
+                    width,
+                    height
+            );
+
+            if (opaque) {
+                tryInsertFace(up, SideDirection.UP, sprite, frame, pixelX, pixelY, width, height);
+                tryInsertFace(down, SideDirection.DOWN, sprite, frame, pixelX, pixelY, width, height);
+                tryInsertFace(left, SideDirection.LEFT, sprite, frame, pixelX, pixelY, width, height);
+                tryInsertFace(right, SideDirection.RIGHT, sprite, frame, pixelX, pixelY, width, height);
+            }
+        }
+
+        public Set<SideFace> buildSideFaces() {
+            var output = new ObjectOpenHashSet<SideFace>();
+
+            buildMergedFaces(output, up, SideDirection.UP);
+            buildMergedFaces(output, down, SideDirection.DOWN);
+            buildMergedFaces(output, left, SideDirection.LEFT);
+            buildMergedFaces(output, right, SideDirection.RIGHT);
+
+            return output;
+        }
+
+        private static void tryInsertFace(
+                Int2ObjectMap<BitSet> storage,
+                SideDirection faceFacing,
+                SpriteContents sprite,
+                int frame,
+                int pixelX,
+                int pixelY,
+                int width,
+                int height
+        ) {
+            var neighborTransparent = isTransparent(
+                    sprite,
+                    frame,
+                    pixelX - faceFacing.getDirection().getStepX(),
+                    pixelY - faceFacing.getDirection().getStepY(),
+                    width,
+                    height
+            );
+
+            if (neighborTransparent) {
+                var anchor = faceFacing.isHorizontal() ? pixelY : pixelX;
+                var offset = faceFacing.isHorizontal() ? pixelX : pixelY;
+
+                storage.computeIfAbsent(anchor, _ -> new BitSet()).set(offset);
+            }
+        }
+
+        private static void buildMergedFaces(
+                Collection<SideFace> faceOutput,
+                Int2ObjectMap<BitSet> storage,
+                SideDirection faceFacing
+        ) {
+            for (int anchor : storage.keySet()) {
+                var faces = storage.get(anchor);
+                var accum = 0;
+
+                for (var index = faces.nextSetBit(0); index < faces.length() + 1; index ++) {
+                    if (faces.get(index)) {
+                        accum ++;
+                    } else {
+                        if (accum > 0) {
+                            faceOutput.add(new SideFace(
+                                    faceFacing,
+                                    index - accum,
+                                    index - 1,
+                                    anchor
+                            ));
+                        }
+
+                        accum = 0;
+                    }
+                }
+            }
+        }
+    }
+
 	public record SideFace(
 			SideDirection facing,
 			int min,
 			int max,
 			int anchor
 	) {
-		public SideFace(
-				SideDirection facing,
-				int minMax,
-				int anchor
-		) {
-			this(
-					facing,
-					minMax,
-					minMax,
-					anchor
-			);
-		}
+
 	}
 }
