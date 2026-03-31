@@ -3,7 +3,7 @@ package net.caffeinemc.mods.sodium.client.render.immediate.model;
 import com.mojang.math.Quadrant;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.client.renderer.block.dispatch.ModelState;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.resources.model.ModelBaker;
@@ -117,6 +117,8 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 			var faceMin = sideFace.min();
 			var faceMax = sideFace.max();
 
+            // Calculate the start coordinate and length of the side quad using the side face properties, as described
+            // in the diagram in FaceStorage.
 			float minX = faceFacing.isHorizontal() ? faceMin : faceAnchor;
 			float minY = faceFacing.isHorizontal() ? faceAnchor : faceMin;
 			float length = faceMax - faceMin + 1.0F;
@@ -176,7 +178,6 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 				case DOWN -> fromY = toY;
 				case LEFT -> toX = fromX;
 				case UP -> toY = fromY;
-				default -> throw new UnsupportedOperationException();
 			}
 
 			builder.addUnculledFace(
@@ -205,6 +206,8 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 		var height = sprite.height();
 		var storage = new FaceStorage();
 
+        // For each pixel in each frame, attempts to insert side faces of the pixel into the face storage.
+        // All frames are included to avoid missing sides on animated textures with inconsistent shapes.
 		sprite.getUniqueFrames().forEach(frame -> {
 			for (var pixelY = 0; pixelY < height; pixelY ++) {
 				for (var pixelX = 0; pixelX < width; pixelX ++) {
@@ -220,6 +223,7 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 			}
 		});
 
+        // Merge stored side faces.
 		return storage.buildSideFaces();
 	}
 
@@ -239,6 +243,54 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 		}
 	}
 
+    /*Coordinates of the sprite:
+
+    (0,0) ------ (width, 0)
+      |
+      |
+      |
+    (0, height)
+
+    For SideDirection.UP/DOWN (plane horizontal)
+
+       min(x) max(x)
+         |      |
+    +-----------+----+--
+    |    |      |    ||\                                        ||
+    |    |      |    || anchor(y)                               || Plane normal is vertical, parallel to the direction
+    |    |      |    ||/                                        || vector of UP/DOWN.
+    +----A------B----+-- <-- plane of anchor y                  \/
+    +----------------+-- <-- plane of anchor y + v (v > 0)
+    +----------------+
+    So:
+    The coordinate of the start point of the quad (A) is (min, anchor).
+    The coordinate of the end point of the quad (B) is (max, anchor).
+    Side quad AB is on the plane of anchor y.
+
+    For SideDirection.LEFT/RIGHT (plane vertical):
+
+    anchor(x)
+    /     \
+    |<--->|
+    +-----+---+------+
+    |     |   |      |
+    |     A----------+-- min(y)   Plane normal is horizontal, parallel to the direction vector of LEFT/RIGHT.
+    |     |   |      |               ----->
+    |     B----------+-- max(y)
+    |     |   |      |
+    +-----+---+------+
+          ^   ^
+          |   plane of anchor x + v (v > 0)
+    plane of anchor x
+    So:
+    The coordinate of the start point of the quad (A) is (anchor, min).
+    The coordinate of the end point of the quad (B) is (anchor, max).
+    Side quad AB is on the plane of anchor x.*/
+
+    // Stores the side faces using BitSet maps. Each direction has its own map to avoid performance overhead of
+    // enumerating all faces from different directions together.
+    // Each map contains bit sets that represent "planes" of anchors in the same direction.
+    // The bits in the bit set indicate which parts of the plane have per-pixel side quads.
     public record FaceStorage(
             Int2ObjectMap<BitSet> up,
             Int2ObjectMap<BitSet> down,
@@ -262,6 +314,8 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
                 int width,
                 int height
         ) {
+            // If the pixel is transparent, any side quads would also be invisible.
+            // Skip the transparent pixel to avoid generating redundant invisible quad faces.
             var opaque = !isTransparent(
                     sprite,
                     frame,
@@ -272,6 +326,7 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
             );
 
             if (opaque) {
+                // Try insert per-pixel side quads for each side of the pixel.
                 tryInsertFace(up, SideDirection.UP, sprite, frame, pixelX, pixelY, width, height);
                 tryInsertFace(down, SideDirection.DOWN, sprite, frame, pixelX, pixelY, width, height);
                 tryInsertFace(left, SideDirection.LEFT, sprite, frame, pixelX, pixelY, width, height);
@@ -279,9 +334,10 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
             }
         }
 
-        public Set<SideFace> buildSideFaces() {
-            var output = new ObjectOpenHashSet<SideFace>();
+        public List<SideFace> buildSideFaces() {
+            var output = new ReferenceArrayList<SideFace>();
 
+            // Merges and collects all faces from different directions.
             buildMergedFaces(output, up, SideDirection.UP);
             buildMergedFaces(output, down, SideDirection.DOWN);
             buildMergedFaces(output, left, SideDirection.LEFT);
@@ -300,6 +356,7 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
                 int width,
                 int height
         ) {
+            // Check if the neighbor pixel in the corresponding direction is transparent.
             var neighborTransparent = isTransparent(
                     sprite,
                     frame,
@@ -309,10 +366,13 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
                     height
             );
 
+            // Only insert a per-pixel side quad if the side face is exposed (not blocked by opaque neighbors).
             if (neighborTransparent) {
+                // Calculate the anchor and the pixel-level offset on the plane of the anchor,
                 var anchor = faceFacing.isHorizontal() ? pixelY : pixelX;
                 var offset = faceFacing.isHorizontal() ? pixelX : pixelY;
 
+                // Mark the corresponding part of the plane of given anchor as occupied.
                 storage.computeIfAbsent(anchor, _ -> new BitSet()).set(offset);
             }
         }
@@ -322,15 +382,28 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
                 Int2ObjectMap<BitSet> storage,
                 SideDirection faceFacing
         ) {
+            // Merge all planes (anchors) in the map.
             for (int anchor : storage.keySet()) {
-                var faces = storage.get(anchor);
-                var accum = 0;
+                var faces = storage.get(anchor); // Get the plane bit set.
+                var accum = 0; // Initialize the merge accumulation counter.
 
+                // For all bits in the plane, scan the occupied bits (per-pixel side quads) and merge consecutive bits
+                // into segments as SideFace.
+                // The scan starts from the position (index) of the first per-pixel side quad (first set bit) to the
+                // last per-pixel side quad (highest set bit).
+                // The scan runs to faces.length() + 1 is to ensure that the final accumulated segment is also emitted,
+                // since the bit immediately after the highest set bit is always clear.
                 for (var index = faces.nextSetBit(0); index < faces.length() + 1; index ++) {
+                    // If the bit is set,
                     if (faces.get(index)) {
+                        // accumulate the length of the merged segment.
                         accum ++;
                     } else {
+                        // The bit is clear, meaning previous continuous segment has ended, or a new segment has not
+                        // started yet,
+                        // If we do have a previously accumulated segment,
                         if (accum > 0) {
+                            // Pop the segment out to the faceOutput as a merged SideFace.
                             faceOutput.add(new SideFace(
                                     faceFacing,
                                     index - accum,
@@ -339,6 +412,7 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
                             ));
                         }
 
+                        // Reset the accumulation counter for new segments.
                         accum = 0;
                     }
                 }
