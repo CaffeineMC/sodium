@@ -380,11 +380,11 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
         /*
           <--merged-->    <-----merged----->
         001111111111110000111111111111111111
-          ^          ^
-          |          |
-        min(?)     max(13)
-                   accum = 11
-                   min = max - accum = 13 - 11 = 2
+          ^           ^
+          |           |
+        min = ?     max = index - 1 = 14 - 1 = 13
+        accum = 0   accum = 12
+                    min = index - accum = 14 - 12 = 2
         SideFace(facing, anchor, min=2, max=13)
          */
         private static void buildMergedFaces(
