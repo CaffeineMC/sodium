@@ -377,6 +377,16 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
             }
         }
 
+        /*
+          <--merged-->    <-----merged----->
+        001111111111110000111111111111111111
+          ^          ^
+          |          |
+        min(?)     max(13)
+                   accum = 11
+                   min = max - accum = 13 - 11 = 2
+        SideFace(facing, anchor, min=2, max=13)
+         */
         private static void buildMergedFaces(
                 Collection<SideFace> faceOutput,
                 Int2ObjectMap<BitSet> storage,
@@ -394,13 +404,12 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
                 // The scan runs to faces.length() + 1 is to ensure that the final accumulated segment is also emitted,
                 // since the bit immediately after the highest set bit is always clear.
                 for (var index = faces.nextSetBit(0); index < faces.length() + 1; index ++) {
-                    // If the bit is set,
                     if (faces.get(index)) {
-                        // accumulate the length of the merged segment.
+                        // The bit is set, accumulate the length of the segment.
                         accum ++;
                     } else {
-                        // The bit is clear, meaning previous continuous segment has ended, or a new segment has not
-                        // started yet,
+                        // The bit is clear, meaning that the previous consecutive segment has ended, or a new segment
+                        // has not started yet.
                         // If we do have a previously accumulated segment,
                         if (accum > 0) {
                             // Pop the segment out to the faceOutput as a merged SideFace.
