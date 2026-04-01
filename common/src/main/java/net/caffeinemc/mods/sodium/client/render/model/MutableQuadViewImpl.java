@@ -289,6 +289,7 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
         setTintIndex(quad.materialInfo().tintIndex());
         setAmbientOcclusion(((BakedQuadView) (Object) quad).hasAO() ? TriState.DEFAULT : TriState.FALSE); // TODO: TRUE, or DEFAULT?
         setItemRenderType(quad.materialInfo().itemRenderType());
+        setRenderType(quad.materialInfo().layer());
         setAnimated(quad.materialInfo().sprite().contents().isAnimated());
         setEmissive(quad.materialInfo().lightEmission() == 15);
 

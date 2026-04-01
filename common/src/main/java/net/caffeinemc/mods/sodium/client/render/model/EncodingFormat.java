@@ -101,12 +101,10 @@ public final class EncodingFormat {
     private static final int DIRECTION_COUNT = Direction.values().length;
     private static final int NULLABLE_DIRECTION_COUNT = DIRECTION_COUNT + 1;
 
-    private static final ChunkSectionLayer[] CHUNK_SECTION_LAYERS = ChunkSectionLayer.values();
-    private static final int CHUNK_SECTION_LAYER_COUNT = CHUNK_SECTION_LAYERS.length;
     private static final RenderType[] ITEM_RENDER_TYPES = ItemRenderType.RENDER_TYPES;
     private static final int ITEM_RENDER_TYPE_COUNT = ITEM_RENDER_TYPES.length;
-    private static final @Nullable ChunkSectionLayer[] NULLABLE_BLOCK_RENDER_LAYERS = ArrayUtils.add(ChunkSectionLayer.values(), null);
-    private static final int NULLABLE_BLOCK_RENDER_LAYER_COUNT = NULLABLE_BLOCK_RENDER_LAYERS.length;
+    private static final @Nullable ChunkSectionLayer[] NULLABLE_CHUNK_SECTION_LAYERS = ArrayUtils.add(ChunkSectionLayer.values(), null);
+    private static final int NULLABLE_CHUNK_SECTION_LAYER_COUNT = NULLABLE_CHUNK_SECTION_LAYERS.length;
     private static final TriState[] TRI_STATES = TriState.values();
     private static final int TRI_STATE_COUNT = TRI_STATES.length;
     private static final @Nullable ItemStackRenderState.FoilType[] NULLABLE_GLINTS = ArrayUtils.add(ItemStackRenderState.FoilType.values(), null);
@@ -116,16 +114,15 @@ public final class EncodingFormat {
     private static final SodiumQuadAtlas[] QUAD_ATLASES = SodiumQuadAtlas.values();
     private static final int QUAD_ATLAS_COUNT = QUAD_ATLASES.length;
 
-    private static final int NULL_RENDER_LAYER_INDEX = NULLABLE_BLOCK_RENDER_LAYER_COUNT - 1;
+    private static final int NULL_CHUNK_SECTION_LAYER_INDEX = NULLABLE_CHUNK_SECTION_LAYER_COUNT - 1;
     private static final int NULL_GLINT_INDEX = NULLABLE_GLINT_COUNT - 1;
 
     private static final int CULL_BIT_LENGTH = Mth.ceillog2(NULLABLE_DIRECTION_COUNT);
     private static final int LIGHT_BIT_LENGTH = Mth.ceillog2(DIRECTION_COUNT);
     private static final int NORMALS_BIT_LENGTH = 4;
     private static final int NORMAL_FACE_BIT_LENGTH = 3;
-    private static final int CHUNK_LAYER_BIT_LENGTH = Mth.ceillog2(CHUNK_SECTION_LAYER_COUNT);
+    private static final int CHUNK_LAYER_BIT_LENGTH = Mth.ceillog2(NULLABLE_CHUNK_SECTION_LAYER_COUNT);
     private static final int ITEM_RENDER_TYPE_BIT_LENGTH = Mth.ceillog2(ITEM_RENDER_TYPE_COUNT);
-    private static final int RENDER_LAYER_BIT_LENGTH = Mth.ceillog2(NULLABLE_BLOCK_RENDER_LAYER_COUNT);
     private static final int EMISSIVE_BIT_LENGTH = 1;
     private static final int DIFFUSE_BIT_LENGTH = 1;
     private static final int AO_BIT_LENGTH = Mth.ceillog2(TRI_STATE_COUNT);
@@ -156,7 +153,7 @@ public final class EncodingFormat {
     private static final int NORMAL_FACE_MASK = bitMask(NORMAL_FACE_BIT_LENGTH, NORMAL_FACE_BIT_OFFSET);
     private static final int NORMALS_MASK = bitMask(NORMALS_BIT_LENGTH, NORMALS_BIT_OFFSET);
     private static final int GEOMETRY_MASK = bitMask(GEOMETRY_BIT_LENGTH, GEOMETRY_BIT_OFFSET);
-    private static final int RENDER_LAYER_MASK = bitMask(RENDER_LAYER_BIT_LENGTH, CHUNK_LAYER_BIT_OFFSET);
+    private static final int CHUNK_LAYER_MASK = bitMask(CHUNK_LAYER_BIT_LENGTH, CHUNK_LAYER_BIT_OFFSET);
     private static final int QUAD_ATLAS_MASK = bitMask(QUAD_ATLAS_BIT_LENGTH, QUAD_ATLAS_BIT_OFFSET);
     private static final int EMISSIVE_MASK = bitMask(EMISSIVE_BIT_LENGTH, EMISSIVE_BIT_OFFSET);
     private static final int DIFFUSE_MASK = bitMask(DIFFUSE_BIT_LENGTH, DIFFUSE_BIT_OFFSET);
@@ -219,12 +216,12 @@ public final class EncodingFormat {
 
     @Nullable
     static ChunkSectionLayer renderLayer(int bits) {
-        return NULLABLE_BLOCK_RENDER_LAYERS[(bits & RENDER_LAYER_MASK) >>> CHUNK_LAYER_BIT_OFFSET];
+        return NULLABLE_CHUNK_SECTION_LAYERS[(bits & CHUNK_LAYER_MASK) >>> CHUNK_LAYER_BIT_OFFSET];
     }
 
     static int renderLayer(int bits, @Nullable ChunkSectionLayer renderLayer) {
-        int index = renderLayer == null ? NULL_RENDER_LAYER_INDEX : renderLayer.ordinal();
-        return (bits & ~RENDER_LAYER_MASK) | (index << CHUNK_LAYER_BIT_OFFSET);
+        int index = renderLayer == null ? NULL_CHUNK_SECTION_LAYER_INDEX : renderLayer.ordinal();
+        return (bits & ~CHUNK_LAYER_MASK) | (index << CHUNK_LAYER_BIT_OFFSET);
     }
 
     static boolean emissive(int bits) {
