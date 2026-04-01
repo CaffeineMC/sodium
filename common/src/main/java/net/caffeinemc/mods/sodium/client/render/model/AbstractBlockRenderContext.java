@@ -239,7 +239,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
                 editorQuad.fromBakedQuad(q);
                 editorQuad.setCullFace(cullFace);
                 editorQuad.setAmbientOcclusion(ao.toTriState());
-                editorQuad.setShadeMode(SodiumShadeMode.VANILLA);
+                editorQuad.setShadeMode(SodiumShadeMode.ENHANCED);
                 // Call processQuad instead of emit for efficiency
                 // (avoid unnecessarily clearing data, trying to apply transforms, and performing cull check again)
 
