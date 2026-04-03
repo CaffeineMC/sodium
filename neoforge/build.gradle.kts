@@ -1,7 +1,10 @@
+import me.modmuss50.mpp.ReleaseType
+
 plugins {
     id("multiloader-platform")
 
     id("net.neoforged.moddev") version("2.0.140")
+    id("me.modmuss50.mod-publish-plugin") version(BuildConfig.MOD_PUBLISH_PLUGIN_VERSION)
 }
 
 base {
@@ -137,13 +140,6 @@ sourceSets {
 neoForge {
     version = BuildConfig.NEOFORGE_VERSION
 
-    if (BuildConfig.PARCHMENT_VERSION != null) {
-        parchment {
-            minecraftVersion = BuildConfig.MINECRAFT_VERSION
-            mappingsVersion = BuildConfig.PARCHMENT_VERSION
-        }
-    }
-
     runs {
         create("Client") {
             client()
@@ -191,6 +187,42 @@ tasks {
         filesMatching(listOf("META-INF/neoforge.mods.toml")) {
             expand(mapOf("version" to BuildConfig.createVersionString(rootProject)))
         }
+    }
+}
+
+publishMods {
+    file.set(tasks.jar.get().archiveFile)
+    changelog = BuildConfig.getChangelog(project)
+    type = when {
+        version.toString().contains("alpha") -> ReleaseType.ALPHA
+        version.toString().contains("beta") -> ReleaseType.BETA
+        else -> ReleaseType.STABLE
+    }
+    version = project.version.toString()
+    displayName = "Sodium ${BuildConfig.MOD_VERSION} for NeoForge ${BuildConfig.MINECRAFT_VERSION}"
+    modLoaders.add(project.name)
+
+    curseforge {
+        accessToken = providers.environmentVariable("CURSEFORGE_API_KEY")
+        projectId = BuildConfig.CURSEFORGE_PROJECT_ID
+        minecraftVersions.add(BuildConfig.MINECRAFT_VERSION)
+    }
+
+    modrinth {
+        accessToken = providers.environmentVariable("MODRINTH_API_KEY")
+        projectId = BuildConfig.MODRINTH_PROJECT_ID
+        minecraftVersions.add(BuildConfig.MINECRAFT_VERSION)
+    }
+
+    github {
+        accessToken = providers.environmentVariable("GITHUB_TOKEN")
+        repository = "CaffeineMC/sodium"
+        commitish = BuildConfig.calculateGitHash(project)
+        tagName = BuildConfig.RELEASE_TAG
+        file.unset()
+        file.unsetConvention()
+
+        allowEmptyFiles = true
     }
 }
 

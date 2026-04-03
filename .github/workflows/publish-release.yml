@@ -1,11 +1,17 @@
-# Used when a commit is tagged and pushed to the repository
+# Used when a developer decides to publish a release
 # This makes use of caching for faster builds and uploads the resulting artifacts
-name: build-tag
+name: Release GH+MR+CF
 
 on:
-  push:
-    tags:
-      - '*'
+  workflow_dispatch:
+    inputs:
+      platform:
+        type: choice
+        description: Platform
+        options:
+          - both
+          - fabric
+          - neoforge
 
 jobs:
   build:
@@ -19,8 +25,10 @@ jobs:
         # bash pattern expansion to grab branch name without slashes
         run: ref="${GITHUB_REF#refs/heads/}" && echo "branch=${ref////-}" >> $GITHUB_OUTPUT
         id: ref
+
       - name: Checkout sources
         uses: actions/checkout@v6
+
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -39,6 +47,14 @@ jobs:
         with:
           name: sodium-artifacts-${{ steps.ref.outputs.branch }}
           path: build/mods/*.jar
+          
+      - name: Publish Modrinth, Curseforge and Github Releases for Fabric
+        if: ${{ inputs.platform == 'both' || inputs.platform == 'fabric' }}
+        run: ./gradlew :fabric:publishMods
+        
+      - name: Publish Modrinth, Curseforge and Github Releases for NeoForge
+        if: ${{ inputs.platform == 'both' || inputs.platform == 'neoforge' }}
+        run: ./gradlew :neoforge:publishMods
 
       - name: Publish Tag Release to CaffeineMC Maven
         env:
