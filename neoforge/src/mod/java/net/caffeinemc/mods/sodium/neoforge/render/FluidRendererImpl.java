@@ -155,7 +155,7 @@ public class FluidRendererImpl extends FluidRenderer {
                             .getFluidStateModelSet()
                             .get(state)
                             .fluidTintSource();
-                    return tintSource != null ? tintSource.colorInWorld(state, state.createLegacyBlock(), slice, pos) : -1;
+                    return tintSource != null ? tintSource.colorInWorld(state, state.createLegacyBlock(), slice, pos) | 0xFF000000 : -1;
                 }
             };
         }
@@ -170,7 +170,7 @@ public class FluidRendererImpl extends FluidRenderer {
                             .getFluidStateModelSet()
                             .get(state.getFluidState().isEmpty() ? Fluids.WATER.defaultFluidState() : state.getFluidState())
                             .fluidTintSource();
-                    return tintSource != null ? tintSource.colorInWorld(state, slice, pos) : -1;
+                    return tintSource != null ? tintSource.colorInWorld(state, slice, pos) | 0xFF000000 : -1;
                 }
             };
         }
