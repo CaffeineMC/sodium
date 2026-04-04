@@ -48,13 +48,12 @@ jobs:
           name: sodium-artifacts-${{ steps.ref.outputs.branch }}
           path: build/mods/*.jar
           
-      - name: Publish Modrinth, Curseforge and Github Releases for Fabric
-        if: ${{ inputs.platform == 'both' || inputs.platform == 'fabric' }}
-        run: ./gradlew :fabric:publishMods
-        
-      - name: Publish Modrinth, Curseforge and Github Releases for NeoForge
-        if: ${{ inputs.platform == 'both' || inputs.platform == 'neoforge' }}
-        run: ./gradlew :neoforge:publishMods
+      - name: Publish Modrinth, Curseforge and Github Releases
+        env:
+          PLATFORM: ${{ inputs.platform }}
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+          MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
+        run: ./gradlew publishMods -Pbuild.release=true -Pbuild.release.platform=true
 
       - name: Publish Tag Release to CaffeineMC Maven
         env:

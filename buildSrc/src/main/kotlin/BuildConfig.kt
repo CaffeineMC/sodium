@@ -1,22 +1,19 @@
  import org.gradle.api.Project
 
- object BuildConfig {
+object BuildConfig {
     val MINECRAFT_VERSION: String = "26.1.1"
     val NEOFORGE_VERSION: String = "26.1.1.0-beta"
     val FABRIC_LOADER_VERSION: String = "0.18.4"
     val FABRIC_API_VERSION: String = "0.145.1+26.1"
     val SUPPORT_FRAPI : Boolean = true
-    
-    // https://modmuss50.github.io/mod-publish-plugin/getting_started/
-    val MOD_PUBLISH_PLUGIN_VERSION: String = "1.1.0"
 
     // https://semver.org/
-    var MOD_VERSION: String = "0.8.9-beta.4"
-    
-    var RELEASE_TAG: String = "mc$MINECRAFT_VERSION-$MOD_VERSION"
-    
-    var CURSEFORGE_PROJECT_ID = "394468"
-    var MODRINTH_PROJECT_ID = "AANobbMI"
+    val MOD_VERSION: String = "0.8.9-beta.4"
+
+    val RELEASE_TAG: String = "mc$MINECRAFT_VERSION-$MOD_VERSION"
+
+    val CURSEFORGE_PROJECT_ID = "394468"
+    val MODRINTH_PROJECT_ID = "AANobbMI"
 
     fun createVersionString(project: Project): String {
         val builder = StringBuilder()
@@ -57,6 +54,7 @@
     
     fun getChangelog(project: Project): String {
         return project.rootProject.file("changelog.md").readText()
+                .split("----------")[1]
                 .trim()
                 .replace("_ReleaseTag_", RELEASE_TAG)
                 .replace("_MCVersion_", MINECRAFT_VERSION)

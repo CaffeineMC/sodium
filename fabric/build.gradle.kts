@@ -1,10 +1,7 @@
-import me.modmuss50.mpp.ReleaseType
-
 plugins {
     id("multiloader-platform")
 
     id("net.fabricmc.fabric-loom") version ("1.15.4")
-    id("me.modmuss50.mod-publish-plugin") version(BuildConfig.MOD_PUBLISH_PLUGIN_VERSION)
 }
 
 base {
@@ -138,42 +135,6 @@ tasks {
         if (BuildConfig.SUPPORT_FRAPI) {
             from(configurationFrapiModResources)
         }
-    }
-}
-
-publishMods {
-    file.set(tasks.jar.get().archiveFile)
-    changelog = BuildConfig.getChangelog(project)
-    type = when {
-        version.toString().contains("alpha") -> ReleaseType.ALPHA
-        version.toString().contains("beta") -> ReleaseType.BETA
-        else -> ReleaseType.STABLE
-    }
-    version = project.version.toString()
-    displayName = "Sodium ${BuildConfig.MOD_VERSION} for Fabric ${BuildConfig.MINECRAFT_VERSION}"
-    modLoaders.add(project.name)
-
-    curseforge {
-        accessToken = providers.environmentVariable("CURSEFORGE_API_KEY")
-        projectId = BuildConfig.CURSEFORGE_PROJECT_ID
-        minecraftVersions.add(BuildConfig.MINECRAFT_VERSION)
-    }
-
-    modrinth {
-        accessToken = providers.environmentVariable("MODRINTH_API_KEY")
-        projectId = BuildConfig.MODRINTH_PROJECT_ID
-        minecraftVersions.add(BuildConfig.MINECRAFT_VERSION)
-    }
-
-    github {
-        accessToken = providers.environmentVariable("GITHUB_TOKEN")
-        repository = "CaffeineMC/sodium"
-        commitish = BuildConfig.calculateGitHash(project)
-        tagName = BuildConfig.RELEASE_TAG
-        file.unset()
-        file.unsetConvention()
-
-        allowEmptyFiles = true
     }
 }
 
