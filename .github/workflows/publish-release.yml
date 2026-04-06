@@ -1,6 +1,8 @@
 # Used when a developer decides to publish a release
 # This makes use of caching for faster builds and uploads the resulting artifacts
 name: Release GH+MR+CF
+permissions:
+  contents: write # Needed to publish a GitHub release
 
 on:
   workflow_dispatch:
@@ -50,10 +52,10 @@ jobs:
           
       - name: Publish Modrinth, Curseforge and Github Releases
         env:
-          PLATFORM: ${{ inputs.platform }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
           MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
-        run: ./gradlew publishMods -Pbuild.release=true -Pbuild.release.platform=true
+        run: ./gradlew publishMods -Pbuild.release=true -Pbuild.release.platform=${{ inputs.platform }}
 
       - name: Publish Tag Release to CaffeineMC Maven
         env:

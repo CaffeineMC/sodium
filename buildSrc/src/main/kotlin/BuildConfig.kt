@@ -1,11 +1,11 @@
- import org.gradle.api.Project
+import org.gradle.api.Project
 
 object BuildConfig {
     val MINECRAFT_VERSION: String = "26.1.1"
     val NEOFORGE_VERSION: String = "26.1.1.0-beta"
     val FABRIC_LOADER_VERSION: String = "0.18.4"
     val FABRIC_API_VERSION: String = "0.145.1+26.1"
-    val SUPPORT_FRAPI : Boolean = true
+    val SUPPORT_FRAPI: Boolean = true
 
     // https://semver.org/
     val MOD_VERSION: String = "0.8.9-beta.4"
@@ -40,24 +40,21 @@ object BuildConfig {
 
         return builder.toString()
     }
-    
-    fun calculateGitHash(project: Project): String {
-        try {
-            val output = project.providers.exec {
-                commandLine("git", "rev-parse", "HEAD")
-            }
-            return output.standardOutput.asText.get().trim()
-        } catch (ignored: Throwable) {
-            return "unknown"
+
+    fun calculateGitHash(project: Project): String = try {
+        val output = project.providers.exec {
+            workingDir(project.projectDir)
+            commandLine("git", "rev-parse", "HEAD")
         }
+        output.standardOutput.asText.get().trim()
+    } catch (_: Throwable) {
+        "unknown"
     }
-    
-    fun getChangelog(project: Project): String {
-        return project.rootProject.file("changelog.md").readText()
-                .split("----------")[1]
-                .trim()
-                .replace("_ReleaseTag_", RELEASE_TAG)
-                .replace("_MCVersion_", MINECRAFT_VERSION)
-                .replace("_SodiumVersion_", MOD_VERSION)
-    }
+
+    fun getChangelog(project: Project): String = project.rootProject.file("changelog.md").readText()
+            .split("----------")[1]
+            .trim()
+            .replace("_ReleaseTag_", RELEASE_TAG)
+            .replace("_MCVersion_", MINECRAFT_VERSION)
+            .replace("_SodiumVersion_", MOD_VERSION)
 }
