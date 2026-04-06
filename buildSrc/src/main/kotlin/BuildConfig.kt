@@ -51,7 +51,7 @@ object BuildConfig {
         "unknown"
     }
 
-    fun getChangelog(project: Project): String = project.rootProject.file("changelog.md").readText()
+    fun getChangelog(project: Project): String = project.rootProject.file("CHANGELOG.md").readText()
             .split("----------")[1]
             .trim()
             .replace("_ReleaseTag_", RELEASE_TAG)
