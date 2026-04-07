@@ -33,4 +33,8 @@ public abstract class DynamicData extends PresentTranslucentData {
     public Vector3dc getInitialCameraPos() {
         return this.initialCameraPos;
     }
+
+    public boolean isMatchingSorter(DynamicSorter sorter) {
+        return sorter.sourceData == this;
+    }
 }

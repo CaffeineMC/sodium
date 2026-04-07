@@ -13,10 +13,8 @@ import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.render.chunk.async.CullTask;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkSortOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.*;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.executor.ChunkBuilder;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.executor.ChunkJob;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.executor.ChunkJobCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.executor.ChunkJobResult;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilderMeshingTask;
@@ -564,11 +562,8 @@ public class RenderSectionManager {
     }
 
     private boolean processChunkBuildResults(ArrayList<BuilderTaskOutput> results, Viewport viewport) {
-        var filtered = filterChunkBuildResults(results);
-
-        var start = System.nanoTime();
-        this.regions.uploadResults(RenderDevice.INSTANCE.createCommandList(), filtered);
-        var uploadDuration = System.nanoTime() - start;
+        var sectionsWithOutputs = applyBuildOutputs(results);
+        var outputs = new ArrayList<BuilderTaskOutput>();
 
         // prepare list of pending present patches if there are pending tasks that will need patches
         List<RenderSection> pendingPresentPatches = null;
@@ -578,59 +573,71 @@ public class RenderSectionManager {
 
         boolean touchedSectionInfo = false;
         long totalUploadSize = 0;
-        for (var result : filtered) {
-            var resultSize = result.getResultSize();
-            RenderSection section = result.render;
-            var job = section.getRunningJob();
+        for (var section : sectionsWithOutputs) {
+            {
+                var buildOutput = section.retrievePendingBuildOutput();
+                if (buildOutput != null) {
+                    var resultSize = buildOutput.getResultSize();
+                    TranslucentData oldData = section.getTranslucentData();
 
-            TranslucentData oldData = section.getTranslucentData();
-            if (result instanceof ChunkBuildOutput chunkBuildOutput) {
-                touchedSectionInfo |= updateWithResult(viewport, section, chunkBuildOutput, job, pendingPresentPatches);
+                    touchedSectionInfo |= updateWithResult(viewport, section, buildOutput, pendingPresentPatches);
 
-                section.setLastMeshResultSize(resultSize);
-                this.meshTaskSizeEstimator.addData(this.meshTaskSizeEstimator.resultForSection(section, resultSize));
+                    section.setLastMeshResultSize(resultSize);
+                    this.meshTaskSizeEstimator.addData(this.meshTaskSizeEstimator.resultForSection(section, resultSize));
 
-                if (chunkBuildOutput.translucentData != null) {
-                    this.sortTriggering.integrateTranslucentData(oldData, chunkBuildOutput.translucentData, this.cameraPosition, this::scheduleSort);
+                    if (buildOutput.translucentData != null) {
+                        this.sortTriggering.integrateTranslucentData(oldData, buildOutput.translucentData, this.cameraPosition, this::scheduleSort);
 
-                    // a rebuild always generates new translucent data which means applyTriggerChanges isn't necessary
-                    section.setTranslucentData(chunkBuildOutput.translucentData);
+                        // a rebuild always generates new translucent data which means applyTriggerChanges isn't necessary
+                        section.setTranslucentData(buildOutput.translucentData);
+                    }
+
+                    outputs.add(buildOutput);
+                    totalUploadSize += resultSize;
                 }
-            } else if (result instanceof ChunkSortOutput sortOutput &&
-                    sortOutput.getDynamicSorter() != null &&
-                    section.getTranslucentData() instanceof DynamicTopoData data) {
-                this.sortTriggering.applyTopoSortingTriggerChanges(data, sortOutput.getDynamicSorter(), section.getPosition(), this.cameraPosition);
             }
+            {
+                var sortOutput = section.retrievePendingDynamicSortOutput();
+                if (sortOutput != null) {
+                    var resultSize = sortOutput.getResultSize();
 
-            // clear the running job if this job is the most recent submitted job for this section
-            if (job != null && result.submitTime >= section.getLastSubmittedFrame()) {
-                section.setRunningJob(null);
+                    if (section.getTranslucentData() instanceof DynamicTopoData data) {
+                        var sorter = sortOutput.getSorter();
+                        if (sorter instanceof DynamicTopoData.DynamicTopoSorter topoSorter) {
+                            this.sortTriggering.applyTopoSortingTriggerChanges(data, topoSorter, section.getPosition(), this.cameraPosition);
+                        }
+                    }
+
+                    outputs.add(sortOutput);
+                    totalUploadSize += resultSize;
+                }
             }
-
-            section.setLastUploadFrame(result.submitTime);
-
-            totalUploadSize += resultSize;
         }
 
         this.meshTaskSizeEstimator.updateModels();
-
-        // insert and update the upload duration estimator with the total upload size,
-        // since we don't know which task took how long and the time it takes to upload is not independent between tasks
-        // we take the average size and duration
-        if (!filtered.isEmpty()) {
-            this.jobUploadDurationEstimator.addData(new UploadDuration(uploadDuration / filtered.size(), totalUploadSize / filtered.size()));
-            this.jobUploadDurationEstimator.updateModels();
-        }
 
         if (pendingPresentPatches != null && !pendingPresentPatches.isEmpty() &&
                 this.pendingTask != null) {
             this.pendingTask.registerPresentPatches(pendingPresentPatches);
         }
 
+        var uploadStart = System.nanoTime();
+        this.regions.uploadResults(RenderDevice.INSTANCE.createCommandList(), outputs);
+        var uploadDuration = System.nanoTime() - uploadStart;
+
+        // insert and update the upload duration estimator with the total upload size,
+        // since we don't know which task took how long and the time it takes to upload is not independent between tasks
+        // we take the average size and duration
+        if (!outputs.isEmpty()) {
+            var outputCount = outputs.size();
+            this.jobUploadDurationEstimator.addData(new UploadDuration(uploadDuration / outputCount, totalUploadSize / outputCount));
+            this.jobUploadDurationEstimator.updateModels();
+        }
+
         return touchedSectionInfo;
     }
 
-    private boolean updateWithResult(Viewport viewport, RenderSection section, ChunkBuildOutput chunkBuildOutput, ChunkJob job, List<RenderSection> pendingPresentPatches) {
+    private boolean updateWithResult(Viewport viewport, RenderSection section, ChunkBuildOutput chunkBuildOutput, List<RenderSection> pendingPresentPatches) {
         var index = section.getSectionIndex();
         var prevFlags = section.getRegion().getSectionFlags(index);
 
@@ -638,8 +645,8 @@ public class RenderSectionManager {
 
         // if result was blocking (or is approximately visible) and section is now newly renderable, force render it since it's probably a newly uncovered chunk.
         // This also fixes flickering issues with pistons moving blocks and switching between being a mesh and a BE.
-        if (this.renderTree != null && job != null &&
-                (job.isBlocking() || this.isSectionImmediatePresentationCandidate(viewport, section)) &&
+        if (this.renderTree != null &&
+                (chunkBuildOutput.blockingTask || this.isSectionImmediatePresentationCandidate(viewport, section)) &&
                 RenderSectionFlags.renderingMoreTypesNow(prevFlags, chunkBuildOutput.info.flags)) {
             var chunkX = section.getChunkX();
             var chunkY = section.getChunkY();
@@ -676,24 +683,20 @@ public class RenderSectionManager {
         }
     }
 
-    private static List<BuilderTaskOutput> filterChunkBuildResults(ArrayList<BuilderTaskOutput> outputs) {
-        var map = new Reference2ReferenceLinkedOpenHashMap<RenderSection, BuilderTaskOutput>();
+    private static List<RenderSection> applyBuildOutputs(ArrayList<BuilderTaskOutput> outputs) {
+        var sectionsWithPendingOutputs = new ReferenceArrayList<RenderSection>();
 
         for (var output : outputs) {
-            // throw out outdated or duplicate outputs
-            if (output.render.isDisposed() || output.render.getLastUploadFrame() > output.submitTime) {
+            if (output.section.isDisposed()) {
                 continue;
             }
 
-            var render = output.render;
-            var previous = map.get(render);
-
-            if (previous == null || previous.submitTime < output.submitTime) {
-                map.put(render, output);
+            if (output.section.addBuildOutput(output)) {
+                sectionsWithPendingOutputs.add(output.section);
             }
         }
 
-        return new ArrayList<>(map.values());
+        return sectionsWithPendingOutputs;
     }
 
     private ArrayList<BuilderTaskOutput> collectChunkBuildResults() {
@@ -703,6 +706,8 @@ public class RenderSectionManager {
 
         while ((result = this.buildResults.poll()) != null) {
             results.add(result.unwrap());
+            result.clearJobFromSection();
+
             var jobEffort = result.getJobEffort();
             if (jobEffort != null) {
                 this.jobDurationEstimator.addData(jobEffort);
@@ -829,7 +834,7 @@ public class RenderSectionManager {
 
         ChunkBuilderTask<? extends BuilderTaskOutput> task;
         if (ChunkUpdateTypes.isInitialBuild(type) || ChunkUpdateTypes.isRebuild(type)) {
-            task = this.createRebuildTask(section, this.frame);
+            task = this.createRebuildTask(section, this.frame, blocking);
 
             if (task == null) {
                 // if the section is empty or doesn't exist submit this null-task to set the
@@ -847,10 +852,8 @@ public class RenderSectionManager {
                 }
                 var result = ChunkJobResult.successfully(new ChunkBuildOutput(
                         section, this.frame, translucentData,
-                        BuiltSectionInfo.EMPTY, Collections.emptyMap()));
+                        BuiltSectionInfo.EMPTY, Collections.emptyMap(), false));
                 this.buildResults.add(result);
-
-                section.setRunningJob(null);
             }
         } else { // implies it's a type of sort task
             task = this.createSortTask(section, this.frame);
@@ -864,27 +867,26 @@ public class RenderSectionManager {
         }
 
         if (task != null) {
-            var job = this.builder.scheduleTask(task, ChunkUpdateTypes.isImportant(type), collector::onJobFinished, blocking);
+            var job = this.builder.scheduleTask(task, ChunkUpdateTypes.isImportant(type), collector::onJobFinished);
             collector.addSubmittedJob(job);
 
             // consume upload budget in size and duration using estimates
-            uploadBudget.consume(job.getEstimatedUploadDuration(), job.getEstimatedSize());
+            uploadBudget.consume(task.getEstimatedUploadDuration(), task.getEstimatedSize());
 
-            section.setRunningJob(job);
+            section.addRunningJob(job);
         }
 
-        section.setLastSubmittedFrame(this.frame);
         section.clearPendingUpdate();
     }
 
-    public @Nullable ChunkBuilderMeshingTask createRebuildTask(RenderSection render, int frame) {
+    public @Nullable ChunkBuilderMeshingTask createRebuildTask(RenderSection render, int frame, boolean blocking) {
         ChunkRenderContext context = LevelSlice.prepare(this.level, render.getPosition(), this.sectionCache);
 
         if (context == null) {
             return null;
         }
 
-        var task = new ChunkBuilderMeshingTask(render, frame, this.cameraPosition, context, this.sortBehavior, ChunkUpdateTypes.isRebuildWithSort(render.getPendingUpdate()));
+        var task = new ChunkBuilderMeshingTask(render, frame, this.cameraPosition, context, this.sortBehavior, ChunkUpdateTypes.isRebuildWithSort(render.getPendingUpdate()), blocking);
         task.calculateEstimations(this.jobDurationEstimator, this.meshTaskSizeEstimator, this.jobUploadDurationEstimator);
         return task;
     }

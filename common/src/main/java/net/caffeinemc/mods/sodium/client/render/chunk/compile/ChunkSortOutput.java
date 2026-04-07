@@ -1,12 +1,11 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.compile;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicTopoData;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.Sorter;
 
 public class ChunkSortOutput extends BuilderTaskOutput {
     private Sorter sorter;
-    private boolean reuseUploadedIndexData;
+    private boolean containsNewIndexData;
 
     public ChunkSortOutput(RenderSection render, int buildTime) {
         super(render, buildTime);
@@ -19,23 +18,19 @@ public class ChunkSortOutput extends BuilderTaskOutput {
 
     public void setSorter(Sorter sorter) {
         this.sorter = sorter;
-        this.reuseUploadedIndexData = false;
+        this.containsNewIndexData = true;
     }
 
     public Sorter getSorter() {
         return this.sorter;
     }
 
-    public void markAsReusingUploadedData() {
-        this.reuseUploadedIndexData = true;
+    public void markAsNotContainingNewIndexData() {
+        this.containsNewIndexData = false;
     }
 
-    public boolean isReusingUploadedIndexData() {
-        return this.reuseUploadedIndexData;
-    }
-
-    public DynamicTopoData.DynamicTopoSorter getDynamicSorter() {
-        return this.sorter instanceof DynamicTopoData.DynamicTopoSorter dynamicSorter ? dynamicSorter : null;
+    public boolean containsNewIndexData() {
+        return this.containsNewIndexData;
     }
 
     public void destroy() {

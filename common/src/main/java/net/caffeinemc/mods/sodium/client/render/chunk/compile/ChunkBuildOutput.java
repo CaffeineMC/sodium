@@ -18,14 +18,16 @@ public class ChunkBuildOutput extends ChunkSortOutput {
     public final BuiltSectionInfo info;
     public final TranslucentData translucentData;
     public final Map<TerrainRenderPass, BuiltSectionMeshParts> meshes;
+    public final boolean blockingTask;
 
     public ChunkBuildOutput(RenderSection render, int buildTime, TranslucentData translucentData, BuiltSectionInfo info,
-            Map<TerrainRenderPass, BuiltSectionMeshParts> meshes) {
+                            Map<TerrainRenderPass, BuiltSectionMeshParts> meshes, boolean blockingTask) {
         super(render, buildTime);
 
         this.info = info;
         this.translucentData = translucentData;
         this.meshes = meshes;
+        this.blockingTask = blockingTask;
     }
 
     public BuiltSectionMeshParts getMesh(TerrainRenderPass pass) {

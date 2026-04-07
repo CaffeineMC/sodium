@@ -1,16 +1,15 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks;
 
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.MeshTaskSizeEstimator;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicSorter;
-import net.minecraft.util.profiling.Profiler;
-import net.minecraft.util.profiling.ProfilerFiller;
-import org.joml.Vector3dc;
-
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildContext;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkSortOutput;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.MeshTaskSizeEstimator;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicData;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicSorter;
 import net.caffeinemc.mods.sodium.client.util.task.CancellationToken;
+import net.minecraft.util.profiling.Profiler;
+import net.minecraft.util.profiling.ProfilerFiller;
+import org.joml.Vector3dc;
 
 public class ChunkBuilderSortingTask extends ChunkBuilderTask<ChunkSortOutput> {
     private final DynamicSorter sorter;
@@ -32,7 +31,7 @@ public class ChunkBuilderSortingTask extends ChunkBuilderTask<ChunkSortOutput> {
         this.sorter.writeIndexBuffer(this, false);
 
         profiler.pop();
-        return new ChunkSortOutput(this.render, this.submitTime, this.sorter);
+        return new ChunkSortOutput(this.section, this.submitTime, this.sorter);
     }
 
     public static ChunkBuilderSortingTask createTask(RenderSection render, int frame, Vector3dc absoluteCameraPos) {

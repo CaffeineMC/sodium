@@ -7,20 +7,18 @@ import net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilder
 
 import java.util.function.Consumer;
 
-public class ChunkJobTyped<TASK extends ChunkBuilderTask<OUTPUT>, OUTPUT extends BuilderTaskOutput>
-        implements ChunkJob
-{
+public class ChunkJobTyped<TASK extends ChunkBuilderTask<OUTPUT>, OUTPUT extends BuilderTaskOutput> implements ChunkJob {
     private final TASK task;
     private final Consumer<ChunkJobResult<OUTPUT>> consumer;
-    private final boolean blocking;
+    private final long estimatedDuration;
 
     private volatile boolean cancelled;
     private volatile boolean started;
 
-    ChunkJobTyped(TASK task, Consumer<ChunkJobResult<OUTPUT>> consumer, boolean blocking) {
+    ChunkJobTyped(TASK task, Consumer<ChunkJobResult<OUTPUT>> consumer) {
         this.task = task;
         this.consumer = consumer;
-        this.blocking = blocking;
+        this.estimatedDuration = task.getEstimatedDuration();
     }
 
     @Override
@@ -48,7 +46,7 @@ public class ChunkJobTyped<TASK extends ChunkBuilderTask<OUTPUT>, OUTPUT extends
             var start = System.nanoTime();
             var output = this.task.execute(context, this);
 
-            // Task was cancelled while executing
+            // Task was canceled while executing
             if (output == null) {
                 return;
             }
@@ -58,6 +56,7 @@ public class ChunkJobTyped<TASK extends ChunkBuilderTask<OUTPUT>, OUTPUT extends
             result = ChunkJobResult.exceptionally(throwable);
             ChunkBuilder.LOGGER.error("Chunk build failed", throwable);
         }
+        result.associateWithChunkTask(this.task, this);
 
         try {
             this.consumer.accept(result);
@@ -72,22 +71,7 @@ public class ChunkJobTyped<TASK extends ChunkBuilderTask<OUTPUT>, OUTPUT extends
     }
 
     @Override
-    public boolean isBlocking() {
-        return this.blocking;
-    }
-
-    @Override
-    public long getEstimatedSize() {
-        return this.task.getEstimatedSize();
-    }
-
-    @Override
     public long getEstimatedDuration() {
-        return this.task.getEstimatedDuration();
-    }
-    
-    @Override
-    public long getEstimatedUploadDuration() {
-        return this.task.getEstimatedUploadDuration();
+        return this.estimatedDuration;
     }
 }

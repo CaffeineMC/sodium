@@ -1,12 +1,16 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.compile.executor;
 
+import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.JobEffort;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilderTask;
 import net.minecraft.ReportedException;
 
 public class ChunkJobResult<OUTPUT> {
     private final OUTPUT output;
     private final Throwable throwable;
     private final JobEffort jobEffort;
+    private RenderSection section;
+    private ChunkJob associatedJob;
 
     private ChunkJobResult(OUTPUT output, Throwable throwable, JobEffort jobEffort) {
         this.output = output;
@@ -39,5 +43,16 @@ public class ChunkJobResult<OUTPUT> {
 
     public JobEffort getJobEffort() {
         return this.jobEffort;
+    }
+
+    public void associateWithChunkTask(ChunkBuilderTask<?> task, ChunkJob job) {
+        this.section = task.getRenderSection();
+        this.associatedJob = job;
+    }
+
+    public void clearJobFromSection() {
+        if (this.associatedJob != null) {
+            this.section.clearRunningJob(this.associatedJob);
+        }
     }
 }

@@ -4,12 +4,12 @@ import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.MeshResultSize;
 
 public abstract class BuilderTaskOutput {
-    public final RenderSection render;
+    public final RenderSection section;
     public final int submitTime;
     private long resultSize = MeshResultSize.NO_DATA;
 
-    public BuilderTaskOutput(RenderSection render, int buildTime) {
-        this.render = render;
+    public BuilderTaskOutput(RenderSection section, int buildTime) {
+        this.section = section;
         this.submitTime = buildTime;
     }
 

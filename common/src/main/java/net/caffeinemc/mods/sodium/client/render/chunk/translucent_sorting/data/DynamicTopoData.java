@@ -59,7 +59,7 @@ public class DynamicTopoData extends DynamicData {
 
     @Override
     public DynamicSorter getSorter() {
-        return new DynamicTopoSorter(this.getInputQuadCount(), this, this.pendingTriggerIsDirect, this.consecutiveTopoSortFailures, this.GFNITrigger, this.directTrigger);
+        return new DynamicTopoSorter(this.getInputQuadCount(), this.pendingTriggerIsDirect, this.consecutiveTopoSortFailures, this.GFNITrigger, this.directTrigger);
     }
 
     public boolean GFNITriggerEnabled() {
@@ -76,10 +76,6 @@ public class DynamicTopoData extends DynamicData {
 
     public void setDirectTriggerKey(double key) {
         this.directTriggerKey = key;
-    }
-
-    public boolean isMatchingSorter(DynamicTopoSorter sorter) {
-        return sorter.parent == this;
     }
 
     public boolean checkAndApplyGFNITriggerOff(DynamicTopoSorter sorter) {
@@ -126,7 +122,6 @@ public class DynamicTopoData extends DynamicData {
     }
 
     public class DynamicTopoSorter extends DynamicSorter implements IntConsumer {
-        private final DynamicTopoData parent;
         private final boolean isDirectTrigger;
         private final int consecutiveTopoSortFailures;
 
@@ -136,9 +131,8 @@ public class DynamicTopoData extends DynamicData {
 
         private IntBuffer intBuffer;
 
-        private DynamicTopoSorter(int quadCount, DynamicTopoData parent, boolean isDirectTrigger, int consecutiveTopoSortFailures, boolean GFNITrigger, boolean directTrigger) {
-            super(quadCount);
-            this.parent = parent;
+        private DynamicTopoSorter(int quadCount, boolean isDirectTrigger, int consecutiveTopoSortFailures, boolean GFNITrigger, boolean directTrigger) {
+            super(quadCount, DynamicTopoData.this);
             this.isDirectTrigger = isDirectTrigger;
             this.consecutiveTopoSortFailures = consecutiveTopoSortFailures;
             this.consecutiveTopoSortFailuresNew = consecutiveTopoSortFailures;

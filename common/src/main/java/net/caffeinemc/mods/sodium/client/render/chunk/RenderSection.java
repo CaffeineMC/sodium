@@ -1,5 +1,9 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkSortOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.MeshResultSize;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.executor.ChunkJob;
 import net.caffeinemc.mods.sodium.client.render.chunk.data.BuiltSectionInfo;
@@ -7,10 +11,11 @@ import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.GraphDirection;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.GraphDirectionSet;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.SectionPos;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+
+import java.util.List;
 
 /**
  * The render state object for a chunk section. This contains all the graphics state for each render pass along with
@@ -46,16 +51,18 @@ public class RenderSection {
     @Nullable
     private TranslucentData translucentData;
 
-    // Pending Update State
-    @Nullable
-    private ChunkJob runningJob = null;
+    // Update State
+    private final List<ChunkJob> runningJobs = new ReferenceArrayList<>(2);
     private long lastMeshResultSize = MeshResultSize.NO_DATA;
+    @Nullable
+    private ChunkBuildOutput pendingBuildOutput;
+    private int frameOfBuildSubmit;
+    @Nullable
+    private ChunkSortOutput pendingDynamicSortOutput;
+    private int frameOfSortSubmit;
 
     private int pendingUpdateType;
     private long pendingUpdateSince;
-
-    private int lastUploadFrame = -1;
-    private int lastSubmittedFrame = -1;
 
     // Lifetime state
     private boolean disposed;
@@ -101,7 +108,8 @@ public class RenderSection {
             case GraphDirection.SOUTH -> this.adjacentSouth = node;
             case GraphDirection.WEST -> this.adjacentWest = node;
             case GraphDirection.EAST -> this.adjacentEast = node;
-            default -> { }
+            default -> {
+            }
         }
     }
 
@@ -127,10 +135,10 @@ public class RenderSection {
      * be used.
      */
     public void delete() {
-        if (this.runningJob != null) {
-            this.runningJob.setCancelled();
-            this.runningJob = null;
+        for (var job : this.runningJobs) {
+            job.setCancelled();
         }
+        this.runningJobs.clear();
 
         this.clearRenderState();
         this.disposed = true;
@@ -484,12 +492,12 @@ public class RenderSection {
         return this.visibilityData;
     }
 
-    public @Nullable ChunkJob getRunningJob() {
-        return this.runningJob;
+    public void clearRunningJob(ChunkJob job) {
+        this.runningJobs.remove(job);
     }
 
-    public void setRunningJob(@Nullable ChunkJob token) {
-        this.runningJob = token;
+    public void addRunningJob(ChunkJob job) {
+        this.runningJobs.add(job);
     }
 
     public int getPendingUpdate() {
@@ -515,27 +523,63 @@ public class RenderSection {
         }
     }
 
-    public int getLastUploadFrame() {
-        return this.lastUploadFrame;
+    public boolean addBuildOutput(BuilderTaskOutput output) {
+        var hasNoPendingOutputs = this.pendingBuildOutput == null && this.pendingDynamicSortOutput == null;
+
+        if (output instanceof ChunkBuildOutput buildOutput) {
+            this.addMeshBuildOutput(buildOutput);
+        } else if (output instanceof ChunkSortOutput sortOutput) {
+            this.addDynamicSortOutput(sortOutput);
+        } else {
+            throw new IllegalArgumentException("Unexpected output type: " + output.getClass());
+        }
+
+        // signal that this section needs build processing only once
+        return hasNoPendingOutputs && (this.pendingBuildOutput != null || this.pendingDynamicSortOutput != null);
     }
 
-    public void setLastUploadFrame(int lastSortFrame) {
-        this.lastUploadFrame = lastSortFrame;
+    private void addMeshBuildOutput(ChunkBuildOutput output) {
+        // TODO: check that the sorting output actually matches the translucent data that's on the render section?
+        // TODO: there's some sort of new flickering going on with sorting sometimes
+        // records build output if it's newer than what is uploaded, or newer than what is pending to be uploaded
+        if (this.pendingBuildOutput == null && output.submitTime > this.frameOfBuildSubmit ||
+                this.pendingBuildOutput != null && output.submitTime > this.pendingBuildOutput.submitTime) {
+            this.pendingBuildOutput = output;
+
+            // if there's a dynamic sort submitted before the rebuild but the rebuild reuses the index data, then we need to accept the sort. If the rebuild doesn't reuse uploaded index data, then the previously scheduled sort will be invalid.
+            if (output.containsNewIndexData()) {
+                this.pendingDynamicSortOutput = output;
+            }
+        }
     }
 
-    public int getLastSubmittedFrame() {
-        return this.lastSubmittedFrame;
+    private void addDynamicSortOutput(ChunkSortOutput output) {
+        if (this.pendingDynamicSortOutput == null && output.submitTime > this.frameOfSortSubmit ||
+                this.pendingDynamicSortOutput != null && output.submitTime > this.pendingDynamicSortOutput.submitTime) {
+            this.pendingDynamicSortOutput = output;
+        }
     }
 
-    public void setLastSubmittedFrame(int lastSubmittedFrame) {
-        this.lastSubmittedFrame = lastSubmittedFrame;
+    public @Nullable ChunkBuildOutput retrievePendingBuildOutput() {
+        ChunkBuildOutput output = null;
+        if (this.pendingBuildOutput != null) {
+            this.frameOfBuildSubmit = this.pendingBuildOutput.submitTime;
+            output = this.pendingBuildOutput;
+        }
+        this.pendingBuildOutput = null;
+        return output;
     }
 
-    public float getCurrentVisibility() {
-        int currentTime = Math.toIntExact(System.currentTimeMillis() - region.getCreationTime());
-        int fadeTime = currentTime - this.fadeTime;
-        float elapsed = (float) fadeTime;
-        return Math.clamp(elapsed / ((float) (Minecraft.getInstance().options.chunkSectionFadeInTime().get() * 1000)), 0.0f, 1.0f);
+    public @Nullable ChunkSortOutput retrievePendingDynamicSortOutput() {
+        ChunkSortOutput output = null;
+        if (this.pendingDynamicSortOutput != null) {
+            this.frameOfSortSubmit = this.pendingDynamicSortOutput.submitTime;
+            if (this.pendingDynamicSortOutput != this.pendingBuildOutput) {
+                output = this.pendingDynamicSortOutput;
+            }
+        }
+        this.pendingDynamicSortOutput = null;
+        return output;
     }
 
     public void setFadeTime(int relativeBuiltTime) {

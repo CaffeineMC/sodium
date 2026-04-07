@@ -2,11 +2,11 @@ package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.UpdatedQuadsList;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.BSPNode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.BSPResult;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree.UpdatedQuadsList;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.minecraft.core.SectionPos;
 import org.joml.Vector3dc;
 
@@ -39,7 +39,7 @@ public class DynamicBSPData extends DynamicData {
 
     private class DynamicBSPSorter extends DynamicSorter {
         private DynamicBSPSorter(int quadCount) {
-            super(quadCount);
+            super(quadCount, DynamicBSPData.this);
         }
 
         @Override

@@ -293,10 +293,6 @@ public class RenderRegion {
         return (float) RenderRegion.REGION_SIZE / (float) this.sectionCount;
     }
 
-    public RenderSection getSection(int id) {
-        return this.sections[id];
-    }
-
     public DeviceResources getResources() {
         return this.resources;
     }
