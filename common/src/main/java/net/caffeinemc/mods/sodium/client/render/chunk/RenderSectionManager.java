@@ -599,7 +599,7 @@ public class RenderSectionManager {
             } else if (result instanceof ChunkSortOutput sortOutput &&
                     sortOutput.getDynamicSorter() != null &&
                     section.getTranslucentData() instanceof DynamicTopoData data) {
-                this.sortTriggering.applyTriggerChanges(data, sortOutput.getDynamicSorter(), section.getPosition(), this.cameraPosition);
+                this.sortTriggering.applyTopoSortingTriggerChanges(data, sortOutput.getDynamicSorter(), section.getPosition(), this.cameraPosition);
             }
 
             // clear the running job if this job is the most recent submitted job for this section

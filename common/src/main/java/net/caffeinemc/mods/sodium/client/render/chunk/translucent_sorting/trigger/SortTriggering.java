@@ -131,7 +131,7 @@ public class SortTriggering {
         }
     }
 
-    public void applyTriggerChanges(DynamicTopoData data, DynamicTopoData.DynamicTopoSorter topoSorter, SectionPos pos, Vector3dc cameraPos) {
+    public void applyTopoSortingTriggerChanges(DynamicTopoData data, DynamicTopoData.DynamicTopoSorter topoSorter, SectionPos pos, Vector3dc cameraPos) {
         if (!data.isMatchingSorter(topoSorter)) {
             return;
         }
