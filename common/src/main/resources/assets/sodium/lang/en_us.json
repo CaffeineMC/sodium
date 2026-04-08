@@ -88,7 +88,6 @@
   "sodium.options.search": "Search",
   "sodium.options.search.hint": "Search...",
   "sodium.options.open_external_page_button": "Open",
-  "sodium.options.buy_us_a_coffee": "Buy us a coffee",
   "sodium.donation_prompt_message_1": "Hello!",
   "sodium.donation_prompt_message_2": "It seems that you've been enjoying ",
   "sodium.donation_prompt_message_3": ", the powerful and open rendering optimization mod for Minecraft.",
@@ -98,5 +97,6 @@
   "sodium.donation_prompt_message_7": "If you'd like to show your token of appreciation, and support the development of our mod in the process, then consider ",
   "sodium.donation_prompt_message_8": "buying us a coffee",
   "sodium.donation_prompt_message_9": "And thanks again for using our mod! We hope it helps you (and your computer.)",
-  "sodium.donation_prompt_message.close": "Close"
+  "sodium.donation_prompt_message.close": "Close",
+  "sodium.donation_prompt_message.buy_us_a_coffee": "Buy us a coffee"
 }
