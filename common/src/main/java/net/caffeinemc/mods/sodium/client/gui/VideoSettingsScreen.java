@@ -112,7 +112,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
 
     private void openDonationPrompt(SodiumOptions options) {
         var prompt = new ScreenPrompt(this, DONATION_PROMPT_MESSAGE, 320, 190,
-                new ScreenPrompt.Action(Component.translatable("sodium.donation_prompt_message.buy_us_a_coffee"), this::openDonationPage));
+                new ScreenPrompt.Action(Component.translatable("sodium.options.buy_us_a_coffee"), this::openDonationPage));
         prompt.setFocused(true);
 
         options.notifications.hasSeenDonationPrompt = true;
@@ -530,11 +530,11 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
 
     static {
         DONATION_PROMPT_MESSAGE = List.of(
-                FormattedText.composite(Component.translatable("sodium.options.donation_promt_messange_1")),
-                FormattedText.composite(Component.translatable("sodium.options.donation_promt_messange_2"), Component.literal("Sodium").withColor(0x27eb92), Component.translatable("sodium.options.donation_promt_messange_3")),
-                FormattedText.composite(Component.translatable("sodium.options.donation_promt_messange_4"), Component.translatable("sodium.options.donation_promt_messange_5").withColor(0xff6e00), Component.translatable("sodium.options.donation_promt_messange_6")),
-                FormattedText.composite(Component.translatable("sodium.options.donation_promt_messange_7"), Component.translatable("sodium.options.donation_promt_messange_8").withColor(0xed49ce), Component.literal(".")),
-                FormattedText.composite(Component.translatable("sodium.options.donation_promt_messange_9"))
+                FormattedText.composite(Component.translatable("sodium.donation_prompt_message_1")),
+                FormattedText.composite(Component.translatable("sodium.donation_prompt_message_2"), Component.literal("Sodium").withColor(0x27eb92), Component.translatable("sodium.donation_prompt_message_3")),
+                FormattedText.composite(Component.translatable("sodium.donation_prompt_message_4"), Component.translatable("sodium.donation_prompt_message_5").withColor(0xff6e00), Component.translatable("sodium.donation_prompt_message_6")),
+                FormattedText.composite(Component.translatable("sodium.donation_prompt_message_7"), Component.translatable("sodium.donation_prompt_message_8").withColor(0xed49ce), Component.literal(".")),
+                FormattedText.composite(Component.translatable("sodium.donation_prompt_message_9"))
         );
     }
 }
