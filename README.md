@@ -57,20 +57,22 @@ We have an [official Discord community](https://caffeinemc.net/discord) for all 
 - Get the latest updates about development and community events
 - Talk with and collaborate with the rest of our team
 - ... and just hang out with the rest of our community.
-
 ## ✅ Hardware Compatibility
 
-We only provide official support for graphics cards which have up-to-date drivers that are compatible with OpenGL 4.5
+We only provide official support for graphics cards which have up-to-date drivers that are compatible with OpenGL 4.5  
 or newer. Most graphics cards released in the past 12 years will meet these requirements, including the following:
 
-- AMD Radeon HD 7000 Series (GCN 1) or newer
-- NVIDIA GeForce 400 Series (Fermi) or newer
-- Intel HD Graphics 500 Series (Skylake) or newer
+- AMD Radeon HD 7000 Series (GCN 1) or newer  
+- NVIDIA GeForce 400 Series (Fermi) or newer  
+- Intel HD Graphics 500 Series (Skylake) or newer  
 
-Nearly all graphics cards that are already compatible with Minecraft (which requires OpenGL 3.3) should also work
-with Sodium. But our team cannot ensure compatibility or provide support for older graphics cards, and they may
+### 🍎 For macOS Users
+Apple has switched over from supporting OpenGL to Metal, and macOS only supports up to OpenGL 4.1.  
+As a result, some advanced features may be unavailable and performance may differ compared to other platforms.
+
+Nearly all graphics cards that are already compatible with Minecraft (which requires OpenGL 3.3) should also work  
+with Sodium. But our team cannot ensure compatibility or provide support for older graphics cards, and they may  
 not work with future versions of Sodium.
-
 #### OpenGL Compatibility Layers
 
 Devices which need to use OpenGL translation layers (such as GL4ES, ANGLE, etc.) are not supported and will very likely
