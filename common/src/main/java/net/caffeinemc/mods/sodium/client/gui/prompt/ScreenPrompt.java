@@ -46,7 +46,7 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
         int boxX = parentDimensions.getCenterX() - (this.width / 2);
         int boxY = parentDimensions.getCenterY() - (this.height / 2);
 
-        this.closeButton = new FlatButtonWidget(new Dim2i((boxX + this.width) - 84, (boxY + this.height) - 24, 80, Layout.BUTTON_SHORT), Component.literal("Close"), this::close, true, false, PROMPT_THEME);
+        this.closeButton = new FlatButtonWidget(new Dim2i((boxX + this.width) - 84, (boxY + this.height) - 24, 80, Layout.BUTTON_SHORT), Component.translatable("sodium.donation_prompt_message.close"), this::close, true, false, PROMPT_THEME);
 
         this.actionButton = new FlatButtonWidget(new Dim2i((boxX + this.width) - 198, (boxY + this.height) - 24, 110, Layout.BUTTON_SHORT), this.action.label, this::runAction, true, false, PROMPT_THEME);
     }

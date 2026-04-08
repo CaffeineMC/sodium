@@ -87,5 +87,16 @@
   "sodium.console.config_file_was_reset": "The config file has been reset to known-good defaults.",
   "sodium.options.search": "Search",
   "sodium.options.search.hint": "Search...",
-  "sodium.options.open_external_page_button" : "Open"
+  "sodium.options.open_external_page_button": "Open",
+  "sodium.options.buy_us_a_coffee": "Buy us a coffee",
+  "sodium.donation_prompt_message_1": "Hello!",
+  "sodium.donation_prompt_message_2": "It seems that you've been enjoying ",
+  "sodium.donation_prompt_message_3": ", the powerful and open rendering optimization mod for Minecraft.",
+  "sodium.donation_prompt_message_4": "Mods like these are complex. They require ",
+  "sodium.donation_prompt_message_5": "thousands of hours",
+  "sodium.donation_prompt_message_6": " of development, debugging, and tuning to create the experience that players have come to expect.",
+  "sodium.donation_prompt_message_7": "If you'd like to show your token of appreciation, and support the development of our mod in the process, then consider ",
+  "sodium.donation_prompt_message_8": "buying us a coffee",
+  "sodium.donation_prompt_message_9": "And thanks again for using our mod! We hope it helps you (and your computer.)",
+  "sodium.donation_prompt_message.close": "Close"
 }
