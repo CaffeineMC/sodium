@@ -570,11 +570,11 @@ public class RenderSection {
         return output;
     }
 
-    public @Nullable ChunkSortOutput retrievePendingDynamicSortOutput() {
+    public @Nullable ChunkSortOutput retrievePendingDynamicSortOutput(ChunkBuildOutput buildOutput) {
         ChunkSortOutput output = null;
         if (this.pendingDynamicSortOutput != null) {
             this.frameOfSortSubmit = this.pendingDynamicSortOutput.submitTime;
-            if (this.pendingDynamicSortOutput != this.pendingBuildOutput) {
+            if (this.pendingDynamicSortOutput != buildOutput) {
                 output = this.pendingDynamicSortOutput;
             }
         }

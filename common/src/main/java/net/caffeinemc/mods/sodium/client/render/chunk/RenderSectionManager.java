@@ -28,9 +28,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegionManager
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior.PriorityMode;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicTopoData;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.NoData;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.*;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.CameraMovement;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.SortTriggering;
 import net.caffeinemc.mods.sodium.client.render.chunk.tree.RemovableMultiForest;
@@ -574,34 +572,34 @@ public class RenderSectionManager {
         boolean touchedSectionInfo = false;
         long totalUploadSize = 0;
         for (var section : sectionsWithOutputs) {
-            {
-                var buildOutput = section.retrievePendingBuildOutput();
-                if (buildOutput != null) {
-                    var resultSize = buildOutput.getResultSize();
-                    TranslucentData oldData = section.getTranslucentData();
+            var buildOutput = section.retrievePendingBuildOutput();
+            if (buildOutput != null) {
+                var resultSize = buildOutput.getResultSize();
+                TranslucentData oldData = section.getTranslucentData();
 
-                    touchedSectionInfo |= updateWithResult(viewport, section, buildOutput, pendingPresentPatches);
+                touchedSectionInfo |= updateWithResult(viewport, section, buildOutput, pendingPresentPatches);
 
-                    section.setLastMeshResultSize(resultSize);
-                    this.meshTaskSizeEstimator.addData(this.meshTaskSizeEstimator.resultForSection(section, resultSize));
+                section.setLastMeshResultSize(resultSize);
+                this.meshTaskSizeEstimator.addData(this.meshTaskSizeEstimator.resultForSection(section, resultSize));
 
-                    if (buildOutput.translucentData != null) {
-                        this.sortTriggering.integrateTranslucentData(oldData, buildOutput.translucentData, this.cameraPosition, this::scheduleSort);
+                if (buildOutput.translucentData != null) {
+                    this.sortTriggering.integrateTranslucentData(oldData, buildOutput.translucentData, this.cameraPosition, this::scheduleSort);
 
-                        // a rebuild always generates new translucent data which means applyTriggerChanges isn't necessary
-                        section.setTranslucentData(buildOutput.translucentData);
-                    }
-
-                    outputs.add(buildOutput);
-                    totalUploadSize += resultSize;
+                    // a rebuild always generates new translucent data which means applyTriggerChanges isn't necessary
+                    section.setTranslucentData(buildOutput.translucentData);
                 }
-            }
-            {
-                var sortOutput = section.retrievePendingDynamicSortOutput();
-                if (sortOutput != null) {
-                    var resultSize = sortOutput.getResultSize();
 
-                    if (section.getTranslucentData() instanceof DynamicTopoData data) {
+                outputs.add(buildOutput);
+                totalUploadSize += resultSize;
+            }
+
+            var sortOutput = section.retrievePendingDynamicSortOutput(buildOutput);
+            if (sortOutput != null) {
+                var translucentData = section.getTranslucentData();
+                if (translucentData instanceof DynamicData dynamicData &&
+                        sortOutput.getSorter() instanceof DynamicSorter dynamicSorter &&
+                        dynamicData.isMatchingSorter(dynamicSorter)) {
+                    if (dynamicData instanceof DynamicTopoData data) {
                         var sorter = sortOutput.getSorter();
                         if (sorter instanceof DynamicTopoData.DynamicTopoSorter topoSorter) {
                             this.sortTriggering.applyTopoSortingTriggerChanges(data, topoSorter, section.getPosition(), this.cameraPosition);
@@ -609,7 +607,7 @@ public class RenderSectionManager {
                     }
 
                     outputs.add(sortOutput);
-                    totalUploadSize += resultSize;
+                    totalUploadSize += sortOutput.getResultSize();
                 }
             }
         }
@@ -683,7 +681,7 @@ public class RenderSectionManager {
         }
     }
 
-    private static List<RenderSection> applyBuildOutputs(ArrayList<BuilderTaskOutput> outputs) {
+    private List<RenderSection> applyBuildOutputs(ArrayList<BuilderTaskOutput> outputs) {
         var sectionsWithPendingOutputs = new ReferenceArrayList<RenderSection>();
 
         for (var output : outputs) {
