@@ -5,6 +5,9 @@ import net.minecraft.client.renderer.block.model.BlockElement;
 import net.minecraft.client.renderer.block.model.BlockElementFace;
 import net.minecraft.client.renderer.block.model.SimpleUnbakedGeometry;
 import net.minecraft.client.renderer.block.model.TextureSlots;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.resources.model.ModelBaker;
 import net.minecraft.client.resources.model.ModelDebugName;
@@ -109,6 +112,8 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 			var faceMin = sideFace.min();
 			var faceMax = sideFace.max();
 
+            // Calculate the start coordinate and length of the side quad using the side face properties, as described
+            // in the diagram in FaceStorage.
 			float minX = faceFacing.isHorizontal() ? faceMin : faceAnchor;
 			float minY = faceFacing.isHorizontal() ? faceAnchor : faceMin;
 			float length = faceMax - faceMin + 1.0F;
@@ -168,7 +173,6 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 				case DOWN -> fromY = toY;
 				case LEFT -> toX = fromX;
 				case UP -> toY = fromY;
-				default -> throw new UnsupportedOperationException();
 			}
 
             blockElements.add(new BlockElement(
@@ -193,128 +197,214 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 	private static Collection<SideFace> buildSideFaces(SpriteContents sprite) {
 		var width = sprite.width();
 		var height = sprite.height();
-		var sideFaces = new HashSet<SideFace>();
+		var storage = new FaceStorage();
 
+        // For each pixel in each frame, attempts to insert side faces of the pixel into the face storage.
+        // All frames are included to avoid missing sides on animated textures with inconsistent shapes.
 		sprite.getUniqueFrames().forEach(frame -> {
 			for (var pixelY = 0; pixelY < height; pixelY ++) {
 				for (var pixelX = 0; pixelX < width; pixelX ++) {
-					var opaque = !isTransparent(
-							sprite,
-							frame,
-							pixelX,
-							pixelY,
-							width,
-							height
-					);
-
-					if (opaque) {
-						tryInsertFace(SideDirection.UP, sideFaces, sprite, frame, pixelX, pixelY, width, height);
-						tryInsertFace(SideDirection.DOWN, sideFaces, sprite, frame, pixelX, pixelY, width, height);
-						tryInsertFace(SideDirection.LEFT, sideFaces, sprite, frame, pixelX, pixelY, width, height);
-						tryInsertFace(SideDirection.RIGHT, sideFaces, sprite, frame, pixelX, pixelY, width, height);
-					}
+					storage.tryInsertPixel(
+                            sprite,
+                            frame,
+                            pixelX,
+                            pixelY,
+                            width,
+                            height
+                    );
 				}
 			}
 		});
 
-		return sideFaces;
+        // Merge stored side faces.
+		return storage.buildSideFaces();
 	}
 
-	private static void tryInsertFace(
-			SideDirection sideFacing,
-			Set<SideFace> sideFaces,
-			SpriteContents sprite,
-			int frame,
-			int pixelX,
-			int pixelY,
-			int width,
-			int height
-	) {
-		var neighborTransparent = isTransparent(
-				sprite,
-				frame,
-				pixelX - sideFacing.getDirection().getStepX(),
-				pixelY - sideFacing.getDirection().getStepY(),
-				width,
-				height
-		);
+    /*Coordinates of the sprite:
 
-		if (neighborTransparent) {
-			insertOrMergeFace(
-					sideFaces,
-					sideFacing,
-					pixelX,
-					pixelY
-			);
-		}
-	}
+    (0,0) ------ (width, 0)
+      |
+      |
+      |
+    (0, height)
 
-	private static void insertOrMergeFace(
-			Set<SideFace> sideFaces,
-			SideDirection sideFacing,
-			int pixelX,
-			int pixelY
-	) {
-		var newFace = new SideFace(
-				sideFacing,
-				sideFacing.isHorizontal() ? pixelX : pixelY,
-				sideFacing.isHorizontal() ? pixelY : pixelX
-		);
+    For SideDirection.UP/DOWN (plane horizontal)
 
-		while (true) {
-			var newAnchor = newFace.anchor();
-			var newMin = newFace.min();
-			var newMax = newFace.max();
-			var merged = false;
+       min(x) max(x)
+         |      |
+    +-----------+----+--
+    |    |      |    ||\                                        ||
+    |    |      |    || anchor(y)                               || Plane normal is vertical, parallel to the direction
+    |    |      |    ||/                                        || vector of UP/DOWN.
+    +----A------B----+-- <-- plane of anchor y                  \/
+    +----------------+-- <-- plane of anchor y + v (v > 0)
+    +----------------+
+    So:
+    The coordinate of the start point of the quad (A) is (min, anchor).
+    The coordinate of the end point of the quad (B) is (max, anchor).
+    Side quad AB is on the plane of anchor y.
 
-			for (var oldFace : sideFaces) {
-				var oldFacing = oldFace.facing();
+    For SideDirection.LEFT/RIGHT (plane vertical):
 
-                if (oldFacing != sideFacing) {
-                    continue;
+    anchor(x)
+    /     \
+    |<--->|
+    +-----+---+------+
+    |     |   |      |
+    |     A----------+-- min(y)   Plane normal is horizontal, parallel to the direction vector of LEFT/RIGHT.
+    |     |   |      |               ----->
+    |     B----------+-- max(y)
+    |     |   |      |
+    +-----+---+------+
+          ^   ^
+          |   plane of anchor x + v (v > 0)
+    plane of anchor x
+    So:
+    The coordinate of the start point of the quad (A) is (anchor, min).
+    The coordinate of the end point of the quad (B) is (anchor, max).
+    Side quad AB is on the plane of anchor x.*/
+
+    // Stores the side faces using BitSet maps. Each direction has its own map to avoid performance overhead of
+    // enumerating all faces from different directions together.
+    // Each map contains bit sets that represent "planes" of anchors in the same direction.
+    // The bits in the bit set indicate which parts of the plane have per-pixel side quads.
+    public record FaceStorage(
+            Int2ObjectMap<BitSet> up,
+            Int2ObjectMap<BitSet> down,
+            Int2ObjectMap<BitSet> left,
+            Int2ObjectMap<BitSet> right
+    ) {
+        public FaceStorage() {
+            this(
+                    new Int2ObjectOpenHashMap<>(),
+                    new Int2ObjectOpenHashMap<>(),
+                    new Int2ObjectOpenHashMap<>(),
+                    new Int2ObjectOpenHashMap<>()
+            );
+        }
+
+        public void tryInsertPixel(
+                SpriteContents sprite,
+                int frame,
+                int pixelX,
+                int pixelY,
+                int width,
+                int height
+        ) {
+            // If the pixel is transparent, any side quads would also be invisible.
+            // Skip the transparent pixel to avoid generating redundant invisible quad faces.
+            var opaque = !isTransparent(
+                    sprite,
+                    frame,
+                    pixelX,
+                    pixelY,
+                    width,
+                    height
+            );
+
+            if (opaque) {
+                // Try insert per-pixel side quads for each side of the pixel.
+                tryInsertFace(up, SideDirection.UP, sprite, frame, pixelX, pixelY, width, height);
+                tryInsertFace(down, SideDirection.DOWN, sprite, frame, pixelX, pixelY, width, height);
+                tryInsertFace(left, SideDirection.LEFT, sprite, frame, pixelX, pixelY, width, height);
+                tryInsertFace(right, SideDirection.RIGHT, sprite, frame, pixelX, pixelY, width, height);
+            }
+        }
+
+        public List<SideFace> buildSideFaces() {
+            var output = new ReferenceArrayList<SideFace>();
+
+            // Merges and collects all faces from different directions.
+            buildMergedFaces(output, up, SideDirection.UP);
+            buildMergedFaces(output, down, SideDirection.DOWN);
+            buildMergedFaces(output, left, SideDirection.LEFT);
+            buildMergedFaces(output, right, SideDirection.RIGHT);
+
+            return output;
+        }
+
+        private static void tryInsertFace(
+                Int2ObjectMap<BitSet> storage,
+                SideDirection faceFacing,
+                SpriteContents sprite,
+                int frame,
+                int pixelX,
+                int pixelY,
+                int width,
+                int height
+        ) {
+            // Check if the neighbor pixel in the corresponding direction is transparent.
+            var neighborTransparent = isTransparent(
+                    sprite,
+                    frame,
+                    pixelX - faceFacing.getDirection().getStepX(),
+                    pixelY - faceFacing.getDirection().getStepY(),
+                    width,
+                    height
+            );
+
+            // Only insert a per-pixel side quad if the side face is exposed (not blocked by opaque neighbors).
+            if (neighborTransparent) {
+                // Calculate the anchor and the pixel-level offset on the plane of the anchor,
+                var anchor = faceFacing.isHorizontal() ? pixelY : pixelX;
+                var offset = faceFacing.isHorizontal() ? pixelX : pixelY;
+
+                // Mark the corresponding part of the plane of given anchor as occupied.
+                storage.computeIfAbsent(anchor, ignored -> new BitSet()).set(offset);
+            }
+        }
+
+        /*
+          <--merged-->    <-----merged----->
+        001111111111110000111111111111111111
+          ^           ^
+          |           |
+        min = ?     max = index - 1 = 14 - 1 = 13
+        accum = 0   accum = 12
+                    min = index - accum = 14 - 12 = 2
+        SideFace(facing, anchor, min=2, max=13)
+         */
+        private static void buildMergedFaces(
+                Collection<SideFace> faceOutput,
+                Int2ObjectMap<BitSet> storage,
+                SideDirection faceFacing
+        ) {
+            // Merge all planes (anchors) in the map.
+            for (int anchor : storage.keySet()) {
+                var faces = storage.get(anchor); // Get the plane bit set.
+                var accum = 0; // Initialize the merge accumulation counter.
+
+                // For all bits in the plane, scan the occupied bits (per-pixel side quads) and merge consecutive bits
+                // into segments as SideFace.
+                // The scan starts from the position (index) of the first per-pixel side quad (first set bit) to the
+                // last per-pixel side quad (highest set bit).
+                // The scan runs to faces.length() + 1 is to ensure that the final accumulated segment is also emitted,
+                // since the bit immediately after the highest set bit is always clear.
+                for (var index = faces.nextSetBit(0); index < faces.length() + 1; index ++) {
+                    if (faces.get(index)) {
+                        // The bit is set, accumulate the length of the segment.
+                        accum ++;
+                    } else {
+                        // The bit is clear, meaning that the previous consecutive segment has ended, or a new segment
+                        // has not started yet.
+                        // If we do have a previously accumulated segment,
+                        if (accum > 0) {
+                            // Pop the segment out to the faceOutput as a merged SideFace.
+                            faceOutput.add(new SideFace(
+                                    faceFacing,
+                                    index - accum,
+                                    index - 1,
+                                    anchor
+                            ));
+                        }
+
+                        // Reset the accumulation counter for new segments.
+                        accum = 0;
+                    }
                 }
-
-				var oldAnchor = oldFace.anchor();
-
-                if (newAnchor != oldAnchor) {
-                    continue;
-                }
-
-				var oldMin = oldFace.min();
-				var oldMax = oldFace.max();
-
-				if (newMin == oldMax + 1) {
-					merged = true;
-					newFace = new SideFace(
-							sideFacing,
-							oldMin,
-							newMax,
-							newAnchor
-					);
-				}
-
-				if (newMax == oldMin - 1) {
-					merged = true;
-					newFace = new SideFace(
-							sideFacing,
-							newMin,
-							oldMax,
-							newAnchor
-					);
-				}
-
-				if (merged) {
-					sideFaces.remove(oldFace);
-					break;
-				}
-			}
-
-			if (!merged) {
-				sideFaces.add(newFace);
-				break;
-			}
-		}
-	}
+            }
+        }
+    }
 
 	public record SideFace(
 			SideDirection facing,
@@ -322,17 +412,6 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 			int max,
 			int anchor
 	) {
-		public SideFace(
-				SideDirection facing,
-				int minMax,
-				int anchor
-		) {
-			this(
-					facing,
-					minMax,
-					minMax,
-					anchor
-			);
-		}
+
 	}
 }
