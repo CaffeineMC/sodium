@@ -72,6 +72,21 @@ fun exportSourceSetJava(name: String, sourceSet: SourceSet) {
     }
 }
 
+fun exportSourceSetSources(name: String, sourceSet: SourceSet) {
+    val configuration = configurations.create("${name}Sources") {
+        isCanBeResolved = true
+        isCanBeConsumed = true
+    }
+
+    val compileTask = tasks.register<Copy>(sourceSet.getTaskName("process", "sources")) {
+        from(sourceSet.allSource)
+        into(file(project.layout.buildDirectory).resolve("sources").resolve(sourceSet.name))
+    }.get()
+    artifacts.add(configuration.name, compileTask.destinationDir) {
+        builtBy(compileTask)
+    }
+}
+
 fun exportSourceSetResources(name: String, sourceSet: SourceSet) {
     val configuration = configurations.create("${name}Resources") {
         isCanBeResolved = true
@@ -92,6 +107,7 @@ fun exportSourceSetResources(name: String, sourceSet: SourceSet) {
 // Exports the compiled output of the source set to the named configuration.
 fun exportSourceSet(name: String, sourceSet: SourceSet) {
     exportSourceSetJava(name, sourceSet)
+    exportSourceSetSources(name, sourceSet)
     exportSourceSetResources(name, sourceSet)
 }
 

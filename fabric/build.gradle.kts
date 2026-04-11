@@ -20,6 +20,14 @@ val configurationFrapiModJava: Configuration = configurations.create("frapiJava"
     isCanBeResolved = true
 }
 
+val configurationCommonModSources: Configuration = configurations.create("commonSources") {
+    isCanBeResolved = true
+}
+
+val configurationFrapiModSources: Configuration = configurations.create("frapiSources") {
+    isCanBeResolved = true
+}
+
 val configurationApiModSources: Configuration = configurations.create("apiSources") {
     isCanBeResolved = true
 }
@@ -34,9 +42,11 @@ val configurationFrapiModResources: Configuration = configurations.create("frapi
 
 dependencies {
     configurationCommonModJava(project(path = ":common", configuration = "commonMainJava"))
+    configurationCommonModSources(project(path = ":common", configuration = "commonMainSources"))
     configurationApiModJava(project(path = ":common", configuration = "commonApiJava"))
     configurationCommonModJava(project(path = ":common", configuration = "commonBootJava"))
     if (BuildConfig.SUPPORT_FRAPI) configurationFrapiModJava(project(path = ":frapi", configuration = "frapiMainJava"))
+    if (BuildConfig.SUPPORT_FRAPI) configurationFrapiModSources(project(path = ":frapi", configuration = "frapiMainSources"))
 
     configurationApiModSources(project(path = ":common", configuration = "commonApiSources"))
 
@@ -130,6 +140,14 @@ tasks {
         destinationDirectory.set(file(rootProject.layout.buildDirectory).resolve("mods"))
     }
 
+    val sourcesJar = register<Jar>("sourcesJar") {
+        archiveClassifier.set("sources")
+        from(configurationCommonModSources)
+        from(configurationApiModSources)
+        from(configurationFrapiModSources)
+        destinationDirectory.set(file(rootProject.layout.buildDirectory).resolve("mods-sources"))
+    }
+
     processResources {
         from(configurationCommonModResources)
         if (BuildConfig.SUPPORT_FRAPI) {
@@ -144,6 +162,10 @@ publishing {
             groupId = project.group as String
             artifactId = rootProject.name + "-" + project.name
             version = version
+
+            artifact(tasks.named("sourcesJar")) {
+                classifier = "sources"
+            }
 
             from(components["java"])
         }
