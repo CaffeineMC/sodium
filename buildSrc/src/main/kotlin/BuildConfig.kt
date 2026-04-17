@@ -54,7 +54,7 @@ object BuildConfig {
     fun getChangelog(project: Project): String = project.rootProject.file("CHANGELOG.md").readText()
             .split("----------")[1]
             .trim()
-            .replace("_ReleaseTag_", RELEASE_TAG)
-            .replace("_MCVersion_", MINECRAFT_VERSION)
-            .replace("_SodiumVersion_", MOD_VERSION)
+            .replace("[ReleaseTag]()", RELEASE_TAG)
+            .replace("[MCVersion]()", MINECRAFT_VERSION)
+            .replace("[SodiumVersion]()", MOD_VERSION)
 }
