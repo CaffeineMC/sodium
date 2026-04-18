@@ -41,6 +41,11 @@ public class MultiPartBakedModelMixin {
     @Unique
     private boolean canSkipRenderTypeCheck;
 
+    @Unique
+    private static ModelData getModelDataForPart(ModelData modelData, BakedModel model) {
+        return MultipartModelData.resolve(modelData, model);
+    }
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void storeClassInfo(List<Pair<Predicate<BlockState>, BakedModel>> list, CallbackInfo ci) {
         this.canSkipRenderTypeCheck = this.selectors.stream().allMatch(model -> (model.getRight() instanceof SimpleBakedModel simpleModel && ((SimpleBakedModelAccessor) simpleModel).getBlockRenderTypes() == null));
@@ -88,9 +93,10 @@ public class MultiPartBakedModelMixin {
 
         for (BakedModel model : models) {
             random.setSeed(seed);
-
-            if (canSkipRenderTypeCheck || renderType == null || model.getRenderTypes(state, random, modelData).contains(renderType)) {
-                quads.addAll(model.getQuads(state, direction, random, MultipartModelData.resolve(modelData, model), renderType));
+            ModelData partData = getModelDataForPart(modelData, model);
+            ChunkRenderTypeSet childRenderTypes = canSkipRenderTypeCheck ? null : model.getRenderTypes(state, random, partData);
+            if (canSkipRenderTypeCheck || renderType == null || childRenderTypes.contains(renderType)) {
+                quads.addAll(model.getQuads(state, direction, random, partData, renderType));
             }
         }
 
@@ -140,8 +146,9 @@ public class MultiPartBakedModelMixin {
 
         for (BakedModel model : models) {
             random.setSeed(seed);
-
-            bits.or((((ChunkRenderTypeSetAccessor) (Object) model.getRenderTypes(state, random, data)).getBits()));
+            ModelData partData = getModelDataForPart(data, model);
+            ChunkRenderTypeSet childRenderTypes = model.getRenderTypes(state, random, partData);
+            bits.or((((ChunkRenderTypeSetAccessor) (Object) childRenderTypes).getBits()));
         }
 
         return ChunkRenderTypeSetAccessor.create(bits);

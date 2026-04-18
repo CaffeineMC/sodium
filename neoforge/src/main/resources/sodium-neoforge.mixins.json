@@ -16,6 +16,7 @@
       "features.world.biome.BiomeMixin",
       "platform.neoforge.AbstractBlockRenderContextMixin",
       "platform.neoforge.AuxiliaryLightManagerMixin",
+      "platform.neoforge.BlockRendererMixin",
       "platform.neoforge.ChunkRenderTypeSetAccessor",
       "platform.neoforge.ClientHooksMixin",
       "platform.neoforge.EntrypointMixin",
