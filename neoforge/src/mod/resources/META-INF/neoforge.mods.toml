@@ -28,3 +28,10 @@ config = "sodium-common.mixins.json"
 
 [[mixins]]
 config = "sodium-neoforge.mixins.json"
+
+[[dependencies.sodium]]
+modId = "neoforge"
+type = "required"
+versionRange = "[26.1.2.10-beta,)"
+ordering = "NONE"
+side = "BOTH"
