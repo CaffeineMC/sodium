@@ -14,11 +14,11 @@ public abstract class AbstractBlockRenderContextMixin implements RenderContext {
     protected RenderType type;
 
     @Shadow
-    protected SodiumModelData modelData;
+    public abstract SodiumModelData sodium$getModelData();
 
     @Override
     public ModelData getModelData() {
-        return (ModelData) (Object) this.modelData;
+        return (ModelData) (Object) this.sodium$getModelData();
     }
 
     @Override

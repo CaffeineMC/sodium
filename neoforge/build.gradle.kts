@@ -54,7 +54,7 @@ dependencies {
     }
 
     addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")
-    addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-renderer-api-v1:3.4.0+9c40919e19")
+    addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-renderer-api-v1:3.4.1+9125b6dc19")
     addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48+73761d2e19")
     addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
 

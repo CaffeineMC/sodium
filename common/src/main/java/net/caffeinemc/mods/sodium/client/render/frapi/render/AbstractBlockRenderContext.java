@@ -33,6 +33,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Stack;
 import java.util.function.Supplier;
 
 /**
@@ -102,6 +103,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
      * The current model's model data.
      */
     protected SodiumModelData modelData;
+    private final Stack<SodiumModelData> modelDataStack = new Stack<>();
 
     private final BlockOcclusionCache occlusionCache = new BlockOcclusionCache();
     private boolean enableCulling = true;
@@ -186,6 +188,14 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
      */
     protected abstract void processQuad(MutableQuadViewImpl quad);
 
+    public final SodiumModelData sodium$getModelData() {
+        if (!this.modelDataStack.empty()) {
+            return this.modelDataStack.peek();
+        }
+
+        return this.modelData;
+    }
+
     protected void prepareCulling(boolean enableCulling) {
         this.enableCulling = enableCulling;
         this.cullCompletionFlags = 0;
@@ -219,6 +229,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     /* Handling of vanilla models - this is the hot path for non-modded models */
     public void bufferDefaultModel(BakedModel model, @Nullable BlockState state) {
         MutableQuadViewImpl editorQuad = this.editorQuad;
+        SodiumModelData modelData = this.sodium$getModelData();
 
 
         // If there is no transform, we can check the culling face once for all the quads,
