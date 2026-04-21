@@ -23,7 +23,7 @@ public class FlatButtonWidget extends AbstractWidget implements Renderable {
     private final boolean drawFrame;
     private final boolean leftAlign;
     private final ButtonTheme theme;
-    private final Component label;
+    protected Component label;
 
     private boolean selected;
     private boolean enabled = true;
@@ -138,5 +138,9 @@ public class FlatButtonWidget extends AbstractWidget implements Renderable {
 
     public boolean isVisible() {
         return this.visible;
+    }
+
+    public boolean isEnabled() {
+        return this.enabled;
     }
 }

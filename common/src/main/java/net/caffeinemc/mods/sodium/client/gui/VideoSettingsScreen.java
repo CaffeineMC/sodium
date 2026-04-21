@@ -198,15 +198,15 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
             reserveBottomSpace = true;
         }
 
-        this.closeButton = new FlatButtonWidget(new Dim2i(this.getLimitX() - Layout.BUTTON_LONG - ifNotInsetX(Layout.INNER_MARGIN), this.getLimitY() - (ifNotInsetY(Layout.INNER_MARGIN) + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("gui.done"), this::onClose, true, false);
+        this.closeButton = new KeyBoundButtonWidget(new Dim2i(this.getLimitX() - Layout.BUTTON_LONG - ifNotInsetX(Layout.INNER_MARGIN), this.getLimitY() - (ifNotInsetY(Layout.INNER_MARGIN) + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("gui.done"), this::onClose, true, false);
         this.addRenderableWidget(this.closeButton);
 
         if (stackVertically) {
-            this.applyButton = new FlatButtonWidget(new Dim2i(this.closeButton.getX(), this.closeButton.getY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.apply"), ConfigManager.CONFIG::applyAllOptions, true, false);
-            this.undoButton = new FlatButtonWidget(new Dim2i(this.applyButton.getX(), this.applyButton.getY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.undo"), this::undoChanges, true, false);
+            this.applyButton = new KeyBoundButtonWidget(new Dim2i(this.closeButton.getX(), this.closeButton.getY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.apply"), this::applyChanges, true, false);
+            this.undoButton = new KeyBoundButtonWidget(new Dim2i(this.applyButton.getX(), this.applyButton.getY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.undo"), this::undoChanges, true, false);
         } else {
-            this.applyButton = new FlatButtonWidget(new Dim2i(this.closeButton.getX() - Layout.INNER_MARGIN - Layout.BUTTON_LONG, this.getLimitY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.apply"), ConfigManager.CONFIG::applyAllOptions, true, false);
-            this.undoButton = new FlatButtonWidget(new Dim2i(this.applyButton.getX() - Layout.INNER_MARGIN - Layout.BUTTON_LONG, this.getLimitY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.undo"), this::undoChanges, true, false);
+            this.applyButton = new KeyBoundButtonWidget(new Dim2i(this.closeButton.getX() - Layout.INNER_MARGIN - Layout.BUTTON_LONG, this.getLimitY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.apply"), this::applyChanges, true, false);
+            this.undoButton = new KeyBoundButtonWidget(new Dim2i(this.applyButton.getX() - Layout.INNER_MARGIN - Layout.BUTTON_LONG, this.getLimitY() - (Layout.INNER_MARGIN + Layout.BUTTON_SHORT), Layout.BUTTON_LONG, Layout.BUTTON_SHORT), Component.translatable("sodium.options.buttons.undo"), this::undoChanges, true, false);
         }
         this.addRenderableWidget(this.undoButton);
         this.addRenderableWidget(this.applyButton);
@@ -366,6 +366,10 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
         ConfigManager.CONFIG.resetAllOptionsFromBindings();
     }
 
+    private void applyChanges() {
+        ConfigManager.CONFIG.applyAllOptions();
+    }
+
     private void openDonationPage() {
         Util.getPlatform().openUri("https://caffeinemc.net/donate");
     }
@@ -397,6 +401,30 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
                 this.setFocused(this.searchWidget);
                 return true;
             }
+        }
+
+        // Alt + A applies all unsaved changes
+        if (this.applyButton.isEnabled() && (event.key() == GLFW.GLFW_KEY_A && event.modifiers() == GLFW.GLFW_MOD_ALT)) {
+            this.applyChanges();
+        }
+
+        // Alt + U undoes all unsaved changes
+        if (this.undoButton.isEnabled() && (event.key() == GLFW.GLFW_KEY_U && event.modifiers() == GLFW.GLFW_MOD_ALT)) {
+            this.undoChanges();
+        }
+
+        // Alt + D exits the video settings screen
+        if (this.closeButton.isEnabled() && (event.key() == GLFW.GLFW_KEY_D && event.modifiers() == GLFW.GLFW_MOD_ALT)) {
+            this.onClose();
+        }
+
+        // ESC closes this screen without saving any pending changes
+        if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
+            if (this.hasPendingChanges) {
+                this.undoChanges();
+            }
+
+            this.onClose();
         }
 
         return super.keyReleased(event);
