@@ -137,13 +137,6 @@ sourceSets {
 neoForge {
     version = BuildConfig.NEOFORGE_VERSION
 
-    if (BuildConfig.PARCHMENT_VERSION != null) {
-        parchment {
-            minecraftVersion = BuildConfig.MINECRAFT_VERSION
-            mappingsVersion = BuildConfig.PARCHMENT_VERSION
-        }
-    }
-
     runs {
         create("Client") {
             client()

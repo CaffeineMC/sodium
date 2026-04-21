@@ -1,4 +1,4 @@
- import org.gradle.api.Project
+import org.gradle.api.Project
 
 object BuildConfig {
     val MINECRAFT_VERSION: String = "1.21.11"
@@ -11,7 +11,12 @@ object BuildConfig {
     val PARCHMENT_VERSION: String? = null
 
     // https://semver.org/
-    var MOD_VERSION: String = "0.8.9-beta.3"
+    val MOD_VERSION: String = "0.8.9-beta.3"
+
+    val RELEASE_TAG: String = "mc$MINECRAFT_VERSION-$MOD_VERSION"
+
+    val CURSEFORGE_PROJECT_ID = "394468"
+    val MODRINTH_PROJECT_ID = "AANobbMI"
 
     fun createVersionString(project: Project): String {
         val builder = StringBuilder()
@@ -38,4 +43,21 @@ object BuildConfig {
 
         return builder.toString()
     }
+
+    fun calculateGitHash(project: Project): String = try {
+        val output = project.providers.exec {
+            workingDir(project.projectDir)
+            commandLine("git", "rev-parse", "HEAD")
+        }
+        output.standardOutput.asText.get().trim()
+    } catch (_: Throwable) {
+        "unknown"
+    }
+
+    fun getChangelog(project: Project): String = project.rootProject.file("CHANGELOG.md").readText()
+            .split("----------")[1]
+            .trim()
+            .replace("[ReleaseTag]()", RELEASE_TAG)
+            .replace("[MCVersion]()", MINECRAFT_VERSION)
+            .replace("[SodiumVersion]()", MOD_VERSION)
 }
