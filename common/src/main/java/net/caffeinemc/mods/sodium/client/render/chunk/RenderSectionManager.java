@@ -185,7 +185,7 @@ public class RenderSectionManager {
         }
 
         // consume the results of completed tasks
-        this.consumeTaskResults(false);
+        this.consumeCullTaskResults(false);
 
         // discard unusable present and pending frustum-tested trees
         if (this.cameraChanged) {
@@ -210,7 +210,7 @@ public class RenderSectionManager {
         this.cameraChanged = false;
     }
 
-    private void consumeTaskResults(boolean waitForCompletion) {
+    private void consumeCullTaskResults(boolean waitForCompletion) {
         if (this.pendingTask == null) {
             return;
         }
@@ -287,7 +287,7 @@ public class RenderSectionManager {
 
         // wait for pending tasks to maybe supply a valid tree if there's no current tree (first frames after initial load/reload)
         if (bestTree == null) {
-            this.consumeTaskResults(true);
+            this.consumeCullTaskResults(true);
             bestTree = this.findBestTree(viewport, fogParameters);
         }
 
