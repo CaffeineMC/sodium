@@ -401,15 +401,18 @@ public class OcclusionCuller {
         var hasWidePath = GraphDirectionSet.contains(outgoingWide, outgoingDirection);
         var hasRegularPath = GraphDirectionSet.contains(outgoingRegular, outgoingDirection);
         var hasLocalPath = GraphDirectionSet.contains(outgoingLocal, outgoingDirection);
+
+        // perform angular occlusion culling if enabled in general and locally
+        // comment out to entirely disable angle-based occlusion culling, the other places are just supporting.
+        if (originSection != null && hasRegularPath && !section.intersectSlopes(this.inBoundsOrigin, originSection, this.token)) {
+            hasRegularPath = false;
+            hasLocalPath = false;
+        }
+
         if (!(hasWidePath || hasRegularPath || hasLocalPath)) {
             // no path to this neighbor from the current section, so skip it
             return;
         }
-
-        // perform angular occlusion culling if enabled in general and locally
-//        if (originSection != null && !section.intersectSlopes(this.inBoundsOrigin, originSection, this.token)) {
-//            return;
-//        }
 
         visitNode(queue, section, outgoingDirection, hasLocalPath, hasRegularPath, hasWidePath);
     }
@@ -541,7 +544,7 @@ public class OcclusionCuller {
             return;
         }
 
-//        originSection.setOriginAngles();
+        originSection.setOriginAngles();
         originSection.resetOnFirstVisit(this.token);
 
         this.visitAll(originSection);
