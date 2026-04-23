@@ -516,12 +516,13 @@ public class RenderSectionManager {
             return;
         }
 
-        // only mark as needing a graph update if the uploads could have changed the graph
-        // (sort results never change the graph)
-        // generally there's no sort results without a camera movement, which would also trigger
-        // a graph update, but it can sometimes happen because of async task execution
-        if (this.processChunkBuildResults(results, viewport)) {
+        // processing build results can cause invalidation of the render lists or change the connectivity of the graph. They don't necessarily imply each other, so they're tracked separately.
+        int changes = this.processChunkBuildResults(results, viewport);
+        if ((changes & SectionInfoChange.GRAPH) != 0) {
             this.markGraphDirty();
+        }
+        if ((changes & SectionInfoChange.RENDER_LIST) != 0) {
+            this.invalidateRenderLists();
         }
 
         for (var result : results) {
@@ -559,7 +560,7 @@ public class RenderSectionManager {
                         || this.isSectionFrustumVisible(viewport, section.adjacentEast));
     }
 
-    private boolean processChunkBuildResults(ArrayList<BuilderTaskOutput> results, Viewport viewport) {
+    private int processChunkBuildResults(ArrayList<BuilderTaskOutput> results, Viewport viewport) {
         var sectionsWithOutputs = applyBuildOutputs(results);
         var outputs = new ArrayList<BuilderTaskOutput>();
 
@@ -569,7 +570,7 @@ public class RenderSectionManager {
             pendingPresentPatches = new ReferenceArrayList<>();
         }
 
-        boolean touchedSectionInfo = false;
+        int changes = SectionInfoChange.NONE;
         long totalUploadSize = 0;
         for (var section : sectionsWithOutputs) {
             var buildOutput = section.retrievePendingBuildOutput();
@@ -577,7 +578,7 @@ public class RenderSectionManager {
                 var resultSize = buildOutput.getResultSize();
                 TranslucentData oldData = section.getTranslucentData();
 
-                touchedSectionInfo |= updateWithResult(viewport, section, buildOutput, pendingPresentPatches);
+                changes |= updateWithResult(viewport, section, buildOutput, pendingPresentPatches);
 
                 section.setLastMeshResultSize(resultSize);
                 this.meshTaskSizeEstimator.addData(this.meshTaskSizeEstimator.resultForSection(section, resultSize));
@@ -632,14 +633,14 @@ public class RenderSectionManager {
             this.jobUploadDurationEstimator.updateModels();
         }
 
-        return touchedSectionInfo;
+        return changes;
     }
 
-    private boolean updateWithResult(Viewport viewport, RenderSection section, ChunkBuildOutput chunkBuildOutput, List<RenderSection> pendingPresentPatches) {
+    private int updateWithResult(Viewport viewport, RenderSection section, ChunkBuildOutput chunkBuildOutput, List<RenderSection> pendingPresentPatches) {
         var index = section.getSectionIndex();
         var prevFlags = section.getRegion().getSectionFlags(index);
 
-        var touchedSectionInfo = this.updateSectionInfo(section, chunkBuildOutput.info);
+        int changes = this.updateSectionInfo(section, chunkBuildOutput.info);
 
         // if result was blocking (or is approximately visible) and section is now newly renderable, force render it since it's probably a newly uncovered chunk.
         // This also fixes flickering issues with pistons moving blocks and switching between being a mesh and a BE.
@@ -652,7 +653,7 @@ public class RenderSectionManager {
 
             for (var tree : this.cullResults.values()) {
                 if (tree.patchMarkPresent(chunkX, chunkY, chunkZ)) {
-                    this.invalidateRenderLists();
+                    changes |= SectionInfoChange.RENDER_LIST;
                 }
             }
 
@@ -662,23 +663,31 @@ public class RenderSectionManager {
             }
         }
 
-        return touchedSectionInfo;
+        return changes;
     }
 
-    private boolean updateSectionInfo(RenderSection render, BuiltSectionInfo info) {
+    private int updateSectionInfo(RenderSection render, BuiltSectionInfo info) {
         if (info == null || !RenderSectionFlags.needsRender(info.flags)) {
             this.renderableSectionTree.remove(render);
         } else {
             this.renderableSectionTree.add(render);
         }
 
-        var infoChanged = render.setInfo(info);
+        int changes = render.setInfo(info);
 
+        boolean globalSetChanged;
         if (info == null || ArrayUtils.isEmpty(info.globalBlockEntities)) {
-            return this.sectionsWithGlobalEntities.remove(render) || infoChanged;
+            globalSetChanged = this.sectionsWithGlobalEntities.remove(render);
         } else {
-            return this.sectionsWithGlobalEntities.add(render) || infoChanged;
+            globalSetChanged = this.sectionsWithGlobalEntities.add(render);
         }
+
+        // invalidate render list when membership of global block entity set changes
+        if (globalSetChanged) {
+            changes |= SectionInfoChange.RENDER_LIST;
+        }
+
+        return changes;
     }
 
     private List<RenderSection> applyBuildOutputs(ArrayList<BuilderTaskOutput> outputs) {

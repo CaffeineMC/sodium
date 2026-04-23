@@ -144,7 +144,7 @@ public class RenderSection {
         this.disposed = true;
     }
 
-    public boolean setInfo(@Nullable BuiltSectionInfo info) {
+    public int setInfo(@Nullable BuiltSectionInfo info) {
         if (info != null) {
             return this.setRenderState(info);
         } else {
@@ -152,26 +152,36 @@ public class RenderSection {
         }
     }
 
-    private boolean setRenderState(@NonNull BuiltSectionInfo info) {
+    private int setRenderState(@NonNull BuiltSectionInfo info) {
         var prevFlags = this.region.getSectionFlags(this.sectionIndex);
         var prevVisibilityData = this.visibilityData;
 
         this.region.setSectionRenderState(this.sectionIndex, info);
         this.visibilityData = info.visibilityData;
 
-        // the section is marked as having received graph-relevant changes if it's build state, flags, or connectedness has changed.
-        // the entities and sprites don't need to be checked since whether they exist is encoded in the flags.
-        return prevFlags != this.region.getSectionFlags(this.sectionIndex) || prevVisibilityData != this.visibilityData;
+        int changes = SectionInfoChange.NONE;
+
+        // invalidate the graph if the connectivity of this section changes. Changes to the BE and sprite flags are indirectly detected by checking for changes to the data directly hereafter.
+        if (prevFlags != this.region.getSectionFlags(this.sectionIndex) || prevVisibilityData != this.visibilityData) {
+            changes |= SectionInfoChange.GRAPH;
+        }
+
+        // Render lists need to be invalidated when the lists of BEs or sprites change since they are baked into the render list itself, and thus simply re-rendering the same render list won't update the presentation as it works for the meshes.
+        if (info.culledBlockEntities != null || info.animatedSprites != null) {
+            changes |= SectionInfoChange.RENDER_LIST;
+        }
+
+        return changes;
     }
 
-    private boolean clearRenderState() {
+    private int clearRenderState() {
         var wasBuilt = this.isBuilt();
 
         this.region.clearSectionRenderState(this.sectionIndex);
         this.visibilityData = null;
 
-        // changes to data if it moves from built to not built don't matter, so only build state changes matter
-        return wasBuilt;
+        // Invalidate graph when a previously built section is removed. Invalidating render lists too here doesn't make any sense since the section would still be in the tree until the graph is re-traversed.
+        return wasBuilt ? SectionInfoChange.GRAPH : SectionInfoChange.NONE;
     }
 
     public void setLastMeshResultSize(long size) {
