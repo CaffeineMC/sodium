@@ -8,8 +8,6 @@ import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 public interface RenderListProvider extends SortItemsProvider {
     ObjectArrayList<ChunkRenderList> getUnsortedRenderLists();
 
-    boolean orderIsSorted();
-
     default SortedRenderLists createRenderLists(Viewport viewport) {
         var sectionPos = viewport.getChunkCoord();
         var unsorted = this.getUnsortedRenderLists();

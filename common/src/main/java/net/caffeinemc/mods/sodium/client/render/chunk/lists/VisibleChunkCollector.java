@@ -38,7 +38,7 @@ public class VisibleChunkCollector implements CoordinateSectionVisitor, RenderLi
         ChunkRenderList renderList = region.getRenderList();
 
         if (renderList.getLastVisibleFrame() != this.frame) {
-            renderList.reset(this.frame, this.orderIsSorted());
+            renderList.reset(this.frame);
 
             this.sortedRenderLists.add(renderList);
         }
@@ -62,10 +62,5 @@ public class VisibleChunkCollector implements CoordinateSectionVisitor, RenderLi
     @Override
     public void setCachedSortItems(int[] sortItems) {
         VisibleChunkCollector.sortItems = sortItems;
-    }
-
-    @Override
-    public boolean orderIsSorted() {
-        return true;
     }
 }
