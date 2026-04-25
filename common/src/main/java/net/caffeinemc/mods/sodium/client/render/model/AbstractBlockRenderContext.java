@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.model;
 
+import com.google.common.base.Suppliers;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.caffeinemc.mods.sodium.client.model.light.LightMode;
 import net.caffeinemc.mods.sodium.client.model.light.LightPipeline;
@@ -10,7 +11,6 @@ import net.caffeinemc.mods.sodium.client.render.helper.ColorHelper;
 import net.caffeinemc.mods.sodium.client.render.helper.ModelHelper;
 import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
-import net.caffeinemc.mods.sodium.client.services.SodiumModelData;
 import net.caffeinemc.mods.sodium.client.util.DirectionUtil;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.client.Minecraft;
@@ -22,7 +22,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
@@ -30,6 +29,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Base class for the functions that can be shared between the terrain and non-terrain pipelines.
@@ -82,7 +82,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
 
     protected boolean allowDowngrade;
 
-    private final ShapeComparisonCache occlusionCache = new ShapeComparisonCache();
+    private final Supplier<ShapeComparisonCache> occlusionCache = Suppliers.memoize(ShapeComparisonCache::new);
     private final BlockPos.MutableBlockPos cachedPositionObject = new BlockPos.MutableBlockPos();
     private boolean enableCulling = true;
     // Cull cache (as it's checked per-quad instead of once per side like in vanilla)
@@ -151,7 +151,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
         }
 
         // No other simplifications apply, so we need to perform a full shape comparison, which is very slow
-        return this.occlusionCache.lookup(selfShape, neighborShape);
+        return this.occlusionCache.get().lookup(selfShape, neighborShape);
     }
 
     public boolean isFaceCulled(@Nullable Direction face) {

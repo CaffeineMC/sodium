@@ -17,7 +17,7 @@ public class ShapeComparisonCache {
     private final ShapeComparison cachedComparisonObject = new ShapeComparison();
 
     public ShapeComparisonCache() {
-        this.comparisonLookupTable = new Object2IntLinkedOpenCustomHashMap<>(CACHE_SIZE, 0.5F, new ShapeComparison.ShapeComparisonStrategy());
+        this.comparisonLookupTable = new Object2IntLinkedOpenCustomHashMap<>(CACHE_SIZE, 0.5F, ShapeComparison.ShapeComparisonStrategy.INSTANCE);
         this.comparisonLookupTable.defaultReturnValue(ENTRY_ABSENT);
     }
 
@@ -81,6 +81,11 @@ public class ShapeComparisonCache {
         }
 
         public static class ShapeComparisonStrategy implements Hash.Strategy<ShapeComparison> {
+            public static final ShapeComparisonStrategy INSTANCE = new ShapeComparisonStrategy();
+
+            private ShapeComparisonStrategy() {
+            }
+
             @Override
             public int hashCode(ShapeComparison value) {
                 int result = System.identityHashCode(value.self);

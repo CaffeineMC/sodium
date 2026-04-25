@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline;
 
-
+import com.google.common.base.Suppliers;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
@@ -38,6 +38,8 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import java.util.function.Supplier;
+
 /**
  * The default fluid renderer implementation generates fluid geometry for each fluid block based on its fluid state, the block state, and other blocks around it.
  * <p>
@@ -70,7 +72,7 @@ public class DefaultFluidRenderer {
     private final IntList stack = new IntArrayList();
     private long visited = 0;
 
-    private final ShapeComparisonCache occlusionCache = new ShapeComparisonCache();
+    private final Supplier<ShapeComparisonCache> occlusionCache = Suppliers.memoize(ShapeComparisonCache::new);
 
     private final ModelQuadViewMutable quad = new ModelQuad();
 
@@ -157,7 +159,7 @@ public class DefaultFluidRenderer {
                 }
 
                 // perform occlusion of the fluid by the block it's contained in
-                return this.occlusionCache.lookup(fluidShape, selfShape);
+                return this.occlusionCache.get().lookup(fluidShape, selfShape);
             }
         }
 
@@ -217,7 +219,7 @@ public class DefaultFluidRenderer {
         }
 
         var ownShape = ownBlockState.getFaceOcclusionShape(facing);
-        return this.occlusionCache.lookup(fluidShape, neighborShape, ownShape);
+        return this.occlusionCache.get().lookup(fluidShape, neighborShape, ownShape);
     }
 
     private boolean isSideExposedOffset(BlockAndTintGetter world, BlockState ownBlockState, BlockPos originPos, Direction dir, float height) {
