@@ -72,7 +72,7 @@ public class DefaultFluidRenderer {
     private final IntList stack = new IntArrayList();
     private long visited = 0;
 
-    private final Supplier<ShapeComparisonCache> occlusionCache = Suppliers.memorize(ShapeComparisonCache::new);
+    private final Supplier<ShapeComparisonCache> occlusionCache = Suppliers.memoize(ShapeComparisonCache::new);
 
     private final ModelQuadViewMutable quad = new ModelQuad();
 
