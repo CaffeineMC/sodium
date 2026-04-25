@@ -75,7 +75,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
      */
     protected BlockPos pos;
 
-    private final Supplier<ShapeComparisonCache> occlusionCache = Suppliers.memorize(ShapeComparisonCache::new);
+    private final Supplier<ShapeComparisonCache> occlusionCache = Suppliers.memoize(ShapeComparisonCache::new);
     private final BlockPos.MutableBlockPos cachedPositionObject = new BlockPos.MutableBlockPos();
     protected boolean enableCulling = true;
     // Cull cache (as it's checked per-quad instead of once per side like in vanilla)
