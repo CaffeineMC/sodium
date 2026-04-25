@@ -219,7 +219,7 @@ public class DefaultFluidRenderer {
         }
 
         var ownShape = ownBlockState.getFaceOcclusionShape(facing);
-        return this.occlusionCache.lookup(fluidShape, neighborShape, ownShape);
+        return this.occlusionCache.get().lookup(fluidShape, neighborShape, ownShape);
     }
 
     private boolean isSideExposedOffset(BlockAndTintGetter world, BlockState ownBlockState, BlockPos originPos, Direction dir, float height) {
