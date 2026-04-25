@@ -72,7 +72,7 @@ sourceSets.apply {
 }
 
 dependencies {
-    minecraft("com.mojang:minecraft:${BuildConfig.MINECRAFT_VERSION}")
+    minecraft(group = "com.mojang", name = "minecraft", version = BuildConfig.MINECRAFT_VERSION)
     mappings(loom.layered {
         officialMojangMappings()
 
