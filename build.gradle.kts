@@ -77,7 +77,7 @@ fun me.modmuss50.mpp.ModPublishExtension.setupFor(loaderName: String, releasePla
 
             file.set(jar)
             displayName = "Sodium ${BuildConfig.MOD_VERSION} for $loaderName on ${BuildConfig.MINECRAFT_VERSION}"
-            version = "${BuildConfig.MOD_VERSION}+mc${BuildConfig.MINECRAFT_VERSION}-$loaderLowercase"
+            version = "mc${BuildConfig.MINECRAFT_VERSION}-${BuildConfig.MOD_VERSION}-$loaderLowercase"
             modLoaders.add(loaderLowercase)
         }
     }
