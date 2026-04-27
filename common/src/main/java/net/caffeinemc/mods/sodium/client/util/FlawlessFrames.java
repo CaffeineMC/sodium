@@ -13,7 +13,7 @@ import java.util.function.Function;
  * <p>
  * In Sodium's case, this means waiting for all chunks to be fully updated and ready for rendering before each frame.
  * <p>
- * See https://github.com/grondag/frex/pull/9
+ * See <a href="https://github.com/grondag/frex/pull/9">this PR</a>
  */
 public class FlawlessFrames {
     private static final Set<Object> ACTIVE = Collections.newSetFromMap(new ConcurrentHashMap<>());
