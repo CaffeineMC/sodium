@@ -35,7 +35,7 @@ public class CyclingControl<T extends Enum<T>> implements Control {
 
     @Override
     public int getMaxWidth() {
-        return 70;
+        return Layout.CYCLING_CONTROL_WIDTH;
     }
 
     private static class CyclingControlElement<T extends Enum<T>> extends StatefulControlElement {
@@ -66,7 +66,7 @@ public class CyclingControl<T extends Enum<T>> implements Control {
             Component name = this.option.getElementName(value);
 
             int strWidth = this.getStringWidth(name);
-            this.drawString(graphics, name, this.getLimitX() - strWidth - 6, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
+            this.drawString(graphics, name, this.getLimitX() - strWidth - Layout.OPTION_TEXT_SIDE_PADDING, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
         }
 
         @Override
