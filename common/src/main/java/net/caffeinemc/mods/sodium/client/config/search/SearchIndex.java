@@ -16,6 +16,8 @@ public abstract class SearchIndex {
 
     abstract void rebuildIndex();
 
+    abstract void invalidateSourcesForRebuild();
+
     protected abstract SearchQuerySession createQuery();
 
     public SearchQuerySession startQuery() {
@@ -26,6 +28,7 @@ public abstract class SearchIndex {
             this.buildIndexInitial();
         } else if (this.builtLanguage != currentLanguage) {
             this.builtLanguage = currentLanguage;
+            this.invalidateSourcesForRebuild();
             this.rebuildIndex();
         }
 
