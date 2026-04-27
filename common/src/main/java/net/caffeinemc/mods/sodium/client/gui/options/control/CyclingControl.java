@@ -38,7 +38,7 @@ public class CyclingControl<T extends Enum<T>> implements Control {
         return 70;
     }
 
-    private static class CyclingControlElement<T extends Enum<T>> extends ControlElement {
+    private static class CyclingControlElement<T extends Enum<T>> extends StatefulControlElement {
         private final EnumOption<T> option;
         private final T[] baseValues;
 
@@ -50,7 +50,7 @@ public class CyclingControl<T extends Enum<T>> implements Control {
         }
 
         @Override
-        public Option getOption() {
+        public EnumOption<T> getOption() {
             return this.option;
         }
 
@@ -58,7 +58,7 @@ public class CyclingControl<T extends Enum<T>> implements Control {
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             super.render(graphics, mouseX, mouseY, delta);
 
-            if (!this.option.showControl()) {
+            if (!this.option.showControl() || this.isResetOverlayActive()) {
                 return;
             }
 
@@ -71,6 +71,9 @@ public class CyclingControl<T extends Enum<T>> implements Control {
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (super.mouseClicked(mouseX, mouseY, button)) return true;
+            if (this.isResetOverlayActive()) return false;
+
             if (this.option.isEnabled() && button == 0 && this.isMouseOver(mouseX, mouseY)) {
                 cycleControl(Screen.hasShiftDown());
                 return true;

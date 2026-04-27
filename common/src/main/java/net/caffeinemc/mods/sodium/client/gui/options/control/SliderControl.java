@@ -2,7 +2,6 @@ package net.caffeinemc.mods.sodium.client.gui.options.control;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
-import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
 import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
@@ -34,7 +33,7 @@ public class SliderControl implements Control {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    static class SliderControlElement extends ControlElement {
+    static class SliderControlElement extends StatefulControlElement {
         private static final int THUMB_WIDTH = 2, TRACK_HEIGHT = 1;
 
         private final IntegerOption option;
@@ -53,7 +52,7 @@ public class SliderControl implements Control {
         }
 
         @Override
-        public Option getOption() {
+        public IntegerOption getOption() {
             return this.option;
         }
 
@@ -75,18 +74,18 @@ public class SliderControl implements Control {
 
             int labelWidth = this.font.width(label);
 
+            // render the label first and then the slider to prevent the highlight rect from darkening the slider
+            super.render(graphics, mouseX, mouseY, delta);
+
+            if (!this.option.showControl() || this.isResetOverlayActive()) {
+                return;
+            }
+
             boolean drawSlider = isEnabled && (this.hovered || this.isFocused());
             if (drawSlider) {
                 this.contentWidth = sliderWidth + labelWidth;
             } else {
                 this.contentWidth = labelWidth;
-            }
-
-            // render the label first and then the slider to prevent the highlight rect from darkening the slider
-            super.render(graphics, mouseX, mouseY, delta);
-
-            if (!this.option.showControl()) {
-                return;
             }
 
             if (drawSlider) {
@@ -147,6 +146,9 @@ public class SliderControl implements Control {
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             this.sliderHeld = false;
+
+            if (super.mouseClicked(mouseX, mouseY, button)) return true;
+            if (this.isResetOverlayActive()) return false;
 
             if (this.option.isEnabled() && button == 0 && this.isMouseOver(mouseX, mouseY)) {
                 if (this.isMouseOverSlider((int) mouseX, (int) mouseY)) {

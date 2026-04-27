@@ -70,7 +70,7 @@ public abstract class ControlElement extends AbstractWidget {
                 .withItalic(true));
     }
 
-    private String truncateLabelToFit(String name) {
+    protected String truncateLabelToFit(String name) {
         return truncateTextToFit(name, this.getWidth() - this.getContentWidth() - 20);
     }
 
