@@ -14,7 +14,7 @@ import org.joml.Vector3f;
 /**
  * A light pipeline which produces smooth interpolated lighting and ambient occlusion for model quads. This
  * implementation makes a number of improvements over vanilla's own "smooth lighting" option. In no particular order:
- *
+ * <p>
  * - Corner blocks are now selected from the correct set of neighbors above block faces (fixes MC-148689 and MC-12558)
  * - Shading issues caused by anisotropy are fixed by re-orientating quads to a consistent ordering (fixes MC-138211)
  * - Inset block faces are correctly shaded by their neighbors, fixing a number of problems with non-full blocks such as
@@ -22,9 +22,9 @@ import org.joml.Vector3f;
  * - Blocks next to emissive blocks are too bright (MC-260989)
  * - Synchronization issues between the main render thread's light engine and chunk build worker threads are corrected
  *   by copying light data alongside block states, fixing a number of inconsistencies in baked chunks (no open issue)
- *
+ * <p>
  * This implementation also includes a significant number of optimizations:
- *
+ * <p>
  * - Computed light data for a given block face is cached and re-used again when multiple quads exist for a given
  *   facing, making complex block models less expensive to render
  * - The light data cache encodes as much information as possible into integer words to improve cache locality and

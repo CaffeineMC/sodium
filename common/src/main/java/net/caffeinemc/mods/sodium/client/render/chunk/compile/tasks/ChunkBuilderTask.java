@@ -15,10 +15,10 @@ import org.joml.Vector3fc;
 /**
  * Build tasks are immutable jobs (with optional prioritization) which contain all the necessary state to perform
  * chunk mesh updates or quad sorting off the main thread.
- *
+ * <p>
  * When a task is constructed on the main thread, it should copy all the state it requires in order to complete the task
  * without further synchronization. The task will then be scheduled for async execution on a thread pool.
- *
+ * <p>
  * After the task completes, it returns a "build result" which contains any computed data that needs to be handled
  * on the main thread.
  */

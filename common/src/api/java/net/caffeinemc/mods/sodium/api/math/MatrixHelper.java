@@ -10,7 +10,7 @@ import org.joml.Vector3f;
 
 /**
  * Implements optimized utilities for transforming vectors with a given matrix.
- *
+ * <p>
  * Note: Brackets must be used carefully in the transform functions to ensure that floating-point errors are
  * the same as those produced by JOML, otherwise Z-fighting will occur.
  */

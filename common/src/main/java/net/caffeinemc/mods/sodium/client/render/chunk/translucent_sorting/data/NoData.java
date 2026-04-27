@@ -8,7 +8,7 @@ import net.minecraft.core.SectionPos;
 /**
  * This class means there is no translucent data and is used to signal that the
  * section should be removed from triggering data structures.
- * 
+ * <p>
  * If translucent sorting is disabled, not even this class is used, but null is
  * passed instead.
  */
