@@ -12,7 +12,7 @@ import org.joml.Vector3fc;
  * The BSP workspace holds the state during the BSP building process. (see also
  * BSPSortState) It brings a number of fixed parameters and receives partition
  * planes to return as part of the final result.
- * 
+ * <p>
  * Implementation note: Storing the multi partition node's interval points in a
  * global array instead of making a new one at each tree level doesn't appear to
  * have any performance benefit.

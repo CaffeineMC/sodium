@@ -1,20 +1,19 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger;
 
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicTopoData;
-import org.joml.Vector3d;
-import org.joml.Vector3dc;
-
 import it.unimi.dsi.fastutil.doubles.Double2ObjectRBTreeMap;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicTopoData;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.SortTriggering.SectionTriggers;
 import net.minecraft.core.SectionPos;
+import org.joml.Vector3d;
+import org.joml.Vector3dc;
 
 /**
  * Performs direct triggering for sections that are sorted by distance. Direct
  * triggering means the section is not triggered based on its geometry but
  * rather the movement of the camera relative to the last position the camera
  * was in when the section was sorted last.
- * 
+ * <p>
  * There are two types of direct triggering: Distance triggering is used when
  * the camera is close to or inside the section. Angle triggering is used
  * otherwise. Distance triggering sorts the section when the camera has moved at
@@ -27,7 +26,7 @@ class DirectTriggers implements SectionTriggers<DynamicTopoData> {
      * A tree map of the directly triggered sections, indexed by their
      * minimum required camera movement. When the given camera movement is exceeded,
      * they are tested for triggering the angle or distance condition.
-     * 
+     * <p>
      * The accumulated distance is monotonically increasing and is never reset. This
      * only becomes a problem when the camera moves more than 10^15 blocks in total.
      * There will be precision issues at around 10^10 maybe, but it's still not a

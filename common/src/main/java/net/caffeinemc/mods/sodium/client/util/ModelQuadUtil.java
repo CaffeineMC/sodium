@@ -3,10 +3,10 @@ package net.caffeinemc.mods.sodium.client.util;
 
 /**
  * Provides some utilities and constants for interacting with vanilla's model quad vertex format.
- *
+ * <p>
  * This is the current vertex format used by Minecraft for chunk meshes and model quads. Internally, it uses integer
  * arrays for store baked quad data, and as such the following table provides both the byte and int indices.
- *
+ * <p>
  * Byte Index    Integer Index             Name                 Format                 Fields
  * 0 ..11        0..2                      Position             3 floats               x, y, z
  * 12..15        3                         Color                4 unsigned bytes       a, r, g, b

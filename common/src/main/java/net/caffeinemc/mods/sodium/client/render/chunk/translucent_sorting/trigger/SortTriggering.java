@@ -18,7 +18,7 @@ import java.util.function.BiConsumer;
  * This class is a central point in translucency sorting. It counts the number
  * of translucent data objects for each sort type and delegates triggering of
  * sections for dynamic sorting to the trigger components.
- * 
+ * <p>
  * TODO:
  * - investigate why there's a similar number of STA and DYN sections. This might be normal, the counters might be broken or the heuristic is actually wrong.
  * 

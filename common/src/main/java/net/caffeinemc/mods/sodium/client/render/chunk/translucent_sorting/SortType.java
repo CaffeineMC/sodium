@@ -3,7 +3,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting;
 /**
  * What type of sorting to use for a section. Calculated by a heuristic after
  * building a section.
- *
+ * <p>
  * Invariant: !(needsDirectionMixing && allowSliceReordering)
  */
 public enum SortType {

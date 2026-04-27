@@ -2,7 +2,7 @@ package net.caffeinemc.mods.sodium.api.config.structure;
 
 /**
  * Builder interface for defining color themes.
- * 
+ * <p>
  * Colors use RGB integers (bits 0 to 24). This is ARGB format with alpha bits ignored.
  */
 public interface ColorThemeBuilder {

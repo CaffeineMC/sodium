@@ -5,7 +5,7 @@ import java.nio.ByteOrder;
 /**
  * Provides some utilities for packing and unpacking color components from packed integer colors in ABGR format, which
  * is used by OpenGL for color vectors.
- *
+ * <p>
  * | 32        | 24        | 16        | 8          |
  * | 0110 1100 | 0110 1100 | 0110 1100 | 0110 1100  |
  * | Alpha     | Blue      | Green     | Red        |

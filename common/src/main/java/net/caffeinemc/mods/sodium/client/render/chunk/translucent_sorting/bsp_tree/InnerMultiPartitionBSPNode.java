@@ -1,15 +1,14 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree;
 
-import org.joml.Vector3fc;
-
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
+import org.joml.Vector3fc;
 
 /**
  * Partitions quads into multiple child BSP nodes with multiple parallel
  * partition planes. This is uses less memory and time than constructing a
  * binary BSP tree through more partitioning passes.
- *
+ * <p>
  * Implementation note: Detecting and avoiding the double array when possible
  * brings no performance benefit in sorting speed, only a building speed
  * detriment.
