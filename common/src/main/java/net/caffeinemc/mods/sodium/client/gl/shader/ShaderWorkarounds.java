@@ -14,16 +14,15 @@
 
 package net.caffeinemc.mods.sodium.client.gl.shader;
 
-import java.nio.ByteBuffer;
-
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
+import java.nio.ByteBuffer;
+
 /**
- * Contains a workaround for a crash in nglShaderSource on some AMD drivers. Copied from the following Canvas commit:
- * https://github.com/grondag/canvas/commit/820bf754092ccaf8d0c169620c2ff575722d7d96
+ * Contains a workaround for a crash in nglShaderSource on some AMD drivers. Copied from <a href="https://github.com/grondag/canvas/commit/820bf754092ccaf8d0c169620c2ff575722d7d96">this Canvas commit</a>.
  */
 class ShaderWorkarounds {
 	/**
