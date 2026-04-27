@@ -12,10 +12,10 @@ import net.minecraft.world.level.block.state.BlockState;
 /**
  * The light data cache is used to make accessing the light data and occlusion properties of blocks cheaper. The data
  * for each block is stored as an integer with packed fields in order to work around the lack of value types in Java.
- *
+ * <p>
  * This code is not very pretty, but it does perform significantly faster than the vanilla implementation and has
  * good cache locality.
- *
+ * <p>
  * Each integer contains the following fields:
  * - BL: World block light, encoded as a 4-bit unsigned integer
  * - SL: World sky light, encoded as a 4-bit unsigned integer
@@ -25,7 +25,7 @@ import net.minecraft.world.level.block.state.BlockState;
  * - OP: Block opacity test, true if opaque
  * - FO: Full cube opacity test, true if opaque full cube
  * - FC: Full cube test, true if full cube
- *
+ * <p>
  * You can use the various static pack/unpack methods to extract these values in a usable format.
  */
 public abstract class LightDataAccess {
@@ -169,7 +169,7 @@ public abstract class LightDataAccess {
      * Computes the combined lightmap using block light, sky light, and luminance values.
      *
      * <p>This method's logic is equivalent to
-     * {@link LevelRenderer#getLightColor(BlockAndTintGetter, BlockPos)}, but without the
+     * {@link LevelRenderer#getLightColor(net.minecraft.world.level.BlockAndTintGetter, BlockPos)}, but without the
      * emissive check.
      */
     public static int getLightmap(int word) {
@@ -181,7 +181,7 @@ public abstract class LightDataAccess {
      * the {@link LightTexture#FULL_BRIGHT fullbright lightmap} if emissive.
      *
      * <p>This method's logic is equivalent to
-     * {@link LevelRenderer#getLightColor(BlockAndTintGetter, BlockPos)}.
+     * {@link LevelRenderer#getLightColor(net.minecraft.world.level.BlockAndTintGetter, BlockPos)}.
      */
     public static int getEmissiveLightmap(int word) {
         if (unpackEM(word)) {

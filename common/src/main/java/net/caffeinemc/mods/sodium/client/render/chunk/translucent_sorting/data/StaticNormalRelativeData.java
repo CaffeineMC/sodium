@@ -9,7 +9,7 @@ import net.minecraft.core.SectionPos;
 /**
  * Static normal relative sorting orders quads by the dot product of their
  * normal and position. (referred to as "distance" throughout the code)
- *
+ * <p>
  * Unlike sorting by distance, which is descending for translucent rendering to
  * be correct, sorting by dot product is ascending instead.
  */

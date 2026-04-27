@@ -1,8 +1,8 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.minecraft.core.SectionPos;
 
 /**
@@ -10,7 +10,7 @@ import net.minecraft.core.SectionPos;
  * order. However, they do need to be rendered with some index buffer, so that
  * vertices are assembled into quads. Since the sort order doesn't matter, all
  * sections with this sort type can share the same data in the index buffer.
- * 
+ * <p>
  * NOTE: A possible optimization would be to share the buffer for unordered
  * translucent sections on the CPU and on the GPU. It would essentially be the
  * same as SharedQuadIndexBuffer, but it has to be compatible with sections in

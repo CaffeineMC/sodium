@@ -28,7 +28,7 @@ public class SectionRenderDataUnsafe {
     /**
      * When the "base element" field is not specified (indicated by setting the MSB to 0), the indices for the geometry set
      * should be sourced from a monotonic sequence (see {@link net.caffeinemc.mods.sodium.client.render.chunk.SharedQuadIndexBuffer}).
-     *
+     * <p>
      * Otherwise, indices should be sourced from the index buffer for the render region using the specified offset.
      */
     private static final long OFFSET_BASE_ELEMENT = 0;

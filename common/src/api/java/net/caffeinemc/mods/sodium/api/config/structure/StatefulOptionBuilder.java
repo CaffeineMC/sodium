@@ -89,7 +89,7 @@ public interface StatefulOptionBuilder<V> extends OptionBuilder {
 
     /**
      * Sets whether the control for this option should be hidden when the option is disabled. This should only be set to false when the user should know what the state of the option is even when it is disabled, and they cannot interact with it.
-     *
+     * <p>
      * By default, controls are hidden when disabled.
      *
      * @param hidden True to hide the control when disabled, false to show it.

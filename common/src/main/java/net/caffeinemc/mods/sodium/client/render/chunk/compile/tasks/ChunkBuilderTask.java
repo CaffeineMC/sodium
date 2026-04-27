@@ -1,25 +1,24 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks;
 
+import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildContext;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.JobDurationEstimator;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.MeshTaskSizeEstimator;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.estimation.UploadDurationEstimator;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.CombinedCameraPos;
+import net.caffeinemc.mods.sodium.client.util.task.CancellationToken;
 import org.joml.Vector3dc;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
-import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildContext;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.CombinedCameraPos;
-import net.caffeinemc.mods.sodium.client.util.task.CancellationToken;
-
 /**
  * Build tasks are immutable jobs (with optional prioritization) which contain all the necessary state to perform
  * chunk mesh updates or quad sorting off the main thread.
- *
+ * <p>
  * When a task is constructed on the main thread, it should copy all the state it requires in order to complete the task
  * without further synchronization. The task will then be scheduled for async execution on a thread pool.
- *
+ * <p>
  * After the task completes, it returns a "build result" which contains any computed data that needs to be handled
  * on the main thread.
  */

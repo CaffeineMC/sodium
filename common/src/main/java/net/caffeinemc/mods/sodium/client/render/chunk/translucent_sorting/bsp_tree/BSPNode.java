@@ -1,20 +1,19 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree;
 
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
-import org.joml.Vector3fc;
-
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TopoGraphSorting;
-import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TopoGraphSorting;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
+import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
 import net.minecraft.core.SectionPos;
+import org.joml.Vector3fc;
 
 /**
  * A node in the BSP tree. The BSP tree is made up of nodes that split quads
  * into groups on either side of a plane and those that lie on the plane.
  * There's also leaf nodes that contain one or more quads.
- * 
+ * <p>
  * Implementation note:
  * - Doing a convex box test doesn't seem to bring a performance boost, even if
  * it does trigger sometimes with man-made structures. The multi partition node

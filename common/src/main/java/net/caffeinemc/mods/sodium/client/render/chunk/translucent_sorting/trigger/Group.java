@@ -64,11 +64,11 @@ class Group {
 
     /**
      * A pretty good heuristic for equality of captured translucent geometry data.
-     * 
+     * <p>
      * It assumes that if the size, bounds, and hash are equal, they are most likely
      * the same. We also know that the existing and new data is for the same section
      * position since the group was retrieved from the map for the right position.
-     * 
+     * <p>
      * TODO: how common are collisions and are they bad?
      * If they are common, use second or different hash
      */

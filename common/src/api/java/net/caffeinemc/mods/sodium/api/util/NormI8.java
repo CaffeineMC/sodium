@@ -7,7 +7,7 @@ import org.joml.Vector3fc;
 /**
  * Provides some utilities for working with packed normal vectors. Each normal component provides 8 bits of
  * precision in the range of [-1.0,1.0].
- *
+ * <p>
  * | 32        | 24        | 16        | 8          |
  * | 0000 0000 | 0110 1100 | 0110 1100 | 0110 1100  |
  * | Padding   | X         | Y         | Z          |
@@ -94,7 +94,7 @@ public class NormI8 {
 
     /**
      * Returns true if the two packed normals are opposite directions.
-     *
+     * <p>
      * TODO: this could possibly be faster by using normA == (~normB + 0x010101) but
      * that has to special case when a component is zero since that wouldn't
      * overflow correctly back to zero. (~0+1 == 0 but not if it's somewhere inside
