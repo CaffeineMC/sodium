@@ -62,7 +62,7 @@ public class OptionListWidget extends AbstractOptionList {
         this.pageToSectionInfo.clear();
         this.scrollbar = this.addRenderableChild(new ScrollbarWidget(new Dim2i(x + width + Layout.OPTION_LIST_SCROLLBAR_OFFSET, y, Layout.SCROLLBAR_WIDTH, height), this::updateSectionFocus));
 
-        this.entryHeight = this.font.lineHeight * 2;
+        this.entryHeight = Layout.entryHeight(this.font);
         int listHeight;
 
         if (this.filteredOptions != null) {
@@ -216,7 +216,7 @@ public class OptionListWidget extends AbstractOptionList {
 
         // calculate which y position is considered the "viewed" option,
         // + y is needed to compensate for the initial offset that the .startY values have
-        int highlightTarget = scrollAmount + this.getY() + Math.min(this.entryHeight * 3, this.getHeight() / 2);
+        int highlightTarget = scrollAmount + this.getY() + Math.min(this.entryHeight * Layout.SECTION_FOCUS_LEAD_ROWS, this.getHeight() / 2);
 
         // Find which section is currently in the middle of the viewport
         SectionInfo currentSection = null;
@@ -255,7 +255,7 @@ public class OptionListWidget extends AbstractOptionList {
             this.hovered = this.isMouseOver(mouseX, mouseY);
 
             this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.backgroundColor);
-            this.drawString(graphics, this.truncateLabelToFit(this.title, 12), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, this.textColor);
+            this.drawString(graphics, this.truncateLabelToFit(this.title, Layout.OPTION_TEXT_SIDE_PADDING * 2), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, this.textColor);
 
             if (this.resetButton != null) {
                 this.resetButton.render(graphics, mouseX, mouseY, delta);

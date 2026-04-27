@@ -57,7 +57,7 @@ public abstract class CenteredFlatWidget extends AbstractWidget {
         }
 
         if (this.selected) {
-            this.drawRect(graphics, x2 - 3, y1, x2, y2, this.theme.themeLighter);
+            this.drawRect(graphics, x2 - Layout.PAGE_ENTRY_SELECTION_BAR_WIDTH, y1, x2, y2, this.theme.themeLighter);
         }
 
         // render icon and get offset for text
@@ -85,7 +85,7 @@ public abstract class CenteredFlatWidget extends AbstractWidget {
     }
 
     private String truncateToFitWidth(Component text, int iconOffset) {
-        return this.truncateTextToFit(text.getString(), this.getWidth() - 14 - iconOffset);
+        return this.truncateTextToFit(text.getString(), this.getWidth() - Layout.PAGE_ENTRY_LABEL_END_PADDING - iconOffset);
     }
 
     public void setSelected(boolean selected) {

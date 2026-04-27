@@ -68,7 +68,7 @@ public class SearchWidget extends AbstractParentWidget {
                 this.font,
                 x + Layout.INNER_MARGIN,
                 y + Layout.BUTTON_SHORT / 2 - this.font.lineHeight / 2,
-                searchBoxWidth - 20,
+                searchBoxWidth - Layout.BUTTON_SHORT,
                 Layout.BUTTON_SHORT,
                 Component.translatable("sodium.options.search")
         );

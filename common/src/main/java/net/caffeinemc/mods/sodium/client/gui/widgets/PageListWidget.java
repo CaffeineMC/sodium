@@ -40,8 +40,8 @@ public class PageListWidget extends AbstractScrollable {
         this.clearChildren();
         this.scrollbar = this.addRenderableChild(new ScrollbarWidget(new Dim2i(this.getLimitX() - Layout.SCROLLBAR_WIDTH, y, Layout.SCROLLBAR_WIDTH, height), false, false));
 
-        int entryHeight = this.font.lineHeight * 2;
-        var headerHeight = this.font.lineHeight * 3;
+        int entryHeight = Layout.entryHeight(this.font);
+        var headerHeight = Layout.pageHeaderHeight(this.font);
         int listHeight = 0;
         for (var modOptions : ConfigManager.CONFIG.getModOptions()) {
             if (modOptions.pages().isEmpty()) {

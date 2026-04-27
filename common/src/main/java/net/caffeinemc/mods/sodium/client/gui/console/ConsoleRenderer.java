@@ -1,10 +1,10 @@
 package net.caffeinemc.mods.sodium.client.gui.console;
 
+import net.caffeinemc.mods.sodium.api.util.ColorARGB;
+import net.caffeinemc.mods.sodium.api.util.ColorU8;
 import net.caffeinemc.mods.sodium.client.console.Console;
 import net.caffeinemc.mods.sodium.client.console.message.Message;
 import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
-import net.caffeinemc.mods.sodium.api.util.ColorARGB;
-import net.caffeinemc.mods.sodium.api.util.ColorU8;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.StringSplitter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -22,6 +22,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ConsoleRenderer {
+    private static final int BOX_PADDING_X = 3;
+    private static final int BOX_PADDING_Y = 1;
+    private static final int BOX_MARGIN = 4;
+    private static final int CONSOLE_MESSAGE_WIDTH = 270;
+
     static final ConsoleRenderer INSTANCE = new ConsoleRenderer();
 
     private final LinkedList<ActiveMessage> activeMessages = new LinkedList<>();
@@ -49,14 +54,11 @@ public class ConsoleRenderer {
 
         Minecraft minecraft = Minecraft.getInstance();
 
-        var paddingWidth = 3;
-        var paddingHeight = 1;
-
         var renders = new ArrayList<MessageRender>();
 
         {
-            int x = 4;
-            int y = 4;
+            int x = BOX_MARGIN;
+            int y = BOX_MARGIN;
 
             for (ActiveMessage message : this.activeMessages) {
                 double opacity = getMessageOpacity(message, currentTime);
@@ -67,14 +69,14 @@ public class ConsoleRenderer {
 
                 List<FormattedCharSequence> lines = new ArrayList<>();
 
-                var messageWidth = 270;
+                var messageWidth = CONSOLE_MESSAGE_WIDTH;
 
                 StringSplitter splitter = minecraft.font.getSplitter();
                 splitter.splitLines(message.text(), messageWidth - 20, Style.EMPTY, (text, lastLineWrapped) -> {
                     lines.add(Language.getInstance().getVisualOrder(text));
                 });
 
-                var messageHeight = (minecraft.font.lineHeight * lines.size()) + (paddingHeight * 2);
+                var messageHeight = (minecraft.font.lineHeight * lines.size()) + (BOX_PADDING_Y * 2);
 
                 renders.add(new MessageRender(x, y, messageWidth, messageHeight, message.level(), lines, opacity));
 
@@ -118,7 +120,7 @@ public class ConsoleRenderer {
 
             for (var line : render.lines()) {
                 // message text
-                context.drawString(minecraft.font, line, x + paddingWidth + 3, y + paddingHeight,
+                context.drawString(minecraft.font, line, x + BOX_PADDING_X + 3, y + BOX_PADDING_Y,
                         ColorARGB.withAlpha(colors.text(), weightAlpha(opacity)), false);
 
                 y += minecraft.font.lineHeight;

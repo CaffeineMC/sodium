@@ -112,7 +112,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
     }
 
     private void openDonationPrompt(SodiumOptions options) {
-        var prompt = new ScreenPrompt(this, DONATION_PROMPT_MESSAGE, 320, 190,
+        var prompt = new ScreenPrompt(this, DONATION_PROMPT_MESSAGE, ScreenPrompt.PROMPT_WIDTH, ScreenPrompt.PROMPT_HEIGHT,
                 new ScreenPrompt.Action(Component.literal("Buy us a coffee"), this::openDonationPage));
         prompt.setFocused(true);
 

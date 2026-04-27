@@ -18,7 +18,7 @@ import org.jspecify.annotations.Nullable;
  */
 public class ResetButton extends AbstractWidget {
     private static final Identifier ICON = Identifier.fromNamespaceAndPath("sodium", "textures/gui/reset_button.png");
-    private static final int ICON_SIZE = 10;
+    private static final int ICON_SIZE = Layout.CONTROL_ICON_SIZE;
     private static final int COLOR = 0xFFFF8C30;
 
     private final AbstractWidget parent;

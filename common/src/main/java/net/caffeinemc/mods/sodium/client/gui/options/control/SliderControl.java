@@ -62,8 +62,8 @@ public class SliderControl implements Control {
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             int sliderX = this.getSliderX();
             int sliderY = this.getSliderY();
-            int sliderWidth = this.getSliderWidth();
-            int sliderHeight = this.getSliderHeight();
+            int sliderWidth = Layout.SLIDER_WIDTH;
+            int sliderHeight = Layout.SLIDER_HEIGHT;
 
             var value = this.option.getValidatedValue();
             var isEnabled = this.option.isEnabled();
@@ -99,7 +99,7 @@ public class SliderControl implements Control {
                 this.drawRect(graphics, sliderX, trackY, sliderX + sliderWidth, trackY + TRACK_HEIGHT, this.theme.themeLighter);
                 this.drawRect(graphics, thumbX, sliderY, thumbX + (THUMB_WIDTH * 2), sliderY + sliderHeight, Colors.FOREGROUND);
 
-                this.drawString(graphics, label, sliderX - labelWidth - 6, sliderY + (sliderHeight / 2) + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
+                this.drawString(graphics, label, sliderX - labelWidth - Layout.OPTION_TEXT_SIDE_PADDING, sliderY + (sliderHeight / 2) + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
             } else {
                 this.drawString(graphics, label, sliderX + sliderWidth - labelWidth, sliderY + (sliderHeight / 2) + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
             }
@@ -110,23 +110,15 @@ public class SliderControl implements Control {
         }
 
         public int getSliderX() {
-            return this.getLimitX() - 96;
+            return this.getLimitX() - Layout.SLIDER_WIDTH - Layout.OPTION_TEXT_SIDE_PADDING;
         }
 
         public int getSliderY() {
-            return this.getCenterY() - 5;
-        }
-
-        public int getSliderWidth() {
-            return 90;
-        }
-
-        public int getSliderHeight() {
-            return 10;
+            return this.getCenterY() - Layout.SLIDER_HEIGHT / 2;
         }
 
         public boolean isMouseOverSlider(double mouseX, double mouseY) {
-            return mouseX >= this.getSliderX() && mouseX < this.getSliderX() + this.getSliderWidth() && mouseY >= this.getSliderY() && mouseY < this.getSliderY() + this.getSliderHeight();
+            return mouseX >= this.getSliderX() && mouseX < this.getSliderX() + Layout.SLIDER_WIDTH && mouseY >= this.getSliderY() && mouseY < this.getSliderY() + Layout.SLIDER_HEIGHT;
         }
 
         @Override
@@ -193,7 +185,7 @@ public class SliderControl implements Control {
         }
 
         private void setValueFromMouse(double d) {
-            this.setValue(Mth.clamp((d - (double) this.getSliderX()) / (double) this.getSliderWidth(), 0.0D, 1.0D));
+            this.setValue(Mth.clamp((d - (double) this.getSliderX()) / (double) Layout.SLIDER_WIDTH, 0.0D, 1.0D));
         }
 
         public void setValue(double newThumbPosition) {

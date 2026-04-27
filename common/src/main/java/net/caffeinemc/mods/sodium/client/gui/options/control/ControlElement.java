@@ -70,7 +70,7 @@ public abstract class ControlElement extends AbstractWidget {
     }
 
     protected String truncateLabelToFit(String name) {
-        return truncateTextToFit(name, this.getWidth() - this.getContentWidth() - 20);
+        return truncateTextToFit(name, this.getWidth() - this.getContentWidth() - Layout.OPTION_LABEL_END_PADDING);
     }
 
     @Override
