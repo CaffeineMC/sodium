@@ -1,12 +1,11 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.bsp_tree;
 
-import java.nio.IntBuffer;
-import java.lang.Math;
-
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntConsumer;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
 import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
+
+import java.nio.IntBuffer;
 
 /**
  * The sort state is passed around the tree (similar to visitor pattern) and
@@ -210,14 +209,13 @@ class BSPSortState {
         return compressed;
     }
 
-    static int decompressOrRead(int[] indexes, IntConsumer consumer) {
+    static void decompressOrRead(int[] indexes, IntConsumer consumer) {
         if (isCompressed(indexes)) {
-            return decompress(indexes, consumer);
+            decompress(indexes, consumer);
         } else {
             for (int i = 0; i < indexes.length; i++) {
                 consumer.accept(indexes[i]);
             }
-            return indexes.length;
         }
     }
 
@@ -278,10 +276,10 @@ class BSPSortState {
         return indexes[0] < 0;
     }
 
-    private IntConsumer indexConsumer = (int index) -> TranslucentData.writeQuadVertexIndexes(
+    private final IntConsumer indexConsumer = (int index) -> TranslucentData.writeQuadVertexIndexes(
             this.indexBuffer, index);
 
-    private IntConsumer indexMapConsumer = (int index) -> TranslucentData.writeQuadVertexIndexes(
+    private final IntConsumer indexMapConsumer = (int index) -> TranslucentData.writeQuadVertexIndexes(
             this.indexBuffer, this.indexMap[index]);
 
     void writeIndexes(int[] indexes) {

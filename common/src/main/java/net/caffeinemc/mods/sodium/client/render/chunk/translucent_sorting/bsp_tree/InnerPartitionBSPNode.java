@@ -79,7 +79,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
      * Since the indexes might be compressed, the count needs to be stored
      * separately from before compression.
      */
-    record NodeReuseData(float[][] quadExtents, int[] indexes, int indexCount, int maxIndex) {
+    record NodeReuseData(int quadHash, int[] indexes, int indexCount, int maxIndex) {
     }
 
     InnerPartitionBSPNode(NodeReuseData reuseData, int axis) {
@@ -101,20 +101,19 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         // root node and not anything deeper than its children)
         if (workspace.prepareNodeReuse && depth == 1 && indexes.size() > NODE_REUSE_THRESHOLD) {
             // collect the extents of the indexed quads and hash them
-            var quadExtents = new float[indexes.size()][];
+            var quadHash = 1;
             int maxIndex = -1;
             for (int i = 0; i < indexes.size(); i++) {
                 var index = indexes.getInt(i);
                 var quad = workspace.get(index);
-                var extents = quad.getExtents();
-                quadExtents[i] = extents;
+                quadHash = quadHash * 31 + quad.getQuadHash();
                 maxIndex = Math.max(maxIndex, index);
             }
 
             // compress indexes but without sorting them, as the order needs to be the same
             // for the extents comparison loop to work
             return new NodeReuseData(
-                    quadExtents,
+                    quadHash,
                     BSPSortState.compressIndexes(indexes, false),
                     indexes.size(),
                     maxIndex);
@@ -166,15 +165,18 @@ abstract class InnerPartitionBSPNode extends BSPNode {
             return null;
         }
 
-        var oldExtents = reuseData.quadExtents;
-        if (oldExtents.length != newIndexes.size()) {
+        if (reuseData.indexCount != newIndexes.size()) {
             return null;
         }
 
+        var newQuadHash = 1;
         for (int i = 0; i < newIndexes.size(); i++) {
-            if (!workspace.get(newIndexes.getInt(i)).extentsEqual(oldExtents[i])) {
-                return null;
-            }
+            var index = newIndexes.getInt(i);
+            var quad = workspace.get(index);
+            newQuadHash = newQuadHash * 31 + quad.getQuadHash();
+        }
+        if (newQuadHash != reuseData.quadHash) {
+            return null;
         }
 
         // reuse old node and either apply a fixed offset or calculate an index map to
