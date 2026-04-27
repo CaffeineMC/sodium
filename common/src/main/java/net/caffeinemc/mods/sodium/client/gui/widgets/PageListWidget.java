@@ -123,17 +123,13 @@ public class PageListWidget extends AbstractScrollable {
         this.switchSelectedWidget(this.pageToWidget.get(page));
     }
 
-    private class EntryWidget extends CenteredFlatWidget {
+    private abstract class EntryWidget extends CenteredFlatWidget {
         EntryWidget(Dim2i dim, Component label, boolean isSelectable, ColorTheme theme) {
             super(dim, label, isSelectable, theme);
         }
 
         EntryWidget(Dim2i dim, Component label, Component subtitle, boolean isSelectable, ColorTheme theme) {
             super(dim, label, subtitle, isSelectable, theme);
-        }
-
-        @Override
-        void onAction() {
         }
 
         public int getScrollTargetStart() {
@@ -146,12 +142,33 @@ public class PageListWidget extends AbstractScrollable {
         }
     }
 
-    private class HeaderEntryWidget extends EntryWidget {
+    private abstract class ClickableEntryWidget extends EntryWidget {
+        ClickableEntryWidget(Dim2i dim, Component label, boolean isSelectable, ColorTheme theme) {
+            super(dim, label, isSelectable, theme);
+        }
+
+        ClickableEntryWidget(Dim2i dim, Component label, Component subtitle, boolean isSelectable, ColorTheme theme) {
+            super(dim, label, subtitle, isSelectable, theme);
+        }
+
+        @Override
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+            super.render(graphics, mouseX, mouseY, delta);
+
+            if (this.isHovered()) {
+                graphics.requestCursor(CursorTypes.POINTING_HAND);
+            }
+        }
+    }
+
+    private class HeaderEntryWidget extends ClickableEntryWidget {
+        private final ModOptions modOptions;
         private final Identifier icon;
         private final boolean iconMonochrome;
 
         HeaderEntryWidget(Dim2i dim, ModOptions modOptions, ColorTheme theme) {
             super(dim, Component.literal(modOptions.name()), Component.literal(modOptions.version()), false, theme);
+            this.modOptions = modOptions;
             this.icon = modOptions.icon();
             this.iconMonochrome = modOptions.iconMonochrome();
         }
@@ -165,9 +182,24 @@ public class PageListWidget extends AbstractScrollable {
             return VideoSettingsScreen.renderIconWithSpacing(graphics, this.icon, textColor, this.iconMonochrome,
                     this.getX(), this.getY(), this.getHeight(), Layout.ICON_MARGIN);
         }
+
+        @Override
+        void onAction() {
+            var pages = this.modOptions.pages();
+            if (pages.isEmpty()) {
+                return;
+            }
+
+            var firstPage = pages.getFirst();
+            var firstPageWidget = PageListWidget.this.pageToWidget.get(firstPage);
+            if (firstPageWidget != null) {
+                PageListWidget.this.switchSelectedWidget(firstPageWidget);
+            }
+            PageListWidget.this.parent.jumpToPage(firstPage);
+        }
     }
 
-    private abstract class PageEntryWidget<P extends Page> extends EntryWidget {
+    private abstract class PageEntryWidget<P extends Page> extends ClickableEntryWidget {
         final P page;
         final int scrollTargetStart;
 
@@ -175,15 +207,6 @@ public class PageListWidget extends AbstractScrollable {
             super(dim, page.name(), true, theme);
             this.page = page;
             this.scrollTargetStart = scrollTargetStart;
-        }
-
-        @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-            super.render(graphics, mouseX, mouseY, delta);
-
-            if (this.isHovered()) {
-                graphics.requestCursor(CursorTypes.POINTING_HAND);
-            }
         }
     }
 
