@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.client.gui.options.control;
 
 import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
 import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
+import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.gui.widgets.ResetButton;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.gui.GuiGraphics;
@@ -37,7 +38,7 @@ public abstract class StatefulControlElement extends ControlElement {
 
     @Override
     protected String truncateLabelToFit(String name) {
-        int rightReserve = this.isResetOverlayActive() ? this.resetButton.getWidth() : this.getContentWidth() + 20;
+        int rightReserve = this.isResetOverlayActive() ? this.resetButton.getWidth() : this.getContentWidth() + Layout.OPTION_LABEL_END_PADDING;
         return truncateTextToFit(name, this.getWidth() - rightReserve);
     }
 }
