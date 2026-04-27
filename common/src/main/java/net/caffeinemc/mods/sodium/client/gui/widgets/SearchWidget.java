@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.client.gui.widgets;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.config.search.SearchQuerySession;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
+import net.caffeinemc.mods.sodium.client.gui.ButtonTheme;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
 import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
@@ -19,6 +20,10 @@ import java.util.function.Consumer;
 public class SearchWidget extends AbstractParentWidget {
     // maximum distance from its original position that a search result can be moved to improve grouping
     private static final int MAX_ORDER_DIST_ERROR = 2;
+
+    private static final ButtonTheme CLEAR_BUTTON_THEME = new ButtonTheme(
+            Colors.FOREGROUND, Colors.FOREGROUND, Colors.FOREGROUND_DISABLED,
+            Colors.BACKGROUND_MEDIUM, Colors.BACKGROUND_LIGHT, Colors.BACKGROUND_LIGHT);
 
     private final Consumer<List<Option.OptionNameSource>> onSearchResults;
     private final SearchQuerySession searchQuerySession;
@@ -53,7 +58,8 @@ public class SearchWidget extends AbstractParentWidget {
                 Component.literal("×"),
                 this::clearSearch,
                 true,
-                false
+                false,
+                CLEAR_BUTTON_THEME
         );
 
         this.searchBox = new EditBox(
@@ -74,11 +80,18 @@ public class SearchWidget extends AbstractParentWidget {
 
         this.addChild(this.searchBox);
         this.addChild(this.clearButton);
+
+        this.updateClearButtonVisibility();
+    }
+
+    private void updateClearButtonVisibility() {
+        this.clearButton.setVisible(!this.query.isEmpty());
     }
 
     private void clearSearch() {
         this.searchBox.setValue("");
         this.query = "";
+        this.updateClearButtonVisibility();
         this.search();
         this.setFocused(null);
     }
@@ -89,6 +102,7 @@ public class SearchWidget extends AbstractParentWidget {
         }
 
         this.query = text.stripLeading();
+        this.updateClearButtonVisibility();
         this.search();
     }
 
@@ -152,7 +166,7 @@ public class SearchWidget extends AbstractParentWidget {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-        graphics.fill(this.getX(), this.getY(), this.getX() + this.lastRebuildWidth - Layout.BUTTON_SHORT, this.getLimitY(), Colors.BACKGROUND_DEFAULT);
+        graphics.fill(this.getX(), this.getY(), this.getX() + this.lastRebuildWidth, this.getLimitY(), Colors.BACKGROUND_DEFAULT);
 
         this.searchBox.render(graphics, mouseX, mouseY, delta);
         this.clearButton.render(graphics, mouseX, mouseY, delta);
