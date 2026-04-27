@@ -85,6 +85,11 @@ public abstract class StatefulOption<V> extends Option {
     }
 
     @Override
+    public void resetToDefault() {
+        this.modifyValue(this.defaultValue.get(this.state));
+    }
+
+    @Override
     void loadValueInitial() {
         this.value = this.binding.load();
         this.modifiedValue = this.value;
