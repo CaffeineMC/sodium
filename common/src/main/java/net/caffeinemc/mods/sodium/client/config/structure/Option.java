@@ -63,6 +63,10 @@ public abstract class Option {
         // no-op
     }
 
+    public void resetToDefault() {
+        // no-op for non-stateful options
+    }
+
     public boolean isEnabled() {
         return this.enabled.get(this.state);
     }

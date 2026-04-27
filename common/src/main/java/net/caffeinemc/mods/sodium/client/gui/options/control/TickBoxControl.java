@@ -2,7 +2,6 @@ package net.caffeinemc.mods.sodium.client.gui.options.control;
 
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import net.caffeinemc.mods.sodium.client.config.structure.BooleanOption;
-import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
 import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
@@ -34,7 +33,7 @@ public class TickBoxControl implements Control {
         return this.option;
     }
 
-    private static class TickBoxControlElement extends ControlElement {
+    private static class TickBoxControlElement extends StatefulControlElement {
         private final BooleanOption option;
 
         public TickBoxControlElement(AbstractOptionList list, BooleanOption option, Dim2i dim, ColorTheme theme) {
@@ -44,7 +43,7 @@ public class TickBoxControl implements Control {
         }
 
         @Override
-        public Option getOption() {
+        public BooleanOption getOption() {
             return this.option;
         }
 
@@ -52,7 +51,7 @@ public class TickBoxControl implements Control {
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             super.render(graphics, mouseX, mouseY, delta);
 
-            if (!this.option.showControl()) {
+            if (!this.option.showControl() || this.isResetOverlayActive()) {
                 return;
             }
 
@@ -100,6 +99,9 @@ public class TickBoxControl implements Control {
 
         @Override
         public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+            if (super.mouseClicked(event, doubleClick)) return true;
+            if (this.isResetOverlayActive()) return false;
+
             if (this.option.isEnabled() && event.button() == 0 && this.isMouseOver(event.x(), event.y())) {
                 toggleControl();
                 return true;

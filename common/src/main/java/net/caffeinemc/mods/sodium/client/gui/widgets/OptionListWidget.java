@@ -89,7 +89,7 @@ public class OptionListWidget extends AbstractOptionList {
             // Add mod header if mod has changed
             if (lastSource == null || lastSource.getModOptions() != modOptions) {
                 listHeight += Layout.OPTION_MOD_MARGIN;
-                var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions.name(), theme, modOptions.icon(), modOptions.iconMonochrome());
+                var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions, theme);
                 this.addRenderableChild(modHeader);
                 listHeight += this.entryHeight;
             }
@@ -97,7 +97,7 @@ public class OptionListWidget extends AbstractOptionList {
             // Add page header if page has changed
             if (lastSource == null || lastSource.getPage() != page) {
                 listHeight += Layout.OPTION_PAGE_MARGIN;
-                var pageHeader = new PageHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), page.name().getString(), theme);
+                var pageHeader = new PageHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), page, theme);
                 this.addRenderableChild(pageHeader);
                 listHeight += this.entryHeight;
             }
@@ -132,7 +132,7 @@ public class OptionListWidget extends AbstractOptionList {
             // Add mod header
             listHeight += Layout.OPTION_MOD_MARGIN;
             var modHeaderStart = listHeight;
-            var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions.name(), theme, modOptions.icon(), modOptions.iconMonochrome());
+            var modHeader = new ModHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), modOptions, theme);
             this.addRenderableChild(modHeader);
             listHeight += this.entryHeight;
 
@@ -143,7 +143,7 @@ public class OptionListWidget extends AbstractOptionList {
                 if (page instanceof OptionPage) {
                     // Add page header
                     listHeight += Layout.OPTION_PAGE_MARGIN;
-                    var pageHeader = new PageHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), page.name().getString(), theme);
+                    var pageHeader = new PageHeaderWidget(this, new Dim2i(x, y + listHeight, width, this.entryHeight), page, theme);
                     this.addRenderableChild(pageHeader);
                     listHeight += this.entryHeight;
 
@@ -239,13 +239,15 @@ public class OptionListWidget extends AbstractOptionList {
         final String title;
         final int textColor;
         final int backgroundColor;
+        @Nullable final ResetButton resetButton;
 
-        public HeaderWidget(AbstractOptionList list, Dim2i dim, String title, int textColor, int backgroundColor) {
+        public HeaderWidget(AbstractOptionList list, Dim2i dim, String title, int textColor, int backgroundColor, @Nullable Runnable resetAction) {
             super(dim);
             this.list = list;
             this.title = title;
             this.textColor = textColor;
             this.backgroundColor = backgroundColor;
+            this.resetButton = resetAction == null ? null : new ResetButton(this, resetAction);
         }
 
         @Override
@@ -253,11 +255,24 @@ public class OptionListWidget extends AbstractOptionList {
             this.hovered = this.isMouseOver(mouseX, mouseY);
 
             this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.backgroundColor);
-            this.drawString(graphics, this.truncateLabelToFit(this.title), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, this.textColor);
+            this.drawString(graphics, this.truncateLabelToFit(this.title, 12), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, this.textColor);
+
+            if (this.resetButton != null) {
+                this.resetButton.render(graphics, mouseX, mouseY, delta);
+            }
         }
 
-        protected String truncateLabelToFit(String name) {
-            return truncateTextToFit(name, this.getWidth() - 12);
+        protected int rightReservedWidth() {
+            return this.resetButton != null ? this.resetButton.getWidth() : 0;
+        }
+
+        protected String truncateLabelToFit(String name, int padding) {
+            return truncateTextToFit(name, this.getWidth() - padding - this.rightReservedWidth());
+        }
+
+        @Override
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+            return this.resetButton != null && this.resetButton.mouseClicked(event, doubleClick);
         }
 
         @Override
@@ -275,10 +290,10 @@ public class OptionListWidget extends AbstractOptionList {
         final Identifier icon;
         final boolean iconMonochrome;
 
-        public ModHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme, Identifier icon, boolean iconMonochrome) {
-            super(list, dim, ChatFormatting.BOLD + title, theme.themeLighter, Colors.BACKGROUND_DARKER);
-            this.icon = icon;
-            this.iconMonochrome = iconMonochrome;
+        public ModHeaderWidget(AbstractOptionList list, Dim2i dim, ModOptions modOptions, ColorTheme theme) {
+            super(list, dim, ChatFormatting.BOLD + modOptions.name(), theme.themeLighter, Colors.BACKGROUND_DARKER, () -> resetAllOptions(modOptions));
+            this.icon = modOptions.icon();
+            this.iconMonochrome = modOptions.iconMonochrome();
         }
 
         @Override
@@ -293,23 +308,41 @@ public class OptionListWidget extends AbstractOptionList {
                 textOffset = VideoSettingsScreen.renderIconWithSpacing(graphics, this.icon,  this.textColor, this.iconMonochrome, this.getX(), this.getY(), this.getHeight(), Layout.ICON_MARGIN);
                 textY = this.getCenterY() + Layout.ICON_TEXT_BASELINE_OFFSET;
             }
-            this.drawString(graphics, truncateTextToFit(this.title, this.getWidth() - textOffset), this.getX() + textOffset, textY, this.textColor);
+            this.drawString(graphics, this.truncateLabelToFit(this.title, textOffset), this.getX() + textOffset, textY, this.textColor);
+
+            if (this.resetButton != null) {
+                this.resetButton.render(graphics, mouseX, mouseY, delta);
+            }
         }
     }
 
     private static class PageHeaderWidget extends HeaderWidget {
-        public PageHeaderWidget(AbstractOptionList list, Dim2i dim, String title, ColorTheme theme) {
-            this(list, dim, "◆ ", title, theme);
+        public PageHeaderWidget(AbstractOptionList list, Dim2i dim, Page page, ColorTheme theme) {
+            this(list, dim, "◆ ", page.name().getString(), theme, () -> resetAllOptions(page));
         }
 
-        PageHeaderWidget(AbstractOptionList list, Dim2i dim, String prefix, String title, ColorTheme theme) {
-            super(list, dim, prefix + title, theme.theme, Colors.BACKGROUND_DEFAULT);
+        PageHeaderWidget(AbstractOptionList list, Dim2i dim, String prefix, String title, ColorTheme theme, @Nullable Runnable resetAction) {
+            super(list, dim, prefix + title, theme.theme, Colors.BACKGROUND_DEFAULT, resetAction);
         }
     }
 
     private static class GroupHeaderWidget extends HeaderWidget {
         public GroupHeaderWidget(AbstractOptionList list, Dim2i dim, String title) {
-            super(list, dim, ChatFormatting.BOLD + title, Colors.FOREGROUND, Colors.BACKGROUND_MEDIUM);
+            super(list, dim, ChatFormatting.BOLD + title, Colors.FOREGROUND, Colors.BACKGROUND_MEDIUM, null);
+        }
+    }
+
+    private static void resetAllOptions(ModOptions modOptions) {
+        for (Page page : modOptions.pages()) {
+            resetAllOptions(page);
+        }
+    }
+
+    private static void resetAllOptions(Page page) {
+        for (OptionGroup group : page.groups()) {
+            for (Option option : group.options()) {
+                option.resetToDefault();
+            }
         }
     }
 
@@ -320,7 +353,7 @@ public class OptionListWidget extends AbstractOptionList {
         private final ColorTheme theme;
 
         public ExternalPageWidget(Screen screen, AbstractOptionList list, Dim2i dim, ExternalPage page, ColorTheme theme) {
-            super(list, dim, ExternalButtonControl.EXTERNAL_PAGE_PREFIX, page.name().getString(), theme);
+            super(list, dim, ExternalButtonControl.EXTERNAL_PAGE_PREFIX, page.name().getString(), theme, null);
             this.screen = screen;
             this.theme = theme;
             this.page = page;
