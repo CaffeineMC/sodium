@@ -320,7 +320,7 @@ public class OptionListWidget extends AbstractOptionList {
         private final ColorTheme theme;
 
         public ExternalPageWidget(Screen screen, AbstractOptionList list, Dim2i dim, ExternalPage page, ColorTheme theme) {
-            super(list, dim, "▶ ", page.name().getString(), theme);
+            super(list, dim, ExternalButtonControl.EXTERNAL_PAGE_PREFIX, page.name().getString(), theme);
             this.screen = screen;
             this.theme = theme;
             this.page = page;

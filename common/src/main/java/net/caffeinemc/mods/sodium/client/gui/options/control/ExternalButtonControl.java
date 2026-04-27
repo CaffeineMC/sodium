@@ -19,6 +19,7 @@ import java.util.function.Consumer;
 
 public class ExternalButtonControl implements Control {
     public static final Component BASE_BUTTON_TEXT = Component.translatable("sodium.options.open_external_page_button");
+    public static final String EXTERNAL_PAGE_PREFIX = "▶ ";
 
     private final ExternalButtonOption option;
     private final Consumer<Screen> currentScreenConsumer;

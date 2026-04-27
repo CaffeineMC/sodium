@@ -13,6 +13,7 @@ import net.caffeinemc.mods.sodium.client.gui.Colors;
 import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.caffeinemc.mods.sodium.client.gui.options.control.AbstractScrollable;
+import net.caffeinemc.mods.sodium.client.gui.options.control.ExternalButtonControl;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -203,8 +204,8 @@ public class PageListWidget extends AbstractScrollable {
         final P page;
         final int scrollTargetStart;
 
-        PageEntryWidget(Dim2i dim, P page, ColorTheme theme, int scrollTargetStart) {
-            super(dim, page.name(), true, theme);
+        PageEntryWidget(Dim2i dim, P page, Component label, ColorTheme theme, int scrollTargetStart) {
+            super(dim, label, true, theme);
             this.page = page;
             this.scrollTargetStart = scrollTargetStart;
         }
@@ -212,7 +213,7 @@ public class PageListWidget extends AbstractScrollable {
 
     private class OptionPageEntryWidget extends PageEntryWidget<Page> {
         OptionPageEntryWidget(Dim2i dim, Page page, ColorTheme theme, int scrollTargetStart) {
-            super(dim, page, theme, scrollTargetStart);
+            super(dim, page, page.name(), theme, scrollTargetStart);
         }
 
         @Override
@@ -229,7 +230,7 @@ public class PageListWidget extends AbstractScrollable {
 
     private class ExternalPageEntryWidget extends PageEntryWidget<ExternalPage> {
         ExternalPageEntryWidget(Dim2i dim, ExternalPage page, ColorTheme theme, int scrollTargetStart) {
-            super(dim, page, theme, scrollTargetStart);
+            super(dim, page, Component.literal(ExternalButtonControl.EXTERNAL_PAGE_PREFIX).append(page.name()), theme, scrollTargetStart);
         }
 
         @Override
