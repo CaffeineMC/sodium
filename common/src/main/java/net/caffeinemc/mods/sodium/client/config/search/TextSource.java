@@ -15,6 +15,10 @@ public abstract class TextSource {
         return this.text;
     }
 
+    void invalidateText() {
+        this.text = null;
+    }
+
     public int getLength() {
         return this.getText().length();
     }

@@ -20,4 +20,11 @@ public abstract class SourceStoringIndex extends SearchIndex {
     public void buildIndexInitial() {
         this.rebuildIndex();
     }
+
+    @Override
+    protected void invalidateSourcesForRebuild() {
+        for (var source : this.sources) {
+            source.invalidateText();
+        }
+    }
 }
