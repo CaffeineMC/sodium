@@ -23,7 +23,7 @@ public class FlatButtonWidget extends AbstractWidget implements Renderable {
     private final boolean drawFrame;
     private final boolean leftAlign;
     private final ButtonTheme theme;
-    protected Component label;
+    private final Component label;
 
     private boolean selected;
     private boolean enabled = true;
@@ -67,8 +67,9 @@ public class FlatButtonWidget extends AbstractWidget implements Renderable {
         }
 
         if (this.label != null) {
-            int strWidth = this.font.width(this.label);
-            this.drawString(graphics, this.label, this.leftAlign ? this.getX() + Layout.TEXT_LEFT_PADDING : (this.getCenterX() - (strWidth / 2)), this.getCenterY() - this.font.lineHeight / 2, textColor);
+            Component rendered = this.getRenderedLabel();
+            int strWidth = this.font.width(rendered);
+            this.drawString(graphics, rendered, this.leftAlign ? this.getX() + Layout.TEXT_LEFT_PADDING : (this.getCenterX() - (strWidth / 2)), this.getCenterY() - this.font.lineHeight / 2, textColor);
         }
 
         if (this.enabled && this.selected) {
@@ -82,6 +83,10 @@ public class FlatButtonWidget extends AbstractWidget implements Renderable {
 
     protected int getTextColor() {
         return this.enabled ? this.theme.themeLighter : this.theme.themeDarker;
+    }
+
+    protected Component getRenderedLabel() {
+        return this.label;
     }
 
     public void setSelected(boolean selected) {
@@ -116,7 +121,7 @@ public class FlatButtonWidget extends AbstractWidget implements Renderable {
         return false;
     }
 
-    private void doAction() {
+    protected void doAction() {
         this.action.run();
         this.playClickSound();
     }

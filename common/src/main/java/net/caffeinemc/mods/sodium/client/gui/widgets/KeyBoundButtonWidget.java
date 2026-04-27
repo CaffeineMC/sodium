@@ -1,79 +1,63 @@
 package net.caffeinemc.mods.sodium.client.gui.widgets;
 
-import net.caffeinemc.mods.sodium.client.gui.ButtonTheme;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
 
-// A button widget that updates its label dynamically when the ALT key is pressed.
-// When active, the first character of the label is underlined to indicate a keybinding.
+/**
+ * Activates when its bound key is pressed with ALT held. While ALT is held, underlines the first occurrence of the shortcut key in the label; if the label doesn't contain the key (e.g. due to translation), appends the key in square brackets so the binding stays discoverable.
+ */
 public class KeyBoundButtonWidget extends FlatButtonWidget {
+    private final int shortcutKey;
+    private final Component underlinedLabel;
 
-    private boolean altPressed = false;
-    private boolean labelNeedsRebuild = false;
-
-    public KeyBoundButtonWidget(Dim2i dim, Component label, Runnable action, boolean drawBackground, boolean drawFrame, boolean leftAlign, ButtonTheme theme) {
-        super(dim, label, action, drawBackground, drawFrame, leftAlign, theme);
-    }
-
-    public KeyBoundButtonWidget(Dim2i dim, Component label, Runnable action, boolean drawBackground, boolean leftAlign, ButtonTheme theme) {
-        super(dim, label, action, drawBackground, leftAlign, theme);
-    }
-
-    public KeyBoundButtonWidget(Dim2i dim, Component label, Runnable action, boolean drawBackground, boolean leftAlign) {
+    public KeyBoundButtonWidget(Dim2i dim, Component label, Runnable action, boolean drawBackground, boolean leftAlign, int shortcutKey) {
         super(dim, label, action, drawBackground, leftAlign);
+        this.shortcutKey = shortcutKey;
+        this.underlinedLabel = buildUnderlinedLabel(label, shortcutKey);
     }
 
-    public KeyBoundButtonWidget(Dim2i dim, Component label, Runnable action, boolean drawBackground, boolean drawFrame, boolean leftAlign) {
-        super(dim, label, action, drawBackground, drawFrame, leftAlign);
-    }
+    private static Component buildUnderlinedLabel(Component label, int shortcutKey) {
+        var text = label.getString();
+        var keyChar = (char) shortcutKey; // GLFW letter key codes equal their uppercase ASCII char
+        var index = indexOfIgnoreCase(text, keyChar);
 
-    // Changes the first letter of a label to be underlined only whe ALT state changes.
-    private Component buildLabel() {
-        this.labelNeedsRebuild = false;
-
-        String label = this.label.getString();
-
-        if ((this.isAltDown() && this.isEnabled()) && !label.isEmpty()) {
-            Component firstLetter = Component.literal(String.valueOf(label.charAt(0)))
-                    .withStyle(style -> style.withUnderlined(true));
-
-            Component restOfLabel = Component.literal(label.substring(1));
-
-            return Component.literal("").append(firstLetter).append(restOfLabel);
+        if (index >= 0) {
+            return Component.empty()
+                    .append(Component.literal(text.substring(0, index)))
+                    .append(Component.literal(text.substring(index, index + 1)).withStyle(ChatFormatting.UNDERLINE))
+                    .append(Component.literal(text.substring(index + 1)));
         }
 
-        return Component.literal(label);
+        return Component.empty()
+                .append(label)
+                .append(Component.literal(" ["))
+                .append(Component.literal(String.valueOf(keyChar)).withStyle(ChatFormatting.UNDERLINE))
+                .append(Component.literal("]"));
     }
 
-    private boolean isAltDown() {
-        long windowHandle = Minecraft.getInstance().getWindow().handle();
-        return GLFW.glfwGetKey(windowHandle, GLFW.GLFW_KEY_LEFT_ALT) == GLFW.GLFW_PRESS;
-    }
-
-    // Detects ALT press/release transitions to avoid unnecessary work every frame
-    private void verifyAlt() {
-        if (this.isAltDown() && !this.altPressed) {
-            this.altPressed = true;
-            this.labelNeedsRebuild = true;
+    private static int indexOfIgnoreCase(String text, char target) {
+        var lowerTarget = Character.toLowerCase(target);
+        for (int i = 0; i < text.length(); i++) {
+            if (Character.toLowerCase(text.charAt(i)) == lowerTarget) {
+                return i;
+            }
         }
-
-        if (!this.isAltDown() && this.altPressed) {
-            this.altPressed = false;
-            this.labelNeedsRebuild = true;
-        }
+        return -1;
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-        super.render(graphics, mouseX, mouseY, delta);
+    protected Component getRenderedLabel() {
+        return this.isEnabled() && Minecraft.getInstance().hasAltDown() ? this.underlinedLabel : super.getRenderedLabel();
+    }
 
-        this.verifyAlt();
-
-        if (this.labelNeedsRebuild) {
-            this.label = this.buildLabel();
+    public boolean tryActivateShortcut(KeyEvent event) {
+        if (this.isEnabled() && this.isVisible() && event.hasAltDown() && event.key() == this.shortcutKey) {
+            this.doAction();
+            return true;
         }
+        return false;
     }
 }
