@@ -59,7 +59,9 @@ fun me.modmuss50.mpp.ModPublishExtension.setupFor(loaderName: String, releasePla
     val loaderLowercase = loaderName.lowercase(Locale.ROOT)
 
     if (releasePlatform == "both" || releasePlatform == loaderLowercase) {
-        val jar = project(":$loaderLowercase").tasks.named<Jar>("remapJar").get().archiveFile
+        val jar = if (loaderLowercase == "fabric")
+            project(":$loaderLowercase").tasks.named<Jar>("remapJar").get().archiveFile
+        else project(":$loaderLowercase").tasks.named<Jar>("jar").get().archiveFile
 
         curseforge("curseforge$loaderName") {
             from(curseforgeOptions)
