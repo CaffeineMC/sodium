@@ -6,6 +6,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.VideoMode;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
@@ -481,6 +482,21 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setEnabledProvider(i -> {
                                     return i.readEnumOption(Identifier.parse("sodium:quality.filtering_mode"), TextureFilteringMethod.class) == TextureFilteringMethod.ANISOTROPIC;
                                 }, Identifier.parse("sodium:quality.filtering_mode"))
+                )
+                .addOption(
+                        builder.createEnumOption(Identifier.parse("sodium:quality.pixel_filtering_mode"), FilterMode.class)
+                                .setStorageHandler(this.sodiumStorage)
+                                .setName(Component.translatable("sodium.options.pixel_filtering_mode.name"))
+                                .setTooltip(Component.translatable("sodium.options.pixel_filtering_mode.tooltip"))
+                                .setElementNameProvider(filterMode ->
+                                        Component.translatable("sodium.options.pixel_filtering_mode." + filterMode.name().toLowerCase(Locale.ROOT))
+                                )
+                                .setDefaultValue(FilterMode.NEAREST)
+                                .setBinding(filterMode -> {
+                                    this.sodiumOpts.quality.pixelFilteringMode = filterMode;
+                                    Minecraft.getInstance().levelRenderer.resetSampler();
+                                }, () -> this.sodiumOpts.quality.pixelFilteringMode)
+                                .setImpact(OptionImpact.MEDIUM)
                 )
         );
 
