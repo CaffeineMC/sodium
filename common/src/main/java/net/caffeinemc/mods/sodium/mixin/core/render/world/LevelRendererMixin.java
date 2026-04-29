@@ -268,7 +268,10 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
      * @reason Allow control of the texture filtering mode
      * @author pajic
      */
-    @Redirect(method = "method_62214", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/textures/FilterMode;LINEAR:Lcom/mojang/blaze3d/textures/FilterMode;", opcode = Opcodes.GETSTATIC))
+    @Redirect(method = {
+            "method_62214",
+            "lambda$addMainPass$1"
+    }, require = 1, at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/textures/FilterMode;LINEAR:Lcom/mojang/blaze3d/textures/FilterMode;", opcode = Opcodes.GETSTATIC))
     private FilterMode setFilterMode() {
         return SodiumClientMod.options().quality.pixelFilteringMode;
     }
