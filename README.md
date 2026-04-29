@@ -26,7 +26,7 @@ We also provide bleeding-edge builds ("nightlies") which are useful for testing 
 packaged into a release. These builds are primarily intended for other mod developers and users with expert skills, and do
 not come with any support or warranty.
 
-For a complete listing of available nightly builds, please see [the wiki page](https://github.com/CaffeineMC/sodium/wiki/Nightly-Builds).
+For a complete listing of available nightly builds, please see [the wiki page](https://github.com/CaffeineMC/sodium/wiki/Nightly-Builds). We also have a Maven repository for including Sodium in your development workspace or build process, for which you can also find [documentation on our wiki](https://github.com/CaffeineMC/sodium/wiki/CaffeineMC-Maven-&-Config-API).
 
 ### 🖥️ Installation
 
