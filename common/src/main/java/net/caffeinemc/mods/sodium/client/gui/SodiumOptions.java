@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.client.gui;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mojang.blaze3d.textures.FilterMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
@@ -38,6 +39,7 @@ public class SodiumOptions {
     public static class QualitySettings {
         public boolean hiddenFluidCulling = true;
         public boolean improvedFluidShaping = false;
+        public FilterMode pixelFilteringMode = FilterMode.NEAREST;
     }
 
     public static class PerformanceSettings {
