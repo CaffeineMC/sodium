@@ -5,6 +5,8 @@ import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
+import net.caffeinemc.mods.sodium.client.config.structure.Option;
+import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
 import net.caffeinemc.mods.sodium.client.config.structure.Page;
 import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlElement;
@@ -48,6 +50,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
     private OptionListWidget optionList;
 
     private KeyBoundButtonWidget applyButton, closeButton, undoButton;
+    private KeyBoundButtonWidget performancePresetButton, balancedPresetButton;
     private List<KeyBoundButtonWidget> shortcutButtons = List.of();
     private DonationButtonWidget donateButton;
 
@@ -183,7 +186,29 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
         int topBarHeight = Layout.BUTTON_SHORT;
         this.searchWidget = new SearchWidget(this::onSearchResults, new Dim2i(x, y, w, topBarHeight));
 
-        int topBarClear = topBarHeight + ifInsetY(Layout.INNER_MARGIN);
+        int presetButtonW = Layout.BUTTON_LONG;
+        int presetButtonH = Layout.BUTTON_SHORT;
+        int presetY = y + topBarHeight + Layout.INNER_MARGIN;
+        this.performancePresetButton = new KeyBoundButtonWidget(
+                new Dim2i(x, presetY, presetButtonW, presetButtonH),
+                Component.translatable("sodium.options.buttons.max_performance"),
+                this::applyPerformancePreset,
+                true,
+                false,
+                GLFW.GLFW_KEY_M
+        );
+        this.balancedPresetButton = new KeyBoundButtonWidget(
+                new Dim2i(x + presetButtonW + Layout.INNER_MARGIN, presetY, presetButtonW, presetButtonH),
+                Component.translatable("sodium.options.buttons.balanced"),
+                this::applyBalancedPreset,
+                true,
+                false,
+                GLFW.GLFW_KEY_B
+        );
+        this.addRenderableWidget(this.performancePresetButton);
+        this.addRenderableWidget(this.balancedPresetButton);
+
+        int topBarClear = topBarHeight + Layout.BUTTON_SHORT + ifInsetY(Layout.INNER_MARGIN);
         this.pageList = new PageListWidget(new Dim2i(x, y + topBarClear, Layout.PAGE_LIST_WIDTH, h - topBarClear), this);
         this.addRenderableWidget(this.pageList);
 
@@ -207,14 +232,14 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
 
         var optionListDim = new Dim2i(
                 this.pageList.getLimitX(),
-                y + topBarHeight + Layout.INNER_MARGIN,
+                y + topBarClear,
                 Layout.OPTION_WIDTH + Layout.OPTION_LIST_SCROLLBAR_OFFSET + Layout.SCROLLBAR_WIDTH,
-                h - topBarHeight - (reserveBottomSpace ? (Layout.INNER_MARGIN * 2 + Layout.BUTTON_SHORT) : Layout.INNER_MARGIN) - ifNotInsetY(Layout.INNER_MARGIN)
+                h - topBarClear - (reserveBottomSpace ? (Layout.INNER_MARGIN * 2 + Layout.BUTTON_SHORT) : Layout.INNER_MARGIN) - ifNotInsetY(Layout.INNER_MARGIN)
         );
         this.optionList = new OptionListWidget(this, optionListDim, this::onSectionFocused);
         this.addRenderableWidget(this.optionList);
 
-        var tooltipAreaY = y + topBarHeight + ifInsetY(Layout.TOOLTIP_OUTER_MARGIN);
+        var tooltipAreaY = y + topBarClear + ifInsetY(Layout.TOOLTIP_OUTER_MARGIN);
         this.tooltip.setTooltipArea(
                 new Dim2i(
                         this.optionList.getLimitX(),
@@ -243,7 +268,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
         this.addRenderableWidget(this.closeButton);
         this.addRenderableWidget(this.undoButton);
         this.addRenderableWidget(this.applyButton);
-        this.shortcutButtons = List.of(this.closeButton, this.applyButton, this.undoButton);
+        this.shortcutButtons = List.of(this.closeButton, this.applyButton, this.undoButton, this.performancePresetButton, this.balancedPresetButton);
     }
 
     private void updateScreenDimensions() {
@@ -320,6 +345,57 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
 
         this.donateButton.updateDisplay(this, false);
         this.updateSearchWidgetWidth();
+    }
+
+    private void applyPerformancePreset() {
+        this.applyPresetValues(true);
+    }
+
+    private void applyBalancedPreset() {
+        this.applyPresetValues(false);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <V> void setOptionValue(Identifier id, V value) {
+        Option option = ConfigManager.CONFIG.getOption(id);
+        if (option instanceof StatefulOption<?> statefulOption) {
+            ((StatefulOption<V>) statefulOption).modifyValue(value);
+        }
+    }
+
+    private void applyPresetValues(boolean maxPerformance) {
+        setOptionValue(Identifier.parse("sodium:general.render_distance"), maxPerformance ? 8 : 12);
+        setOptionValue(Identifier.parse("sodium:general.simulation_distance"), maxPerformance ? 8 : 12);
+        setOptionValue(Identifier.parse("sodium:general.framerate_limit"), maxPerformance ? 60 : 120);
+        setOptionValue(Identifier.parse("sodium:quality.clouds"), maxPerformance ? Options.CloudStatus.OFF : Options.CloudStatus.FAST);
+        setOptionValue(Identifier.parse("sodium:quality.render_cloud_distance"), maxPerformance ? 2 : 64);
+        setOptionValue(Identifier.parse("sodium:quality.weather"), maxPerformance ? 3 : 6);
+        setOptionValue(Identifier.parse("sodium:quality.leaves"), !maxPerformance);
+        setOptionValue(Identifier.parse("sodium:quality.particles"), maxPerformance ? Options.ParticleStatus.MINIMAL : Options.ParticleStatus.DECREASED);
+        setOptionValue(Identifier.parse("sodium:quality.ao"), !maxPerformance);
+        setOptionValue(Identifier.parse("sodium:quality.biome_blend"), maxPerformance ? 0 : 2);
+        setOptionValue(Identifier.parse("sodium:quality.entity_distance"), maxPerformance ? 50 : 100);
+        setOptionValue(Identifier.parse("sodium:quality.entity_shadows"), !maxPerformance);
+        setOptionValue(Identifier.parse("sodium:quality.vignette"), !maxPerformance);
+        setOptionValue(Identifier.parse("sodium:quality.fade_time"), maxPerformance ? 0 : 750);
+        setOptionValue(Identifier.parse("sodium:quality.mipmap_levels"), maxPerformance ? 0 : 2);
+        setOptionValue(Identifier.parse("sodium:quality.filtering_mode"), maxPerformance ? Options.TextureFilteringMethod.BILINEAR : Options.TextureFilteringMethod.RGSS);
+        setOptionValue(Identifier.parse("sodium:quality.anisotropy_bit"), 0);
+        setOptionValue(Identifier.parse("sodium:quality.hidden_fluid_culling"), true);
+        setOptionValue(Identifier.parse("sodium:quality.improved_fluid_shaping"), false);
+        setOptionValue(Identifier.parse("sodium:performance.chunk_update_threads"), maxPerformance ? Math.max(1, Runtime.getRuntime().availableProcessors() - 1) : 0);
+        setOptionValue(Identifier.parse("sodium:performance.always_defer_chunk_updates"), maxPerformance ? DeferMode.ALWAYS : DeferMode.ONE_FRAME);
+        setOptionValue(Identifier.parse("sodium:performance.use_block_face_culling"), true);
+        setOptionValue(Identifier.parse("sodium:performance.use_fog_occlusion"), true);
+        setOptionValue(Identifier.parse("sodium:performance.use_entity_culling"), true);
+        setOptionValue(Identifier.parse("sodium:performance.animate_only_visible_textures"), true);
+        setOptionValue(Identifier.parse("sodium:performance.use_no_error_context"), true);
+        setOptionValue(Identifier.parse("sodium:performance.inactivity_fps_limit"), Options.InactivityFpsLimit.AFK);
+        setOptionValue(Identifier.parse("sodium:performance.quad_splitting"), maxPerformance ? net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode.OFF : net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode.SAFE);
+        setOptionValue(Identifier.parse("sodium:advanced.use_persistent_mapping"), true);
+        setOptionValue(Identifier.parse("sodium:advanced.cpu_render_ahead_limit"), maxPerformance ? 0 : 1);
+
+        ConfigManager.CONFIG.applyAllOptions();
     }
 
     @Override
