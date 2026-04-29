@@ -8,7 +8,7 @@ object BuildConfig {
     val SUPPORT_FRAPI : Boolean = true
 
     // https://semver.org/
-    val MOD_VERSION: String = "0.8.10"
+    val MOD_VERSION: String = "0.8.11"
 
     val RELEASE_TAG: String = "mc$MINECRAFT_VERSION-$MOD_VERSION"
 
