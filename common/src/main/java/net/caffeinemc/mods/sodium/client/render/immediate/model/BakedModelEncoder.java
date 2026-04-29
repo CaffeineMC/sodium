@@ -14,20 +14,7 @@ import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryStack;
 
 public class BakedModelEncoder {
-    private static int mergeLighting(int stored, int calculated) {
-        if (stored == 0) return calculated;
-
-        int blockLight = Math.max(stored & 0xFFFF, calculated & 0xFFFF);
-        int skyLight = Math.max((stored >> 16) & 0xFFFF, (calculated >> 16) & 0xFFFF);
-        return blockLight | (skyLight << 16);
-    }
-
-    private static final boolean MULTIPLY_ALPHA = PlatformRuntimeInformation.getInstance().usesAlphaMultiplication();
-
-
-    public static boolean shouldMultiplyAlpha() {
-        return MULTIPLY_ALPHA;
-    }
+    private static final boolean USE_COLOR_MULTIPLICATION = PlatformRuntimeInformation.getInstance().usesBakedQuadColorMultiplication();
 
     public static void writeQuadVertices(VertexBufferWriter writer, PoseStack.Pose matrices, ModelQuadView quad, QuadInstance instance) {
         Matrix3f matNormal = matrices.normal();
@@ -48,7 +35,7 @@ public class BakedModelEncoder {
                 //  NeoForge patches the default VertexConsumer.putBakedQuad to do ARGB.multiply(instance.getColor(vertex), quad.bakedColors().color(vertex)), but Sodium short-circuits that path via BufferBuilderMixin, so the multiplication is lost. Blocks that encode their tint only in element.color(...) (XyCraft ores) lose all color, and blocks combining a BlockTintSource with a baked color get only one factor applied.
                 //  The platform flag is needed because Fabric's default implementation does not perform this multiplication.
                 int color = instance.getColor(i);
-                if (MULTIPLY_ALPHA) {
+                if (USE_COLOR_MULTIPLICATION) {
                     color = ColorMixer.mulComponentWise(color, quad.getColor(i));
                 }
                 int newColor = ColorARGB.toABGR(color);

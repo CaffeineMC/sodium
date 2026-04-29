@@ -37,7 +37,7 @@ public class FabricRuntimeInformation implements PlatformRuntimeInformation {
     }
 
     @Override
-    public boolean usesAlphaMultiplication() {
+    public boolean usesBakedQuadColorMultiplication() {
         return false;
     }
 }

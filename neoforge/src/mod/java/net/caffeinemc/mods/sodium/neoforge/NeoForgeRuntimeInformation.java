@@ -3,7 +3,6 @@ package net.caffeinemc.mods.sodium.neoforge;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.FMLPaths;
-import net.neoforged.fml.loading.LoadingModList;
 
 import java.nio.file.Path;
 
@@ -39,7 +38,7 @@ public class NeoForgeRuntimeInformation implements PlatformRuntimeInformation {
     }
 
     @Override
-    public boolean usesAlphaMultiplication() {
+    public boolean usesBakedQuadColorMultiplication() {
         return true;
     }
 }
