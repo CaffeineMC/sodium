@@ -2,14 +2,12 @@ package net.caffeinemc.mods.sodium.client.render.immediate.model;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.QuadInstance;
+import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.util.ColorMixer;
-import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
-import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
-import net.caffeinemc.mods.sodium.api.util.ColorABGR;
-import net.caffeinemc.mods.sodium.api.util.ColorU8;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.EntityVertex;
+import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -47,7 +45,13 @@ public class BakedModelEncoder {
 
                 int newLight = instance.getLightCoordsWithEmission(i, quad.getMaxLightQuad(i));
 
-                int newColor = ColorARGB.toABGR(instance.getColor(i));
+                //  NeoForge patches the default VertexConsumer.putBakedQuad to do ARGB.multiply(instance.getColor(vertex), quad.bakedColors().color(vertex)), but Sodium short-circuits that path via BufferBuilderMixin, so the multiplication is lost. Blocks that encode their tint only in element.color(...) (XyCraft ores) lose all color, and blocks combining a BlockTintSource with a baked color get only one factor applied.
+                //  The platform flag is needed because Fabric's default implementation does not perform this multiplication.
+                int color = instance.getColor(i);
+                if (MULTIPLY_ALPHA) {
+                    color = ColorMixer.mulComponentWise(color, quad.getColor(i));
+                }
+                int newColor = ColorARGB.toABGR(color);
 
                 // The packed transformed normal vector
                 int normal = MatrixHelper.transformNormal(matNormal, matrices.trustedNormals, quad.getAccurateNormal(i));
