@@ -33,9 +33,6 @@ val configurationCommonModJava: Configuration = configurations.create("commonMod
 val configurationCommonApiJava: Configuration = configurations.create("commonApiJava") {
     isCanBeResolved = true
 }
-val configurationCommonModSources: Configuration = configurations.create("commonModSources") {
-    isCanBeResolved = true
-}
 val configurationCommonApiSources: Configuration = configurations.create("apiSources") {
     isCanBeResolved = true
 }
@@ -55,7 +52,6 @@ dependencies {
     configurationCommonApiJava(project(path = ":common", configuration = "commonApiJava"))
     configurationCommonServiceJava(project(path = ":common", configuration = "commonBootJava"))
 
-    configurationCommonModSources(project(path = ":common", configuration = "commonMainSources"))
     configurationCommonApiSources(project(path = ":common", configuration = "commonApiSources"))
 
     configurationCommonModResources(project(path = ":common", configuration = "commonMainResources"))
@@ -86,23 +82,6 @@ val modJar = tasks.register<Jar>("modJar") {
     }
 
     archiveClassifier = "mod"
-}
-
-val modSourcesJar = tasks.register<Jar>("modSourcesJar") {
-    from(configurationCommonModSources)
-    from(configurationCommonApiSources)
-
-    from(sourceSets["mod"].allSource)
-
-    from(rootDir.resolve("LICENSE.md"))
-
-    filesMatching(listOf("META-INF/neoforge.mods.toml")) {
-        expand(mapOf("version" to inputs.properties["version"]))
-    }
-
-    archiveClassifier = "mod-sources"
-
-    destinationDirectory.set(file(rootProject.layout.buildDirectory).resolve("mods-sources"))
 }
 
 val apiJar = tasks.register<Jar>("apiJar") {
@@ -238,10 +217,6 @@ publishing {
 
             artifact(modJar) {
                 classifier = null
-            }
-
-            artifact(modSourcesJar) {
-                classifier = "sources"
             }
 
             pom.packaging = "jar"
