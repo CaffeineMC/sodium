@@ -23,7 +23,6 @@ gradle.projectsEvaluated {
             modVersion.contains("beta") -> ReleaseType.BETA
             else -> ReleaseType.STABLE
         }
-        version = modVersion
         changelog = BuildConfig.getChangelog(project)
 
         val curseforgeShared = curseforgeOptions {
@@ -45,7 +44,7 @@ gradle.projectsEvaluated {
             accessToken = project.providers.environmentVariable("GITHUB_TOKEN")
             repository = "CaffeineMC/sodium"
             commitish = BuildConfig.calculateGitHash(project)
-            tagName = BuildConfig.RELEASE_TAG
+            version = BuildConfig.RELEASE_TAG
             displayName = "Sodium ${BuildConfig.MOD_VERSION} for Minecraft ${BuildConfig.MINECRAFT_VERSION}"
             file.unset()
             file.unsetConvention()
@@ -59,13 +58,18 @@ fun me.modmuss50.mpp.ModPublishExtension.setupFor(loaderName: String, releasePla
     val loaderLowercase = loaderName.lowercase(Locale.ROOT)
 
     if (releasePlatform == "both" || releasePlatform == loaderLowercase) {
-        val jar = project(":$loaderLowercase").tasks.named<Jar>("jar").get().archiveFile
+        val taskName = if (loaderLowercase == "fabric") "remapJar" else "jar"
+        val jar = project(":$loaderLowercase").tasks.getByName(taskName).outputs.files.singleFile
+
+        val releaseTitle = "Sodium ${BuildConfig.MOD_VERSION} for $loaderName on ${BuildConfig.MINECRAFT_VERSION}"
+        val releaseVersion = "${BuildConfig.RELEASE_TAG}-$loaderLowercase"
 
         curseforge("curseforge$loaderName") {
             from(curseforgeOptions)
             
             file.set(jar)
-            displayName = "Sodium ${BuildConfig.MOD_VERSION} for $loaderName"
+            displayName = releaseTitle
+            version = releaseVersion
             modLoaders.add(loaderLowercase)
 
             clientRequired = true
@@ -76,8 +80,8 @@ fun me.modmuss50.mpp.ModPublishExtension.setupFor(loaderName: String, releasePla
             from(modrinthOptions)
 
             file.set(jar)
-            displayName = "Sodium ${BuildConfig.MOD_VERSION} for $loaderName on ${BuildConfig.MINECRAFT_VERSION}"
-            version = "mc${BuildConfig.MINECRAFT_VERSION}-${BuildConfig.MOD_VERSION}-$loaderLowercase"
+            displayName = releaseTitle
+            version = releaseVersion
             modLoaders.add(loaderLowercase)
         }
     }
