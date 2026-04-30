@@ -1,7 +1,6 @@
 package net.caffeinemc.mods.sodium.client.data.config;
 
 import net.caffeinemc.mods.sodium.client.services.PlatformMixinOverrides;
-import net.caffeinemc.mods.sodium.client.services.Services;
 import net.caffeinemc.mods.sodium.mixin.MixinOption;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,6 +60,8 @@ public class MixinConfig {
         this.addMixinRule("features.render.model.item", true);
 
         this.addMixinRule("features.render.particle", true);
+
+        this.addMixinRule("features.render.viewport", true);
 
         this.addMixinRule("features.render.world", true);
         this.addMixinRule("features.render.world.clouds", true);
