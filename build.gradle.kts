@@ -61,7 +61,7 @@ fun me.modmuss50.mpp.ModPublishExtension.setupFor(loaderName: String, releasePla
         val taskName = if (loaderLowercase == "fabric") "remapJar" else "jar"
         val jar = project(":$loaderLowercase").tasks.getByName(taskName).outputs.files.singleFile
 
-        val releaseTitle = "Sodium ${BuildConfig.MOD_VERSION} for $loaderName on ${BuildConfig.MINECRAFT_VERSION}"
+        val releaseTitle = "Sodium ${BuildConfig.MOD_VERSION} for $loaderName ${BuildConfig.MINECRAFT_VERSION}"
         val releaseVersion = "${BuildConfig.RELEASE_TAG}-$loaderLowercase"
 
         curseforge("curseforge$loaderName") {
