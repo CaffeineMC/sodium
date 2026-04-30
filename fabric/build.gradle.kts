@@ -4,7 +4,7 @@ import net.fabricmc.loom.task.RemapSourcesJarTask
 plugins {
     id("multiloader-platform")
 
-    id("fabric-loom") version ("1.13.4")
+    id("net.fabricmc.fabric-loom-remap") version ("1.16.1")
 }
 
 base {
