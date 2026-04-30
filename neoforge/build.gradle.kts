@@ -199,9 +199,6 @@ tasks {
     }
 
     getByName<ProcessResources>("processModResources") {
-        eachFile {
-            println(path)
-        }
         filesMatching(listOf("META-INF/neoforge.mods.toml")) {
             expand(mapOf("version" to BuildConfig.createVersionString(rootProject)))
         }
