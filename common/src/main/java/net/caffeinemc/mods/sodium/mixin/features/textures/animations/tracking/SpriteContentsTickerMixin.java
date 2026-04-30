@@ -14,8 +14,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.List;
-
 @Mixin(SpriteContents.AnimationState.class)
 public class SpriteContentsTickerMixin {
     @Shadow
@@ -29,6 +27,9 @@ public class SpriteContentsTickerMixin {
     @Unique
     private boolean hasUploadedAllOnce = false;
 
+    @Unique
+    private boolean wasActiveThisTick = false;
+
     /**
      * @author IMS
      * @reason Replace fragile Shadow
@@ -38,10 +39,16 @@ public class SpriteContentsTickerMixin {
         this.parent = spriteContents;
     }
 
+    // We need to copy the value from the parent to retain it for the whole tick, since if we reset it at the end of needsToDraw it would be reset after the first animation frame is finished, but before processing the rest of the frames.
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void captureActiveState(CallbackInfo ci) {
+        SpriteContentsExtension parent = (SpriteContentsExtension) this.parent;
+        this.wasActiveThisTick = parent.sodium$isActive();
+        parent.sodium$setActive(false);
+    }
+
     @Inject(method = "needsToDraw", at = @At("HEAD"), cancellable = true)
     private void preTick(CallbackInfoReturnable<Boolean> cir) {
-        SpriteContentsExtension parent = (SpriteContentsExtension) this.parent;
-
         boolean onDemand = SodiumClientMod.options().performance.animateOnlyVisibleTextures;
 
         if (!hasUploadedAllOnce) {
@@ -52,14 +59,8 @@ public class SpriteContentsTickerMixin {
             }
         }
 
-        if (onDemand && !parent.sodium$isActive()) {
+        if (onDemand && !this.wasActiveThisTick) {
             cir.setReturnValue(false);
         }
-    }
-
-    @Inject(method = "drawToAtlas", at = @At("TAIL"))
-    private void postTick(CallbackInfo ci) {
-        SpriteContentsExtension parent = (SpriteContentsExtension) this.parent;
-        parent.sodium$setActive(false);
     }
 }
