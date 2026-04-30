@@ -60,7 +60,7 @@ fun me.modmuss50.mpp.ModPublishExtension.setupFor(loaderName: String, releasePla
     if (releasePlatform == "both" || releasePlatform == loaderLowercase) {
         val jar = project(":$loaderLowercase").tasks.named<Jar>("jar").get().archiveFile
 
-        val releaseTitle = "Sodium ${BuildConfig.MOD_VERSION} for $loaderName on ${BuildConfig.MINECRAFT_VERSION}"
+        val releaseTitle = "Sodium ${BuildConfig.MOD_VERSION} for $loaderName ${BuildConfig.MINECRAFT_VERSION}"
         val releaseVersion = "${BuildConfig.RELEASE_TAG}-$loaderLowercase"
         
         curseforge("curseforge$loaderName") {
