@@ -30,6 +30,9 @@ public class RenderSystemMixin {
     @Unique
     private static long wglPrevContext;
 
+    @Unique
+    private static boolean hasDonePostLaunchChecks = false;
+
     @Inject(method = "initRenderer", at = @At(value = "RETURN"))
     private static void postContextReady(GpuDevice device, CallbackInfo ci) {
         GlContextInfo context = GlContextInfo.create();
@@ -40,7 +43,6 @@ public class RenderSystemMixin {
         // Capture the current WGL context so that we can detect it being replaced later.
         if (Util.getPlatform() == Util.OS.WINDOWS) {
             wglPrevContext = WGL.wglGetCurrentContext(null);
-            handleWGLContextInitialization();
         } else {
             wglPrevContext = MemoryUtil.NULL;
         }
@@ -64,6 +66,12 @@ public class RenderSystemMixin {
             wglPrevContext = WGL.wglGetCurrentContext(null);
 
             return;
+        }
+
+        if (!hasDonePostLaunchChecks) {
+            // separately do post launch checks even if the prev context is not null, since otherwise we never do the post launch check if wglGetCurrentContext in postContextReady returns a non-null value.
+            handleWGLContextInitialization();
+            hasDonePostLaunchChecks = true;
         }
 
         var currentWglContext = WGL.wglGetCurrentContext(null);
