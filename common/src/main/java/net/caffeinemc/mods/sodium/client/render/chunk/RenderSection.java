@@ -66,7 +66,6 @@ public class RenderSection {
 
     // Lifetime state
     private boolean disposed;
-    private int fadeTime;
 
     public RenderSection(RenderRegion region, int chunkX, int chunkY, int chunkZ) {
         this.chunkX = chunkX;
@@ -590,9 +589,5 @@ public class RenderSection {
         }
         this.pendingDynamicSortOutput = null;
         return output;
-    }
-
-    public void setFadeTime(int relativeBuiltTime) {
-        this.fadeTime = relativeBuiltTime;
     }
 }

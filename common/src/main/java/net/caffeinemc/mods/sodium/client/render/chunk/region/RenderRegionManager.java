@@ -173,7 +173,6 @@ public class RenderRegionManager {
                     double distanceToPlayer = dx * dx + dy * dy + dz * dz;
 
                     int relativeBuiltTime = distanceToPlayer < 768.0 ? -1 : upload.relativeBuiltTime;
-                    upload.section.setFadeTime(relativeBuiltTime);
                     resources.writeMeshTimes(upload.section.getSectionIndex(), relativeBuiltTime);
                 }
                 storage.setVertexData(upload.section.getSectionIndex(),
