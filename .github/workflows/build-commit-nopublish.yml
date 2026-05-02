@@ -1,11 +1,11 @@
-# Used when a commit is tagged and pushed to the repository
+# Used when a commit is pushed to the repository
 # This makes use of caching for faster builds and uploads the resulting artifacts
-name: build-tag
+name: build-commit-nopublish
 
 on:
   push:
-    tags:
-      - '*'
+    branches-ignore:
+      - dev
 
 jobs:
   build:
@@ -17,23 +17,26 @@ jobs:
         # bash pattern expansion to grab branch name without slashes
         run: ref="${GITHUB_REF#refs/heads/}" && echo "branch=${ref////-}" >> $GITHUB_OUTPUT
         id: ref
+
       - name: Checkout sources
-        uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+        uses: actions/checkout@v6
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
         with:
-          cache-read-only: true
+          cache-read-only: false
 
       - name: Execute Gradle build
-        run: ./gradlew build -Pbuild.release=true
+        run: ./gradlew build
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sodium-artifacts-${{ steps.ref.outputs.branch }}
           path: build/mods/*.jar

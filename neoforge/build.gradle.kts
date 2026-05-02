@@ -1,7 +1,7 @@
 plugins {
     id("multiloader-platform")
 
-    id("net.neoforged.moddev") version("2.0.42-beta")
+    id("net.neoforged.moddev") version("2.0.141")
 }
 
 base {

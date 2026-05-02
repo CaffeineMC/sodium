@@ -2,15 +2,20 @@ import org.gradle.api.Project
 
 object BuildConfig {
     val MINECRAFT_VERSION: String = "1.21.1"
-    val NEOFORGE_VERSION: String = "21.1.143"
-    val FABRIC_LOADER_VERSION: String = "0.16.9"
-    val FABRIC_API_VERSION: String = "0.110.0+1.21.1"
+    val NEOFORGE_VERSION: String = "21.1.228"
+    val FABRIC_LOADER_VERSION: String = "0.19.2"
+    val FABRIC_API_VERSION: String = "0.116.11+1.21.1"
 
     // This value can be set to null to disable Parchment.
     val PARCHMENT_VERSION: String? = "2024.11.17"
 
     // https://semver.org/
-    var MOD_VERSION: String = "0.6.13"
+    val MOD_VERSION: String = "0.8.11"
+
+    val RELEASE_TAG: String = "mc$MINECRAFT_VERSION-$MOD_VERSION"
+
+    val CURSEFORGE_PROJECT_ID = "394468"
+    val MODRINTH_PROJECT_ID = "AANobbMI"
 
     fun createVersionString(project: Project): String {
         val builder = StringBuilder()
@@ -22,7 +27,7 @@ object BuildConfig {
             builder.append(MOD_VERSION)
         } else {
             builder.append(MOD_VERSION.substringBefore('-'))
-            builder.append("-snapshot")
+            builder.append("-SNAPSHOT")
         }
 
         builder.append("+mc").append(MINECRAFT_VERSION)
@@ -37,4 +42,21 @@ object BuildConfig {
 
         return builder.toString()
     }
+
+    fun calculateGitHash(project: Project): String = try {
+        val output = project.providers.exec {
+            workingDir(project.projectDir)
+            commandLine("git", "rev-parse", "HEAD")
+        }
+        output.standardOutput.asText.get().trim()
+    } catch (_: Throwable) {
+        "unknown"
+    }
+
+    fun getChangelog(project: Project): String = project.rootProject.file("CHANGELOG.md").readText()
+            .split("----------")[1]
+            .trim()
+            .replace("[ReleaseTag]()", RELEASE_TAG)
+            .replace("[MCVersion]()", MINECRAFT_VERSION)
+            .replace("[SodiumVersion]()", MOD_VERSION)
 }
