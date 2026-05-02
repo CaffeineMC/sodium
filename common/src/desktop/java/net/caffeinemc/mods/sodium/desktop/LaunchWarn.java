@@ -91,7 +91,7 @@ public class LaunchWarn {
     }
 
     private static void showFallbackGraphicalDialog() {
-        // Fallback for Linux, etc users with no "default" browser
+        // Fallback for Linux, etc. users with no "default" browser
         showDialogBox(FALLBACK_MESSAGE, WINDOW_TITLE, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null);
     }
 

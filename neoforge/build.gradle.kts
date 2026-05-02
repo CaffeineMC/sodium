@@ -42,11 +42,11 @@ val configurationCommonServiceResources: Configuration = configurations.create("
 dependencies {
     configurationCommonModJava(project(path = ":common", configuration = "commonMainJava"))
     configurationCommonModJava(project(path = ":common", configuration = "commonApiJava"))
-    configurationCommonServiceJava(project(path = ":common", configuration = "commonEarlyLaunchJava"))
+    configurationCommonServiceJava(project(path = ":common", configuration = "commonBootJava"))
 
     configurationCommonModResources(project(path = ":common", configuration = "commonMainResources"))
     configurationCommonModResources(project(path = ":common", configuration = "commonApiResources"))
-    configurationCommonServiceResources(project(path = ":common", configuration = "commonEarlyLaunchResources"))
+    configurationCommonServiceResources(project(path = ":common", configuration = "commonBootResources"))
 
     fun addEmbeddedFabricModule(dependency: String) {
         dependencies.implementation(dependency)
@@ -124,7 +124,7 @@ neoForge {
 
         create("sodium-service") {
             sourceSet(sourceSets["service"])
-            sourceSet(project(":common").sourceSets["workarounds"])
+            sourceSet(project(":common").sourceSets["boot"])
         }
     }
 }

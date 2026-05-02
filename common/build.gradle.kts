@@ -16,7 +16,7 @@ val configurationPreLaunch = configurations.create("preLaunchDeps") {
 sourceSets {
     val main = getByName("main")
     val api = create("api")
-    val workarounds = create("workarounds")
+    val boot = create("boot")
 
     api.apply {
         java {
@@ -24,7 +24,7 @@ sourceSets {
         }
     }
 
-    workarounds.apply {
+    boot.apply {
         java {
             compileClasspath += configurationPreLaunch
         }
@@ -33,15 +33,19 @@ sourceSets {
     main.apply {
         java {
             compileClasspath += api.output
-            compileClasspath += workarounds.output
+            compileClasspath += boot.output
         }
     }
 
     create("desktop")
 }
 
+repositories {
+    mavenLocal()
+}
+
 dependencies {
-    minecraft(group = "com.mojang", name = "minecraft", version = BuildConfig.MINECRAFT_VERSION)
+    minecraft("com.mojang:minecraft:${BuildConfig.MINECRAFT_VERSION}")
     mappings(loom.layered {
         officialMojangMappings()
 
@@ -74,7 +78,7 @@ dependencies {
     configurationPreLaunch("net.java.dev.jna:jna:5.14.0")
     configurationPreLaunch("net.java.dev.jna:jna-platform:5.14.0")
     configurationPreLaunch("org.slf4j:slf4j-api:2.0.9")
-    configurationPreLaunch("org.jetbrains:annotations:25.0.0")
+    configurationPreLaunch("org.jspecify:jspecify:1.0.0")
 }
 
 loom {
@@ -93,6 +97,21 @@ fun exportSourceSetJava(name: String, sourceSet: SourceSet) {
 
     val compileTask = tasks.getByName<JavaCompile>(sourceSet.compileJavaTaskName)
     artifacts.add(configuration.name, compileTask.destinationDirectory) {
+        builtBy(compileTask)
+    }
+}
+
+fun exportSourceSetSources(name: String, sourceSet: SourceSet) {
+    val configuration = configurations.create("${name}Sources") {
+        isCanBeResolved = true
+        isCanBeConsumed = true
+    }
+
+    val compileTask = tasks.register<Copy>(sourceSet.getTaskName("process", "sources")) {
+        from(sourceSet.allSource)
+        into(file(project.layout.buildDirectory).resolve("sources").resolve(sourceSet.name))
+    }.get()
+    artifacts.add(configuration.name, compileTask.destinationDir) {
         builtBy(compileTask)
     }
 }
@@ -117,12 +136,13 @@ fun exportSourceSetResources(name: String, sourceSet: SourceSet) {
 // Exports the compiled output of the source set to the named configuration.
 fun exportSourceSet(name: String, sourceSet: SourceSet) {
     exportSourceSetJava(name, sourceSet)
+    exportSourceSetSources(name, sourceSet)
     exportSourceSetResources(name, sourceSet)
 }
 
 exportSourceSet("commonMain", sourceSets["main"])
 exportSourceSet("commonApi", sourceSets["api"])
-exportSourceSet("commonEarlyLaunch", sourceSets["workarounds"])
+exportSourceSet("commonBoot", sourceSets["boot"])
 exportSourceSet("commonDesktop", sourceSets["desktop"])
 
 tasks.jar { enabled = false }
