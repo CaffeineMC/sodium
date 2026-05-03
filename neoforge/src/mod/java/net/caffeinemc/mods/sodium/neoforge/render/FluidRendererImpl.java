@@ -21,8 +21,6 @@ import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.neoforged.neoforge.client.textures.FluidSpriteCache;
 
-import java.util.Objects;
-
 public class FluidRendererImpl extends FluidRenderer {
     // The current default context is set up before invoking FluidRenderHandler#renderFluid and cleared afterwards.
     private static final ThreadLocal<DefaultRenderContext> CURRENT_DEFAULT_CONTEXT = ThreadLocal.withInitial(DefaultRenderContext::new);

@@ -1,6 +1,5 @@
 package net.caffeinemc.mods.sodium.neoforge.render;
 
-import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
 import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
