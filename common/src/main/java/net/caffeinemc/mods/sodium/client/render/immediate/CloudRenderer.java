@@ -90,8 +90,8 @@ public class CloudRenderer {
         double cloudTime = (ticks + tickDelta) * 0.03F;
 
         // Translation of the clouds texture in world-space
-        float worldX = (float) (cameraPos.x() + cloudTime);
-        float worldZ = (float) (cameraPos.z() + 0.33D);
+        double worldX = cameraPos.x() + cloudTime;
+        double worldZ = cameraPos.z() + 0.33D;
 
         // The coordinates of the cloud cell which the camera is within
         int cellX = Mth.floor(worldX / CLOUD_WIDTH);
@@ -126,9 +126,9 @@ public class CloudRenderer {
         }
 
         // Apply world->view transform
-        final float viewPosX = (worldX - (cellX * CLOUD_WIDTH));
+        final float viewPosX = (float) (worldX - (cellX * CLOUD_WIDTH));
         final float viewPosY = (float) cameraPos.y() - height;
-        final float viewPosZ = (worldZ - (cellZ * CLOUD_WIDTH));
+        final float viewPosZ = (float) (worldZ - (cellZ * CLOUD_WIDTH));
 
         poseStack.pushPose();
         var poseEntry = poseStack.last();
