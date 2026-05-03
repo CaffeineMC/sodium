@@ -5,8 +5,8 @@ import net.caffeinemc.mods.sodium.client.compatibility.environment.probe.Graphic
 import net.caffeinemc.mods.sodium.client.platform.windows.WindowsFileVersion;
 import net.caffeinemc.mods.sodium.client.platform.windows.api.Gdi32;
 import net.caffeinemc.mods.sodium.client.platform.windows.api.version.Version;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +46,7 @@ public class D3DKMT {
         }
     }
 
-    private static @NonNull ArrayList<WDDMAdapterInfo> queryAdapters(D3DKMTAdapterInfoStruct.@NonNull Buffer adapterInfoBuffer) {
+    private static @NotNull ArrayList<WDDMAdapterInfo> queryAdapters(D3DKMTAdapterInfoStruct.@NotNull Buffer adapterInfoBuffer) {
         var results = new ArrayList<WDDMAdapterInfo>();
 
         for (int adapterIndex = adapterInfoBuffer.position(); adapterIndex < adapterInfoBuffer.limit(); adapterIndex++) {
@@ -63,7 +63,7 @@ public class D3DKMT {
         return results;
     }
 
-    private static void freeAdapters(D3DKMTAdapterInfoStruct.@NonNull Buffer adapterInfoBuffer) {
+    private static void freeAdapters(D3DKMTAdapterInfoStruct.@NotNull Buffer adapterInfoBuffer) {
         for (int adapterIndex = adapterInfoBuffer.position(); adapterIndex < adapterInfoBuffer.limit(); adapterIndex++) {
             var adapterInfo = adapterInfoBuffer.get(adapterIndex);
             apiCheckError("D3DKMTCloseAdapter",
@@ -133,7 +133,7 @@ public class D3DKMT {
         return WindowsFileVersion.fromFileVersion(fileVersion);
     }
 
-    private static @NonNull String queryFriendlyName(int adapter) {
+    private static @NotNull String queryFriendlyName(int adapter) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             D3DKMTAdapterRegistryInfoStruct registryInfo = D3DKMTAdapterRegistryInfoStruct.calloc(stack);
             d3dkmtQueryAdapterInfo(adapter, KMTQAITYPE_ADAPTERREGISTRYINFO, memByteBuffer(registryInfo));
@@ -183,8 +183,8 @@ public class D3DKMT {
     }
 
     public record WDDMAdapterInfo(
-            @NonNull GraphicsAdapterVendor vendor,
-            @NonNull String name,
+            @NotNull GraphicsAdapterVendor vendor,
+            @NotNull String name,
             int adapterType,
             @Nullable String openglIcdFilePath,
             @Nullable WindowsFileVersion openglIcdVersion
