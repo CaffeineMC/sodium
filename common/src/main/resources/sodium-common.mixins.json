@@ -69,6 +69,7 @@
     "features.textures.NativeImageAccessor",
     "features.textures.animations.tracking.AtlasGlyphProviderMixin",
     "features.textures.animations.tracking.AtlasManagerMixin",
+    "features.textures.animations.tracking.FluidStateModelSetMixin",
     "features.textures.animations.tracking.GuiGraphicsMixin",
     "features.textures.animations.tracking.ModelBlockRendererMixin",
     "features.textures.animations.tracking.SpriteContentsMixin",
