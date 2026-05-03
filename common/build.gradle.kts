@@ -60,6 +60,9 @@ dependencies {
     compileOnly("net.fabricmc:sponge-mixin:0.13.2+mixin.0.8.5")
     compileOnly("net.fabricmc:fabric-loader:${BuildConfig.FABRIC_LOADER_VERSION}")
 
+    // Not shipped by Minecraft 1.21.1
+    compileOnly("org.jspecify:jspecify:1.0.0")
+
     fun addDependentFabricModule(name: String) {
         modCompileOnly(fabricApi.module(name, BuildConfig.FABRIC_API_VERSION))
     }
