@@ -23,10 +23,6 @@ public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Shadow
     @Final
-    protected TextureAtlasSprite sprite;
-
-    @Shadow
-    @Final
     protected int tintIndex;
 
     @Shadow
@@ -86,10 +82,8 @@ public abstract class BakedQuadMixin implements BakedQuadView {
         return this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.LIGHT_INDEX];
     }
 
-    @Override
-    public TextureAtlasSprite getSprite() {
-        return this.sprite;
-    }
+    @Shadow
+    public abstract TextureAtlasSprite getSprite();
 
     @Override
     public float getTexU(int idx) {
