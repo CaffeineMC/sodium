@@ -237,10 +237,10 @@ public class OptionListWidget extends AbstractOptionList {
         final String title;
         final int textColor;
         final int backgroundColor;
-        @org.jspecify.annotations.Nullable
+        @Nullable
         final ResetButton resetButton;
 
-        public HeaderWidget(AbstractOptionList list, Dim2i dim, String title, int textColor, int backgroundColor, @org.jspecify.annotations.Nullable Runnable resetAction) {
+        public HeaderWidget(AbstractOptionList list, Dim2i dim, String title, int textColor, int backgroundColor, @Nullable Runnable resetAction) {
             super(dim);
             this.list = list;
             this.title = title;
@@ -320,7 +320,7 @@ public class OptionListWidget extends AbstractOptionList {
             this(list, dim, "◆ ", page.name().getString(), theme, () -> resetAllOptions(page));
         }
 
-        PageHeaderWidget(AbstractOptionList list, Dim2i dim, String prefix, String title, ColorTheme theme, @org.jspecify.annotations.Nullable Runnable resetAction) {
+        PageHeaderWidget(AbstractOptionList list, Dim2i dim, String prefix, String title, ColorTheme theme, @Nullable Runnable resetAction) {
             super(list, dim, prefix + title, theme.theme, Colors.BACKGROUND_DEFAULT, resetAction);
         }
     }
