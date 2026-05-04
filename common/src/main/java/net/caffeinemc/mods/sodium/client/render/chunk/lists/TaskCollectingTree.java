@@ -78,17 +78,7 @@ public class TaskCollectingTree extends SectionTree {
             priority += WITHIN_FRUSTUM_BIAS;
         }
 
-        // explain how priority was calculated
-//        System.out.println("Priority " + priority + " from: distance " + distance + " = " + (distance * this.invMaxDistance) +
-//                ", time " + taskPendingTimeNanos + " = " + (taskPendingTimeNanos * PENDING_TIME_FACTOR) +
-//                ", type " + type + " = " + type.getPriorityValue() +
-//                ", frustum " + this.isFrustumTested + " = " + (this.isFrustumTested ? WITHIN_FRUSTUM_BIAS : 0));
-
         return priority;
-    }
-
-    public static float decodePriority(long encoded) {
-        return MathUtil.comparableIntToFloat((int) (encoded >>> 32));
     }
 
     public DeferredTaskList getPendingTaskLists() {

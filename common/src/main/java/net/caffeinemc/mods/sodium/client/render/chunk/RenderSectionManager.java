@@ -4,7 +4,6 @@ import com.mojang.blaze3d.textures.GpuSampler;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMaps;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.*;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
@@ -257,8 +256,6 @@ public class RenderSectionManager {
         this.needsGraphUpdate = false;
     }
 
-    private static final LongArrayList timings = new LongArrayList();
-
     private SectionTree findBestTree(Viewport viewport, FogParameters fogParameters) {
         for (var type : CullType.NARROW_TO_WIDE) {
             var tree = this.cullResults.get(type);
@@ -296,32 +293,9 @@ public class RenderSectionManager {
             return;
         }
 
-        var start = System.nanoTime();
-
         var visibleCollector = new VisibleChunkCollector(this.regions, this.frame);
         bestTree.traverse(visibleCollector, viewport, this.getSearchDistance(fogParameters));
         this.renderLists = visibleCollector.createRenderLists(viewport);
-
-        var end = System.nanoTime();
-        var time = end - start;
-        timings.add(time);
-        if (timings.size() >= 1000) {
-            var totalAverage = (long) timings.longStream().average().orElse(0);
-            // average with removal of outliers
-            var sortedTimings = timings.longStream().sorted().toArray();
-            var trimCount = (int) (timings.size() * 0.1);
-            var sum = 0L;
-            for (int i = trimCount; i < sortedTimings.length - trimCount; i++) {
-                sum += sortedTimings[i];
-            }
-            var average = sum / (sortedTimings.length - trimCount * 2);
-            var sectionsWithGeometry = visibleCollector.getUnsortedRenderLists().stream().mapToInt(ChunkRenderList::getSectionsWithGeometryCount).sum();
-            if (sectionsWithGeometry == 0) {
-                sectionsWithGeometry = 1;
-            }
-            System.out.println("Render list culling generation took " + average / 1000 + "µs (" + totalAverage / 1000 + "µs raw, " + totalAverage / sectionsWithGeometry + "ns per section) over " + timings.size() + " samples");
-            timings.clear();
-        }
 
         this.renderTree = bestTree;
     }
@@ -1144,7 +1118,6 @@ public class RenderSectionManager {
         } else {
             list.add("TS OFF");
         }
-
 
         list.add("Async Culling: " + (this.pendingTask == null ?
                 "Idle" : this.pendingTask.isDone() ? "Done" : "Running"));

@@ -1,6 +1,5 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.async;
 
-import it.unimi.dsi.fastutil.longs.LongArrayList;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.DeferredTaskList;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.TaskCollectingTree;
@@ -31,26 +30,13 @@ public class CullTask extends AsyncRenderTask<CullResult> {
         this.level = level;
     }
 
-    private static final LongArrayList timings = new LongArrayList();
-
     @Override
     protected CullResult runTask() {
         var wideTree = new TaskCollectingTree(this.viewport, this.searchDistanceRegular, this.frame, CullType.WIDE, this.level);
         var regularTree = new SectionTree(this.viewport, this.searchDistanceRegular, this.frame, CullType.REGULAR, this.level);
         var localTree = new RayOcclusionSectionTree(this.viewport, this.searchDistanceLocal, this.frame, CullType.LOCAL, this.level);
 
-        var start = System.nanoTime();
-
         this.occlusionCuller.findVisible(wideTree, regularTree, localTree, this.viewport, this.searchDistanceRegular, this.searchDistanceLocal, this.useOcclusionCulling, this);
-
-        var end = System.nanoTime();
-        var time = end - start;
-        timings.add(time);
-        if (timings.size() >= 500) {
-            var average = timings.longStream().average().orElse(0);
-            System.out.println("Global culling took " + (average) / 1000 + "µs over " + timings.size() + " samples");
-            timings.clear();
-        }
 
         wideTree.prepareForTraversal();
         regularTree.prepareForTraversal();
