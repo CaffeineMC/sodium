@@ -61,8 +61,8 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
         double subTexelOffset = 1.0f / CompactChunkVertex.TEXTURE_MAX_VALUE;
 
         this.uniformTexCoordShrink.set(
-                (float) (subTexelOffset - (((1.0D / textureAtlas.getWidth()) / subTexelPrecision))),
-                (float) (subTexelOffset - (((1.0D / textureAtlas.getHeight()) / subTexelPrecision)))
+                (float) (subTexelOffset - (((1.0D / textureAtlas.sodium$getWidth()) / subTexelPrecision))),
+                (float) (subTexelOffset - (((1.0D / textureAtlas.sodium$getHeight()) / subTexelPrecision)))
         );
 
         this.fogShader.setup();
