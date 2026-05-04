@@ -32,6 +32,8 @@ import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -58,6 +60,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
             STANDARD_MATERIALS[i] = SodiumRenderer.INSTANCE.materialFinder().ambientOcclusion(state).find();
         }
     }
+
     private final MutableQuadViewImpl editorQuad = new MutableQuadViewImpl() {
         {
             data = new int[EncodingFormat.TOTAL_STRIDE];
@@ -102,6 +105,18 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
      * The current model's model data.
      */
     protected SodiumModelData modelData;
+
+    /**
+     * Submodel ModelData stack pushed by FFAPI's MultipartBakedModelMixin during multipart traversal.
+     * See <a href="https://github.com/Sinytra/ForgifiedFabricAPI/commit/b71c3a6c5e9446ed54da5f18af4f44e597ada9ca">this commit</a>.
+     */
+    protected final Deque<SodiumModelData> modelDataStack = new ArrayDeque<>();
+
+    /**
+     * Submodel AO override pushed by FFAPI's MultipartBakedModelMixin; non-DEFAULT forces the parent multipart's choice.
+     * See <a href="https://github.com/Sinytra/ForgifiedFabricAPI/commit/9125b6dcd82bb8412ef003d92960f3724d8918f1">this commit</a>.
+     */
+    protected TriState useAO = TriState.DEFAULT;
 
     private final BlockOcclusionCache occlusionCache = new BlockOcclusionCache();
     private boolean enableCulling = true;
@@ -156,6 +171,19 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     @Override
     public ItemDisplayContext itemTransformationMode() {
         throw new UnsupportedOperationException("itemTransformationMode can only be called on an item render context.");
+    }
+
+    protected SodiumModelData currentModelData() {
+        SodiumModelData top = this.modelDataStack.peek();
+        return top != null ? top : this.modelData;
+    }
+
+    private static AmbientOcclusionMode applyAOOverride(AmbientOcclusionMode mode, TriState override) {
+        return switch (override) {
+            case TRUE -> AmbientOcclusionMode.ENABLED;
+            case FALSE -> AmbientOcclusionMode.DISABLED;
+            default -> mode;
+        };
     }
 
     @SuppressWarnings("removal")
@@ -220,6 +248,9 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     public void bufferDefaultModel(BakedModel model, @Nullable BlockState state) {
         MutableQuadViewImpl editorQuad = this.editorQuad;
 
+        // Per-submodel state pushed by FFAPI's multipart mixin, falls through to the root context otherwise.
+        final SodiumModelData currentData = this.currentModelData();
+        final TriState aoOverride = this.useAO;
 
         // If there is no transform, we can check the culling face once for all the quads,
         // and we don't need to check for transforms per-quad.
@@ -229,10 +260,12 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
             final Direction cullFace = ModelHelper.faceFromIndex(i);
 
             RandomSource random = this.randomSupplier.get();
-            AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(model, state, modelData, type, slice, pos);
+            AmbientOcclusionMode ao = applyAOOverride(
+                    PlatformBlockAccess.getInstance().usesAmbientOcclusion(model, state, currentData, type, slice, pos),
+                    aoOverride);
             if (noTransform) {
                 if (!this.isFaceCulled(cullFace)) {
-                    final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, model, state, cullFace, random, type, modelData);
+                    final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, model, state, cullFace, random, type, currentData);
                     final int count = quads.size();
 
                     for (int j = 0; j < count; j++) {
@@ -245,7 +278,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
                     }
                 }
             } else {
-                final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, model, state, cullFace, random, type, modelData);
+                final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, model, state, cullFace, random, type, currentData);
                 final int count = quads.size();
 
                 for (int j = 0; j < count; j++) {
