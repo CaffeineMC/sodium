@@ -2,13 +2,13 @@ package net.caffeinemc.mods.sodium.client.gl.arena.staging;
 
 import it.unimi.dsi.fastutil.PriorityQueue;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
+import net.caffeinemc.mods.sodium.client.gl.buffer.*;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gl.functions.BufferStorageFunctions;
 import net.caffeinemc.mods.sodium.client.gl.sync.GlFence;
 import net.caffeinemc.mods.sodium.client.gl.util.EnumBitField;
 import net.caffeinemc.mods.sodium.client.util.MathUtil;
-import net.caffeinemc.mods.sodium.client.gl.buffer.*;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -36,7 +36,7 @@ public class MappedStagingBuffer implements StagingBuffer {
     private int remaining;
 
     public MappedStagingBuffer(CommandList commandList) {
-        this(commandList, 1024 * 1024 * 16 /* 16 MB */);
+        this(commandList, (int) MathUtil.fromMib(16));
     }
 
     public MappedStagingBuffer(CommandList commandList, int capacity) {
