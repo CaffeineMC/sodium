@@ -22,13 +22,15 @@ public class DynamicBSPData extends DynamicData {
     private final int indexQuadCount;
     private final BSPNode rootNode;
     private final int generation;
-    private final UpdatedQuadsList updatedQuadsList; // TODO: delete reference after mesh task is done since this won't be needed anymore after that
+    private UpdatedQuadsList updatedQuadsList;
+    private final boolean neededQuadSplitting;
 
     private DynamicBSPData(SectionPos sectionPos, int inputQuadCount, BSPResult result, Vector3dc initialCameraPos, int generation) {
         super(sectionPos, inputQuadCount, result, initialCameraPos);
         this.rootNode = result.getRootNode();
         this.generation = generation;
         this.updatedQuadsList = result.getUpdatedQuadsList();
+        this.neededQuadSplitting = this.updatedQuadsList != null;
 
         if (this.updatedQuadsList != null) {
             this.indexQuadCount = this.updatedQuadsList.getIndexQuadCount();
@@ -61,12 +63,21 @@ public class DynamicBSPData extends DynamicData {
 
     @Override
     public DynamicSorter getSorter() {
+        // release references to the modified quad list,
+        // since we sort during the meshing task for the first time (in particular, when there was a non-null updated quad list)
+        this.updatedQuadsList = null;
+
         return new DynamicBSPSorter(this.getIndexQuadCount()); // index quad count
     }
 
     @Override
     public UpdatedQuadsList getUpdatedQuads() {
         return this.updatedQuadsList;
+    }
+
+    @Override
+    public boolean meshesWereModified() {
+        return this.neededQuadSplitting;
     }
 
     public static DynamicBSPData fromMesh(CombinedCameraPos cameraPos, TQuad[] quads, SectionPos sectionPos,
