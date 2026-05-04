@@ -33,7 +33,7 @@ public abstract class TranslucentData {
     }
 
     public boolean meshesWereModified() {
-        return this.getUpdatedQuads() != null;
+        return false;
     }
 
     /**
