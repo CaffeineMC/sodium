@@ -32,13 +32,13 @@ public abstract class BSPNode {
     }
 
     public static BSPResult buildBSP(TQuad[] quads, SectionPos sectionPos, BSPNode oldRoot,
-            boolean prepareNodeReuse, QuadSplittingMode quadSplittingMode) {
+            boolean prepareNodeReuse, boolean allowNodeReuse, QuadSplittingMode quadSplittingMode) {
         // throw if there's too many quads
         InnerPartitionBSPNode.validateQuadCount(quads.length);
 
         // create a workspace and then the nodes figure out the recursive building.
         // throws if the BSP can't be built, null if none is necessary
-        var workspace = new BSPWorkspace(quads, sectionPos, prepareNodeReuse, quadSplittingMode);
+        var workspace = new BSPWorkspace(quads, sectionPos, prepareNodeReuse, allowNodeReuse, quadSplittingMode);
 
         // initialize the indexes to all quads
         int[] initialIndexes = new int[quads.length];
