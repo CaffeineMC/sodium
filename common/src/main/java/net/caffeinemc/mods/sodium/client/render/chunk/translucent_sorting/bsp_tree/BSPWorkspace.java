@@ -21,7 +21,8 @@ class BSPWorkspace extends ObjectArrayList<TQuad> {
     final BSPResult result = new BSPResult();
 
     private final SectionPos sectionPos;
-    final boolean prepareNodeReuse;
+    boolean prepareNodeReuse;
+    final boolean allowNodeReuse;
     final boolean quantizeTriggerNormals;
 
     private int quadCount;
@@ -29,10 +30,11 @@ class BSPWorkspace extends ObjectArrayList<TQuad> {
     private IntArrayList availableQuadIndexes;
     private UpdatedQuadsList updatedQuads;
 
-    BSPWorkspace(TQuad[] quads, SectionPos sectionPos, boolean prepareNodeReuse, QuadSplittingMode quadSplittingMode) {
+    BSPWorkspace(TQuad[] quads, SectionPos sectionPos, boolean prepareNodeReuse, boolean allowNodeReuse, QuadSplittingMode quadSplittingMode) {
         super(quads);
         this.sectionPos = sectionPos;
         this.prepareNodeReuse = prepareNodeReuse;
+        this.allowNodeReuse = allowNodeReuse;
         this.quantizeTriggerNormals = quadSplittingMode.quantizeTriggerNormals();
 
         this.quadCount = quads.length;
@@ -65,6 +67,10 @@ class BSPWorkspace extends ObjectArrayList<TQuad> {
             }
             this.updatedQuads.add(quad);
         }
+
+        // don't attempt any node reuse preparation if any quads were split,
+        // already prepared node reuse will simply be ignored
+        this.prepareNodeReuse = false;
     }
 
     public UpdatedQuadsList getFinalizedUpdatedQuads() {

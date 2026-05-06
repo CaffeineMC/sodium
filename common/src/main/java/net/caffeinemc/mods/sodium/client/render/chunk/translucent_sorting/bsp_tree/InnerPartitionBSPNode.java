@@ -153,7 +153,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
     }
 
     static InnerPartitionBSPNode attemptNodeReuse(BSPWorkspace workspace, IntArrayList newIndexes, InnerPartitionBSPNode oldNode) {
-        if (oldNode == null) {
+        if (oldNode == null || !workspace.allowNodeReuse) {
             return null;
         }
 
