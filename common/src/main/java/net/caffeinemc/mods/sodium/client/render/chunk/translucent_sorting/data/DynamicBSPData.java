@@ -85,15 +85,19 @@ public class DynamicBSPData extends DynamicData {
         BSPNode oldRoot = null;
         int generation = 0;
         boolean prepareNodeReuse = false;
+        boolean allowNodeReuse = false;
         if (oldData instanceof DynamicBSPData oldBSPData) {
             generation = oldBSPData.generation + 1;
             oldRoot = oldBSPData.rootNode;
 
+            // disallow making use of node reuse if quad splitting ended up being needed when the tree was originally built
+            allowNodeReuse = !oldBSPData.neededQuadSplitting;
+
             // only enable partial updates after a certain number of generations
             // (times the section has been built)
-            prepareNodeReuse = generation >= NODE_REUSE_MIN_GENERATION;
+            prepareNodeReuse = allowNodeReuse && generation >= NODE_REUSE_MIN_GENERATION;
         }
-        var result = BSPNode.buildBSP(quads, sectionPos, oldRoot, prepareNodeReuse, quadSplittingMode);
+        var result = BSPNode.buildBSP(quads, sectionPos, oldRoot, prepareNodeReuse, allowNodeReuse, quadSplittingMode);
 
         var dynamicData = new DynamicBSPData(sectionPos, quads.length, result, cameraPos.getAbsoluteCameraPos(), generation);
 
