@@ -6,8 +6,8 @@ import net.minecraft.client.gui.components.debug.DebugScreenEntries;
 import net.minecraft.client.gui.components.debug.DebugScreenEntryList;
 import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
 import net.minecraft.client.gui.components.debug.DebugScreenProfile;
-import org.objectweb.asm.Opcodes;
 import net.minecraft.resources.Identifier;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -19,9 +19,10 @@ import java.util.Map;
 
 @Mixin(DebugScreenEntryList.class)
 public class DebugScreenEntryListMixin {
+    @Final
     @Shadow
     private Map<Identifier, DebugScreenEntryStatus> allStatuses;
-    
+
     @Unique
     private void setFullDebugStatuses() {
         this.allStatuses.put(DebugScreenEntries.CHUNK_RENDER_STATS, DebugScreenEntryStatus.IN_OVERLAY);
@@ -29,16 +30,18 @@ public class DebugScreenEntryListMixin {
         this.allStatuses.put(DebugScreenEntries.PARTICLE_RENDER_STATS, DebugScreenEntryStatus.IN_OVERLAY);
         this.allStatuses.put(DebugScreenEntries.MEMORY, DebugScreenEntryStatus.IN_OVERLAY);
         this.allStatuses.put(DebugScreenEntries.SYSTEM_SPECS, DebugScreenEntryStatus.IN_OVERLAY);
+        this.allStatuses.put(SodiumClientMod.SODIUM_FPS_PERCENTILES, DebugScreenEntryStatus.IN_OVERLAY);
     }
 
     @Unique
     private void setReducedDebugStatuses() {
         this.allStatuses.put(DebugScreenEntries.CHUNK_RENDER_STATS, DebugScreenEntryStatus.IN_OVERLAY);
+        this.allStatuses.put(SodiumClientMod.SODIUM_FPS_PERCENTILES, DebugScreenEntryStatus.IN_OVERLAY);
     }
 
     @Inject(method = "resetToProfile", at = @At("HEAD"))
-    private void injectLoadProfile(DebugScreenProfile debugScreenProfile, CallbackInfo ci) {
-        if (debugScreenProfile == DebugScreenProfile.PERFORMANCE && !PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
+    private void injectLoadProfile(DebugScreenProfile profile, CallbackInfo ci) {
+        if (profile == DebugScreenProfile.PERFORMANCE && !PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
             this.setReducedDebugStatuses();
         } else {
             this.setFullDebugStatuses();
@@ -50,6 +53,9 @@ public class DebugScreenEntryListMixin {
         Identifier setting = PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment() ? SodiumClientMod.SODIUM_DEBUG_ENTRY_FULL : SodiumClientMod.SODIUM_DEBUG_ENTRY_REDUCED;
         if (!this.allStatuses.containsKey(setting)) {
             this.allStatuses.put(setting, DebugScreenEntryStatus.IN_OVERLAY);
+        }
+        if (!this.allStatuses.containsKey(SodiumClientMod.SODIUM_FPS_PERCENTILES)) {
+            this.allStatuses.put(SodiumClientMod.SODIUM_FPS_PERCENTILES, DebugScreenEntryStatus.IN_OVERLAY);
         }
     }
 }
