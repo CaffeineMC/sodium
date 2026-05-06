@@ -237,16 +237,38 @@ class AoFaceData {
     private static int calculateCornerBrightness(int a, int b, int c, int d, boolean aem, boolean bem, boolean cem, boolean dem) {
         // FIX: Normalize corner vectors correctly to the minimum non-zero value between each one to prevent
         // strange issues
-        if ((a == 0) || (b == 0) || (c == 0) || (d == 0)) {
+        int ab = a & 255;
+        int bb = b & 255;
+        int cb = c & 255;
+        int db = d & 255;
+        if ((ab == 0) || (bb == 0) || (cb == 0) || (db == 0)) {
             // Find the minimum value between all corners
-            final int min = minNonZero(minNonZero(a, b), minNonZero(c, d));
+            final int min = minNonZero(minNonZero(ab, bb), minNonZero(cb, db));
 
             // Normalize the corner values
-            a = Math.max(a, min);
-            b = Math.max(b, min);
-            c = Math.max(c, min);
-            d = Math.max(d, min);
+            ab = Math.max(ab, min);
+            bb = Math.max(bb, min);
+            cb = Math.max(cb, min);
+            db = Math.max(db, min);
         }
+        int as = a & 16711680;
+        int bs = b & 16711680;
+        int cs = c & 16711680;
+        int ds = d & 16711680;
+        if ((as == 0) || (bs == 0) || (cs == 0) || (ds == 0)) {
+            // Find the minimum value between all corners
+            final int min = minNonZero(minNonZero(as, bs), minNonZero(cs, ds));
+
+            // Normalize the corner values
+            as = Math.max(as, min);
+            bs = Math.max(bs, min);
+            cs = Math.max(cs, min);
+            ds = Math.max(ds, min);
+        }
+        a = ab | as;
+        b = bb | bs;
+        c = cb | cs;
+        d = db | ds;
 
         // FIX: Apply the fullbright lightmap from emissive blocks at the very end so it cannot influence
         // the minimum lightmap and produce incorrect results (for example, sculk sensors in a dark room)
