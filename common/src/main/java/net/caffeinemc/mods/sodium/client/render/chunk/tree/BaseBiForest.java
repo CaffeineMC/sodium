@@ -4,6 +4,7 @@ import net.minecraft.world.level.Level;
 
 public abstract class BaseBiForest<T extends Tree> extends BaseForest<T> {
     private static final int SECONDARY_TREE_OFFSET_XZ = 4;
+    private static final int MAX_BUILD_DISTANCE = 16 * 65 / 2; // radius of 32 chunk render distance
 
     protected final T mainTree;
     protected T secondaryTree;
@@ -48,7 +49,8 @@ public abstract class BaseBiForest<T extends Tree> extends BaseForest<T> {
     }
 
     public static boolean checkApplicable(float buildDistance, Level level) {
-        if (buildDistance / 16.0f > 64.0f) {
+        int buildDistanceInt = (int) Math.ceil(buildDistance);
+        if (buildDistanceInt > MAX_BUILD_DISTANCE) {
             return false;
         }
 
