@@ -52,6 +52,7 @@
     "core.world.map.ClientLevelMixin",
     "core.world.map.ClientPacketListenerMixin",
     "features.gui.OptionsAccessor",
+    "features.gui.FramerateLimitOptionMixin",
     "features.gui.hooks.console.GameRendererMixin",
     "features.gui.hooks.debug.DebugEntryMemoryMixin",
     "features.gui.hooks.debug.DebugScreenEntriesAccessor",

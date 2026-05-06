@@ -7,7 +7,9 @@ import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.option.SteppedValidator;
 import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
+import net.caffeinemc.mods.sodium.client.gui.options.FramerateLimit;
 import net.caffeinemc.mods.sodium.client.gui.options.control.Control;
+import net.caffeinemc.mods.sodium.client.gui.options.control.IntegerTextBoxControl;
 import net.caffeinemc.mods.sodium.client.gui.options.control.SliderControl;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -59,6 +61,10 @@ public class IntegerOption extends StatefulOption<Integer> {
 
     @Override
     Control createControl() {
+        if (FramerateLimit.OPTION_ID.equals(this.id)) {
+            return new IntegerTextBoxControl(this);
+        }
+
         return new SliderControl(this);
     }
 

@@ -20,6 +20,7 @@ import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
 import net.caffeinemc.mods.sodium.client.config.structure.Config;
 import net.caffeinemc.mods.sodium.client.gui.options.FullscreenMode;
 import net.caffeinemc.mods.sodium.client.gui.options.Toggle;
+import net.caffeinemc.mods.sodium.client.gui.options.FramerateLimit;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
@@ -304,8 +305,8 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setName(Component.translatable("options.framerateLimit"))
                                 .setTooltip(Component.translatable("sodium.options.fps_limit.tooltip"))
                                 .setValueFormatter(ControlValueFormatterImpls.fpsLimit())
-                                .setRange(10, 260, 10)
-                                .setDefaultValue(60)
+                                .setRange(FramerateLimit.MIN, FramerateLimit.MAX, 1)
+                                .setDefaultValue(FramerateLimit.SODIUM_DEFAULT)
                                 .setBinding(this.vanillaOpts.framerateLimit()::set, this.vanillaOpts.framerateLimit()::get)
                 )
         );
