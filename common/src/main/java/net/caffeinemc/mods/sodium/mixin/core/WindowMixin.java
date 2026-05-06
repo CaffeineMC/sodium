@@ -3,9 +3,9 @@ package net.caffeinemc.mods.sodium.mixin.core;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.platform.Window;
-import net.caffeinemc.mods.sodium.client.platform.NativeWindowHandle;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
+import net.caffeinemc.mods.sodium.client.platform.NativeWindowHandle;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWNativeWin32;
@@ -20,7 +20,7 @@ public class WindowMixin implements NativeWindowHandle {
     @Final
     private long window;
 
-    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwCreateWindow(IILjava/lang/CharSequence;JJ)J"), require = 0)
+    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwCreateWindow(IILjava/lang/CharSequence;JJ)J"), require = 0, expect = 0)
     public long setAdditionalWindowHints(int titleEncoded, int width, CharSequence height, long title, long monitor, Operation<Long> original) {
         if (!PlatformRuntimeInformation.getInstance().platformHasEarlyLoadingScreen()) {
             if (SodiumClientMod.options().performance.useNoErrorGLContext) {
