@@ -237,10 +237,10 @@ class AoFaceData {
     private static int calculateCornerBrightness(int a, int b, int c, int d, boolean aem, boolean bem, boolean cem, boolean dem) {
         // FIX: Normalize corner vectors correctly to the minimum non-zero value between each one to prevent
         // strange issues
-        int ab = a & 255;
-        int bb = b & 255;
-        int cb = c & 255;
-        int db = d & 255;
+        int ab = a & 0xFF;
+        int bb = b & 0xFF;
+        int cb = c & 0xFF;
+        int db = d & 0xFF;
         if ((ab == 0) || (bb == 0) || (cb == 0) || (db == 0)) {
             // Find the minimum value between all corners
             final int min = minNonZero(minNonZero(ab, bb), minNonZero(cb, db));
@@ -251,10 +251,10 @@ class AoFaceData {
             cb = Math.max(cb, min);
             db = Math.max(db, min);
         }
-        int as = a & 16711680;
-        int bs = b & 16711680;
-        int cs = c & 16711680;
-        int ds = d & 16711680;
+        int as = a & 0xFF0000;
+        int bs = b & 0xFF0000;
+        int cs = c & 0xFF0000;
+        int ds = d & 0xFF0000;
         if ((as == 0) || (bs == 0) || (cs == 0) || (ds == 0)) {
             // Find the minimum value between all corners
             final int min = minNonZero(minNonZero(as, bs), minNonZero(cs, ds));
