@@ -56,6 +56,8 @@ public class RenderSystemMixin {
 
         PostLaunchChecks.onContextInitialized(handle, context);
         ModuleScanner.checkModules(handle);
+
+        hasDonePostLaunchChecks = true;
     }
 
     @Inject(method = "flipFrame", at = @At(value = "RETURN"))
@@ -71,7 +73,6 @@ public class RenderSystemMixin {
         if (!hasDonePostLaunchChecks) {
             // separately do post launch checks even if the prev context is not null, since otherwise we never do the post launch check if wglGetCurrentContext in postContextReady returns a non-null value.
             handleWGLContextInitialization();
-            hasDonePostLaunchChecks = true;
         }
 
         var currentWglContext = WGL.wglGetCurrentContext(null);
