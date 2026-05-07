@@ -39,14 +39,6 @@ public class RenderSystemMixin {
         LOGGER.info("OpenGL Vendor: {}", context.vendor());
         LOGGER.info("OpenGL Renderer: {}", context.renderer());
         LOGGER.info("OpenGL Version: {}", context.version());
-
-        // Capture the current WGL context so that we can detect it being replaced later.
-        if (Util.getPlatform() == Util.OS.WINDOWS) {
-            wglPrevContext = WGL.wglGetCurrentContext(null);
-        } else {
-            wglPrevContext = MemoryUtil.NULL;
-            doChecksOnce();
-        }
     }
 
     @Unique
@@ -67,12 +59,13 @@ public class RenderSystemMixin {
 
     @Inject(method = "flipFrame", at = @At(value = "RETURN"))
     private static void preSwapBuffers(TracyFrameCapture tracyFrameCapture, CallbackInfo ci) {
+        doChecksOnce();
+
         // wglGetCurrentContext is only applicable on Windows
         if (Util.getPlatform() != Util.OS.WINDOWS) return;
 
         if (wglPrevContext == MemoryUtil.NULL) {
             // There is no prior recorded context. Record it.
-            doChecksOnce();
             wglPrevContext = WGL.wglGetCurrentContext(null);
 
             return;
