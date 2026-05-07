@@ -5,6 +5,7 @@ import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
 import net.caffeinemc.mods.sodium.client.data.fingerprint.FingerprintMeasure;
 import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
 import net.caffeinemc.mods.sodium.client.gui.SodiumDebugEntry;
+import net.caffeinemc.mods.sodium.client.gui.SodiumFpsPercentilesEntry;
 import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.mixin.features.gui.hooks.debug.DebugScreenEntriesAccessor;
@@ -19,6 +20,7 @@ public class SodiumClientMod {
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium");
     public static final Identifier SODIUM_DEBUG_ENTRY_FULL = Identifier.fromNamespaceAndPath("sodium", "debug_full");
     public static final Identifier SODIUM_DEBUG_ENTRY_REDUCED = Identifier.fromNamespaceAndPath("sodium", "debug_reduced");
+    public static final Identifier SODIUM_FPS_PERCENTILES = Identifier.fromNamespaceAndPath("sodium", "fps_percentiles");
 
     private static String MOD_VERSION;
 
@@ -26,6 +28,7 @@ public class SodiumClientMod {
         var entries = DebugScreenEntriesAccessor.sodium$getEntries();
         entries.put(SODIUM_DEBUG_ENTRY_FULL, new SodiumDebugEntry(true));
         entries.put(SODIUM_DEBUG_ENTRY_REDUCED, new SodiumDebugEntry(false));
+        entries.put(SODIUM_FPS_PERCENTILES, new SodiumFpsPercentilesEntry());
 
         MOD_VERSION = version;
 
