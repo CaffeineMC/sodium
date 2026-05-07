@@ -1,7 +1,6 @@
 package net.caffeinemc.mods.sodium.mixin.workarounds.context_creation;
 
 import com.mojang.blaze3d.TracyFrameCapture;
-import com.mojang.blaze3d.systems.GpuDevice;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.client.compatibility.checks.ModuleScanner;
 import net.caffeinemc.mods.sodium.client.compatibility.checks.PostLaunchChecks;
@@ -33,14 +32,6 @@ public class RenderSystemMixin {
     @Unique
     private static boolean hasDonePostLaunchChecks = false;
 
-    @Inject(method = "initRenderer", at = @At(value = "RETURN"))
-    private static void postContextReady(GpuDevice device, CallbackInfo ci) {
-        GlContextInfo context = GlContextInfo.create();
-        LOGGER.info("OpenGL Vendor: {}", context.vendor());
-        LOGGER.info("OpenGL Renderer: {}", context.renderer());
-        LOGGER.info("OpenGL Version: {}", context.version());
-    }
-
     @Unique
     private static void doChecksOnce() {
         if (hasDonePostLaunchChecks) {
@@ -48,6 +39,9 @@ public class RenderSystemMixin {
         }
 
         GlContextInfo context = GlContextInfo.create();
+        LOGGER.info("OpenGL Vendor: {}", context.vendor());
+        LOGGER.info("OpenGL Renderer: {}", context.renderer());
+        LOGGER.info("OpenGL Version: {}", context.version());
 
         NativeWindowHandle handle = () -> GLFWNativeWin32.glfwGetWin32Window(Minecraft.getInstance().getWindow().handle());
 
