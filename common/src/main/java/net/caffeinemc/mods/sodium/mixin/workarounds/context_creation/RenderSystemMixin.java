@@ -37,6 +37,8 @@ public class RenderSystemMixin {
         if (hasDonePostLaunchChecks) {
             return;
         }
+
+        // note the position of this assignment is here to prevent checkModules from running twice when the game renders the last frame before shutting down after checkModules throws an exception and aborts control flow
         hasDonePostLaunchChecks = true;
 
         LOGGER.info(String.valueOf(Thread.currentThread()));
@@ -73,8 +75,8 @@ public class RenderSystemMixin {
             return;
         }
 
-        // If we didn't find anything problematic (which would have thrown an exception), then let's just record
-        // the new context pointer and carry on.
+        // record the current context for the next check,
+        // we do this here to prevent a duplicate call to checkModules when the game renders on last frame before shutting down after checkModules throws an exception
         wglPrevContext = currentWglContext;
 
         // Something has decided to replace the OpenGL context, which is not a good sign
