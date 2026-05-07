@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 
 class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, Integer> implements IntegerOptionBuilder {
     private DependentValue<? extends SteppedValidator> validatorProvider;
-    private IntegerOptionControl control;
+    private IntegerOptionControlStyle control = IntegerOptionControlStyle.SLIDER;
     private ControlValueFormatter valueFormatter;
 
     IntegerOptionBuilderImpl(Identifier id) {
@@ -32,6 +32,7 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
 
         Validate.notNull(this.getValidatorProvider(), "Validator provider must be set");
         Validate.notNull(this.getValueFormatter(), "Value formatter must be set");
+        Validate.notNull(this.getControlStyle(), "Control style must be set");
     }
 
     @Override
@@ -52,7 +53,7 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
                 this.getBinding(),
                 this.getApplyHook(),
                 this.getValidatorProvider(),
-                this.getControl(),
+                this.getControlStyle(),
                 this.getValueFormatter());
     }
 
@@ -72,9 +73,8 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
         return this.getFirstNotNull(this.validatorProvider, IntegerOption::getValidatorProvider);
     }
 
-    IntegerOptionControl getControl() {
-        var control = getFirstNotNull(this.control, IntegerOption::getControlType);
-        return control != null ? control : IntegerOptionControl.SLIDER;
+    IntegerOptionControlStyle getControlStyle() {
+        return getFirstNotNull(this.control, IntegerOption::getControlStyle);
     }
 
     ControlValueFormatter getValueFormatter() {
@@ -201,9 +201,7 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     }
 
     @Override
-    public IntegerOptionBuilder setControl(IntegerOptionControl control) {
-        Validate.notNull(control, "Argument must not be null");
-
+    public IntegerOptionBuilder setControlStyle(IntegerOptionControlStyle control) {
         this.control = control;
         return this;
     }

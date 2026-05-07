@@ -14,12 +14,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static net.caffeinemc.mods.sodium.client.gui.SodiumConfigBuilder.*;
+
 @Mixin(Options.class)
 public class FramerateLimitOptionMixin {
-    private static final int FRAMERATE_LIMIT_MIN = 10;
-    private static final int FRAMERATE_LIMIT_MAX = 1_000_000;
-    private static final int FRAMERATE_LIMIT_DEFAULT = 120;
-
     @Mutable
     @Shadow
     @Final

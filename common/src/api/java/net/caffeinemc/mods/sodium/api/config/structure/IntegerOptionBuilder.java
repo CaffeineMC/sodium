@@ -109,7 +109,7 @@ public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
      * @param control The control style to use.
      * @return The current builder instance.
      */
-    IntegerOptionBuilder setControl(IntegerOptionControl control);
+    IntegerOptionBuilder setControlStyle(IntegerOptionControlStyle control);
 
     /**
      * Sets the value formatter for this integer option.

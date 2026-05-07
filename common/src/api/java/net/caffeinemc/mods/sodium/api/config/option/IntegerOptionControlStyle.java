@@ -3,7 +3,7 @@ package net.caffeinemc.mods.sodium.api.config.option;
 /**
  * The control style used by an integer option.
  */
-public enum IntegerOptionControl {
+public enum IntegerOptionControlStyle {
     SLIDER,
     TEXT_BOX
 }

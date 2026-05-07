@@ -10,7 +10,7 @@ import com.mojang.blaze3d.textures.FilterMode;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
-import net.caffeinemc.mods.sodium.api.config.option.IntegerOptionControl;
+import net.caffeinemc.mods.sodium.api.config.option.IntegerOptionControlStyle;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.option.Range;
@@ -49,9 +49,9 @@ import java.util.Optional;
 public class SodiumConfigBuilder implements ConfigEntryPoint {
     private static final Identifier SODIUM_ICON = Identifier.fromNamespaceAndPath("sodium", "textures/gui/config-icon.png");
     private static final SodiumOptions DEFAULTS = SodiumOptions.defaults();
-    private static final int FRAMERATE_LIMIT_MIN = 10;
-    private static final int FRAMERATE_LIMIT_MAX = 1_000_000;
-    private static final int FRAMERATE_LIMIT_DEFAULT = 60;
+    public static final int FRAMERATE_LIMIT_MIN = 10;
+    public static final int FRAMERATE_LIMIT_MAX = 1_000_000;
+    public static final int FRAMERATE_LIMIT_DEFAULT = 60;
 
     private final Options vanillaOpts;
     private final StorageEventHandler vanillaStorage;
@@ -310,7 +310,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setValueFormatter(ControlValueFormatterImpls.fpsLimit(FRAMERATE_LIMIT_MAX))
                                 .setRange(FRAMERATE_LIMIT_MIN, FRAMERATE_LIMIT_MAX, 1)
                                 .setDefaultValue(FRAMERATE_LIMIT_DEFAULT)
-                                .setControl(IntegerOptionControl.TEXT_BOX)
+                                .setControlStyle(IntegerOptionControlStyle.TEXT_BOX)
                                 .setBinding(this.vanillaOpts.framerateLimit()::set, this.vanillaOpts.framerateLimit()::get)
                 )
         );
