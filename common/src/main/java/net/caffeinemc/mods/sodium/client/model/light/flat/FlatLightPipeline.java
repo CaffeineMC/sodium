@@ -26,7 +26,7 @@ public class FlatLightPipeline implements LightPipeline {
     /**
      * The cache which light data will be accessed from.
      */
-    private final LightDataAccess lightCache;
+    protected final LightDataAccess lightCache;
 
     public FlatLightPipeline(LightDataAccess lightCache) {
         this.lightCache = lightCache;
@@ -56,7 +56,7 @@ public class FlatLightPipeline implements LightPipeline {
         Arrays.fill(out.lm, lightmap);
     }
 
-    private float getShade(BlockAndTintGetter level, Direction lightFace, boolean shade) {
+    float getShade(BlockAndTintGetter level, Direction lightFace, boolean shade) {
         return shade ? level.cardinalLighting().byFace(lightFace) : level.cardinalLighting().up();
     }
 

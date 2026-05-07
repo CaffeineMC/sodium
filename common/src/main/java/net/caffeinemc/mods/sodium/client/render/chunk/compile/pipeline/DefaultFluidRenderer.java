@@ -76,7 +76,8 @@ public class DefaultFluidRenderer {
 
     private final ModelQuadViewMutable quad = new ModelQuad();
 
-    private final LightPipelineProvider lighters;
+    private final LightPipeline smoothLighter;
+    private final LightPipeline flatLighter;
 
     private final QuadLightData quadLightData = new QuadLightData();
     private final int[] quadColors = new int[4];
@@ -86,7 +87,8 @@ public class DefaultFluidRenderer {
 
     public DefaultFluidRenderer(LightPipelineProvider lighters) {
         this.quad.setLightFace(Direction.UP);
-        this.lighters = lighters;
+        this.smoothLighter = lighters.getLighter(LightMode.SMOOTH);
+        this.flatLighter = lighters.getFlatFluidLighter();
 
         this.hiddenFluidCulling = SodiumClientMod.options().quality.hiddenFluidCulling;
         this.improvedFluidShaping = SodiumClientMod.options().quality.improvedFluidShaping;
@@ -443,8 +445,7 @@ public class DefaultFluidRenderer {
 
         final ModelQuadViewMutable quad = this.quad;
 
-        LightMode lightMode = isWater && level.useAmbientOcclusion() ? LightMode.SMOOTH : LightMode.FLAT;
-        LightPipeline lighter = this.lighters.getLighter(lightMode);
+        LightPipeline lighter = isWater && level.useAmbientOcclusion() ? this.smoothLighter : this.flatLighter;
 
         quad.setFlags(0);
 
