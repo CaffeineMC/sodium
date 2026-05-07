@@ -19,6 +19,7 @@ import java.util.function.Supplier;
 
 class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, Integer> implements IntegerOptionBuilder {
     private DependentValue<? extends SteppedValidator> validatorProvider;
+    private IntegerOptionControl control;
     private ControlValueFormatter valueFormatter;
 
     IntegerOptionBuilderImpl(Identifier id) {
@@ -51,6 +52,7 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
                 this.getBinding(),
                 this.getApplyHook(),
                 this.getValidatorProvider(),
+                this.getControl(),
                 this.getValueFormatter());
     }
 
@@ -68,6 +70,11 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
 
     DependentValue<? extends SteppedValidator> getValidatorProvider() {
         return this.getFirstNotNull(this.validatorProvider, IntegerOption::getValidatorProvider);
+    }
+
+    IntegerOptionControl getControl() {
+        var control = getFirstNotNull(this.control, IntegerOption::getControlType);
+        return control != null ? control : IntegerOptionControl.SLIDER;
     }
 
     ControlValueFormatter getValueFormatter() {
@@ -190,6 +197,14 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     @Override
     public IntegerOptionBuilder setValidatorProvider(Function<ConfigState, ? extends SteppedValidator> provider, Identifier... dependencies) {
         this.validatorProvider = new DynamicValue<>(provider, dependencies);
+        return this;
+    }
+
+    @Override
+    public IntegerOptionBuilder setControl(IntegerOptionControl control) {
+        Validate.notNull(control, "Argument must not be null");
+
+        this.control = control;
         return this;
     }
 

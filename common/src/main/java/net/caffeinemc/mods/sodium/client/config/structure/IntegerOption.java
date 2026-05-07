@@ -3,11 +3,11 @@ package net.caffeinemc.mods.sodium.client.config.structure;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.api.config.option.ControlValueFormatter;
+import net.caffeinemc.mods.sodium.api.config.option.IntegerOptionControl;
 import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.option.SteppedValidator;
 import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
-import net.caffeinemc.mods.sodium.client.gui.options.FramerateLimit;
 import net.caffeinemc.mods.sodium.client.gui.options.control.Control;
 import net.caffeinemc.mods.sodium.client.gui.options.control.IntegerTextBoxControl;
 import net.caffeinemc.mods.sodium.client.gui.options.control.SliderControl;
@@ -21,6 +21,7 @@ import java.util.function.Function;
 
 public class IntegerOption extends StatefulOption<Integer> {
     private final DependentValue<? extends SteppedValidator> validator;
+    private final IntegerOptionControl control;
     private final ControlValueFormatter valueFormatter;
 
     public IntegerOption(
@@ -37,10 +38,12 @@ public class IntegerOption extends StatefulOption<Integer> {
             OptionBinding<Integer> binding,
             Consumer<ConfigState> applyHook,
             DependentValue<? extends SteppedValidator> validator,
+            IntegerOptionControl control,
             ControlValueFormatter valueFormatter
     ) {
         super(id, dependencies, name, enabled, storage, tooltipProvider, impact, flags, defaultValue, controlHiddenWhenDisabled, binding, applyHook);
         this.validator = validator;
+        this.control = control;
         this.valueFormatter = valueFormatter;
     }
 
@@ -61,11 +64,10 @@ public class IntegerOption extends StatefulOption<Integer> {
 
     @Override
     Control createControl() {
-        if (FramerateLimit.OPTION_ID.equals(this.id)) {
-            return new IntegerTextBoxControl(this);
-        }
-
-        return new SliderControl(this);
+        return switch (this.control) {
+            case SLIDER -> new SliderControl(this);
+            case TEXT_BOX -> new IntegerTextBoxControl(this);
+        };
     }
 
     public SteppedValidator getSteppedValidator() {
@@ -78,6 +80,10 @@ public class IntegerOption extends StatefulOption<Integer> {
 
     public DependentValue<? extends SteppedValidator> getValidatorProvider() {
         return this.validator;
+    }
+
+    public IntegerOptionControl getControlType() {
+        return this.control;
     }
 
     public ControlValueFormatter getValueFormatter() {

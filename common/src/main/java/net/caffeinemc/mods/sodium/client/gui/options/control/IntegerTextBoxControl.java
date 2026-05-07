@@ -15,6 +15,8 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
 
+import java.util.regex.Pattern;
+
 public class IntegerTextBoxControl implements Control {
     private final IntegerOption option;
 
@@ -38,6 +40,7 @@ public class IntegerTextBoxControl implements Control {
     }
 
     static class IntegerTextBoxControlElement extends StatefulControlElement {
+        private static final Pattern NON_DIGIT_PATTERN = Pattern.compile("[^0-9]");
         private static final int TEXT_BOX_WIDTH = Layout.SLIDER_WIDTH;
         private static final int TEXT_BOX_HEIGHT = Layout.BUTTON_SHORT - 4;
 
@@ -236,16 +239,7 @@ public class IntegerTextBoxControl implements Control {
         }
 
         private static String sanitize(String text) {
-            var builder = new StringBuilder(text.length());
-
-            for (int i = 0; i < text.length(); i++) {
-                char c = text.charAt(i);
-                if (c >= '0' && c <= '9') {
-                    builder.append(c);
-                }
-            }
-
-            return builder.toString();
+            return NON_DIGIT_PATTERN.matcher(text).replaceAll("");
         }
 
         private static boolean isDigit(int codepoint) {

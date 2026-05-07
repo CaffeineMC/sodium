@@ -10,6 +10,7 @@ import com.mojang.blaze3d.textures.FilterMode;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
+import net.caffeinemc.mods.sodium.api.config.option.IntegerOptionControl;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.option.Range;
@@ -20,7 +21,6 @@ import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
 import net.caffeinemc.mods.sodium.client.config.structure.Config;
 import net.caffeinemc.mods.sodium.client.gui.options.FullscreenMode;
 import net.caffeinemc.mods.sodium.client.gui.options.Toggle;
-import net.caffeinemc.mods.sodium.client.gui.options.FramerateLimit;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
@@ -49,6 +49,9 @@ import java.util.Optional;
 public class SodiumConfigBuilder implements ConfigEntryPoint {
     private static final Identifier SODIUM_ICON = Identifier.fromNamespaceAndPath("sodium", "textures/gui/config-icon.png");
     private static final SodiumOptions DEFAULTS = SodiumOptions.defaults();
+    private static final int FRAMERATE_LIMIT_MIN = 10;
+    private static final int FRAMERATE_LIMIT_MAX = 1_000_000;
+    private static final int FRAMERATE_LIMIT_DEFAULT = 60;
 
     private final Options vanillaOpts;
     private final StorageEventHandler vanillaStorage;
@@ -304,9 +307,10 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setStorageHandler(this.vanillaStorage)
                                 .setName(Component.translatable("options.framerateLimit"))
                                 .setTooltip(Component.translatable("sodium.options.fps_limit.tooltip"))
-                                .setValueFormatter(ControlValueFormatterImpls.fpsLimit())
-                                .setRange(FramerateLimit.MIN, FramerateLimit.MAX, 1)
-                                .setDefaultValue(FramerateLimit.SODIUM_DEFAULT)
+                                .setValueFormatter(ControlValueFormatterImpls.fpsLimit(FRAMERATE_LIMIT_MAX))
+                                .setRange(FRAMERATE_LIMIT_MIN, FRAMERATE_LIMIT_MAX, 1)
+                                .setDefaultValue(FRAMERATE_LIMIT_DEFAULT)
+                                .setControl(IntegerOptionControl.TEXT_BOX)
                                 .setBinding(this.vanillaOpts.framerateLimit()::set, this.vanillaOpts.framerateLimit()::get)
                 )
         );

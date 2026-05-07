@@ -3,7 +3,6 @@ package net.caffeinemc.mods.sodium.client.gui.options.control;
 import com.mojang.blaze3d.platform.Monitor;
 import net.caffeinemc.mods.sodium.api.config.option.ControlValueFormatter;
 import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
-import net.caffeinemc.mods.sodium.client.gui.options.FramerateLimit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
@@ -32,8 +31,8 @@ public class ControlValueFormatterImpls {
         };
     }
 
-    public static ControlValueFormatter fpsLimit() {
-        return (v) -> (v == FramerateLimit.MAX) ? Component.translatable("options.framerateLimit.max") : Component.translatable("options.framerate", v);
+    public static ControlValueFormatter fpsLimit(int maximum) {
+        return (v) -> (v == maximum) ? Component.translatable("options.framerateLimit.max") : Component.translatable("options.framerate", v);
     }
 
     public static ControlValueFormatter brightness() {
