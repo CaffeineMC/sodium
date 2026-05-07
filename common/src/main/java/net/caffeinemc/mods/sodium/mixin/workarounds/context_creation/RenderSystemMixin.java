@@ -37,6 +37,9 @@ public class RenderSystemMixin {
         if (hasDonePostLaunchChecks) {
             return;
         }
+        hasDonePostLaunchChecks = true;
+
+        LOGGER.info(String.valueOf(Thread.currentThread()));
 
         GlContextInfo context = GlContextInfo.create();
         LOGGER.info("OpenGL Vendor: {}", context.vendor());
@@ -47,8 +50,6 @@ public class RenderSystemMixin {
 
         PostLaunchChecks.onContextInitialized(handle, context);
         ModuleScanner.checkModules(handle);
-
-        hasDonePostLaunchChecks = true;
     }
 
     @Inject(method = "flipFrame", at = @At(value = "RETURN"))
@@ -72,15 +73,15 @@ public class RenderSystemMixin {
             return;
         }
 
+        // If we didn't find anything problematic (which would have thrown an exception), then let's just record
+        // the new context pointer and carry on.
+        wglPrevContext = currentWglContext;
+
         // Something has decided to replace the OpenGL context, which is not a good sign
         LOGGER.warn("The OpenGL context appears to have been suddenly replaced! Something has likely just injected into the game process.");
 
         // Likely, this indicates a module was injected into the current process. We should check that
         // nothing problematic was just installed.
         ModuleScanner.checkModules(() -> GLFWNativeWin32.glfwGetWin32Window(Minecraft.getInstance().getWindow().handle()));
-
-        // If we didn't find anything problematic (which would have thrown an exception), then let's just record
-        // the new context pointer and carry on.
-        wglPrevContext = currentWglContext;
     }
 }
