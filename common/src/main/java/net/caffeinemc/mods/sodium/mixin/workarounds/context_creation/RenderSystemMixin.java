@@ -45,11 +45,16 @@ public class RenderSystemMixin {
             wglPrevContext = WGL.wglGetCurrentContext(null);
         } else {
             wglPrevContext = MemoryUtil.NULL;
+            doChecksOnce();
         }
     }
 
     @Unique
-    private static void handleWGLContextInitialization() {
+    private static void doChecksOnce() {
+        if (hasDonePostLaunchChecks) {
+            return;
+        }
+
         GlContextInfo context = GlContextInfo.create();
 
         NativeWindowHandle handle = () -> GLFWNativeWin32.glfwGetWin32Window(Minecraft.getInstance().getWindow().handle());
@@ -62,17 +67,15 @@ public class RenderSystemMixin {
 
     @Inject(method = "flipFrame", at = @At(value = "RETURN"))
     private static void preSwapBuffers(TracyFrameCapture tracyFrameCapture, CallbackInfo ci) {
+        // wglGetCurrentContext is only applicable on Windows
+        if (Util.getPlatform() != Util.OS.WINDOWS) return;
+
         if (wglPrevContext == MemoryUtil.NULL) {
             // There is no prior recorded context. Record it.
-            handleWGLContextInitialization();
+            doChecksOnce();
             wglPrevContext = WGL.wglGetCurrentContext(null);
 
             return;
-        }
-
-        if (!hasDonePostLaunchChecks) {
-            // separately do post launch checks even if the prev context is not null, since otherwise we never do the post launch check if wglGetCurrentContext in postContextReady returns a non-null value.
-            handleWGLContextInitialization();
         }
 
         var currentWglContext = WGL.wglGetCurrentContext(null);
