@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.client.util.sorting;
 import com.mojang.blaze3d.vertex.CompactVectorArray;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
+import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.util.MathUtil;
 import org.apache.commons.lang3.Validate;
 import org.joml.Intersectionf;
@@ -103,12 +104,18 @@ public class VertexSorters {
         Validate.isTrue(buffer.remaining() >= vertexStride * vertexCount,
                 "Vertex buffer is not large enough to contain all vertices");
 
-        if (sorting instanceof SortByDistanceToPoint pointMetric) {
-            return sortWithPerspective(buffer, vertexCount, vertexStride, pointMetric, pointMetric.x, pointMetric.y, pointMetric.z);
-        } else if (sorting instanceof SortByDistanceToOrigin) {
-            return sortWithPerspective(buffer, vertexCount, vertexStride, sorting, 0.0f, 0.0f, 0.0f);
+        if (SodiumClientMod.options().quality.useClosestPointEntitySort) {
+            if (sorting instanceof VertexSorters.SortByDistanceToPoint pointMetric) {
+                return sortWithPerspective(buffer, vertexCount, vertexStride, pointMetric, pointMetric.x, pointMetric.y, pointMetric.z);
+            } else if (sorting instanceof VertexSorters.SortByDistanceToOrigin) {
+                return sortWithPerspective(buffer, vertexCount, vertexStride, sorting, 0.0f, 0.0f, 0.0f);
+            }
         }
 
+        return sortWithCentroid(buffer, vertexCount, vertexStride, sorting);
+    }
+
+    public static int[] sortWithCentroid(ByteBuffer buffer, int vertexCount, int vertexStride, VertexSortingExtended sorting) {
         long pVertex0 = MemoryUtil.memAddress(buffer);
         long pVertex2 = MemoryUtil.memAddress(buffer, vertexStride * 2);
 
@@ -148,7 +155,7 @@ public class VertexSorters {
         return perm;
     }
 
-    private static int[] sortWithPerspective(ByteBuffer buffer, int vertexCount, int vertexStride, VertexSortingExtended metric, float refX, float refY, float refZ) {
+    public static int[] sortWithPerspective(ByteBuffer buffer, int vertexCount, int vertexStride, VertexSortingExtended metric, float refX, float refY, float refZ) {
         long pVertex0 = MemoryUtil.memAddress(buffer);
         long pVertex1 = MemoryUtil.memAddress(buffer, vertexStride);
         long pVertex2 = MemoryUtil.memAddress(buffer, vertexStride * 2);

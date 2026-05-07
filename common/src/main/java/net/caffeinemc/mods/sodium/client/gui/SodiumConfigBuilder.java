@@ -569,6 +569,15 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setBinding(value -> this.sodiumOpts.quality.improvedFluidShaping = value, () -> this.sodiumOpts.quality.improvedFluidShaping)
                                 .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                 )
+                .addOption(
+                        builder.createBooleanOption(Identifier.parse("sodium:quality.closest_point_entity_sort"))
+                                .setStorageHandler(this.sodiumStorage)
+                                .setName(Component.translatable("sodium.options.closest_point_entity_sort.name"))
+                                .setTooltip(Component.translatable("sodium.options.closest_point_entity_sort.tooltip"))
+                                .setImpact(OptionImpact.MEDIUM)
+                                .setDefaultValue(DEFAULTS.quality.useClosestPointEntitySort)
+                                .setBinding(value -> this.sodiumOpts.quality.useClosestPointEntitySort = value, () -> this.sodiumOpts.quality.useClosestPointEntitySort)
+                )
         );
         return qualityPage;
     }
