@@ -89,13 +89,7 @@ public abstract class LightDataAccess {
             }
         }
 
-        // FIX: Do not apply AO from blocks that emit light
-        float ao;
-        if (lu == 0) {
-            ao = state.getShadeBrightness(level, pos);
-        } else {
-            ao = 1.0f;
-        }
+        float ao = state.getShadeBrightness(level, pos);
 
         return packFC(fc) | packFO(fo) | packOP(op) | packEM(em) | packAO(ao) | packLU(lu) | packSL(sl) | packBL(bl);
     }
