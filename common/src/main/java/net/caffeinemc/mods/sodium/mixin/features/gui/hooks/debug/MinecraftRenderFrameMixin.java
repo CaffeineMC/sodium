@@ -16,7 +16,6 @@ public class MinecraftRenderFrameMixin {
             at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;fps:I", opcode = Opcodes.PUTSTATIC, shift = At.Shift.AFTER)
     )
     private void sodium$updatePercentileCache(boolean advanceGameTime, CallbackInfo ci) {
-        var overlay = (DebugScreenOverlayAccessor) ((Minecraft) (Object) this).getDebugOverlay();
-        FrameTimeStatistics.INSTANCE.update(overlay.sodium$getFrameTimeLogger());
+        FrameTimeStatistics.INSTANCE.invalidate();
     }
 }
