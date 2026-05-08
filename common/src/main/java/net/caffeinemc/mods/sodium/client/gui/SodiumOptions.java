@@ -39,6 +39,7 @@ public class SodiumOptions {
     public static class QualitySettings {
         public boolean hiddenFluidCulling = true;
         public boolean improvedFluidShaping = false;
+        public boolean useClosestPointEntitySort = false;
         public FilterMode pixelFilteringMode = FilterMode.NEAREST;
     }
 
