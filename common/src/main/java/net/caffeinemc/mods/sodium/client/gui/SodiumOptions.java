@@ -66,6 +66,8 @@ public class SodiumOptions {
         public LeavesQuality leavesQuality = LeavesQuality.DEFAULT;
 
         public boolean enableVignette = true;
+
+        public boolean useClosestPointEntitySort = false;
     }
 
     public static class NotificationSettings {

@@ -65,6 +65,8 @@
   "sodium.options.quad_splitting.tooltip": "Uses quad splitting to make translucent blocks (not entities or items) look correct through translucency sorting even if they are intersecting or have weird shapes, such as waterlogged stained glass panes. In \"Safe\" mode there's a limit on how much geometry can be generated in extreme cases to prevent crashes or performance degradation. This limit is disabled in \"Unlimited\" mode.",
   "sodium.options.quad_splitting.safe": "Safe",
   "sodium.options.quad_splitting.unlimited": "Unlimited",
+  "sodium.options.closest_point_entity_sort.name" : "Closest-Point Entity Sorting",
+  "sodium.options.closest_point_entity_sort.tooltip" : "Sorts the geometry of entities by the closest point to the camera. This improves rendering accuracy for translucent quads with different sizes, at a small CPU cost.",
   "sodium.options.use_no_error_context.name": "Use No Error Context",
   "sodium.options.use_no_error_context.tooltip": "When enabled, the OpenGL context will be created with error checking disabled. This slightly improves rendering performance, but it can make debugging sudden unexplained crashes much harder.",
   "sodium.options.buttons.undo": "Undo",
