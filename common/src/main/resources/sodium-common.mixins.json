@@ -37,6 +37,7 @@
     "core.render.world.FrustumAccessor",
     "core.render.world.GameRendererMixin",
     "core.render.world.LevelRendererMixin",
+    "core.render.world.ParticleFeatureRendererMixin",
     "core.render.world.RenderBuffersMixin",
     "core.world.biome.ClientLevelMixin",
     "core.world.chunk.PalettedContainerMixin",
