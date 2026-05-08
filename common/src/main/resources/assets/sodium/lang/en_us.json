@@ -69,6 +69,8 @@
   "sodium.options.hidden_fluid_culling.tooltip" : "If enabled, applies more aggressive culling to fluids, which can improve performance of flooded caves and underwater areas. Interruptions in the fluid surface may become visible at very shallow viewing angles.",
   "sodium.options.improved_fluid_shaping.name" : "Improved Fluid Shaping",
   "sodium.options.improved_fluid_shaping.tooltip" : "Changes how fluids are shaped around waterlogged blocks. This can improve the consistency of fluid surfaces, at the expense of not slanting the fluid in the direction of the physical flow in some situations. This does not affect the physical behavior of fluids in any way.",
+  "sodium.options.closest_point_entity_sort.name" : "Closest-Point Entity Sorting",
+  "sodium.options.closest_point_entity_sort.tooltip" : "Sorts the geometry of entities by the closest point to the camera. This improves rendering accuracy for translucent quads with different sizes, at a small CPU cost.",
   "sodium.options.pixel_filtering_mode.name" : "Texel Interpolation",
   "sodium.options.pixel_filtering_mode.tooltip" : "Controls the appearance of edges between pixels within textures. \"Nearest\" mode results in sharp pixel boundaries, while \"Linear\" mode makes them a little blurry. \"Nearest\" can be slightly faster.",
   "sodium.options.pixel_filtering_mode.nearest" : "Nearest",
