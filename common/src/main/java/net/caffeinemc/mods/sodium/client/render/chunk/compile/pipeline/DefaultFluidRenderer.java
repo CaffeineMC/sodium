@@ -294,17 +294,22 @@ public class DefaultFluidRenderer {
      * @return The calculated corner height
      */
     private float fluidCornerHeight(BlockAndTintGetter world, BlockPos origin, Fluid fluid, float fluidHeight, Direction dirA, Direction dirB, float fluidHeightA, float fluidHeightB, boolean exposedA, boolean exposedB) {
-        float filteredHeightA = exposedA ? fluidHeightA : DISCARD_SAMPLE;
-        float filteredHeightB = exposedB ? fluidHeightB : DISCARD_SAMPLE;
-        if (filteredHeightA >= 1.0f || filteredHeightB >= 1.0f) {
-            return 1.0f;
-        }
-
         float cornerHeight;
         if (this.improvedFluidShaping) {
+            float filteredHeightA = exposedA ? fluidHeightA : DISCARD_SAMPLE;
+            float filteredHeightB = exposedB ? fluidHeightB : DISCARD_SAMPLE;
+
+            if (filteredHeightA >= 1.0f || filteredHeightB >= 1.0f) {
+                return 1.0f;
+            }
+
             cornerHeight = sampleFluidCornerSmart(world, origin, fluid, dirA, dirB, fluidHeightA, fluidHeightB, exposedA, exposedB, filteredHeightA, filteredHeightB);
         } else {
-            cornerHeight = sampleFluidCornerBasic(world, origin, fluid, dirA, dirB, fluidHeightA, fluidHeightB, filteredHeightA, filteredHeightB);
+            if (fluidHeightA >= 1.0f || fluidHeightB >= 1.0f) {
+                return 1.0f;
+            }
+
+            cornerHeight = sampleFluidCornerBasic(world, origin, fluid, dirA, dirB, fluidHeightA, fluidHeightB);
         }
         if (cornerHeight >= 1.0f) {
             return 1.0f;
@@ -364,9 +369,9 @@ public class DefaultFluidRenderer {
         return Float.NaN;
     }
 
-    private float sampleFluidCornerBasic(BlockAndTintGetter world, BlockPos origin, Fluid fluid, Direction dirA, Direction dirB, float fluidHeightA, float fluidHeightB, float filteredHeightA, float filteredHeightB) {
+    private float sampleFluidCornerBasic(BlockAndTintGetter world, BlockPos origin, Fluid fluid, Direction dirA, Direction dirB, float fluidHeightA, float fluidHeightB) {
         // if there is any fluid on either side, check if the diagonal has any
-        if (filteredHeightA > 0.0f || filteredHeightB > 0.0f) {
+        if (fluidHeightA > 0.0f || fluidHeightB > 0.0f) {
             BlockPos abNeighbor = this.scratchPos.set(origin).move(dirA).move(dirB);
             float height = this.sampleFluidHeight(world, fluid, abNeighbor);
 
