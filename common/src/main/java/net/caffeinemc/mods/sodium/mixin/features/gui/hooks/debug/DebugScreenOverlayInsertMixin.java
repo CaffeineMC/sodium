@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
-import java.util.Locale;
 
 @Mixin(DebugScreenOverlay.class)
 public class DebugScreenOverlayInsertMixin {
@@ -26,8 +25,8 @@ public class DebugScreenOverlayInsertMixin {
         if (!minecraft.debugEntries.isCurrentlyEnabled(SodiumClientMod.SODIUM_FPS_PERCENTILES)) {
             return;
         }
-        var stats = FrameTimeStatistics.INSTANCE.get();
-        if (stats.count() == 0) {
+        var results = FrameTimeStatistics.INSTANCE.get();
+        if (results == null || results.isEmpty()) {
             return;
         }
 
@@ -41,11 +40,17 @@ public class DebugScreenOverlayInsertMixin {
                 break;
             }
         }
-        leftLines.add(insertAt, String.format(Locale.ROOT,
-                "p50=%d p99=%d p99.9=%d fps",
-                sodium$nanosToFps(stats.p50()),
-                sodium$nanosToFps(stats.p99()),
-                sodium$nanosToFps(stats.p999())));
+
+        var sb = new StringBuilder();
+        for (var entry : results.reference2LongEntrySet()) {
+            if (!sb.isEmpty()) {
+                sb.append(' ');
+            }
+            sb.append(entry.getKey().name()).append('=').append(sodium$nanosToFps(entry.getLongValue()));
+        }
+        sb.append(" fps");
+
+        leftLines.add(insertAt, sb.toString());
     }
 
     @Unique
