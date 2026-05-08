@@ -4,19 +4,24 @@
 Everything above the line is ignored and not included in the changelog. Everything below will be in the
 changelog on GitHub, Modrinth and CurseForge.
 ----------
-Sodium [SodiumVersion]() for Minecraft [MCVersion]() makes some improvements to the options UI, introduces a new automatic publishing system, fixes some bugs, and introduces some small performance optimizations.
+Sodium [SodiumVersion]() fixes a number of bugs, adds some new features, and improves memory usage. The release includes a new display of FPS percentiles which more accurately represent what you actually want to know about the FPS.
+- The median (labeled p50) shows the typical frame rate ignoring the slow frames
+- The 98th and 99.5th percentiles show the FPS of slow and very slow frames
+The average, which is what Minecraft displays by default, can get pulled down by few slow frames even though otherwise the frame rate is pretty high. This leads to the average FPS being not very representative of the actual frame rate you're seeing most of the time.
 
-- Workflow and Gradle based publishing setup with changelog system ([#3575](https://github.com/CaffeineMC/sodium/pull/3575), [#3622](https://github.com/CaffeineMC/sodium/pull/3622))
-- Invalidate cached search index sources to be properly indexed after language switch
-- Jump to the mod's options when its header in the page list is clicked
-- Show that an entry in the options page list leads to an external page more clearly
-- Hide options search bar clear button when search bar is empty
-- Implement Alt shortcuts and ESC discard behavior ([#2769](https://github.com/CaffeineMC/sodium/pull/2769)) ([#3604](https://github.com/CaffeineMC/sodium/pull/3604))
-- Reset button for options with hold-shift to reset functionality
-- Fix rare translucency sorting crash when repeatedly interacting with specific chunks with some resource packs ([#3609](https://github.com/CaffeineMC/sodium/pull/3609))
-- Make the filtering mode configurable with an option and change the default to nearest
-- Fix animated sprite mipping ([#3619](https://github.com/CaffeineMC/sodium/pull/3619))
-- Add caching to `GlStateManager#glViewport` ([#3309](https://github.com/CaffeineMC/sodium/pull/3309))
-- Add support for new fabric color provider API
-- Fix tint on neoforge when blocks are rendered as items ([#3615](https://github.com/CaffeineMC/sodium/pull/3615))
+The new option to sort entities quads by their closest point allows correct rendering of similar translucent entities that have specific types of otherwise wrongly sorted geometry. This is disabled by default as it incurs a performance cost.
+
+The bug fixes include multiple crash fixes and changes to avoid retaining large memory allocations in specific scenarios.
+
 - Fix the animation when fluid sprites are obtained directly via FluidModel ([#3630](https://github.com/CaffeineMC/sodium/pull/3630))
+- Avoid retaining large allocations created when heavy quad splitting takes place
+- Fix buffer overflow caused by BSP Node reuse when quads were split
+- Fix wrong applicability test in BaseBiForest that would cause wrong rendering at render distances >32
+- Fix post launch checks to actually run and fix duplicate module dialog ([#3624](https://github.com/CaffeineMC/sodium/pull/3624))
+- Implement optional percentile fps display ([#3633](https://github.com/CaffeineMC/sodium/pull/3633))
+- Fix flat fluid lighting being too dark ([#3620](https://github.com/CaffeineMC/sodium/pull/3620))
+- Significantly reduce memory consumption on the direct sorting fallback path
+- Fix issues with fluid shaping in both "improved" and regular mode
+- Fix #3612 by performing uniform binding on particle rendering ([#3637](https://github.com/CaffeineMC/sodium/pull/3637))
+- Fixed #3603 (incorrect AO and skylight level around light sources) ([#3631](https://github.com/CaffeineMC/sodium/pull/3631))
+- Add option to sort Entity Quads by Closest Point ([#3635](https://github.com/CaffeineMC/sodium/pull/3635))
