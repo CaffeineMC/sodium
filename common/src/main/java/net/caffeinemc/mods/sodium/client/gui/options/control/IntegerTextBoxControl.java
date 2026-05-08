@@ -42,7 +42,7 @@ public class IntegerTextBoxControl implements Control {
     static class IntegerTextBoxControlElement extends StatefulControlElement {
         private static final Pattern NON_DIGIT_PATTERN = Pattern.compile("[^0-9]");
         private static final int TEXT_BOX_WIDTH = Layout.SLIDER_WIDTH;
-        private static final int TEXT_BOX_HEIGHT = Layout.BUTTON_SHORT - 4;
+        private static final int TEXT_BOX_HEIGHT = Layout.BUTTON_SHORT - 6;
 
         private final IntegerOption option;
         private final EditBox textBox;
@@ -123,9 +123,9 @@ public class IntegerTextBoxControl implements Control {
             this.updateTextBoxPosition();
 
             if (event.button() == 0 && this.isMouseOverTextBox(event.x(), event.y())) {
-                this.focused = true;
-                this.textBox.setFocused(true);
-                return this.textBox.mouseClicked(event, doubleClick);
+                this.setFocused(true);
+                this.textBox.mouseClicked(event, doubleClick);
+                return true;
             }
 
             return false;
@@ -156,12 +156,12 @@ public class IntegerTextBoxControl implements Control {
 
         @Override
         public void setFocused(boolean focused) {
-            super.setFocused(focused);
-
-            if (focused && this.isFocused()) {
+            if (focused) {
+                this.focused = true;
                 this.textBox.setFocused(true);
-            } else if (!focused) {
+            } else {
                 this.commitText();
+                this.focused = false;
                 this.textBox.setFocused(false);
             }
         }
@@ -176,7 +176,7 @@ public class IntegerTextBoxControl implements Control {
 
         private void updateTextBoxPosition() {
             this.textBox.setX(this.getTextBoxX() + Layout.INNER_MARGIN);
-            this.textBox.setY(this.getTextBoxY() + ((TEXT_BOX_HEIGHT - this.font.lineHeight) / 2));
+            this.textBox.setY(this.getTextBoxY() + ((TEXT_BOX_HEIGHT - this.font.lineHeight + 1) / 2));
         }
 
         private boolean isMouseOverTextBox(double mouseX, double mouseY) {
