@@ -7,21 +7,16 @@ import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
 import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
-import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
-import java.util.List;
 import java.util.regex.Pattern;
 
 public class IntegerTextBoxControl implements Control {
@@ -46,7 +41,7 @@ public class IntegerTextBoxControl implements Control {
         return Layout.SLIDER_WIDTH;
     }
 
-    static class IntegerTextBoxControlElement extends StatefulControlElement implements ContainerEventHandler {
+    static class IntegerTextBoxControlElement extends StatefulControlElement {
         private static final Pattern NON_DIGIT_PATTERN = Pattern.compile("[^0-9]");
         private static final int TEXT_BOX_WIDTH = Layout.SLIDER_WIDTH;
         private static final int TEXT_BOX_HEIGHT = Layout.BUTTON_SHORT - 6;
@@ -54,8 +49,6 @@ public class IntegerTextBoxControl implements Control {
         private final IntegerOption option;
         private final EditBox textBox;
 
-        private @Nullable GuiEventListener focusedElement;
-        private boolean dragging;
         private boolean updatingText;
 
         public IntegerTextBoxControlElement(AbstractOptionList list, IntegerOption option, Dim2i dim, ColorTheme theme) {
@@ -74,6 +67,7 @@ public class IntegerTextBoxControl implements Control {
             this.textBox.setMaxLength(String.valueOf(option.getSteppedValidator().max()).length());
             this.textBox.setResponder(this::setValueFromText);
             this.syncTextToOption();
+            this.addChild(this.textBox);
         }
 
         @Override
@@ -164,19 +158,6 @@ public class IntegerTextBoxControl implements Control {
         }
 
         @Override
-        public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent event) {
-            if (!this.option.isEnabled()) {
-                return null;
-            }
-
-            if (!this.option.showControl()) {
-                return super.nextFocusPath(event);
-            }
-
-            return ContainerEventHandler.super.nextFocusPath(event);
-        }
-
-        @Override
         public void setFocused(boolean focused) {
             if (focused) {
                 this.setFocused(this.textBox);
@@ -186,45 +167,12 @@ public class IntegerTextBoxControl implements Control {
         }
 
         @Override
-        public @NonNull List<? extends GuiEventListener> children() {
-            return List.of(this.textBox);
-        }
-
-        @Override
-        public @Nullable GuiEventListener getFocused() {
-            return this.focusedElement;
-        }
-
-        @Override
         public void setFocused(@Nullable GuiEventListener guiEventListener) {
-            if (this.focusedElement == guiEventListener) {
-                return;
-            }
-
-            if (guiEventListener == null && this.focusedElement == this.textBox) {
+            if (guiEventListener == null && this.getFocused() == this.textBox) {
                 this.commitText();
             }
 
-            if (this.focusedElement != null) {
-                this.focusedElement.setFocused(false);
-            }
-
-            this.focusedElement = guiEventListener;
-            this.focused = guiEventListener != null;
-
-            if (this.focusedElement != null) {
-                this.focusedElement.setFocused(true);
-            }
-        }
-
-        @Override
-        public boolean isDragging() {
-            return this.dragging;
-        }
-
-        @Override
-        public void setDragging(boolean dragging) {
-            this.dragging = dragging;
+            super.setFocused(guiEventListener);
         }
 
         private int getTextBoxX() {

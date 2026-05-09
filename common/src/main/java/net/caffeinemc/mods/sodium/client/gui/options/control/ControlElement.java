@@ -4,7 +4,7 @@ import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
 import net.caffeinemc.mods.sodium.client.gui.Layout;
-import net.caffeinemc.mods.sodium.client.gui.widgets.AbstractWidget;
+import net.caffeinemc.mods.sodium.client.gui.widgets.AbstractParentWidget;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.ComponentPath;
@@ -15,7 +15,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jspecify.annotations.Nullable;
 
-public abstract class ControlElement extends AbstractWidget {
+public abstract class ControlElement extends AbstractParentWidget {
     protected final AbstractOptionList list;
     protected final ColorTheme theme;
 
@@ -83,6 +83,16 @@ public abstract class ControlElement extends AbstractWidget {
         if (!this.getOption().isEnabled()) {
             return null;
         }
+
+        if (this.children().isEmpty()) {
+            return ComponentPath.leaf(this);
+        }
+
         return super.nextFocusPath(event);
+    }
+
+    @Override
+    public boolean isFocused() {
+        return super.isFocused() || this.getFocused() != null;
     }
 }
