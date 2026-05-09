@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.mixin.features.gui.hooks.debug;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.util.FrameTimeStatistics;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
@@ -13,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
+import java.util.Locale;
 
 @Mixin(DebugScreenOverlay.class)
 public class DebugScreenOverlayInsertMixin {
@@ -46,9 +48,12 @@ public class DebugScreenOverlayInsertMixin {
             if (!sb.isEmpty()) {
                 sb.append(' ');
             }
-            sb.append(entry.getKey().name()).append('=').append(sodium$nanosToFps(entry.getLongValue()));
+            long ns = entry.getLongValue();
+            sb.append(ChatFormatting.RESET)
+                    .append(entry.getKey().name()).append('=')
+                    .append(sodium$nanosToFps(ns))
+                    .append(ChatFormatting.GRAY).append(" (").append(sodium$nanosToMs(ns)).append("ms)");
         }
-        sb.append(" fps");
 
         leftLines.add(insertAt, sb.toString());
     }
@@ -56,5 +61,20 @@ public class DebugScreenOverlayInsertMixin {
     @Unique
     private static long sodium$nanosToFps(long ns) {
         return ns > 0L ? Math.round(1.0e9 / ns) : 0L;
+    }
+
+    @Unique
+    private static String sodium$nanosToMs(long ns) {
+        double ms = ns / 1.0e6;
+        if (ms >= 100.0) {
+            return String.format(Locale.ROOT, "%.0f", ms);
+        }
+        if (ms >= 10.0) {
+            return String.format(Locale.ROOT, "%.1f", ms);
+        }
+        if (ms >= 1.0) {
+            return String.format(Locale.ROOT, "%.2f", ms);
+        }
+        return String.format(Locale.ROOT, "%.3f", ms);
     }
 }
