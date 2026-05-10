@@ -10,4 +10,6 @@ public interface BakedQuadView extends ModelQuadView {
     boolean hasShade();
 
     boolean hasAO();
+
+    int getLightEmission();
 }

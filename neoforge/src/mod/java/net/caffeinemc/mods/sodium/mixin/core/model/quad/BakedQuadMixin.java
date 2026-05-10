@@ -3,10 +3,9 @@ package net.caffeinemc.mods.sodium.mixin.core.model.quad;
 import net.caffeinemc.mods.sodium.client.model.quad.BakedQuadView;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFlags;
-import net.caffeinemc.mods.sodium.client.util.ModelQuadUtil;
 import net.minecraft.client.model.geom.builders.UVPair;
-import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.core.Direction;
 import net.minecraft.util.LightCoordsUtil;
 import net.neoforged.neoforge.client.model.quad.BakedColors;
@@ -131,6 +130,11 @@ public abstract class BakedQuadMixin implements BakedQuadView {
     @Override
     public int getMaxLightQuad(int idx) {
         return LightCoordsUtil.lightCoordsWithEmission(getLight(idx), this.materialInfo.lightEmission());
+    }
+
+    @Override
+    public int getLightEmission() {
+        return this.materialInfo.lightEmission();
     }
 
     @Override
