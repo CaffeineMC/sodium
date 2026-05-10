@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.mixin.features.gui.hooks.debug;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.util.FrameTimeStatistics;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
@@ -46,9 +47,14 @@ public class DebugScreenOverlayInsertMixin {
             if (!sb.isEmpty()) {
                 sb.append(' ');
             }
-            sb.append(entry.getKey().name()).append('=').append(sodium$nanosToFps(entry.getLongValue()));
+            long ns = entry.getLongValue();
+            sb.append(ChatFormatting.GRAY)
+                    .append(entry.getKey().name()).append('=')
+                    .append(ChatFormatting.RESET)
+                    .append(sodium$nanosToFps(ns));
         }
-        sb.append(" fps");
+
+        sb.append(ChatFormatting.GRAY).append(" fps");
 
         leftLines.add(insertAt, sb.toString());
     }
