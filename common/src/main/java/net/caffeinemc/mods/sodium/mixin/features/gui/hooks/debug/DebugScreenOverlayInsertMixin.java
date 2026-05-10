@@ -49,8 +49,9 @@ public class DebugScreenOverlayInsertMixin {
                 sb.append(' ');
             }
             long ns = entry.getLongValue();
-            sb.append(ChatFormatting.RESET)
+            sb.append(ChatFormatting.GRAY)
                     .append(entry.getKey().name()).append('=')
+                    .append(ChatFormatting.RESET)
                     .append(sodium$nanosToFps(ns))
                     .append(ChatFormatting.GRAY).append(" (").append(sodium$nanosToMs(ns)).append("ms)");
         }
