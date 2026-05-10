@@ -273,16 +273,20 @@ class AoFaceData {
         // FIX: Apply the fullbright lightmap from emissive blocks at the very end so it cannot influence
         // the minimum lightmap and produce incorrect results (for example, sculk sensors in a dark room)
         if (aem) {
-            a = LightTexture.FULL_BRIGHT;
+            a &= 0xFF0000;
+            a |= 0xF0;
         }
         if (bem) {
-            b = LightTexture.FULL_BRIGHT;
+            b &= 0xFF0000;
+            b |= 0xF0;
         }
         if (cem) {
-            c = LightTexture.FULL_BRIGHT;
+            c &= 0xFF0000;
+            c |= 0xF0;
         }
         if (dem) {
-            d = LightTexture.FULL_BRIGHT;
+            d &= 0xFF0000;
+            d |= 0xF0;
         }
 
         return ((a + b + c + d) >> 2) & 0xFF00FF;
