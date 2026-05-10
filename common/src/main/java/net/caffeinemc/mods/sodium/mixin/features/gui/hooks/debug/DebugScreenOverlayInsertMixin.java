@@ -14,7 +14,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
-import java.util.Locale;
 
 @Mixin(DebugScreenOverlay.class)
 public class DebugScreenOverlayInsertMixin {
@@ -52,9 +51,10 @@ public class DebugScreenOverlayInsertMixin {
             sb.append(ChatFormatting.GRAY)
                     .append(entry.getKey().name()).append('=')
                     .append(ChatFormatting.RESET)
-                    .append(sodium$nanosToFps(ns))
-                    .append(ChatFormatting.GRAY).append(" (").append(sodium$nanosToMs(ns)).append("ms)");
+                    .append(sodium$nanosToFps(ns));
         }
+
+        sb.append(ChatFormatting.GRAY).append(" fps");
 
         leftLines.add(insertAt, sb.toString());
     }
@@ -62,20 +62,5 @@ public class DebugScreenOverlayInsertMixin {
     @Unique
     private static long sodium$nanosToFps(long ns) {
         return ns > 0L ? Math.round(1.0e9 / ns) : 0L;
-    }
-
-    @Unique
-    private static String sodium$nanosToMs(long ns) {
-        double ms = ns / 1.0e6;
-        if (ms >= 100.0) {
-            return String.format(Locale.ROOT, "%.0f", ms);
-        }
-        if (ms >= 10.0) {
-            return String.format(Locale.ROOT, "%.1f", ms);
-        }
-        if (ms >= 1.0) {
-            return String.format(Locale.ROOT, "%.2f", ms);
-        }
-        return String.format(Locale.ROOT, "%.3f", ms);
     }
 }
