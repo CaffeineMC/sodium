@@ -6,9 +6,8 @@ import com.mojang.blaze3d.vertex.QuadInstance;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
-import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
-import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
+import net.caffeinemc.mods.sodium.client.model.quad.BakedQuadView;
 import net.caffeinemc.mods.sodium.client.render.immediate.model.BakedModelEncoder;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
 import org.spongepowered.asm.mixin.Final;
@@ -62,7 +61,7 @@ public abstract class BufferBuilderMixin implements VertexConsumer {
 
         VertexBufferWriter writer = VertexBufferWriter.of(this);
 
-        ModelQuadView quadX = (ModelQuadView) (Object) quad;
+        BakedQuadView quadX = (BakedQuadView) (Object) quad;
 
         BakedModelEncoder.writeQuadVertices(writer, pose, quadX, instance);
 
