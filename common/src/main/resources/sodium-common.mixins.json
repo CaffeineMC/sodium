@@ -82,7 +82,6 @@
     "features.textures.animations.tracking.TextureAtlasMixin",
     "features.textures.animations.tracking.TextureAtlasSpriteMixin",
     "features.textures.animations.tracking.TextureSheetParticleMixin",
-    "features.textures.scan.SpriteContentsMixin",
     "features.textures.scan.TextureAtlasSpriteMixin",
     "workarounds.context_creation.RenderSystemMixin",
     "workarounds.context_creation.WindowMixin",
