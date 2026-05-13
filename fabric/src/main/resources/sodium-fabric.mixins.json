@@ -11,9 +11,8 @@
   },
   "client": [
     "core.model.quad.BakedQuadMixin",
-    "features.render.model.ModelManagerMixin",
+    "fabric.LevelSliceMixin",
     "features.render.model.block.ModelBlockRendererMixin",
-    "features.world.biome.BiomeMixin",
-    "fabric.LevelSliceMixin"
+    "features.world.biome.BiomeMixin"
   ]
 }
