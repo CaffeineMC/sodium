@@ -10,7 +10,7 @@ object BuildConfig {
     val PARCHMENT_VERSION: String? = "2024.11.17"
 
     // https://semver.org/
-    val MOD_VERSION: String = "0.8.12-alpha.1"
+    val MOD_VERSION: String = "0.8.12-alpha.2"
 
     val RELEASE_TAG: String = "mc$MINECRAFT_VERSION-$MOD_VERSION"
 
