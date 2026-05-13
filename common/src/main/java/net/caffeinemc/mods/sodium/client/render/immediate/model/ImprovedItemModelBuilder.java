@@ -8,47 +8,26 @@ import net.minecraft.client.renderer.block.dispatch.ModelState;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.resources.model.ModelBaker;
 import net.minecraft.client.resources.model.ModelDebugName;
-import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.client.resources.model.cuboid.CuboidFace;
 import net.minecraft.client.resources.model.cuboid.FaceBakery;
+import net.minecraft.client.resources.model.cuboid.ItemModelGenerator;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.client.resources.model.geometry.QuadCollection;
-import net.minecraft.client.resources.model.geometry.UnbakedGeometry;
 import net.minecraft.client.resources.model.sprite.TextureSlots;
-import net.minecraft.core.Direction;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
-import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.LAYERS;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.TEXTURE_SLOTS;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.SOUTH_FACE_UVS;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.NORTH_FACE_UVS;
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.MIN_Z;
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.MAX_Z;
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.UV_SHRINK;
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.SideDirection;
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.isTransparent;
 
-public class ImprovedItemModelBuilder implements UnbakedModel {
-	@Override
-	public TextureSlots.@NotNull Data textureSlots() {
-		return TEXTURE_SLOTS;
-	}
+public class ImprovedItemModelBuilder {
 
-	@Override
-	public UnbakedGeometry geometry() {
-		return ImprovedItemModelBuilder::bake;
-	}
-
-	@Override
-	public GuiLight guiLight() {
-		return GuiLight.FRONT;
-	}
-
-	private static QuadCollection bake(
+	public static QuadCollection bake(
 			TextureSlots textureSlots,
 			ModelBaker modelBaker,
 			ModelState modelState,
@@ -64,46 +43,16 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 			}
 
 			var bakedMaterial = modelBaker.materials().get(material, debugName);
-			var quadMaterial = BakedQuad.MaterialInfo.of(
-					bakedMaterial,
-					bakedMaterial.sprite().transparency(),
-					index,
-					true,
-					0
-			);
-
-			builder.addAll(modelBaker.compute(new ItemLayerKey(quadMaterial, modelState)));
+			builder.addAll(modelBaker.compute(new ItemModelGenerator.ItemLayerKey(bakedMaterial, modelState, index)));
 		}
 
 		return builder.build();
 	}
 
-	private static void bakeItemQuads(
-			QuadCollection.Builder builder,
-			ModelBaker.Interner interner,
+    public static void bakeSideQuads(
+            QuadCollection.Builder builder,
+            ModelBaker.Interner interner,
 			BakedQuad.MaterialInfo materialInfo,
-			ModelState modelState
-	) {
-		var material = interner.materialInfo(materialInfo);
-
-		var from = new Vector3f(0.0F, 0.0F, MIN_Z);
-		var to = new Vector3f(16.0F, 16.0F, MAX_Z);
-
-		builder.addUnculledFace(FaceBakery.bakeQuad(interner, from, to, SOUTH_FACE_UVS, Quadrant.R0, material, Direction.SOUTH, modelState, null));
-		builder.addUnculledFace(FaceBakery.bakeQuad(interner, from, to, NORTH_FACE_UVS, Quadrant.R0, material, Direction.NORTH, modelState, null));
-
-		bakeSideQuads(
-				material,
-				interner,
-				builder,
-				modelState
-		);
-	}
-
-	private static void bakeSideQuads(
-			BakedQuad.MaterialInfo materialInfo,
-			ModelBaker.Interner interner,
-			QuadCollection.Builder builder,
 			ModelState modelState
 	) {
 		var sprite = materialInfo.sprite().contents();
@@ -147,12 +96,8 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 			var toY = minY;
 
 			switch (faceFacing) {
-				case UP -> {
-					toX = minX + length;
-				}
-				case LEFT -> {
-					toY = minY + length;
-				}
+				case UP -> toX = minX + length;
+				case LEFT -> toY = minY + length;
 				case DOWN -> {
 					fromY = minY + 1.0F;
 					toY = minY + 1.0F;
@@ -225,22 +170,6 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 
         // Merge stored side faces.
 		return storage.buildSideFaces();
-	}
-
-	private record ItemLayerKey(BakedQuad.MaterialInfo quadMaterial, ModelState modelState) implements ModelBaker.SharedOperationKey<@NotNull QuadCollection> {
-        @Override
-		public @NonNull QuadCollection compute(ModelBaker modelBakery) {
-			var builder = new QuadCollection.Builder();
-
-			bakeItemQuads(
-					builder,
-					modelBakery.interner(),
-					this.quadMaterial,
-					this.modelState
-			);
-
-			return builder.build();
-		}
 	}
 
     /*Coordinates of the sprite:
