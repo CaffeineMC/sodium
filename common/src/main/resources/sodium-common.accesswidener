@@ -24,4 +24,3 @@ accessible field net/minecraft/client/resources/model/cuboid/ItemModelGenerator 
 accessible method net/minecraft/client/resources/model/cuboid/ItemModelGenerator isTransparent (Lnet/minecraft/client/renderer/texture/SpriteContents;IIIII)Z
 accessible class net/minecraft/client/resources/model/cuboid/ItemModelGenerator$SideDirection
 accessible method net/minecraft/client/resources/model/cuboid/ItemModelGenerator$SideDirection isHorizontal ()Z
-accessible class net/minecraft/client/resources/model/cuboid/ItemModelGenerator$ItemLayerKey
