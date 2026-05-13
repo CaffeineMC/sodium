@@ -136,6 +136,8 @@ sourceSets {
 
 neoForge {
     version = BuildConfig.NEOFORGE_VERSION
+    accessTransformers.from(file("src/mod/resources/META-INF/accesstransformer.cfg"))
+    validateAccessTransformers = true
 
     runs {
         create("Client") {
