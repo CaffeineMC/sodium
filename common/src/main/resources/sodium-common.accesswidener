@@ -20,7 +20,6 @@ accessible field net/minecraft/world/level/FoliageColor pixels [I
 
 accessible field net/minecraft/client/resources/model/cuboid/ItemModelGenerator MIN_Z F
 accessible field net/minecraft/client/resources/model/cuboid/ItemModelGenerator MAX_Z F
-accessible field net/minecraft/client/resources/model/cuboid/ItemModelGenerator TEXTURE_SLOTS Lnet/minecraft/client/resources/model/sprite/TextureSlots$Data;
 accessible field net/minecraft/client/resources/model/cuboid/ItemModelGenerator UV_SHRINK F
 accessible method net/minecraft/client/resources/model/cuboid/ItemModelGenerator isTransparent (Lnet/minecraft/client/renderer/texture/SpriteContents;IIIII)Z
 accessible class net/minecraft/client/resources/model/cuboid/ItemModelGenerator$SideDirection
