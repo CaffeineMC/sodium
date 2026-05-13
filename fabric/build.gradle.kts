@@ -1,3 +1,6 @@
+import net.fabricmc.loom.task.RemapJarTask
+import net.fabricmc.loom.task.RemapSourcesJarTask
+
 plugins {
     id("multiloader-platform")
 
@@ -8,17 +11,28 @@ base {
     archivesName = "sodium-fabric"
 }
 
+val configurationApiModJava: Configuration = configurations.create("apiJava") {
+    isCanBeResolved = true
+}
+
 val configurationCommonModJava: Configuration = configurations.create("commonJava") {
     isCanBeResolved = true
 }
+
+val configurationApiModSources: Configuration = configurations.create("apiSources") {
+    isCanBeResolved = true
+}
+
 val configurationCommonModResources: Configuration = configurations.create("commonResources") {
     isCanBeResolved = true
 }
 
 dependencies {
     configurationCommonModJava(project(path = ":common", configuration = "commonMainJava"))
-    configurationCommonModJava(project(path = ":common", configuration = "commonApiJava"))
+    configurationApiModJava(project(path = ":common", configuration = "commonApiJava"))
     configurationCommonModJava(project(path = ":common", configuration = "commonBootJava"))
+
+    configurationApiModSources(project(path = ":common", configuration = "commonApiSources"))
 
     configurationCommonModResources(project(path = ":common", configuration = "commonMainResources"))
     configurationCommonModResources(project(path = ":common", configuration = "commonApiResources"))
@@ -28,7 +42,9 @@ dependencies {
 sourceSets.apply {
     main {
         compileClasspath += configurationCommonModJava
+        compileClasspath += configurationApiModJava
         runtimeClasspath += configurationCommonModJava
+        runtimeClasspath += configurationApiModJava
     }
 }
 
@@ -80,6 +96,38 @@ loom {
 tasks {
     jar {
         from(configurationCommonModJava)
+        from(configurationApiModJava)
+    }
+
+    val apiJar = register<org.gradle.jvm.tasks.Jar>("apiJar") {
+        archiveClassifier.set("api-dev")
+        from(configurationApiModJava)
+        from(sourceSets.main.get().resources)
+        destinationDirectory.set(file(project.layout.buildDirectory).resolve("devlibs"))
+    }
+
+    val apiSourcesJar = register<org.gradle.jvm.tasks.Jar>("apiSourcesJar") {
+        archiveClassifier.set("api-sources-dev")
+        from(configurationApiModSources)
+        from(sourceSets.main.get().resources)
+        destinationDirectory.set(file(project.layout.buildDirectory).resolve("devlibs"))
+    }
+
+    register<RemapJarTask>("remapApiJar") {
+        dependsOn("apiJar")
+        archiveClassifier.set("api")
+        nestedJars.unset()
+        destinationDirectory.set(file(rootProject.layout.buildDirectory).resolve("api"))
+
+        inputFile.set(apiJar.flatMap { it.archiveFile })
+    }
+
+    register<RemapSourcesJarTask>("remapApiSourcesJar") {
+        dependsOn("apiSourcesJar")
+        archiveClassifier.set("api-sources")
+        destinationDirectory.set(file(rootProject.layout.buildDirectory).resolve("api-sources"))
+
+        inputFile.set(apiSourcesJar.flatMap { it.archiveFile })
     }
 
     remapJar {
@@ -88,5 +136,33 @@ tasks {
 
     processResources {
         from(configurationCommonModResources)
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = project.group as String
+            artifactId = rootProject.name + "-" + project.name
+            version = version
+
+            from(components["java"])
+        }
+
+        create<MavenPublication>("mavenApi") {
+            groupId = project.group as String
+            artifactId = rootProject.name + "-" + project.name + "-api"
+            version = version
+
+            artifact(tasks.named("remapApiJar")) {
+                classifier = null
+            }
+
+            artifact(tasks.named("remapApiSourcesJar")) {
+                classifier = "sources"
+            }
+
+            pom.packaging = "jar"
+        }
     }
 }
