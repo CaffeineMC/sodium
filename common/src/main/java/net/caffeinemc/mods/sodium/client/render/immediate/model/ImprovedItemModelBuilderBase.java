@@ -1,166 +1,28 @@
 package net.caffeinemc.mods.sodium.client.render.immediate.model;
 
-import com.mojang.math.Quadrant;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
-import net.minecraft.client.renderer.block.dispatch.ModelState;
 import net.minecraft.client.renderer.texture.SpriteContents;
-import net.minecraft.client.resources.model.ModelBaker;
-import net.minecraft.client.resources.model.ModelDebugName;
-import net.minecraft.client.resources.model.cuboid.CuboidFace;
-import net.minecraft.client.resources.model.cuboid.FaceBakery;
-import net.minecraft.client.resources.model.cuboid.ItemModelGenerator;
-import net.minecraft.client.resources.model.geometry.BakedQuad;
-import net.minecraft.client.resources.model.geometry.QuadCollection;
-import net.minecraft.client.resources.model.sprite.TextureSlots;
-import org.joml.Vector3f;
 
 import java.util.*;
 
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.LAYERS;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.MIN_Z;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.MAX_Z;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.UV_SHRINK;
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.SideDirection;
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.isTransparent;
 
-public class ImprovedItemModelBuilder {
+public class ImprovedItemModelBuilderBase {
 
-	public static QuadCollection bake(
-			TextureSlots textureSlots,
-			ModelBaker modelBaker,
-			ModelState modelState,
-			ModelDebugName debugName
-	) {
-		var builder	= new QuadCollection.Builder();
-
-		for (var index = 0; index < LAYERS.size(); index ++) {
-			var material = textureSlots.getMaterial(LAYERS.get(index));
-
-			if (material == null) {
-				break;
-			}
-
-			var bakedMaterial = modelBaker.materials().get(material, debugName);
-			builder.addAll(modelBaker.compute(new ItemModelGenerator.ItemLayerKey(bakedMaterial, modelState, index)));
-		}
-
-		return builder.build();
-	}
-
-    public static void bakeSideQuads(
-            QuadCollection.Builder builder,
-            ModelBaker.Interner interner,
-			BakedQuad.MaterialInfo materialInfo,
-			ModelState modelState
-	) {
-		var sprite = materialInfo.sprite().contents();
-
-		var xScale = 16.0F / sprite.width();
-		var yScale = 16.0F / sprite.height();
-
-		for (SideFace sideFace : buildSideFaces(sprite)) {
-			var faceFacing = sideFace.facing();
-			var faceAnchor = sideFace.anchor();
-			var faceMin = sideFace.min();
-			var faceMax = sideFace.max();
-
-            // Calculate the start coordinate and length of the side quad using the side face properties, as described
-            // in the diagram in FaceStorage.
-			float minX = faceFacing.isHorizontal() ? faceMin : faceAnchor;
-			float minY = faceFacing.isHorizontal() ? faceAnchor : faceMin;
-			float length = faceMax - faceMin + 1.0F;
-
-			var u0 = 0.0F;
-			var v0 = 0.0F;
-
-			var u1 = 0.0F;
-			var v1 = 0.0F;
-
-			if (faceFacing.isHorizontal()) {
-				u0 = minX + UV_SHRINK;
-				v0 = minY + UV_SHRINK;
-				u1 = minX + length - UV_SHRINK;
-				v1 = minY + 1.0F - UV_SHRINK;
-			} else {
-				u0 = minX + UV_SHRINK;
-				v0 = minY + length - UV_SHRINK;
-				u1 = minX + 1.0F - UV_SHRINK;
-				v1 = minY + UV_SHRINK;
-			}
-
-			var fromX = minX;
-			var fromY = minY;
-			var toX = minX;
-			var toY = minY;
-
-			switch (faceFacing) {
-				case UP -> {
-                    toX = minX + length;
-                }
-				case LEFT -> {
-                    toY = minY + length;
-                }
-				case DOWN -> {
-					fromY = minY + 1.0F;
-					toY = minY + 1.0F;
-					toX = minX + length;
-				}
-				case RIGHT -> {
-					fromX = minX + 1.0F;
-					toX = minX + 1.0F;
-					toY = minY + length;
-				}
-			}
-
-			fromX *= xScale;
-			fromY *= yScale;
-			toX *= xScale;
-			toY *= yScale;
-
-			fromY = 16.0F - fromY;
-			toY = 16.0F - toY;
-
-			switch (faceFacing) {
-				case RIGHT -> fromX = toX;
-				case DOWN -> fromY = toY;
-				case LEFT -> toX = fromX;
-				case UP -> toY = fromY;
-			}
-
-			builder.addUnculledFace(
-					FaceBakery.bakeQuad(
-							interner,
-							new Vector3f(fromX, fromY, MIN_Z),
-							new Vector3f(toX, toY, MAX_Z),
-							new CuboidFace.UVs(
-									u0 * xScale,
-									v0 * yScale,
-									u1 * xScale,
-									v1 * yScale
-							),
-							Quadrant.R0,
-							materialInfo,
-							faceFacing.getDirection(),
-							modelState,
-							null
-					)
-			);
-		}
-	}
-
-	private static Collection<SideFace> buildSideFaces(SpriteContents sprite) {
-		var width = sprite.width();
-		var height = sprite.height();
-		var storage = new FaceStorage();
+    public static Collection<SideFace> buildSideFaces(SpriteContents sprite) {
+        var width = sprite.width();
+        var height = sprite.height();
+        var storage = new FaceStorage();
 
         // For each pixel in each frame, attempts to insert side faces of the pixel into the face storage.
         // All frames are included to avoid missing sides on animated textures with inconsistent shapes.
-		sprite.getUniqueFrames().forEach(frame -> {
-			for (var pixelY = 0; pixelY < height; pixelY ++) {
-				for (var pixelX = 0; pixelX < width; pixelX ++) {
-					storage.tryInsertPixel(
+        sprite.getUniqueFrames().forEach(frame -> {
+            for (var pixelY = 0; pixelY < height; pixelY ++) {
+                for (var pixelX = 0; pixelX < width; pixelX ++) {
+                    storage.tryInsertPixel(
                             sprite,
                             frame,
                             pixelX,
@@ -168,13 +30,13 @@ public class ImprovedItemModelBuilder {
                             width,
                             height
                     );
-				}
-			}
-		});
+                }
+            }
+        });
 
         // Merge stored side faces.
-		return storage.buildSideFaces();
-	}
+        return storage.buildSideFaces();
+    }
 
     /*Coordinates of the sprite:
 
@@ -362,12 +224,12 @@ public class ImprovedItemModelBuilder {
         }
     }
 
-	public record SideFace(
-			SideDirection facing,
-			int min,
-			int max,
-			int anchor
-	) {
+    public record SideFace(
+            SideDirection facing,
+            int min,
+            int max,
+            int anchor
+    ) {
 
-	}
+    }
 }
