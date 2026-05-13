@@ -29,3 +29,7 @@ The bug fixes include multiple crash fixes and changes to avoid retaining large 
 - Add option to sort Entity Quads by Closest Point ([#3635](https://github.com/CaffeineMC/sodium/pull/3635))
 - Fix Minecraft's CompactVectorArray#getZ returning the wrong value which broke some mods' rendering ([#3643](https://github.com/CaffeineMC/sodium/pull/3643))
 - Change fullbright blocks to only emit block light and no sky light ([#3640](https://github.com/CaffeineMC/sodium/pull/3640))
+- Fix clouds being invisible behind leaves with specific resource packs
+- Refactor `ImprovedItemModelBuilder` for better mod compatibility ([#3648](https://github.com/CaffeineMC/sodium/pull/3648))
+
+Please participate in testing this release and giving feedback on [our discord server](https://caffeinemc.net/discord).
