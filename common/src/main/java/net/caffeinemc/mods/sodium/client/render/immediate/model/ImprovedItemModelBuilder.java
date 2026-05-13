@@ -1,108 +1,26 @@
 package net.caffeinemc.mods.sodium.client.render.immediate.model;
 
 import com.mojang.math.Quadrant;
-import net.minecraft.client.renderer.block.model.BlockElement;
-import net.minecraft.client.renderer.block.model.BlockElementFace;
-import net.minecraft.client.renderer.block.model.SimpleUnbakedGeometry;
-import net.minecraft.client.renderer.block.model.TextureSlots;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
+import net.minecraft.client.renderer.block.model.BlockElement;
+import net.minecraft.client.renderer.block.model.BlockElementFace;
 import net.minecraft.client.renderer.texture.SpriteContents;
-import net.minecraft.client.resources.model.ModelBaker;
-import net.minecraft.client.resources.model.ModelDebugName;
-import net.minecraft.client.resources.model.ModelState;
-import net.minecraft.client.resources.model.QuadCollection;
-import net.minecraft.client.resources.model.UnbakedGeometry;
-import net.minecraft.client.resources.model.UnbakedModel;
-import net.minecraft.core.Direction;
 import org.joml.Vector3f;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-import static net.minecraft.client.renderer.block.model.ItemModelGenerator.LAYERS;
-import static net.minecraft.client.renderer.block.model.ItemModelGenerator.TEXTURE_SLOTS;
-import static net.minecraft.client.renderer.block.model.ItemModelGenerator.SOUTH_FACE_UVS;
-import static net.minecraft.client.renderer.block.model.ItemModelGenerator.NORTH_FACE_UVS;
-import static net.minecraft.client.renderer.block.model.ItemModelGenerator.MIN_Z;
-import static net.minecraft.client.renderer.block.model.ItemModelGenerator.MAX_Z;
-import static net.minecraft.client.renderer.block.model.ItemModelGenerator.UV_SHRINK;
-import static net.minecraft.client.renderer.block.model.ItemModelGenerator.SideDirection;
-import static net.minecraft.client.renderer.block.model.ItemModelGenerator.isTransparent;
+import static net.minecraft.client.renderer.block.model.ItemModelGenerator.*;
 
-public class ImprovedItemModelBuilder implements UnbakedModel {
-	@Override
-	public TextureSlots.@NotNull Data textureSlots() {
-		return TEXTURE_SLOTS;
-	}
+public class ImprovedItemModelBuilder {
 
-	@Override
-	public UnbakedGeometry geometry() {
-		return ImprovedItemModelBuilder::bake;
-	}
-
-	@Override
-	public GuiLight guiLight() {
-		return GuiLight.FRONT;
-	}
-
-	private static QuadCollection bake(
-			TextureSlots textureSlots,
-			ModelBaker modelBaker,
-			ModelState modelState,
-			ModelDebugName debugName
-	) {
-        var blockElements = new ArrayList<BlockElement>();
-
-		for (var index = 0; index < LAYERS.size(); index ++) {
-            var layer = LAYERS.get(index);
-			var material = textureSlots.getMaterial(layer);
-
-			if (material == null) {
-				break;
-			}
-
-            bakeItemQuads(
-                    blockElements,
-                    modelBaker.sprites().get(material, debugName).contents(),
-                    layer,
-                    index
-            );
-		}
-
-		return SimpleUnbakedGeometry.bake(blockElements, textureSlots, modelBaker, modelState, debugName);
-	}
-
-	private static void bakeItemQuads(
-            List<BlockElement> blockElements,
-			SpriteContents sprite,
-            String layer,
-            int index
-	) {
-       blockElements.add(new BlockElement(
-                new Vector3f(0.0F, 0.0F, 7.5F),
-                new Vector3f(16.0F, 16.0F, 8.5F),
-                Map.of(
-                        Direction.SOUTH, new BlockElementFace(null, index, layer, SOUTH_FACE_UVS, Quadrant.R0),
-                        Direction.NORTH, new BlockElementFace(null, index, layer, NORTH_FACE_UVS, Quadrant.R0)
-                )
-        ));
-
-		bakeSideQuads(
-				blockElements,
-				sprite,
-				layer,
-				index
-		);
-	}
-
-	private static void bakeSideQuads(
-            List<BlockElement> blockElements,
+	public static List<BlockElement> bakeSideQuads(
             SpriteContents sprite,
             String layer,
             int index
 	) {
+        List<BlockElement> list = new ArrayList<>();
 		var xScale = 16.0F / sprite.width();
 		var yScale = 16.0F / sprite.height();
 
@@ -175,7 +93,7 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
 				case UP -> toY = fromY;
 			}
 
-            blockElements.add(new BlockElement(
+            list.add(new BlockElement(
                     new Vector3f(fromX, fromY, MIN_Z),
                     new Vector3f(toX, toY, MAX_Z),
                     Map.of(faceFacing.getDirection(), new BlockElementFace(
@@ -192,6 +110,7 @@ public class ImprovedItemModelBuilder implements UnbakedModel {
                     ))
             ));
 		}
+        return list;
 	}
 
 	private static Collection<SideFace> buildSideFaces(SpriteContents sprite) {

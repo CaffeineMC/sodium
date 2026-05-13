@@ -62,6 +62,7 @@
     "features.render.immediate.buffer_builder.sorting.VertexSortingMixin",
     "features.render.immediate.matrix_stack.VertexConsumerMixin",
     "features.render.model.ItemBlockRenderTypesMixin",
+    "features.render.model.ItemModelGeneratorMixin",
     "features.render.model.item.ItemRendererMixin",
     "features.render.particle.QuadParticleRenderStateMixin",
     "features.render.viewport.GlStateManagerMixin",
