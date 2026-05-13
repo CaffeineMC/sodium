@@ -96,8 +96,12 @@ public class ImprovedItemModelBuilder {
 			var toY = minY;
 
 			switch (faceFacing) {
-				case UP -> toX = minX + length;
-				case LEFT -> toY = minY + length;
+				case UP -> {
+                    toX = minX + length;
+                }
+				case LEFT -> {
+                    toY = minY + length;
+                }
 				case DOWN -> {
 					fromY = minY + 1.0F;
 					toY = minY + 1.0F;
