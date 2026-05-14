@@ -153,7 +153,8 @@ public class SodiumOptions {
 
     public static void writeToDisk(SodiumOptions config) throws IOException {
         if (config.isReadOnly()) {
-            throw new IllegalStateException("Config file is read-only");
+            // throws an IOException so that it is caught correctly when trying to save the config when it's locked
+            throw new IOException("Config file is read-only");
         }
 
         Path path = getConfigPath();
