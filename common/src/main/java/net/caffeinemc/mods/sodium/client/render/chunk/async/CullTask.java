@@ -20,6 +20,7 @@ public class CullTask extends AsyncRenderTask<CullResult> {
     private final float searchDistanceLocal;
     private LinkedList<Collection<RenderSection>> presentPatches;
     private final Level level;
+    private long elapsedNanos = -1;
 
     public CullTask(Viewport viewport, float searchDistanceRegular, float searchDistanceLocal, int frame, OcclusionCuller occlusionCuller, boolean useOcclusionCulling, Level level) {
         super(viewport, frame);
@@ -32,6 +33,8 @@ public class CullTask extends AsyncRenderTask<CullResult> {
 
     @Override
     protected CullResult runTask() {
+        var start = System.nanoTime();
+
         var wideTree = new TaskCollectingTree(this.viewport, this.searchDistanceRegular, this.frame, CullType.WIDE, this.level);
         var regularTree = new SectionTree(this.viewport, this.searchDistanceRegular, this.frame, CullType.REGULAR, this.level);
         var localTree = new RayOcclusionSectionTree(this.viewport, this.searchDistanceLocal, this.frame, CullType.LOCAL, this.level);
@@ -43,6 +46,8 @@ public class CullTask extends AsyncRenderTask<CullResult> {
         localTree.prepareForTraversal();
 
         var taskLists = wideTree.getPendingTaskLists();
+
+        this.elapsedNanos = System.nanoTime() - start;
 
         return new CullResult() {
             @Override
@@ -68,6 +73,10 @@ public class CullTask extends AsyncRenderTask<CullResult> {
                 return taskLists;
             }
         };
+    }
+
+    public long getElapsedNanos() {
+        return this.elapsedNanos;
     }
 
     @Override

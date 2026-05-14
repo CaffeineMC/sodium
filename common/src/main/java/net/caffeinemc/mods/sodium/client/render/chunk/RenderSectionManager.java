@@ -118,6 +118,8 @@ public class RenderSectionManager {
 
     private final ExecutorService asyncCullExecutor = Executors.newSingleThreadExecutor(RenderSectionManager::makeAsyncCullThread);
     private CullTask pendingTask = null;
+    private long averageCullDurationNanos = -1;
+    private static final float CULL_DURATION_UPDATE_RATIO = 0.2f;
 
     private SectionTree renderTree = null;
     private final Map<CullType, SectionTree> cullResults = new EnumMap<>(CullType.class);
@@ -220,6 +222,14 @@ public class RenderSectionManager {
         }
 
         var result = this.pendingTask.getResult();
+
+        var elapsedNanos = this.pendingTask.getElapsedNanos();
+        if (this.averageCullDurationNanos == -1) {
+            this.averageCullDurationNanos = elapsedNanos;
+        } else {
+            this.averageCullDurationNanos = MathUtil.exponentialMovingAverage(this.averageCullDurationNanos, elapsedNanos, CULL_DURATION_UPDATE_RATIO);
+        }
+
         var treeLocal = result.getCullTreeLocal();
         var treeRegular = result.getCullTreeRegular();
         var treeWide = result.getCullTreeWide();
@@ -1119,8 +1129,9 @@ public class RenderSectionManager {
             list.add("TS OFF");
         }
 
-        list.add("Async Culling: " + (this.pendingTask == null ?
-                "Idle" : this.pendingTask.isDone() ? "Done" : "Running"));
+        var cullState = this.pendingTask == null ? "Idle" : this.pendingTask.isDone() ? "Done" : "Running";
+        var cullDuration = this.averageCullDurationNanos == -1 ? "?" : String.format("%.1fms", this.averageCullDurationNanos / 1_000_000.0);
+        list.add(String.format("Async Culling: %s (avg %s)", cullState, cullDuration));
 
         return list;
     }
