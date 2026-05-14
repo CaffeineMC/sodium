@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.caffeinemc.mods.sodium.api.util.ColorMixer;
+import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TopoGraphSorting;
@@ -533,6 +534,22 @@ abstract class InnerPartitionBSPNode extends BSPNode {
                     splittingGroup.add(candidateIndex);
                     continue;
                 }
+            } else if (!splitPlaneIsAligned && (!representativeFacing.isAligned() || !quadFacing.isAligned())) {
+                // For non-axis-aligned quads, check for coplanar using packed normals and dot products.
+                // This handles the case where quads are coplanar but have different facings,
+                // which is common with terrain meshed banners and other complex geometry.
+                var packedNormal = insideQuad.getPackedNormal();
+                var representativePackedNormal = representative.getPackedNormal();
+                var accurateDotProduct = insideQuad.getAccurateDotProduct();
+
+                // Check if quads are coplanar (same normal, same distance) or anti-coplanar (opposite normal, same plane)
+                if (packedNormal == representativePackedNormal && floatEquals(accurateDotProduct, splitDistance)) {
+                    splittingGroup.add(candidateIndex);
+                    continue;
+                } else if (NormI8.isOpposite(packedNormal, representativePackedNormal) && floatEquals(accurateDotProduct, splitDistanceNeg)) {
+                    splittingGroup.add(candidateIndex);
+                    continue;
+                }
             }
 
             // split the geometry with the plane
@@ -1017,68 +1034,4 @@ abstract class InnerPartitionBSPNode extends BSPNode {
         }
 
         // no need to add the geometry to the workspace's trigger registry
-        // since it's being sorted statically and the sort order won't change based on the camera position
-
-        return new LeafMultiBSPNode(BSPSortState.compressIndexesInPlace(indexWriter.indexes, false));
-    }
-
-    static private BSPNode buildSNRLeafNodeFromQuads(BSPWorkspace workspace, IntArrayList indexes) {
-        final var indexBuffer = indexes.elements();
-        final var indexCount = indexes.size();
-
-        final var keys = new int[indexCount];
-        final var perm = new int[indexCount];
-
-        for (int i = 0; i < indexCount; i++) {
-            TQuad quad = workspace.get(indexBuffer[i]);
-            keys[i] = MathUtil.floatToComparableInt(quad.getAccurateDotProduct());
-            perm[i] = i;
-        }
-
-        RadixSort.sortIndirect(perm, keys, true);
-
-        for (int i = 0; i < indexCount; i++) {
-            perm[i] = indexBuffer[perm[i]];
-        }
-
-        return new LeafMultiBSPNode(BSPSortState.compressIndexes(IntArrayList.wrap(perm), false));
-    }
-
-    static private BSPNode buildSNRLeafNodeFromPoints(BSPWorkspace workspace, LongArrayList points, int positiveSignCount) {
-        int pointCount = points.size();
-        if (positiveSignCount < pointCount) {
-            // invert the distance for all points where the quad is facing backwards,
-            // this is necessary to make the quad order stable relative to the quad index
-            for (int i = 0; i < pointCount; i++) {
-                // based one each quad's facing, order them forwards or backwards,
-                // this means forwards is written from the start and backwards is written from the end
-                var point = points.getLong(i);
-                var quadIndex = decodeQuadIndex(point);
-                if (workspace.get(quadIndex).getFacing().getSign() == -1) {
-                    points.set(i, point ^ 0xFFFFFFFF00000000L); // invert distance bits
-                }
-            }
-        }
-
-        // also sort by ascending encoded point but then process as an SNR result
-        Arrays.sort(points.elements(), 0, pointCount);
-
-        // since the quads are aligned and are all INTERVAL_SIDE, there's no issues with duplicates.
-        // the length of the array is exactly how many quads there are.
-        int[] quadIndexes = new int[pointCount];
-        int positive = 0;
-        int negative = positiveSignCount;
-        for (int i = 0; i < pointCount; i++) {
-            // based one each quad's facing, order them forwards or backwards,
-            // this means forwards is written from the start and backwards is written from the end
-            var quadIndex = decodeQuadIndex(points.getLong(i));
-            if (workspace.get(quadIndex).getFacing().getSign() == 1) {
-                quadIndexes[positive++] = quadIndex;
-            } else {
-                quadIndexes[negative++] = quadIndex;
-            }
-        }
-
-        return new LeafMultiBSPNode(BSPSortState.compressIndexes(IntArrayList.wrap(quadIndexes), false));
-    }
-}
+        // since it's being sorted statically and the sort order ... (truncated)
