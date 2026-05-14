@@ -202,7 +202,10 @@ public class SodiumWorldRenderer {
             this.cullMatrix = new Matrix4f(cullMatrix);
         }
         boolean cameraLocationChanged = !pos.equals(this.lastCameraPos);
-        boolean fogDistanceChanged = fogParameters.renderEnd() != this.lastFogParameters.renderEnd();
+        // Check if the fog distance (renderEnd - renderStart) has changed, not just renderEnd.
+        // This prevents unnecessary camera updates when effects like blindness/darkness change
+        // both fog parameters together without actually changing the visible chunk area.
+        boolean fogDistanceChanged = this.computeFogDistance(fogParameters) != this.computeFogDistance(this.lastFogParameters);
         boolean cameraAngleChanged = pitch != this.lastCameraPitch || yaw != this.lastCameraYaw;
         boolean cameraProjectionChanged = !cullMatrix.equals(this.cullMatrix, 0.0001f);
 
@@ -260,6 +263,15 @@ public class SodiumWorldRenderer {
         profiler.pop();
 
         Entity.setViewScale(Mth.clamp((double) this.client.options.getEffectiveRenderDistance() / 8.0D, 1.0D, 2.5D) * this.client.options.entityDistanceScaling().get());
+    }
+
+    /**
+     * Computes the effective fog distance by calculating renderEnd - renderStart.
+     * This is used to detect meaningful changes in fog distance while ignoring
+     * changes in individual parameters that occur together (e.g., during blindness effects).
+     */
+    private static float computeFogDistance(FogParameters parameters) {
+        return parameters.renderEnd() - parameters.renderStart();
     }
 
     private void processChunkEvents() {
