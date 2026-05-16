@@ -203,7 +203,7 @@ public class SodiumWorldRenderer {
             this.cullMatrix = new Matrix4f(cullMatrix);
         }
         boolean cameraLocationChanged = !pos.equals(this.lastCameraPos);
-        boolean fogDistanceChanged = fogParameters.renderEnd() != this.lastFogParameters.renderEnd();
+        boolean fogDistanceChanged = fogParameters.cullDistance() != this.lastFogParameters.cullDistance();
         boolean cameraAngleChanged = pitch != this.lastCameraPitch || yaw != this.lastCameraYaw;
         boolean cameraProjectionChanged = !cullMatrix.equals(this.cullMatrix, 0.0001f);
 
