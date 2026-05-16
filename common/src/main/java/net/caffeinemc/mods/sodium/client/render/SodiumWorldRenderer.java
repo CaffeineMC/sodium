@@ -45,6 +45,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
+import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
@@ -161,6 +162,10 @@ public class SodiumWorldRenderer {
      */
     public boolean isTerrainRenderComplete() {
         return this.renderSectionManager.getBuilder().isBuildQueueEmpty();
+    }
+
+    public void updateFogColor(Vector4f fogColor) {
+        this.lastFogParameters = new FogParameters(fogColor, this.lastFogParameters);
     }
 
     /**

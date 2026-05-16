@@ -163,9 +163,12 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     }
 
     @Inject(method = "renderLevel", at = @At(value = "HEAD"))
-    private void sodium$setMatrices(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {
+    private void getRenderState(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {
         matrices = new ChunkRenderMatrices(((GameRendererStorage) Minecraft.getInstance().gameRenderer).sodium$getProjectionMatrix(), modelViewMatrix);
         ((SodiumChunkSection) (Object) chunkSectionsToRender).sodium$setRendering(renderer, matrices, this.levelRenderState.cameraRenderState.pos.x, this.levelRenderState.cameraRenderState.pos.y, this.levelRenderState.cameraRenderState.pos.z);
+
+        // update the fog color here with the actual fog color being used to render the sky, since the fog color that SodiumWorldRenderer still has stored from FogRendererMixin is outdated.
+        SodiumWorldRenderer.instance().updateFogColor(fogColor);
     }
 
     /**
