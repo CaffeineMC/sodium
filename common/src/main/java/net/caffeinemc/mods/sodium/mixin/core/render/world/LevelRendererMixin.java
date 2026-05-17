@@ -168,7 +168,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         ((SodiumChunkSection) (Object) chunkSectionsToRender).sodium$setRendering(renderer, matrices, this.levelRenderState.cameraRenderState.pos.x, this.levelRenderState.cameraRenderState.pos.y, this.levelRenderState.cameraRenderState.pos.z);
 
         // update the fog color here with the actual fog color being used to render the sky, since the fog color that SodiumWorldRenderer still has stored from FogRendererMixin is outdated.
-        SodiumWorldRenderer.instance().updateFogColor(fogColor);
+        this.renderer.updateFogColor(fogColor);
     }
 
     /**
