@@ -13,7 +13,7 @@ The release includes a new display of FPS percentiles which more accurately repr
 
 The new option to sort entities quads by their closest point allows correct rendering of similar translucent entities that have specific types of otherwise wrongly sorted geometry. This is disabled by default as it incurs a performance cost.
 
-The bug fixes include multiple crash fixes and changes to avoid retaining large memory allocations in specific scenarios.
+Included are also multiple crash fixes and changes to avoid retaining large memory allocations in specific scenarios.
 
 - Fix the animation when fluid sprites are obtained directly via FluidModel ([#3630](https://github.com/CaffeineMC/sodium/pull/3630))
 - Avoid retaining large allocations created when heavy quad splitting takes place
@@ -31,5 +31,5 @@ The bug fixes include multiple crash fixes and changes to avoid retaining large 
 - Change fullbright blocks to only emit block light and no sky light ([#3640](https://github.com/CaffeineMC/sodium/pull/3640))
 - Fix clouds being invisible behind leaves with specific resource packs
 - Refactor `ImprovedItemModelBuilder` for better mod compatibility and fixed crash from beta 3 ([#3648](https://github.com/CaffeineMC/sodium/pull/3648))
-
-Please participate in testing this release and giving feedback on [our discord server](https://caffeinemc.net/discord).
+- Fix the corrupted config screen to show up properly
+- Fix fog flicker ([#3666](https://github.com/CaffeineMC/sodium/pull/3666))
