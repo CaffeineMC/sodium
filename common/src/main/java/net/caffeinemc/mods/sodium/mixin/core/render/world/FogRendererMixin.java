@@ -22,11 +22,11 @@ public class FogRendererMixin implements FogStorage {
 
     @Override
     public FogParameters sodium$getFogParameters() {
-        return parameters;
+        return this.parameters;
     }
 
     @Inject(method = "setupFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/fog/FogRenderer;updateBuffer(Ljava/nio/ByteBuffer;ILorg/joml/Vector4f;FFFFFF)V"))
     private void sodium$storeFogParameters(Camera camera, int i, DeltaTracker deltaTracker, float f, ClientLevel clientLevel, CallbackInfoReturnable<Vector4f> cir, @Local FogData data, @Local Vector4f fogColor) {
-        parameters = new FogParameters(fogColor.x, fogColor.y, fogColor.z, fogColor.w, data.environmentalStart, data.environmentalEnd, data.renderDistanceStart, data.renderDistanceEnd);
+        this.parameters = new FogParameters(fogColor.x, fogColor.y, fogColor.z, fogColor.w, data.environmentalStart, data.environmentalEnd, data.renderDistanceStart, data.renderDistanceEnd);
     }
 }
