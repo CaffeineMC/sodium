@@ -44,6 +44,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
+import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
@@ -162,6 +163,10 @@ public class SodiumWorldRenderer {
         return this.renderSectionManager.getBuilder().isBuildQueueEmpty();
     }
 
+    public void updateFogColor(Vector4f fogColor) {
+        this.lastFogParameters = new FogParameters(fogColor, this.lastFogParameters);
+    }
+
     /**
      * Called prior to any chunk rendering in order to update necessary state.
      */
@@ -202,7 +207,7 @@ public class SodiumWorldRenderer {
             this.cullMatrix = new Matrix4f(cullMatrix);
         }
         boolean cameraLocationChanged = !pos.equals(this.lastCameraPos);
-        boolean fogDistanceChanged = fogParameters.renderEnd() != this.lastFogParameters.renderEnd();
+        boolean fogDistanceChanged = fogParameters.cullDistance() != this.lastFogParameters.cullDistance();
         boolean cameraAngleChanged = pitch != this.lastCameraPitch || yaw != this.lastCameraYaw;
         boolean cameraProjectionChanged = !cullMatrix.equals(this.cullMatrix, 0.0001f);
 
