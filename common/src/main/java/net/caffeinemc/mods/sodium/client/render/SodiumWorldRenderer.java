@@ -343,7 +343,7 @@ public class SodiumWorldRenderer {
                 }
 
                 for (BlockEntity blockEntity : blockEntities) {
-                    extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState);
+                    extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState, false);
                 }
             }
         }
@@ -356,12 +356,12 @@ public class SodiumWorldRenderer {
             }
 
             for (var blockEntity : blockEntities) {
-                extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState);
+                extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState, true);
             }
         }
     }
 
-    private void extractBlockEntity(BlockEntity blockEntity, PoseStack poseStack, Camera camera, float tickDelta, Long2ObjectMap<SortedSet<BlockDestructionProgress>> progression, LevelRenderState levelRenderState) {
+    private void extractBlockEntity(BlockEntity blockEntity, PoseStack poseStack, Camera camera, float tickDelta, Long2ObjectMap<SortedSet<BlockDestructionProgress>> progression, LevelRenderState levelRenderState, boolean global) {
         BlockPos blockPos = blockEntity.getBlockPos();
         SortedSet<BlockDestructionProgress> sortedSet = progression.get(blockPos.asLong());
         ModelFeatureRenderer.CrumblingOverlay crumblingOverlay;
@@ -374,7 +374,7 @@ public class SodiumWorldRenderer {
             crumblingOverlay = null;
         }
 
-        BlockEntityRenderState blockEntityRenderState = Minecraft.getInstance().getBlockEntityRenderDispatcher().tryExtractRenderState(blockEntity, tickDelta, crumblingOverlay);
+        BlockEntityRenderState blockEntityRenderState = Minecraft.getInstance().getBlockEntityRenderDispatcher().tryExtractRenderState(blockEntity, tickDelta, crumblingOverlay, global);
         if (blockEntityRenderState != null) {
             levelRenderState.blockEntityRenderStates.add(blockEntityRenderState);
         }

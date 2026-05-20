@@ -41,11 +41,9 @@ public class ShadowFeatureRendererMixin {
      * @author JellySquid
      * @reason Reduce vertex assembly overhead for shadow rendering
      */
-    @Inject(method = "renderTranslucent", at = @At("HEAD"), cancellable = true)
-    private static void renderShadowPartFast(SubmitNodeCollection submitNodeCollection, MultiBufferSource.BufferSource bufferSource, CallbackInfo ci) {
-        VertexConsumer vertices = bufferSource.getBuffer(SHADOW_RENDER_TYPE);
-
-        var writer = VertexConsumerUtils.convertOrLog(vertices);
+    @Inject(method = "prepare", at = @At("HEAD"), cancellable = true)
+    private static void renderShadowPartFast(ShadowFeatureRenderer.Submit shadows, VertexConsumer builder, CallbackInfo ci) {
+        var writer = VertexConsumerUtils.convertOrLog(builder);
 
         if (writer == null) {
             return;
@@ -53,29 +51,27 @@ public class ShadowFeatureRendererMixin {
 
         ci.cancel();
 
-        for (SubmitNodeStorage.ShadowSubmit shadows : submitNodeCollection.getShadowSubmits()) {
-            Matrix4fc matrices = shadows.pose();
+        Matrix4fc matrices = shadows.pose();
 
-            for (int i = 0; i < shadows.pieces().size(); i++) {
-                EntityRenderState.ShadowPiece shadowPiece = shadows.pieces().get(i);
+        for (int i = 0; i < shadows.pieces().size(); i++) {
+            EntityRenderState.ShadowPiece shadowPiece = shadows.pieces().get(i);
 
-                float alpha = shadowPiece.alpha();
+            float alpha = shadowPiece.alpha();
 
-                if (alpha >= 0.0F) {
-                    if (alpha > 1.0F) {
-                        alpha = 1.0F;
-                    }
-
-                    AABB box = shadowPiece.shapeBelow().bounds();
-
-                    float minX = (float) (shadowPiece.relativeX() + box.minX);
-                    float maxX = (float) (shadowPiece.relativeX() + box.maxX);
-                    float minY = (float) (shadowPiece.relativeY() + box.minY);
-                    float minZ = (float) (shadowPiece.relativeZ() + box.minZ);
-                    float maxZ = (float) (shadowPiece.relativeZ() + box.maxZ);
-
-                    renderShadowPart(matrices, writer, shadows.radius(), alpha, minX, maxX, minY, minZ, maxZ);
+            if (alpha >= 0.0F) {
+                if (alpha > 1.0F) {
+                    alpha = 1.0F;
                 }
+
+                AABB box = shadowPiece.shapeBelow().bounds();
+
+                float minX = (float) (shadowPiece.relativeX() + box.minX);
+                float maxX = (float) (shadowPiece.relativeX() + box.maxX);
+                float minY = (float) (shadowPiece.relativeY() + box.minY);
+                float minZ = (float) (shadowPiece.relativeZ() + box.minZ);
+                float maxZ = (float) (shadowPiece.relativeZ() + box.maxZ);
+
+                renderShadowPart(matrices, writer, shadows.radius(), alpha, minX, maxX, minY, minZ, maxZ);
             }
         }
     }

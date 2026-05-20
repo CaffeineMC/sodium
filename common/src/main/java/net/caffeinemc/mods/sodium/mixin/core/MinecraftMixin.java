@@ -10,6 +10,7 @@ import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.gui.SodiumConfigBuilder;
 import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;
 import net.caffeinemc.mods.sodium.client.platform.windows.api.Imm32;
+import net.minecraft.client.GameLoadCookie;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -86,8 +87,8 @@ public class MinecraftMixin {
     /**
      * Check for problematic core shader resource packs after the initial game launch.
      */
-    @Inject(method = "buildInitialScreens", at = @At("TAIL"))
-    private void postInit(CallbackInfoReturnable<Runnable> cir) {
+    @Inject(method = "onGameLoadFinished", at = @At("HEAD"))
+    private void postInit(GameLoadCookie cookie, CallbackInfo ci) {
         ResourcePackScanner.checkIfCoreShaderLoaded(this.resourceManager);
 
         ConfigManager.registerConfigsLate();

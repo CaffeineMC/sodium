@@ -25,7 +25,7 @@ public class CameraMixin {
         var player = Minecraft.getInstance().player;
         var worldPartialTicks = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
 
-        float screenEffectScale = gameRenderer.getGameRenderState().optionsRenderState.screenEffectScale;
+        float screenEffectScale = gameRenderer.gameRenderState().optionsRenderState.screenEffectScale;
         float portalIntensity = Mth.lerp(worldPartialTicks, player.oPortalEffectIntensity, player.portalEffectIntensity);
         float nauseaIntensity = player.getEffectBlendFactor(MobEffects.NAUSEA, worldPartialTicks);
         float spinningEffectIntensity = Math.max(portalIntensity, nauseaIntensity) * screenEffectScale * screenEffectScale;

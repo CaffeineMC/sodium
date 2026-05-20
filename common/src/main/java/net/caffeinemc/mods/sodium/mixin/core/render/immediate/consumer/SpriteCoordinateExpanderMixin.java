@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.TextureAttribute;
+import net.caffeinemc.mods.sodium.client.render.vertex.VertexFormatOffsetCache;
 import net.minecraft.client.renderer.SpriteCoordinateExpander;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
@@ -72,7 +73,10 @@ public class SpriteCoordinateExpanderMixin implements VertexBufferWriter {
     private static void transform(long ptr, int count, VertexFormat format,
                                   float minU, float minV, float maxU, float maxV) {
         long stride = format.getVertexSize();
-        long offsetUV = format.getOffset(VertexFormatElement.UV0);
+
+        var cache = VertexFormatOffsetCache.getInstance().getCachedOffsets(format);
+
+        var offsetUV = cache[VertexFormatOffsetCache.UV];
 
         // The width/height of the sprite
         float w = maxU - minU;

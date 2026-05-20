@@ -65,7 +65,7 @@ public abstract class LightDataAccess {
 
         BlockState state = level.getBlockState(pos);
 
-        boolean em = state.emissiveRendering(level, pos);
+        boolean em = state.emissiveRendering();
         boolean op = state.isViewBlocking(level, pos) && state.getLightDampening() != 0;
         boolean fo = state.isSolidRender();
         boolean fc = state.isCollisionShapeFullBlock(level, pos);
@@ -83,7 +83,7 @@ public abstract class LightDataAccess {
                 bl = level.getBrightness(LightLayer.BLOCK, pos);
                 sl = level.getBrightness(LightLayer.SKY, pos);
             } else {
-                int light = LevelRenderer.getLightCoords(LevelRenderer.BrightnessGetter.DEFAULT, level, state, pos);
+                int light = LightCoordsUtil.getLightCoords(LightCoordsUtil.BrightnessGetter.DEFAULT, level, state, pos);
                 bl = LightCoordsUtil.block(light);
                 sl = LightCoordsUtil.sky(light);
             }
@@ -164,7 +164,7 @@ public abstract class LightDataAccess {
      * Computes the combined lightmap using block light, sky light, and luminance values.
      *
      * <p>This method's logic is equivalent to
-     * {@link LevelRenderer#getLightCoords(BlockAndLightGetter, BlockPos)}, but without the
+     * {@link LightCoordsUtil#getLightCoords(BlockAndLightGetter, BlockPos)}, but without the
      * emissive check.
      */
     public static int getLightmap(int word) {
@@ -176,7 +176,7 @@ public abstract class LightDataAccess {
      * the {@link LightCoordsUtil#FULL_BRIGHT fullbright lightmap} if emissive.
      *
      * <p>This method's logic is equivalent to
-     * {@link LevelRenderer#getLightCoords(BlockAndLightGetter, BlockPos)}.
+     * {@link LightCoordsUtil#getLightCoords(BlockAndLightGetter, BlockPos)}.
      */
     public static int getEmissiveLightmap(int word) {
         if (unpackEM(word)) {

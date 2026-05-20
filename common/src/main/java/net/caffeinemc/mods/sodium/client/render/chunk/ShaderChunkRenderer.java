@@ -20,6 +20,8 @@ import net.caffeinemc.mods.sodium.mixin.core.CommandEncoderAccessor;
 import net.caffeinemc.mods.sodium.mixin.core.GlCommandEncoderAccessor;
 import net.caffeinemc.mods.sodium.mixin.core.GpuDeviceAccessor;
 import net.minecraft.resources.Identifier;
+
+import java.util.List;
 import java.util.Map;
 
 public abstract class ShaderChunkRenderer implements ChunkRenderer {
@@ -89,8 +91,11 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
     protected void begin(TerrainRenderPass pass, FogParameters parameters, GpuSampler terrainSampler) {
         RenderTarget target = pass.getTarget();
 
+        var glDevice = (GlDevice) ((GpuDeviceAccessor) RenderSystem.getDevice()).sodium$getBackend();
+        var fbo = glDevice.frameBufferCache().getFbo(glDevice.directStateAccess(), List.of(((GlTexture) target.getColorTexture())), ((GlTexture) target.getDepthTexture()));
+
         GlStateManager._viewport(0, 0, target.getColorTexture().getWidth(0), target.getColorTexture().getHeight(0));
-        GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, ((GlTexture) target.getColorTexture()).getFbo(((GlDevice) ((GpuDeviceAccessor) RenderSystem.getDevice()).sodium$getBackend()).directStateAccess(), target.getDepthTexture()));
+        GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, fbo);
         ((GlCommandEncoderAccessor) ((CommandEncoderAccessor) RenderSystem.getDevice().createCommandEncoder()).sodium$getBackend()).sodium$applyPipelineState(pass.getPipeline());
         ((GlCommandEncoderAccessor) ((CommandEncoderAccessor) RenderSystem.getDevice().createCommandEncoder()).sodium$getBackend()).sodium$setLastProgram(null);
 

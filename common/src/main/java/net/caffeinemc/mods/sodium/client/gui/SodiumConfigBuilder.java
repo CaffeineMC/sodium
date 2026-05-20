@@ -34,6 +34,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.server.packs.resources.ResourceManager;
+import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
@@ -367,10 +368,10 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setBinding((value) -> {
                                     this.vanillaOpts.cloudStatus().set(value);
 
-                                    if (Minecraft.useShaderTransparency()) {
-                                        RenderTarget framebuffer = Minecraft.getInstance().levelRenderer.getCloudsTarget();
+                                    if (Minecraft.getInstance().gameRenderer.gameRenderState().useShaderTransparency()) {
+                                        RenderTarget framebuffer = Minecraft.getInstance().levelRenderer.cloudsTarget();
                                         if (framebuffer != null) {
-                                            RenderSystem.getDevice().createCommandEncoder().clearColorAndDepthTextures(framebuffer.getColorTexture(), 0xFFFFFFFF, framebuffer.getDepthTexture(), 1.0f);
+                                            RenderSystem.getDevice().createCommandEncoder().clearColorAndDepthTextures(framebuffer.getColorTexture(), new Vector4f(1.0f), framebuffer.getDepthTexture(), 1.0f);
                                         }
                                     }
                                 }, () -> this.vanillaOpts.cloudStatus().get())
@@ -386,7 +387,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setBinding((value) -> {
                                     this.vanillaOpts.cloudRange().set(value);
 
-                                    Minecraft.getInstance().levelRenderer.getCloudRenderer().markForRebuild();
+                                    Minecraft.getInstance().levelRenderer.cloudRenderer().markForRebuild();
                                 }, () -> this.vanillaOpts.cloudRange().get())
                                 .setImpact(OptionImpact.LOW)
                                 .setValueFormatter(ControlValueFormatterImpls.translateVariable("options.chunks"))
@@ -543,7 +544,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setDefaultValue(FilterMode.NEAREST)
                                 .setBinding(filterMode -> {
                                     this.sodiumOpts.quality.pixelFilteringMode = filterMode;
-                                    Minecraft.getInstance().levelRenderer.resetSampler();
+                                    Minecraft.getInstance().levelExtractor.resetSampler();
                                 }, () -> this.sodiumOpts.quality.pixelFilteringMode)
                                 .setImpact(OptionImpact.MEDIUM)
                 )
