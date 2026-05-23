@@ -1,7 +1,9 @@
 package net.caffeinemc.mods.sodium.client.gl.buffer;
 
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gl.util.EnumBitField;
@@ -10,8 +12,8 @@ import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.lwjgl.system.MemoryUtil;
 
 public class GlBufferStreamer {
-    private final GlBuffer buffer;
-    private final GlBufferMapping mapping;
+    private final GpuBuffer buffer;
+    private final GpuBufferSlice.MappedView mapping;
     private final long writeAddress;
 
     private final int stride;
@@ -22,16 +24,13 @@ public class GlBufferStreamer {
         this.bufferSize = (long) initialCapacity * stride;
         this.stride = stride;
 
-        if (SodiumClientMod.options().advanced.useAdvancedStagingBuffers && MappedStagingBuffer.isSupported(RenderDevice.INSTANCE) && (GL.getCapabilities().GL_ARB_shader_image_load_store && GL.getCapabilities().glMemoryBarrier != 0L)) {
-            this.buffer = commands.createImmutableBuffer(bufferSize, EnumBitField.of(GlBufferStorageFlags.PERSISTENT, GlBufferStorageFlags.MAP_WRITE));
+        this.buffer = RenderSystem.getDevice().createBuffer(() -> "Streamed buffer", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_WRITE, bufferSize);
 
-            this.mapping = commands.mapBuffer(this.buffer, 0, bufferSize,
-                    EnumBitField.of(GlBufferMapFlags.PERSISTENT, GlBufferMapFlags.WRITE, GlBufferMapFlags.EXPLICIT_FLUSH));
-            this.writeAddress = MemoryUtil.memAddress(this.mapping.getMemoryBuffer());
+        if (RenderSystem.getDevice().getDeviceInfo().features().persistentMapping()) {
+            this.mapping = buffer.map(false, true);
+
+            this.writeAddress = MemoryUtil.memAddress(this.mapping.data());
         } else {
-            this.buffer = commands.createMutableBuffer();
-            commands.allocateStorage((GlMutableBuffer) this.buffer, bufferSize, GlBufferUsage.STREAM_DRAW);
-
             this.mapping = null;
             this.writeAddress = MemoryUtil.nmemAlloc(this.bufferSize);
         }
@@ -50,14 +49,13 @@ public class GlBufferStreamer {
         this.requiresFlush = true;
     }
 
-    public GlBuffer prepare(CommandList commandList) { // either flushes or uploads data. This could be replaced with a batching system, but I don't see the point with the tiny buffer we currently use it for.
+    public GpuBuffer prepare(CommandList commandList) { // either flushes or uploads data. This could be replaced with a batching system, but I don't see the point with the tiny buffer we currently use it for.
         if (requiresFlush) {
             requiresFlush = false;
             if (this.mapping != null) {
-                commandList.flushMappedRange(mapping, 0, (int) bufferSize);
                 GL44C.glMemoryBarrier(GL44C.GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT); // TODO: I don't know yet if this is required.
             } else {
-                commandList.uploadDataToOffset((GlMutableBuffer) buffer, 0, writeAddress, (int) bufferSize);
+                RenderSystem.getDevice().createCommandEncoder().writeToBuffer(buffer.slice(), MemoryUtil.memByteBuffer(writeAddress, (int) bufferSize));
             }
         }
 
@@ -66,11 +64,11 @@ public class GlBufferStreamer {
 
     public void delete(CommandList commandList) {
         if (this.mapping != null) {
-            commandList.unmap(this.mapping);
+            this.mapping.close();
         } else {
             MemoryUtil.nmemFree(this.writeAddress);
         }
 
-        commandList.deleteBuffer(this.buffer);
+        this.buffer.close();
     }
 }

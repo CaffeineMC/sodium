@@ -10,6 +10,9 @@
     "conformVisibility": true,
     "requireAnnotations": true
   },
+  "mixinextras": {
+    "minVersion": "0.5.2"
+  },
   "client": [
     "core.CommandEncoderAccessor",
     "core.GlCommandEncoderAccessor",
@@ -39,6 +42,7 @@
     "core.render.world.LevelRendererMixin",
     "core.render.world.ParticleFeatureRendererMixin",
     "core.render.world.RenderBuffersMixin",
+    "core.render.world.ViewAreaMixin",
     "core.world.biome.ClientLevelMixin",
     "core.world.chunk.PalettedContainerMixin",
     "core.world.chunk.SimpleBitStorageMixin",

@@ -1,9 +1,11 @@
 package net.caffeinemc.mods.sodium.client.gl.tessellation;
 
+import com.mojang.blaze3d.opengl.GlBuffer;
 import net.caffeinemc.mods.sodium.client.gl.attribute.GlVertexAttributeBinding;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL33C;
 
 public abstract class GlAbstractTessellation implements GlTessellation {
     protected final GlPrimitiveType primitiveType;
@@ -21,7 +23,7 @@ public abstract class GlAbstractTessellation implements GlTessellation {
 
     protected void bindAttributes(CommandList commandList) {
         for (TessellationBinding binding : this.bindings) {
-            commandList.bindBuffer(binding.target(), binding.buffer());
+            GL33C.glBindBuffer(binding.target().getTargetParameter(), ((GlBuffer) binding.buffer()).handle());
 
             for (GlVertexAttributeBinding attrib : binding.attributeBindings()) {
                 if (attrib.isIntType()) {

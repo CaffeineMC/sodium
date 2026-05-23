@@ -5,8 +5,7 @@ import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gl.arena.PendingUpload;
-import net.caffeinemc.mods.sodium.client.gl.arena.staging.FallbackStagingBuffer;
-import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
+import net.caffeinemc.mods.sodium.client.gl.arena.staging.MojangStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.arena.staging.StagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
@@ -265,10 +264,6 @@ public class RenderRegionManager {
     }
 
     private static StagingBuffer createStagingBuffer(CommandList commandList) {
-        if (SodiumClientMod.options().advanced.useAdvancedStagingBuffers && MappedStagingBuffer.isSupported(RenderDevice.INSTANCE)) {
-            return new MappedStagingBuffer(commandList);
-        }
-
-        return new FallbackStagingBuffer(commandList);
+        return new MojangStagingBuffer(32_000_000);
     }
 }

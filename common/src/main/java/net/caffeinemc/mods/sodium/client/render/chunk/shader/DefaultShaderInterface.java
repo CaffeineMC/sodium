@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.shader;
 
+import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.opengl.GlSampler;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTexture;
@@ -7,7 +8,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.GLRenderDevice;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.*;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
@@ -115,7 +115,7 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
     }
 
     @Override
-    public void setChunkData(GlBuffer data, int time) {
+    public void setChunkData(GpuBuffer data, int time) {
         uniformChunkData.bindBuffer(data);
         uniformCurrentTime.set(time);
     }

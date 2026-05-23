@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.gl.shader.uniform;
 
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.opengl.GlBuffer;
 import org.lwjgl.opengl.GL32C;
 
 public class GlUniformBlock {
@@ -10,7 +11,7 @@ public class GlUniformBlock {
         this.binding = uniformBlockBinding;
     }
 
-    public void bindBuffer(GlBuffer buffer) {
-        GL32C.glBindBufferBase(GL32C.GL_UNIFORM_BUFFER, this.binding, buffer.handle());
+    public void bindBuffer(GpuBuffer buffer) {
+        GL32C.glBindBufferBase(GL32C.GL_UNIFORM_BUFFER, this.binding, ((GlBuffer) buffer).handle());
     }
 }

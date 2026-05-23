@@ -55,7 +55,7 @@
   "sodium.options.cpu_render_ahead_limit.value": "%s frame(s)",
   "sodium.options.performance_impact_string": "Performance Impact: %s",
   "sodium.options.use_persistent_mapping.name": "Use Persistent Mapping",
-  "sodium.options.use_persistent_mapping.tooltip": "For debugging only. If enabled, persistent memory mappings will be used for the staging buffer so that unnecessary memory copies can be avoided. Disabling this can be useful for narrowing down the cause of graphical corruption.\n\nRequires OpenGL 4.4 or ARB_buffer_storage.",
+  "sodium.options.use_persistent_mapping.tooltip": "This is now always on if supported.",
   "sodium.options.chunk_update_threads.name": "Chunk Update Threads",
   "sodium.options.chunk_update_threads.value": "%s Threads",
   "sodium.options.default": "Default",

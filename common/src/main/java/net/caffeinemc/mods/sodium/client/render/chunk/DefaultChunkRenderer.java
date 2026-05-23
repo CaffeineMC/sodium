@@ -1,8 +1,8 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
+import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.textures.GpuSampler;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.DrawCommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.MultiDrawBatch;
@@ -307,7 +307,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         return planes;
     }
 
-    private static void setModelMatrixUniforms(ChunkShaderInterface shader, RenderRegion region, CameraTransform camera, GlBuffer chunKData) {
+    private static void setModelMatrixUniforms(ChunkShaderInterface shader, RenderRegion region, CameraTransform camera, GpuBuffer chunKData) {
         float x = getCameraTranslation(region.getOriginX(), camera.intX, camera.fracX);
         float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
         float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);

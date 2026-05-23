@@ -1,9 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBufferMapFlags;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBufferUsage;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlMutableBuffer;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.tessellation.GlIndexType;
 import net.caffeinemc.mods.sodium.client.gl.util.EnumBitField;
@@ -17,13 +15,12 @@ public class SharedQuadIndexBuffer {
     private static final int ELEMENTS_PER_PRIMITIVE = 6;
     private static final int VERTICES_PER_PRIMITIVE = 4;
 
-    private final GlMutableBuffer buffer;
+    private GpuBuffer buffer;
     private final IndexType indexType;
 
     private int maxPrimitives;
 
     public SharedQuadIndexBuffer(CommandList commandList, IndexType indexType) {
-        this.buffer = commandList.createMutableBuffer();
         this.indexType = indexType;
     }
 
@@ -44,14 +41,16 @@ public class SharedQuadIndexBuffer {
     }
 
     private void grow(CommandList commandList, int primitiveCount) {
+        if (this.buffer != null) this.buffer.close();
+
         var bufferSize = primitiveCount * this.indexType.getBytesPerElement() * ELEMENTS_PER_PRIMITIVE;
 
-        commandList.allocateStorage(this.buffer, bufferSize, GlBufferUsage.STATIC_DRAW);
+        this.buffer = RenderSystem.getDevice().createBuffer(() -> "Shared index buffer", GpuBuffer.USAGE_INDEX | GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_WRITE, bufferSize);
 
-        var mapped = commandList.mapBuffer(this.buffer, 0, bufferSize, EnumBitField.of(GlBufferMapFlags.INVALIDATE_BUFFER, GlBufferMapFlags.WRITE, GlBufferMapFlags.UNSYNCHRONIZED));
-        this.indexType.createIndexBuffer(mapped.getMemoryBuffer(), primitiveCount);
+        var mapped = buffer.map(false, true);
+        this.indexType.createIndexBuffer(mapped.data(), primitiveCount);
 
-        commandList.unmap(mapped);
+        mapped.close();
 
         this.maxPrimitives = primitiveCount;
     }
@@ -65,12 +64,12 @@ public class SharedQuadIndexBuffer {
         return buffer;
     }
 
-    public GlBuffer getBufferObject() {
+    public GpuBuffer getBufferObject() {
         return this.buffer;
     }
 
     public void delete(CommandList commandList) {
-        commandList.deleteBuffer(this.buffer);
+        if (this.buffer != null) this.buffer.close();
     }
 
     public enum IndexType {

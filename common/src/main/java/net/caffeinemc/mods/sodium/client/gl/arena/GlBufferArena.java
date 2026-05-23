@@ -1,9 +1,8 @@
 package net.caffeinemc.mods.sodium.client.gl.arena;
 
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.client.gl.arena.staging.StagingBuffer;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBufferUsage;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 
 import java.nio.ByteBuffer;
@@ -25,10 +24,8 @@ public class GlBufferArena {
     // how much bigger than requested a buffer can be to be considered for reuse
     public static final float MAX_BUFFER_REUSE_SIZE_FACTOR = 1.4f;
 
-    private static final GlBufferUsage BUFFER_USAGE = GlBufferUsage.STATIC_DRAW;
-
     private final StagingBuffer stagingBuffer;
-    private GlMutableBuffer arenaBuffer;
+    private GpuBuffer arenaBuffer;
 
     private GlBufferSegment head;
 
@@ -38,7 +35,7 @@ public class GlBufferArena {
 
     private final int stride;
 
-    private static final GlMutableBuffer[] freeBuffers = new GlMutableBuffer[8];
+    private static final GpuBuffer[] freeBuffers = new GpuBuffer[8];
     private static int freeBufferCount = 0;
 
     public GlBufferArena(CommandList commands, int initialCapacity, int stride, StagingBuffer stagingBuffer) {
@@ -50,7 +47,7 @@ public class GlBufferArena {
         this.head.setFree(true);
 
         this.arenaBuffer = getBufferOfSizeAtLeast(commands, this.capacity * stride);
-        this.capacity = this.arenaBuffer.getSize() / stride;
+        this.capacity = this.arenaBuffer.size() / stride;
 
         this.stagingBuffer = stagingBuffer;
     }
@@ -126,8 +123,8 @@ public class GlBufferArena {
         return pendingCopies;
     }
 
-    private static GlMutableBuffer getBufferOfSizeAtLeast(CommandList commandList, long size) {
-        GlMutableBuffer buffer = null;
+    private static GpuBuffer getBufferOfSizeAtLeast(CommandList commandList, long size) {
+        GpuBuffer buffer = null;
 
         if (freeBufferCount > 0) {
             // get any buffer of at least the requested size but at most MAX_BUFFER_REUSE_SIZE_FACTOR larger
@@ -136,11 +133,11 @@ public class GlBufferArena {
             // iterate buffers to get the smallest acceptable one
             int candidateIndex = -1;
             for (int i = 0; i < freeBuffers.length; i++) {
-                GlMutableBuffer freeBuffer = freeBuffers[i];
+                GpuBuffer freeBuffer = freeBuffers[i];
                 if (freeBuffer != null) {
-                    long testSize = freeBuffer.getSize();
+                    long testSize = freeBuffer.size();
                     if (testSize >= size && testSize <= maxAcceptableSize &&
-                            (buffer == null || testSize < buffer.getSize())) {
+                            (buffer == null || testSize < buffer.size())) {
                         candidateIndex = i;
                         buffer = freeBuffer;
                     }
@@ -153,13 +150,12 @@ public class GlBufferArena {
         }
 
         if (buffer == null) {
-            buffer = commandList.createMutableBuffer();
-            commandList.allocateStorage(buffer, size, BUFFER_USAGE);
+            buffer = RenderSystem.getDevice().createBuffer(() -> "Arena buffer", GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_COPY_SRC | GpuBuffer.USAGE_INDEX | GpuBuffer.USAGE_VERTEX, size);
         }
         return buffer;
     }
 
-    private static void releaseBufferForReuse(CommandList commandList, GlMutableBuffer buffer) {
+    private static void releaseBufferForReuse(CommandList commandList, GpuBuffer buffer) {
         // find an empty slot if there is one
         if (freeBufferCount < freeBuffers.length) {
             for (int i = 0; i < freeBuffers.length; i++) {
@@ -173,7 +169,7 @@ public class GlBufferArena {
 
         // evict randomly if no empty slot available
         int evictIndex = (int) (Math.random() * freeBuffers.length);
-        commandList.deleteBuffer(freeBuffers[evictIndex]);
+        freeBuffers[evictIndex].close();
         freeBuffers[evictIndex] = buffer;
     }
 
@@ -183,14 +179,12 @@ public class GlBufferArena {
             throw new IllegalArgumentException("Maximum arena buffer size is 4 GiB");
         }
 
-        GlMutableBuffer srcBufferObj = this.arenaBuffer;
-        GlMutableBuffer dstBufferObj = getBufferOfSizeAtLeast(commandList, bufferSize);
+        var srcBufferObj = this.arenaBuffer;
+        var dstBufferObj = getBufferOfSizeAtLeast(commandList, bufferSize);
 
         for (PendingBufferCopyCommand cmd : list) {
-            commandList.copyBufferSubData(srcBufferObj, dstBufferObj,
-                    cmd.getReadOffset() * this.stride,
-                    cmd.getWriteOffset() * this.stride,
-                    cmd.getLength() * this.stride);
+            RenderSystem.getDevice().createCommandEncoder().copyToBuffer(srcBufferObj.slice(cmd.getReadOffset() * this.stride, cmd.getLength() * this.stride),
+                    dstBufferObj.slice(cmd.getWriteOffset() * this.stride, cmd.getLength() * this.stride));
         }
 
         releaseBufferForReuse(commandList, srcBufferObj);
@@ -198,7 +192,7 @@ public class GlBufferArena {
         this.arenaBuffer = dstBufferObj;
         
         // set the capacity using the size of the buffer since it may be larger than the expected capacity due to buffer reuse
-        this.capacity = this.arenaBuffer.getSize() / this.stride;
+        this.capacity = this.arenaBuffer.size() / this.stride;
     }
 
     private ArrayList<GlBufferSegment> getUsedSegments() {
@@ -312,21 +306,21 @@ public class GlBufferArena {
     }
 
     public void delete(CommandList commands) {
-        commands.deleteBuffer(this.arenaBuffer);
+        if (this.arenaBuffer != null) this.arenaBuffer.close();
     }
 
     public boolean isEmpty() {
         return this.used <= 0;
     }
 
-    public GlBuffer getBufferObject() {
+    public GpuBuffer getBufferObject() {
         return this.arenaBuffer;
     }
 
     public boolean upload(CommandList commandList, Stream<PendingUpload> stream, float regionFillFractionInv) {
         // Record the buffer object before we start any work
         // If the arena needs to re-allocate a buffer, this will allow us to check and return an appropriate flag
-        GlBuffer buffer = this.arenaBuffer;
+        GpuBuffer buffer = this.arenaBuffer;
 
         // A linked list is used as we'll be randomly removing elements and want O(1) performance
         long totalUploadSize = 0;

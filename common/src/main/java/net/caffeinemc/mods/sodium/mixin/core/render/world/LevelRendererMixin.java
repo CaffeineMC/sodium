@@ -1,5 +1,8 @@
 package net.caffeinemc.mods.sodium.mixin.core.render.world;
 
+import com.llamalad7.mixinextras.expression.Definition;
+import com.llamalad7.mixinextras.expression.Expression;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
@@ -11,15 +14,22 @@ import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
 import net.caffeinemc.mods.sodium.client.util.GameRendererStorage;
+import net.caffeinemc.mods.sodium.client.util.IgnoringSectionRenderDispatcher;
+import net.caffeinemc.mods.sodium.client.util.IgnoringViewArea;
 import net.caffeinemc.mods.sodium.client.util.SodiumChunkSection;
 import net.caffeinemc.mods.sodium.client.world.LevelRendererExtension;
+import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
+import net.minecraft.client.color.block.BlockColors;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
+import net.minecraft.client.renderer.chunk.SectionCompiler;
+import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
@@ -28,9 +38,12 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.client.resources.model.sprite.AtlasManager;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Util;
+import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.joml.Matrix4fc;
 import org.joml.Vector4f;
+import org.jspecify.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
@@ -62,6 +75,20 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     @Shadow
     @Final
     private LevelRenderState levelRenderState;
+    @Shadow
+    @Final
+    private CloudRenderer cloudRenderer;
+
+    @Shadow
+    public abstract void clearVisibleSections();
+
+    @Shadow
+    private @Nullable ViewArea viewArea;
+    @Shadow
+    private @Nullable SectionRenderDispatcher sectionRenderDispatcher;
+    @Shadow
+    @Final
+    private SectionOcclusionGraph sectionOcclusionGraph;
     @Unique
     private SodiumWorldRenderer renderer;
 
@@ -125,8 +152,13 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         return this.renderer.isSectionReady(pos.getX() >> 4, pos.getY() >> 4, pos.getZ() >> 4);
     }
 
-    @Inject(method = "invalidateCompiledGeometry", at = @At("RETURN"))
-    private void onReload(CallbackInfo ci) {
+    @Inject(method = "invalidateCompiledGeometry", at = @At("HEAD"), cancellable = true)
+    private void sodium$replace(ClientLevel level, Options options, Camera camera, BlockColors blockColors, CallbackInfo ci) {
+        ci.cancel();
+
+        this.cloudRenderer.markForRebuild();
+        LeavesBlock.setCutoutLeaves(options.cutoutLeaves().get());
+
         RenderDevice.enterManagedCode();
 
         try {
@@ -134,8 +166,13 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         } finally {
             RenderDevice.exitManagedCode();
         }
-    }
 
+        this.sectionRenderDispatcher = new IgnoringSectionRenderDispatcher(Util.backgroundExecutor(), this.renderBuffers, null, this.sectionOcclusionGraph::schedulePropagationFrom);
+        this.viewArea = new IgnoringViewArea(sectionRenderDispatcher);
+        this.sectionOcclusionGraph .waitAndReset(this.viewArea);
+
+        this.clearVisibleSections();
+    }
 
     // Exclusive to NeoForge, allow to fail.
     @SuppressWarnings("all")

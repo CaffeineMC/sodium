@@ -1,9 +1,9 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.region;
 
+import com.mojang.blaze3d.buffers.GpuBuffer;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.gl.arena.GlBufferArena;
 import net.caffeinemc.mods.sodium.client.gl.arena.staging.StagingBuffer;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer;
 import net.caffeinemc.mods.sodium.client.gl.buffer.GlBufferStreamer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.MultiDrawBatch;
@@ -367,7 +367,7 @@ public class RenderRegion {
             return this.indexedTessellation;
         }
 
-        public GlBuffer prepareChunkData(CommandList commandList) {
+        public GpuBuffer prepareChunkData(CommandList commandList) {
             return this.chunkFades.prepare(commandList);
         }
 
@@ -385,11 +385,11 @@ public class RenderRegion {
             }
         }
 
-        public GlBuffer getGeometryBuffer() {
+        public GpuBuffer getGeometryBuffer() {
             return this.geometryArena.getBufferObject();
         }
 
-        public GlBuffer getIndexBuffer() {
+        public GpuBuffer getIndexBuffer() {
             return this.indexArena.getBufferObject();
         }
 

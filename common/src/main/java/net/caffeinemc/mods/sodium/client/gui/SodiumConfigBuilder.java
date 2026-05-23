@@ -18,7 +18,6 @@ import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
 import net.caffeinemc.mods.sodium.client.config.structure.Config;
-import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
@@ -706,7 +705,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
     private OptionPageBuilder buildAdvancedPage(ConfigBuilder builder) {
         var advancedPage = builder.createOptionPage().setName(Component.translatable("sodium.options.pages.advanced"));
 
-        boolean isPersistentMappingSupported = MappedStagingBuffer.isSupported(RenderDevice.INSTANCE);
 
         advancedPage.addOptionGroup(builder.createOptionGroup()
                 .addOption(
@@ -716,22 +714,9 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setTooltip(Component.translatable("sodium.options.use_persistent_mapping.tooltip"))
                                 .setDefaultValue(DEFAULTS.advanced.useAdvancedStagingBuffers)
                                 .setBinding(value -> this.sodiumOpts.advanced.useAdvancedStagingBuffers = value, () -> this.sodiumOpts.advanced.useAdvancedStagingBuffers)
-                                .setEnabled(isPersistentMappingSupported)
+                                .setEnabled(false)
                                 .setImpact(OptionImpact.MEDIUM)
                                 .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
-                )
-        );
-
-        advancedPage.addOptionGroup(builder.createOptionGroup()
-                .addOption(
-                        builder.createIntegerOption(Identifier.parse("sodium:advanced.cpu_render_ahead_limit"))
-                                .setStorageHandler(this.sodiumStorage)
-                                .setName(Component.translatable("sodium.options.cpu_render_ahead_limit.name"))
-                                .setValueFormatter(ControlValueFormatterImpls.translateVariable("sodium.options.cpu_render_ahead_limit.value"))
-                                .setTooltip(Component.translatable("sodium.options.cpu_render_ahead_limit.tooltip"))
-                                .setRange(0, 9, 1)
-                                .setDefaultValue(DEFAULTS.advanced.cpuRenderAheadLimit)
-                                .setBinding(value -> this.sodiumOpts.advanced.cpuRenderAheadLimit = value, () -> this.sodiumOpts.advanced.cpuRenderAheadLimit)
                 )
         );
         return advancedPage;
