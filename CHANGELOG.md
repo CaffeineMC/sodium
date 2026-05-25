@@ -18,14 +18,20 @@ Sodium [SodiumVersion]() is a backport of modern Sodium 0.8 to Minecraft [MCVers
 ### Using and Testing This Release
 It includes the backport of our Config API and other conventions that will hopefully make it easier for mods to interact with Sodium across multiple versions. This release series doesn't get released at the same cadence as our current releases for Minecraft 26.1 and 1.21.11, and doesn't follow the same alpha/beta numbering. Mod developers can find our artifacts, such as the Config API, on [our Maven repository](https://maven.caffeinemc.net/).
 
-Please participate in testing this release, coordinating on mod compatibility, and giving feedback on [our discord server](https://caffeinemc.net/discord).
+Please participate in testing this release, coordinating on mod compatibility, and giving feedback on [our discord server](https://caffeinemc.net/discord). In the thread in #testing-builds we have more information. Report any issues you may have in the thread.
 
-Known incompatibilities at the time of release:
-- Iris
-- Voxy
-- More culling, sodiumleafculling
-- Create Aeronautics, Sable
+Known incompatibilities at the time of this release:
+- sodiumleafculling does not work
+- C2ME's latest version works
+- Create Aeronautics does not work
+- Veil has an update that works, Sable has a patch that works but no update
+- Iris has a test build on discord that works
+- More culling's latest version works
+- Voxy does not work
+- EBE animations don’t work
 
 ### Alpha Series Changelog
 - Fix BufferBuilderMixin conflicting with Iris' MixinBufferBuilder_SeparateAo when requireOverwriteAnnotations is enabled ([#3658](https://github.com/CaffeineMC/sodium/pull/3658))
 - Potentially fix issues with publishing by making the buildscript more similar to that used in 1.21.11
+- Fix the corrupted config screen to show up properly
+- Revert "Update texture light coords math to match Vanilla (#3311)" as this was mistakenly applied to 1.21.1
