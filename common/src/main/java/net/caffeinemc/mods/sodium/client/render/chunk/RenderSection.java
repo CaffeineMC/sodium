@@ -66,6 +66,7 @@ public class RenderSection {
 
     // Lifetime state
     private boolean disposed;
+    private boolean consumeFade = true;
 
     public RenderSection(RenderRegion region, int chunkX, int chunkY, int chunkZ) {
         this.chunkX = chunkX;
@@ -589,5 +590,11 @@ public class RenderSection {
         }
         this.pendingDynamicSortOutput = null;
         return output;
+    }
+
+    public boolean consumeFade() {
+        boolean consume = this.consumeFade;
+        this.consumeFade = false;
+        return consume;
     }
 }
