@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk;
 
 import com.mojang.blaze3d.IndexType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -31,6 +32,7 @@ import net.caffeinemc.mods.sodium.mixin.core.GlRenderPassAccessor;
 import net.caffeinemc.mods.sodium.mixin.core.RenderPassAccessor;
 import net.caffeinemc.mods.sodium.mixin.core.VulkanRenderPassAccessor;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MappableRingBuffer;
 import org.lwjgl.opengl.GL46C;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -46,11 +48,20 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
     public static final int PUSH_CONSTANT_RANGE = 20;
 
     private final SharedQuadIndexBuffer sharedIndexBuffer;
+    private final MappableRingBuffer ringBuffer;
+
+    private int currentFrameOffset = 0;
+    private GpuBuffer lastUBO;
 
     public DefaultChunkRenderer(RenderDevice device, ChunkVertexType vertexType) {
         super(device, vertexType);
 
         this.sharedIndexBuffer = new SharedQuadIndexBuffer(device.createCommandList(), SharedQuadIndexBuffer.IndexFormat.INTEGER);
+        if (!MultiDrawBatch.supportsMultiDraw) {
+            this.ringBuffer = new MappableRingBuffer(() -> "Indirect storage buffer", GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_INDIRECT_PARAMETERS, 8_000_000);
+        } else {
+            this.ringBuffer = null;
+        }
     }
 
     /**
@@ -69,10 +80,18 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                        GpuSampler terrainSampler, GpuBuffer uniformData, GpuBuffer sectionTimeInfo) {
         super.begin(renderPass, parameters, terrainSampler);
 
+        if (lastUBO != uniformData) {
+            lastUBO = uniformData;
+            currentFrameOffset = 0;
+            if (ringBuffer != null) ringBuffer.rotate();
+        }
+
         final boolean useBlockFaceCulling = SodiumClientMod.options().performance.useBlockFaceCulling;
         final boolean useIndexedTessellation = renderPass.isTranslucent() && indexedRenderingEnabled;
 
         Iterator<ChunkRenderList> iterator = renderLists.iterator(renderPass.isTranslucent());
+
+        int sizes = 0;
 
         while (iterator.hasNext()) {
             ChunkRenderList renderList = iterator.next();
@@ -88,6 +107,8 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
             if (!batch.isFilled) {
                 fillCommandBuffer(batch, region, storage, renderList, camera, renderPass, useBlockFaceCulling, useIndexedTessellation);
             }
+
+            sizes += batch.size;
 
             if (batch.isEmpty()) {
                 continue;
@@ -106,6 +127,8 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         var encoder = RenderSystem.getDevice().createCommandEncoder();
         var commandBackend = ((CommandEncoderAccessor) encoder).sodium$getBackend();
         boolean isGL = !(commandBackend instanceof VulkanCommandEncoder); // TODO
+
+        GpuBufferSlice.MappedView map = MultiDrawBatch.supportsMultiDraw ? null : ringBuffer.currentBuffer().map(false, true);
 
         try (RenderPass pass = encoder.createRenderPass(() -> "Terrain",
                 renderPass.getTarget().getColorTextureView(), Optional.empty(),
@@ -163,10 +186,12 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                     batch.drawGL(pass);
                 } else {
                     setModelMatrixConstants(cmdBuf, layout, region, camera);
-                    batch.drawVK(pass);
+                    currentFrameOffset += batch.drawVK(currentFrameOffset, map, pass);
                 }
             }
         }
+
+        if (map != null) map.close();
 
         super.end(renderPass);
     }
@@ -399,5 +424,6 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         super.delete(commandList);
 
         this.sharedIndexBuffer.delete(commandList);
+        if (this.ringBuffer != null) this.ringBuffer.close();
     }
 }
