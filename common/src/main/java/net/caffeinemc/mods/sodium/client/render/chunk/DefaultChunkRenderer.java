@@ -1,23 +1,22 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
+import com.mojang.blaze3d.IndexType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
-import net.caffeinemc.mods.sodium.client.gl.device.DrawCommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.MultiDrawBatch;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
-import net.caffeinemc.mods.sodium.client.gl.tessellation.GlIndexType;
-import net.caffeinemc.mods.sodium.client.gl.tessellation.GlPrimitiveType;
-import net.caffeinemc.mods.sodium.client.gl.tessellation.GlTessellation;
-import net.caffeinemc.mods.sodium.client.gl.tessellation.TessellationBinding;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.data.SectionRenderDataStorage;
 import net.caffeinemc.mods.sodium.client.render.chunk.data.SectionRenderDataUnsafe;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.ChunkRenderList;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.ChunkRenderListIterable;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
-import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
@@ -25,9 +24,16 @@ import net.caffeinemc.mods.sodium.client.util.BitwiseMath;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.client.util.UInt32;
 import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
+import net.caffeinemc.mods.sodium.mixin.core.GlRenderPassAccessor;
+import net.caffeinemc.mods.sodium.mixin.core.RenderPassAccessor;
+import net.minecraft.client.Minecraft;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.Pointer;
 
 import java.util.Iterator;
+import java.util.Optional;
+import java.util.OptionalDouble;
 
 public class DefaultChunkRenderer extends ShaderChunkRenderer {
     private final SharedQuadIndexBuffer sharedIndexBuffer;
@@ -51,15 +57,11 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                        CameraTransform camera,
                        FogParameters parameters,
                        boolean indexedRenderingEnabled,
-                       GpuSampler terrainSampler) {
+                       GpuSampler terrainSampler, GpuBuffer uniformData, GpuBuffer sectionTimeInfo) {
         super.begin(renderPass, parameters, terrainSampler);
 
         final boolean useBlockFaceCulling = SodiumClientMod.options().performance.useBlockFaceCulling;
         final boolean useIndexedTessellation = renderPass.isTranslucent() && indexedRenderingEnabled;
-
-        ChunkShaderInterface shader = this.activeProgram.getInterface();
-        shader.setProjectionMatrix(matrices.projection());
-        shader.setModelViewMatrix(matrices.modelView());
 
         Iterator<ChunkRenderList> iterator = renderLists.iterator(renderPass.isTranslucent());
 
@@ -88,16 +90,57 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                 this.sharedIndexBuffer.ensureCapacity(commandList, batch.getIndexBufferSize());
             }
 
-            GlTessellation tessellation;
+        }
 
-            if (useIndexedTessellation) {
-                tessellation = this.prepareIndexedTessellation(commandList, region);
-            } else {
-                tessellation = this.prepareTessellation(commandList, region);
+        iterator = renderLists.iterator(renderPass.isTranslucent());
+
+        var encoder = RenderSystem.getDevice().createCommandEncoder();
+        try (RenderPass pass = encoder.createRenderPass(() -> "Terrain",
+                renderPass.getTarget().getColorTextureView(), Optional.empty(),
+                renderPass.getTarget().getDepthTextureView(), OptionalDouble.empty())) {
+            pass.setPipeline(this.activeProgram);
+            if (!useIndexedTessellation) pass.setIndexBuffer(sharedIndexBuffer.getBufferObject(), IndexType.INT);
+
+            pass.setUniform("u_Globals", uniformData);
+            pass.setUniform("u_SectionTimeInfo", sectionTimeInfo);
+            pass.bindTexture("u_LightTex", Minecraft.getInstance().gameRenderer.lightmap(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
+            pass.bindTexture("u_BlockTex", renderPass.getAtlas(), terrainSampler);
+
+            GlRenderPassAccessor passBackend = (GlRenderPassAccessor) ((RenderPassAccessor) pass).getBackend();
+            int programId = passBackend.getPipeline().program().getProgramId();
+            GlStateManager._glUseProgram(programId);
+            int regionUniform = GL46C.glGetUniformLocation(programId, "u_RegionOffset");
+            int timeUniform = GL46C.glGetUniformLocation(programId, "u_CurrentTime");
+            int idUniform = GL46C.glGetUniformLocation(programId, "u_RegionID");
+
+            while (iterator.hasNext()) {
+                ChunkRenderList renderList = iterator.next();
+
+                var region = renderList.getRegion();
+                var storage = region.getStorage(renderPass);
+
+                if (storage == null) {
+                    continue;
+                }
+
+                var batch = region.getCachedBatch(renderPass);
+                if (batch.isEmpty()) {
+                    continue;
+                }
+
+
+                if (useIndexedTessellation) {
+                    pass.setIndexBuffer(region.getResources().getIndexBuffer(), IndexType.INT);
+                }
+
+                pass.setVertexBuffer(0, region.getResources().getGeometryBuffer().slice());
+
+
+                setModelMatrixUniforms(programId, regionUniform, timeUniform, idUniform, region, camera);
+                pass.multiDrawIndexed(MemoryUtil.memPointerBuffer(batch.pElementPointer, batch.size),
+                        MemoryUtil.memIntBuffer(batch.pElementCount, batch.size),
+                        MemoryUtil.memIntBuffer(batch.pBaseVertex, batch.size), batch.size);
             }
-
-            setModelMatrixUniforms(shader, region, camera, region.getResources().prepareChunkData(commandList));
-            executeDrawBatch(commandList, tessellation, batch);
         }
 
         super.end(renderPass);
@@ -307,56 +350,18 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         return planes;
     }
 
-    private static void setModelMatrixUniforms(ChunkShaderInterface shader, RenderRegion region, CameraTransform camera, GpuBuffer chunKData) {
+    private static void setModelMatrixUniforms(int programId, int regionUniform, int timeUniform, int idUniform, RenderRegion region, CameraTransform camera) {
         float x = getCameraTranslation(region.getOriginX(), camera.intX, camera.fracX);
         float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
         float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
 
-        shader.setRegionOffset(x, y, z);
-        shader.setChunkData(chunKData, Math.toIntExact(System.currentTimeMillis() - region.getCreationTime()));
+        GL46C.glUniform3f(regionUniform, x, y, z);
+        GL46C.glUniform1i(timeUniform, Math.toIntExact(System.currentTimeMillis() - region.getCreationTime()));
+        GL46C.glUniform1ui(idUniform, region.getId());
     }
 
     private static float getCameraTranslation(int chunkBlockPos, int cameraBlockPos, float cameraPos) {
         return (chunkBlockPos - cameraBlockPos) - cameraPos;
-    }
-
-    private GlTessellation prepareTessellation(CommandList commandList, RenderRegion region) {
-        var resources = region.getResources();
-
-        GlTessellation tessellation = resources.getTessellation();
-        if (tessellation == null) {
-            tessellation = this.createRegionTessellation(commandList, resources, true);
-            resources.updateTessellation(commandList, tessellation);
-        }
-
-        return tessellation;
-    }
-
-    private GlTessellation prepareIndexedTessellation(CommandList commandList, RenderRegion region) {
-        var resources = region.getResources();
-
-        GlTessellation tessellation = resources.getIndexedTessellation();
-        if (tessellation == null) {
-            tessellation = this.createRegionTessellation(commandList, resources, false);
-            resources.updateIndexedTessellation(commandList, tessellation);
-        }
-
-        return tessellation;
-    }
-
-    private GlTessellation createRegionTessellation(CommandList commandList, RenderRegion.DeviceResources resources, boolean useSharedIndexBuffer) {
-        return commandList.createTessellation(GlPrimitiveType.TRIANGLES, new TessellationBinding[] {
-                TessellationBinding.forVertexBuffer(resources.getGeometryBuffer(), this.vertexFormat.getShaderBindings()),
-                TessellationBinding.forElementBuffer(useSharedIndexBuffer
-                        ? this.sharedIndexBuffer.getBufferObject()
-                        : resources.getIndexBuffer())
-        });
-    }
-
-    private static void executeDrawBatch(CommandList commandList, GlTessellation tessellation, MultiDrawBatch batch) {
-        try (DrawCommandList drawCommandList = commandList.beginTessellating(tessellation)) {
-            drawCommandList.multiDrawElementsBaseVertex(batch, GlIndexType.UNSIGNED_INT);
-        }
     }
 
     @Override

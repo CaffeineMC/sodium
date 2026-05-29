@@ -9,7 +9,9 @@ import net.caffeinemc.mods.sodium.client.gl.arena.staging.MojangStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.arena.staging.StagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
+import net.caffeinemc.mods.sodium.client.render.chunk.IntPool;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
+import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkSortOutput;
@@ -31,8 +33,11 @@ public class RenderRegionManager {
     private final Long2ReferenceOpenHashMap<RenderRegion> regions = new Long2ReferenceOpenHashMap<>();
 
     private final StagingBuffer stagingBuffer;
+    private final IntPool freeIds = new IntPool();
+    private final RenderSectionManager parent;
 
-    public RenderRegionManager(CommandList commandList) {
+    public RenderRegionManager(RenderSectionManager parent, CommandList commandList) {
+        this.parent = parent;
         this.stagingBuffer = createStagingBuffer(commandList);
     }
 
@@ -49,6 +54,7 @@ public class RenderRegionManager {
 
                 if (region.isEmpty()) {
                     region.delete(commandList);
+                    freeIds.release(region.getId());
 
                     it.remove();
                 }
@@ -172,7 +178,7 @@ public class RenderRegionManager {
                     double distanceToPlayer = dx * dx + dy * dy + dz * dz;
 
                     int relativeBuiltTime = distanceToPlayer < 768.0 ? -1 : upload.relativeBuiltTime;
-                    resources.writeMeshTimes(upload.section.getSectionIndex(), relativeBuiltTime);
+                    parent.writeMeshTimes(region.getId(), upload.section.getSectionIndex(), relativeBuiltTime);
                 }
                 storage.setVertexData(upload.section.getSectionIndex(),
                         upload.vertexUpload.getResult(), upload.meshData.getVertexSegments());
@@ -219,6 +225,7 @@ public class RenderRegionManager {
     public void delete(CommandList commandList) {
         for (RenderRegion region : this.regions.values()) {
             region.delete(commandList);
+            freeIds.release(region.getId());
         }
 
         this.regions.clear();
@@ -251,7 +258,7 @@ public class RenderRegionManager {
         var instance = this.regions.get(key);
 
         if (instance == null) {
-            this.regions.put(key, instance = new RenderRegion(x, y, z, this.stagingBuffer));
+            this.regions.put(key, instance = new RenderRegion(x, y, z, this.stagingBuffer, this.freeIds.acquire()));
         }
 
         return instance;

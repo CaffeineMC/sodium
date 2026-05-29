@@ -30,7 +30,7 @@ import java.util.Map;
 public class RenderRegion {
     public static final int SECTION_VERTEX_COUNT_ESTIMATE = 756;
     public static final int SECTION_INDEX_COUNT_ESTIMATE = (SECTION_VERTEX_COUNT_ESTIMATE / DefaultTerrainRenderPasses.ALL.length / 4) * 6;
-    public static final int SECTION_BUFFER_ESTIMATE = SECTION_VERTEX_COUNT_ESTIMATE * ChunkMeshFormats.COMPACT.getVertexFormat().getStride() + SECTION_INDEX_COUNT_ESTIMATE * Integer.BYTES;
+    public static final int SECTION_BUFFER_ESTIMATE = SECTION_VERTEX_COUNT_ESTIMATE * ChunkMeshFormats.COMPACT.getVertexFormat().getVertexSize() + SECTION_INDEX_COUNT_ESTIMATE * Integer.BYTES;
 
     public static final int REGION_WIDTH = 8;
     public static final int REGION_HEIGHT = 4;
@@ -69,12 +69,14 @@ public class RenderRegion {
     private DeviceResources resources;
 
     private final Map<TerrainRenderPass, MultiDrawBatch> cachedBatches = new Reference2ReferenceOpenHashMap<>();
+    private final int uniqueId;
 
-    public RenderRegion(int x, int y, int z, StagingBuffer stagingBuffer) {
+    public RenderRegion(int x, int y, int z, StagingBuffer stagingBuffer, int uniqueId) {
         this.x = x;
         this.y = y;
         this.z = z;
         this.creationTime = System.currentTimeMillis();
+        this.uniqueId = uniqueId;
 
         this.stagingBuffer = stagingBuffer;
         this.renderList = new ChunkRenderList(this);
@@ -316,10 +318,13 @@ public class RenderRegion {
         return this.renderList;
     }
 
+    public int getId() {
+        return uniqueId;
+    }
+
     public static class DeviceResources {
         private final GlBufferArena geometryArena;
         private final GlBufferArena indexArena;
-        private final GlBufferStreamer chunkFades;
         private GlTessellation tessellation;
         private GlTessellation indexedTessellation;
 
@@ -332,15 +337,10 @@ public class RenderRegion {
          * amounts of data which makes the returned offsets incompatible.
          */
         public DeviceResources(CommandList commandList, StagingBuffer stagingBuffer) {
-            int stride = ChunkMeshFormats.COMPACT.getVertexFormat().getStride();
+            int stride = ChunkMeshFormats.COMPACT.getVertexFormat().getVertexSize();
 
             this.geometryArena = new GlBufferArena(commandList, REGION_SIZE * SECTION_VERTEX_COUNT_ESTIMATE, stride, stagingBuffer);
-            this.chunkFades = new GlBufferStreamer(commandList, REGION_SIZE, Integer.BYTES);
             this.indexArena = new GlBufferArena(commandList, REGION_SIZE * SECTION_INDEX_COUNT_ESTIMATE, Integer.BYTES, stagingBuffer);
-        }
-
-        public void writeMeshTimes(int sectionIndex, int millisecondToCompare) {
-            this.chunkFades.writeData(sectionIndex, millisecondToCompare);
         }
 
         public void updateTessellation(CommandList commandList, GlTessellation tessellation) {
@@ -365,10 +365,6 @@ public class RenderRegion {
 
         public GlTessellation getIndexedTessellation() {
             return this.indexedTessellation;
-        }
-
-        public GpuBuffer prepareChunkData(CommandList commandList) {
-            return this.chunkFades.prepare(commandList);
         }
 
         public void deleteTessellation(CommandList commandList) {
@@ -398,7 +394,6 @@ public class RenderRegion {
             this.deleteIndexedTessellation(commandList);
             this.geometryArena.delete(commandList);
             this.indexArena.delete(commandList);
-            this.chunkFades.delete(commandList);
         }
 
         public GlBufferArena getGeometryArena() {

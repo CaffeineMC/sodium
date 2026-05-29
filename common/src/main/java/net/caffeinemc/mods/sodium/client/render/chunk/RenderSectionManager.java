@@ -1,5 +1,9 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.buffers.Std140Builder;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuSampler;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMaps;
@@ -8,6 +12,7 @@ import it.unimi.dsi.fastutil.objects.*;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
+import net.caffeinemc.mods.sodium.client.gl.device.GLRenderDevice;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.render.chunk.async.CullTask;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
@@ -32,6 +37,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigge
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.SortTriggering;
 import net.caffeinemc.mods.sodium.client.render.chunk.tree.RemovableMultiForest;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl.CompactChunkVertex;
 import net.caffeinemc.mods.sodium.client.render.util.RenderAsserts;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
@@ -41,9 +47,13 @@ import net.caffeinemc.mods.sodium.client.util.MathUtil;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
+import net.caffeinemc.mods.sodium.mixin.core.render.texture.TextureAtlasAccessor;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.TextureFilteringMethod;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.MappableRingBuffer;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -52,10 +62,14 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
 import org.joml.Vector3dc;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
@@ -105,6 +119,8 @@ public class RenderSectionManager {
     private final EnumMap<DeferMode, ReferenceLinkedOpenHashSet<RenderSection>> importantTasks;
 
     private int frame;
+    private int uboUpdateFrame;
+    private MappableRingBuffer uniformData;
     private long lastFrameDuration = -1;
     private long averageFrameDuration = -1;
     private long lastFrameAtTime = System.nanoTime();
@@ -127,10 +143,31 @@ public class RenderSectionManager {
 
     private final AsyncCameraTimingControl cameraTimingControl = new AsyncCameraTimingControl();
 
+    private final GpuBuffer sectionTimeInfo;
+    private final GpuBufferSlice.MappedView sectionTimeInfoMap;
+
     public RenderSectionManager(ClientLevel level, int renderDistance, SortBehavior sortBehavior, CommandList commandList) {
         this.meshTaskSizeEstimator = new MeshTaskSizeEstimator(level);
 
         this.chunkRenderer = new DefaultChunkRenderer(RenderDevice.INSTANCE, ChunkMeshFormats.COMPACT);
+
+        this.uniformData = new MappableRingBuffer(() -> "Sodium uniform buffer", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, 256);
+
+        int renderDistanceDiameter = (2 * renderDistance) + 1;
+        int totalVerticalDistance = level.getMaxSectionY() - level.getMinSectionY() + 1;
+
+        int regionsX = (renderDistanceDiameter + 7) / 8;
+        int regionsY = (totalVerticalDistance + 3) / 4;
+
+        int totalRegions = regionsX * regionsY * regionsX;
+
+        this.sectionTimeInfo = RenderSystem.getDevice().createBuffer(() -> "Section time info", GpuBuffer.USAGE_UNIFORM_TEXEL_BUFFER | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_WRITE,
+                (long) totalRegions * 256L * Integer.BYTES);
+        if (RenderSystem.getDevice().getDeviceInfo().features().persistentMapping()) {
+            this.sectionTimeInfoMap = sectionTimeInfo.map(false, true);
+        } else {
+            this.sectionTimeInfoMap = null;
+        }
 
         this.level = level;
         this.builder = new ChunkBuilder(level, ChunkMeshFormats.COMPACT);
@@ -144,7 +181,7 @@ public class RenderSectionManager {
             this.sortTriggering = null;
         }
 
-        this.regions = new RenderRegionManager(commandList);
+        this.regions = new RenderRegionManager(this, commandList);
         this.sectionCache = new ClonedChunkSectionCache(this.level);
 
         this.renderLists = SortedRenderLists.empty();
@@ -445,9 +482,38 @@ public class RenderSectionManager {
         RenderDevice device = RenderDevice.INSTANCE;
         CommandList commandList = device.createCommandList();
 
-        this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z), fogParameters, this.sortBehavior != SortBehavior.OFF, terrainSampler);
+        if (this.uboUpdateFrame != this.frame) {
+            this.uboUpdateFrame = this.frame;
+            this.updateUbo(matrices, fogParameters);
+        }
+
+        this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z), fogParameters, this.sortBehavior != SortBehavior.OFF, terrainSampler, uniformData.currentBuffer(), sectionTimeInfo);
 
         commandList.flush();
+    }
+
+    private void updateUbo(ChunkRenderMatrices matrices, FogParameters fogParameters) {
+        uniformData.rotate();
+
+        double subTexelPrecision = (1 << GLRenderDevice.INSTANCE.getSubTexelPrecisionBits());
+        double subTexelOffset = 1.0f / CompactChunkVertex.TEXTURE_MAX_VALUE;
+
+        var textureAtlas = (TextureAtlasAccessor) Minecraft.getInstance()
+                .getTextureManager()
+                .getTexture(TextureAtlas.LOCATION_BLOCKS);
+
+        try (var data = uniformData.currentBuffer().map(false, true)) {
+            Std140Builder.intoBuffer(data.data())
+                    .putMat4f(new Matrix4f(matrices.projection()).mul(matrices.modelView()))
+                    .putVec4(fogParameters.red(), fogParameters.green(), fogParameters.blue(), fogParameters.alpha())
+                    .putVec2(fogParameters.environmentalStart(), fogParameters.environmentalEnd())
+                    .putVec2(fogParameters.renderStart(), fogParameters.renderEnd())
+                    .putVec2(1.0f / textureAtlas.sodium$getWidth(), 1.0f / textureAtlas.sodium$getHeight())
+                    .putVec2((float) (subTexelOffset - (((1.0D / textureAtlas.sodium$getWidth()) / subTexelPrecision))),
+                            (float) (subTexelOffset - (((1.0D / textureAtlas.sodium$getHeight()) / subTexelPrecision))))
+                    .putFloat((float) (1.0 / (Minecraft.getInstance().options.chunkSectionFadeInTime().get() * 1000.0)))
+                    .putInt(Minecraft.getInstance().options.textureFiltering().get() == TextureFilteringMethod.RGSS ? 1 : 0).get();
+        }
     }
 
     public void tickVisibleRenders() {
@@ -909,9 +975,14 @@ public class RenderSectionManager {
             result.destroy(); // delete resources for any pending tasks (including those that were cancelled)
         }
 
+        if (sectionTimeInfoMap != null) sectionTimeInfoMap.close();
+        sectionTimeInfo.close();
+
         for (var section : this.sectionByPosition.values()) {
             section.delete();
         }
+
+        uniformData.close();
 
         this.sectionsWithGlobalEntities.clear();
 
@@ -1182,5 +1253,18 @@ public class RenderSectionManager {
 
     public Collection<RenderSection> getSectionsWithGlobalEntities() {
         return ReferenceSets.unmodifiable(this.sectionsWithGlobalEntities);
+    }
+
+    public void writeMeshTimes(int id, int sectionIndex, int relativeBuiltTime) {
+        if (this.sectionTimeInfoMap != null) {
+            MemoryUtil.memPutInt(MemoryUtil.memAddress(this.sectionTimeInfoMap.data()) + (((id * 256L) + sectionIndex) * 4L), relativeBuiltTime);
+        } else {
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                ByteBuffer data = stack.malloc(4);
+                data.putInt(relativeBuiltTime);
+                data.flip();
+                RenderSystem.getDevice().createCommandEncoder().writeToBuffer(this.sectionTimeInfo.slice((((id * 256L) + sectionIndex) * 4L), 4), data);
+            }
+        }
     }
 }

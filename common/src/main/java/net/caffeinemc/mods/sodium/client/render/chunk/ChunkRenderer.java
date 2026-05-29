@@ -1,11 +1,13 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
+import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.textures.GpuSampler;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.ChunkRenderListIterable;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
+import net.minecraft.client.renderer.MappableRingBuffer;
 
 /**
  * The chunk render backend takes care of managing the graphics resource state of chunk render containers. This includes
@@ -23,8 +25,10 @@ public interface ChunkRenderer {
      * @param parameters              The current fog state
      * @param indexedRenderingEnabled Whether indexed rendering is enabled
      * @param terrainSampler          The sampler to use for the atlas
+     * @param uniformData
+     * @param sectionTimeInfo
      */
-    void render(ChunkRenderMatrices matrices, CommandList commandList, ChunkRenderListIterable renderLists, TerrainRenderPass pass, CameraTransform camera, FogParameters parameters, boolean indexedRenderingEnabled, GpuSampler terrainSampler);
+    void render(ChunkRenderMatrices matrices, CommandList commandList, ChunkRenderListIterable renderLists, TerrainRenderPass pass, CameraTransform camera, FogParameters parameters, boolean indexedRenderingEnabled, GpuSampler terrainSampler, GpuBuffer uniformData, GpuBuffer sectionTimeInfo);
 
     /**
      * Deletes this render backend and any resources attached to it.

@@ -17,6 +17,8 @@
     "core.CommandEncoderAccessor",
     "core.GlCommandEncoderAccessor",
     "core.GpuDeviceAccessor",
+    "core.GlRenderPassAccessor",
+    "core.RenderPassAccessor",
     "core.MinecraftMixin",
     "core.WindowMixin",
     "core.gui.LevelLoadTrackerMixin",
