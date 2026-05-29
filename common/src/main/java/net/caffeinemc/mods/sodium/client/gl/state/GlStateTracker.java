@@ -1,7 +1,5 @@
 package net.caffeinemc.mods.sodium.client.gl.state;
 
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBufferTarget;
-
 import java.util.Arrays;
 
 public class GlStateTracker {
