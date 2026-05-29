@@ -20,6 +20,8 @@
     "core.GlRenderPassAccessor",
     "core.RenderPassAccessor",
     "core.MinecraftMixin",
+    "core.VulkanPipelineMixin",
+    "core.VulkanRenderPassAccessor",
     "core.WindowMixin",
     "core.gui.LevelLoadTrackerMixin",
     "core.model.colors.BlockColorsMixin",

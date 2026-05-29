@@ -4,10 +4,8 @@ import com.mojang.blaze3d.buffers.GpuBuffer;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.gl.arena.GlBufferArena;
 import net.caffeinemc.mods.sodium.client.gl.arena.staging.StagingBuffer;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBufferStreamer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.MultiDrawBatch;
-import net.caffeinemc.mods.sodium.client.gl.tessellation.GlTessellation;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionFlags;
@@ -190,21 +188,12 @@ public class RenderRegion {
     }
 
     public void refreshTesselation(CommandList commandList) {
-        if (this.resources != null) {
-            this.resources.deleteTessellation(commandList);
-            this.resources.deleteIndexedTessellation(commandList);
-        }
-
         for (var storage : this.sectionRenderData.values()) {
             storage.onBufferResized();
         }
     }
 
     public void refreshIndexedTesselation(CommandList commandList) {
-        if (this.resources != null) {
-            this.resources.deleteIndexedTessellation(commandList);
-        }
-
         this.sectionRenderData.get(DefaultTerrainRenderPasses.TRANSLUCENT).onIndexBufferResized();
     }
 
@@ -325,8 +314,6 @@ public class RenderRegion {
     public static class DeviceResources {
         private final GlBufferArena geometryArena;
         private final GlBufferArena indexArena;
-        private GlTessellation tessellation;
-        private GlTessellation indexedTessellation;
 
         /**
          * The buffer arenas return offsets in terms of how many stride units big things
@@ -343,44 +330,6 @@ public class RenderRegion {
             this.indexArena = new GlBufferArena(commandList, REGION_SIZE * SECTION_INDEX_COUNT_ESTIMATE, Integer.BYTES, stagingBuffer);
         }
 
-        public void updateTessellation(CommandList commandList, GlTessellation tessellation) {
-            if (this.tessellation != null) {
-                this.tessellation.delete(commandList);
-            }
-
-            this.tessellation = tessellation;
-        }
-
-        public void updateIndexedTessellation(CommandList commandList, GlTessellation tessellation) {
-            if (this.indexedTessellation != null) {
-                this.indexedTessellation.delete(commandList);
-            }
-
-            this.indexedTessellation = tessellation;
-        }
-
-        public GlTessellation getTessellation() {
-            return this.tessellation;
-        }
-
-        public GlTessellation getIndexedTessellation() {
-            return this.indexedTessellation;
-        }
-
-        public void deleteTessellation(CommandList commandList) {
-            if (this.tessellation != null) {
-                this.tessellation.delete(commandList);
-                this.tessellation = null;
-            }
-        }
-
-        public void deleteIndexedTessellation(CommandList commandList) {
-            if (this.indexedTessellation != null) {
-                this.indexedTessellation.delete(commandList);
-                this.indexedTessellation = null;
-            }
-        }
-
         public GpuBuffer getGeometryBuffer() {
             return this.geometryArena.getBufferObject();
         }
@@ -390,8 +339,6 @@ public class RenderRegion {
         }
 
         public void delete(CommandList commandList) {
-            this.deleteTessellation(commandList);
-            this.deleteIndexedTessellation(commandList);
             this.geometryArena.delete(commandList);
             this.indexArena.delete(commandList);
         }

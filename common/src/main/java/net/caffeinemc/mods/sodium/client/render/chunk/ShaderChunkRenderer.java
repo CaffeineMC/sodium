@@ -12,7 +12,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.caffeinemc.mods.sodium.client.gl.attribute.GlVertexFormat;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
@@ -50,22 +49,22 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         this.vertexFormat = vertexType.getVertexFormat();
     }
 
-    protected RenderPipeline compileProgram(TerrainRenderPass options) {
-        RenderPipeline program = programs.get(options);
+    protected RenderPipeline compileProgram(TerrainRenderPass pass) {
+        RenderPipeline program = programs.get(pass);
 
         if (program == null) {
-            programs.put(options, program = this.createShader("blocks/block_layer_opaque", options));
+            programs.put(pass, program = this.createShader("blocks/block_layer_opaque", pass));
         }
 
         return program;
     }
 
-    private RenderPipeline createShader(String path, TerrainRenderPass options) {
-        List<String> constants = createShaderConstants(options);
+    private RenderPipeline createShader(String path, TerrainRenderPass pass) {
+        List<String> constants = createShaderConstants(pass);
 
         var builder = RenderPipeline.builder()
                 .withBindGroupLayout(BIND_GROUP)
-                .withLocation(Identifier.fromNamespaceAndPath("sodium", options.getPipeline().getLocation().getPath()))
+                .withLocation(Identifier.fromNamespaceAndPath("sodium", pass.getPipeline().getLocation().getPath()))
                 .withCull(true)
                 .withVertexShader(Identifier.fromNamespaceAndPath("sodium", "blocks/block_layer_opaque"))
                 .withFragmentShader(Identifier.fromNamespaceAndPath("sodium", "blocks/block_layer_opaque"))
@@ -73,7 +72,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
                 .withPrimitiveTopology(PrimitiveTopology.QUADS)
                 .withVertexBinding(0, vertexFormat);
 
-        if (options.isTranslucent()) {
+        if (pass.isTranslucent()) {
             builder.withColorTargetState(new ColorTargetState(Optional.of(BlendFunction.TRANSLUCENT), GpuFormat.RGBA8_UNORM, 0xFFFFFFFF));
         } else {
             builder.withColorTargetState(ColorTargetState.DEFAULT);
@@ -83,15 +82,17 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
             builder.withShaderDefine(s);
         }
 
+        if (pass.isTranslucent()) {
+            builder.withShaderDefine("ALPHA_CUTOUT", 0.01f);
+        } else if (pass.supportsFragmentDiscard()) {
+            builder.withShaderDefine("ALPHA_CUTOUT", 0.5f);
+        }
+
         return builder.build();
     }
 
     private static List<String> createShaderConstants(TerrainRenderPass pass) {
         List<String> defines = new ArrayList<>();
-
-        if (pass.supportsFragmentDiscard()) {
-            defines.add("USE_FRAGMENT_DISCARD");
-        }
 
         defines.add("USE_VERTEX_COMPRESSION"); // TODO: allow compact vertex format to be disabled
         defines.add("USE_FOG");

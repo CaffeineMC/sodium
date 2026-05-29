@@ -334,6 +334,24 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setBinding(this.vanillaOpts.showAutosaveIndicator()::set, this.vanillaOpts.showAutosaveIndicator()::get)
                 )
         );
+        generalPage.addOptionGroup(builder.createOptionGroup().addOption(builder.createEnumOption(Identifier.fromNamespaceAndPath("sodium", "general.graphics_api"),
+                PreferredGraphicsApi.class)
+                .setStorageHandler(this.vanillaStorage)
+                .setName(Component.translatable("options.graphicsApi"))
+                .setTooltip(i -> {
+                    if (i == PreferredGraphicsApi.VULKAN) {
+                        return Component.translatable("options.graphicsApi.tooltip.vulkan");
+                    } else {
+                        return Component.translatable("options.graphicsApi.tooltip");
+                    }
+                })
+                .setElementNameProvider(EnumOptionBuilder.nameProviderFrom(
+                        Component.translatable("options.graphicsApi.default"),
+                        Component.translatable("options.graphicsApi.opengl"),
+                        Component.literal("Prefer Vulkan")))
+                .setDefaultValue(PreferredGraphicsApi.DEFAULT)
+                .setFlags(OptionFlag.REQUIRES_GAME_RESTART)
+                .setBinding((value) -> this.vanillaOpts.preferredGraphicsBackend().set(value), () -> this.vanillaOpts.preferredGraphicsBackend().get())));
         return generalPage;
     }
 
@@ -694,6 +712,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                 .setDefaultValue(DEFAULTS.performance.useNoErrorGLContext)
                 .setBinding(value -> this.sodiumOpts.performance.useNoErrorGLContext = value, () -> this.sodiumOpts.performance.useNoErrorGLContext)
                 .setEnabledProvider((state) -> {
+                    if (!RenderSystem.getDevice().getDeviceInfo().backendName().contains("OpenGL")) return false;
                     GLCapabilities capabilities = GL.getCapabilities();
                     return (capabilities.OpenGL46 || capabilities.GL_KHR_no_error)
                             && !Workarounds.isWorkaroundEnabled(Workarounds.Reference.NO_ERROR_CONTEXT_UNSUPPORTED);

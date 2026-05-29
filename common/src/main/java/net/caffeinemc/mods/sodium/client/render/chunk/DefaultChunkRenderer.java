@@ -7,6 +7,8 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.blaze3d.vulkan.VulkanCommandEncoder;
+import com.mojang.blaze3d.vulkan.VulkanRenderPass;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.MultiDrawBatch;
@@ -24,24 +26,31 @@ import net.caffeinemc.mods.sodium.client.util.BitwiseMath;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.client.util.UInt32;
 import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
+import net.caffeinemc.mods.sodium.mixin.core.CommandEncoderAccessor;
 import net.caffeinemc.mods.sodium.mixin.core.GlRenderPassAccessor;
 import net.caffeinemc.mods.sodium.mixin.core.RenderPassAccessor;
+import net.caffeinemc.mods.sodium.mixin.core.VulkanRenderPassAccessor;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL46C;
+import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.Pointer;
+import org.lwjgl.vulkan.VK13;
+import org.lwjgl.vulkan.VkCommandBuffer;
 
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.OptionalDouble;
 
 public class DefaultChunkRenderer extends ShaderChunkRenderer {
+    public static final int PUSH_CONSTANT_RANGE = 20;
+
     private final SharedQuadIndexBuffer sharedIndexBuffer;
 
     public DefaultChunkRenderer(RenderDevice device, ChunkVertexType vertexType) {
         super(device, vertexType);
 
-        this.sharedIndexBuffer = new SharedQuadIndexBuffer(device.createCommandList(), SharedQuadIndexBuffer.IndexType.INTEGER);
+        this.sharedIndexBuffer = new SharedQuadIndexBuffer(device.createCommandList(), SharedQuadIndexBuffer.IndexFormat.INTEGER);
     }
 
     /**
@@ -95,23 +104,37 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         iterator = renderLists.iterator(renderPass.isTranslucent());
 
         var encoder = RenderSystem.getDevice().createCommandEncoder();
+        var commandBackend = ((CommandEncoderAccessor) encoder).sodium$getBackend();
+        boolean isGL = !(commandBackend instanceof VulkanCommandEncoder); // TODO
+
         try (RenderPass pass = encoder.createRenderPass(() -> "Terrain",
                 renderPass.getTarget().getColorTextureView(), Optional.empty(),
                 renderPass.getTarget().getDepthTextureView(), OptionalDouble.empty())) {
             pass.setPipeline(this.activeProgram);
-            if (!useIndexedTessellation) pass.setIndexBuffer(sharedIndexBuffer.getBufferObject(), IndexType.INT);
+            if (!useIndexedTessellation && sharedIndexBuffer.getBufferObject() != null) pass.setIndexBuffer(sharedIndexBuffer.getBufferObject(), IndexType.INT);
 
             pass.setUniform("u_Globals", uniformData);
             pass.setUniform("u_SectionTimeInfo", sectionTimeInfo);
             pass.bindTexture("u_LightTex", Minecraft.getInstance().gameRenderer.lightmap(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
             pass.bindTexture("u_BlockTex", renderPass.getAtlas(), terrainSampler);
 
-            GlRenderPassAccessor passBackend = (GlRenderPassAccessor) ((RenderPassAccessor) pass).getBackend();
-            int programId = passBackend.getPipeline().program().getProgramId();
-            GlStateManager._glUseProgram(programId);
-            int regionUniform = GL46C.glGetUniformLocation(programId, "u_RegionOffset");
-            int timeUniform = GL46C.glGetUniformLocation(programId, "u_CurrentTime");
-            int idUniform = GL46C.glGetUniformLocation(programId, "u_RegionID");
+            int programId = 0, regionUniform = 0, timeUniform = 0, idUniform = 0;
+
+            VkCommandBuffer cmdBuf = null;
+            long layout = 0;
+
+            if (isGL) {
+                GlRenderPassAccessor passBackend = (GlRenderPassAccessor) ((RenderPassAccessor) pass).getBackend();
+                programId = passBackend.getPipeline().program().getProgramId();
+                GlStateManager._glUseProgram(programId);
+                regionUniform = GL46C.glGetUniformLocation(programId, "u_RegionOffset");
+                timeUniform = GL46C.glGetUniformLocation(programId, "u_CurrentTime");
+                idUniform = GL46C.glGetUniformLocation(programId, "u_RegionID");
+            } else {
+                VulkanRenderPassAccessor passBackend = (VulkanRenderPassAccessor) ((RenderPassAccessor) pass).getBackend();
+                layout = passBackend.sodium$getPipeline().pipelineLayout();
+                cmdBuf = passBackend.sodium$getCommandBuffer();
+            }
 
             while (iterator.hasNext()) {
                 ChunkRenderList renderList = iterator.next();
@@ -135,11 +158,13 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
 
                 pass.setVertexBuffer(0, region.getResources().getGeometryBuffer().slice());
 
-
-                setModelMatrixUniforms(programId, regionUniform, timeUniform, idUniform, region, camera);
-                pass.multiDrawIndexed(MemoryUtil.memPointerBuffer(batch.pElementPointer, batch.size),
-                        MemoryUtil.memIntBuffer(batch.pElementCount, batch.size),
-                        MemoryUtil.memIntBuffer(batch.pBaseVertex, batch.size), batch.size);
+                if (isGL) {
+                    setModelMatrixUniforms(programId, regionUniform, timeUniform, idUniform, region, camera);
+                    batch.drawGL(pass);
+                } else {
+                    setModelMatrixConstants(cmdBuf, layout, region, camera);
+                    batch.drawVK(pass);
+                }
             }
         }
 
@@ -214,10 +239,6 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
      */
     @SuppressWarnings("IntegerMultiplicationImplicitCastToLong")
     private static void addLocalIndexedDrawCommands(MultiDrawBatch batch, long pMeshData, int mask) {
-        final var pElementPointer = batch.pElementPointer;
-        final var pBaseVertex = batch.pBaseVertex;
-        final var pElementCount = batch.pElementCount;
-
         int size = batch.size;
 
         long elementOffset = SectionRenderDataUnsafe.getBaseElement(pMeshData);
@@ -227,11 +248,8 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
             final long vertexCount = SectionRenderDataUnsafe.getVertexCount(pMeshData, facing);
             final long elementCount = (vertexCount >> 2) * 6;
 
-            MemoryIntrinsics.putInt(pElementCount + (size << 2), UInt32.uncheckedDowncast(elementCount));
-            MemoryIntrinsics.putInt(pBaseVertex + (size << 2), UInt32.uncheckedDowncast(baseVertex));
 
-            // * 4 to convert to bytes (the index buffer contains integers)
-            MemoryIntrinsics.putAddress(pElementPointer + (size << Pointer.POINTER_SHIFT), elementOffset << 2);
+            batch.put(size, UInt32.uncheckedDowncast(elementCount), UInt32.uncheckedDowncast(baseVertex), elementOffset);
 
             baseVertex += vertexCount;
             elementOffset += elementCount;
@@ -247,12 +265,8 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
      */
     @SuppressWarnings("IntegerMultiplicationImplicitCastToLong")
     private static void addSharedIndexedDrawCommands(MultiDrawBatch batch, long pMeshData, int mask) {
-        final var pElementPointer = batch.pElementPointer;
-        final var pBaseVertex = batch.pBaseVertex;
-        final var pElementCount = batch.pElementCount;
-
         // this is either zero (global shared index buffer) or the offset to the location of the shared element buffer (region shared index buffer)
-        final var elementOffsetBytes = SectionRenderDataUnsafe.getBaseElement(pMeshData) << 2;
+        final var elementOffsetBytes = SectionRenderDataUnsafe.getBaseElement(pMeshData);
         final var facingList = SectionRenderDataUnsafe.getFacingList(pMeshData);
 
         int size = batch.size;
@@ -280,9 +294,8 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                         continue;
                     }
 
-                    MemoryIntrinsics.putInt(pElementCount + (size << 2), UInt32.uncheckedDowncast((groupVertexCount >> 2) * 6));
-                    MemoryIntrinsics.putInt(pBaseVertex + (size << 2), UInt32.uncheckedDowncast(baseVertex));
-                    MemoryIntrinsics.putAddress(pElementPointer + (size << Pointer.POINTER_SHIFT), elementOffsetBytes);
+                    batch.put(size, UInt32.uncheckedDowncast((groupVertexCount >> 2) * 6), UInt32.uncheckedDowncast(baseVertex), elementOffsetBytes);
+
                     size++;
                     baseVertex += groupVertexCount;
                     groupVertexCount = 0;
@@ -358,6 +371,23 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         GL46C.glUniform3f(regionUniform, x, y, z);
         GL46C.glUniform1i(timeUniform, Math.toIntExact(System.currentTimeMillis() - region.getCreationTime()));
         GL46C.glUniform1ui(idUniform, region.getId());
+    }
+
+    private void setModelMatrixConstants(VkCommandBuffer cmdBuf, long layout, RenderRegion region, CameraTransform camera) {
+        float x = getCameraTranslation(region.getOriginX(), camera.intX, camera.fracX);
+        float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
+        float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
+
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            long memory = stack.nmalloc(PUSH_CONSTANT_RANGE);
+            MemoryUtil.memPutFloat(memory, x);
+            MemoryUtil.memPutFloat(memory + 4, y);
+            MemoryUtil.memPutFloat(memory + 8, z);
+            MemoryUtil.memPutInt(memory + 12, Math.toIntExact(System.currentTimeMillis() - region.getCreationTime()));
+            MemoryUtil.memPutInt(memory + 16, region.getId());
+
+            VK13.nvkCmdPushConstants(cmdBuf, layout, VK13.VK_SHADER_STAGE_ALL, 0, PUSH_CONSTANT_RANGE, memory);
+        }
     }
 
     private static float getCameraTranslation(int chunkBlockPos, int cameraBlockPos, float cameraPos) {

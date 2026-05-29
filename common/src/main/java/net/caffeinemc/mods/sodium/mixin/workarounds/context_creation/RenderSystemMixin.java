@@ -44,15 +44,17 @@ public class RenderSystemMixin {
         hasDonePostLaunchChecks = true;
 
         LOGGER.info(String.valueOf(Thread.currentThread()));
-
-        GlContextInfo context = GlContextInfo.create();
-        LOGGER.info("OpenGL Vendor: {}", context.vendor());
-        LOGGER.info("OpenGL Renderer: {}", context.renderer());
-        LOGGER.info("OpenGL Version: {}", context.version());
-
         NativeWindowHandle handle = () -> GLFWNativeWin32.glfwGetWin32Window(Minecraft.getInstance().getWindow().handle());
 
-        PostLaunchChecks.onContextInitialized(handle, context);
+        if (RenderSystem.getDevice().getDeviceInfo().backendName().contains("OpenGL")) {
+            GlContextInfo context = GlContextInfo.create();
+            LOGGER.info("OpenGL Vendor: {}", context.vendor());
+            LOGGER.info("OpenGL Renderer: {}", context.renderer());
+            LOGGER.info("OpenGL Version: {}", context.version());
+            PostLaunchChecks.onContextInitialized(handle, context);
+        }
+
+
         ModuleScanner.checkModules(handle);
     }
 
@@ -61,7 +63,7 @@ public class RenderSystemMixin {
         doChecksOnce();
 
         // wglGetCurrentContext is only applicable on Windows
-        if (Util.getPlatform() != Util.OS.WINDOWS) return;
+        if (Util.getPlatform() != Util.OS.WINDOWS || !RenderSystem.getDevice().getDeviceInfo().backendName().contains("OpenGL")) return;
 
         if (wglPrevContext == MemoryUtil.NULL) {
             // There is no prior recorded context. Record it.

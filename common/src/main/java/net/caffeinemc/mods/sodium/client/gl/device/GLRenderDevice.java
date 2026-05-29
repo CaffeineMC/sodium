@@ -2,11 +2,8 @@ package net.caffeinemc.mods.sodium.client.gl.device;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
-import net.caffeinemc.mods.sodium.client.gl.array.GlVertexArray;
-import net.caffeinemc.mods.sodium.client.gl.buffer.*;
 import net.caffeinemc.mods.sodium.client.gl.functions.DeviceFunctions;
 import net.caffeinemc.mods.sodium.client.gl.state.GlStateTracker;
-import net.caffeinemc.mods.sodium.client.gl.tessellation.*;
 import net.caffeinemc.mods.sodium.client.gl.util.EnumBitField;
 import org.lwjgl.opengl.*;
 import java.nio.ByteBuffer;
@@ -19,7 +16,6 @@ public class GLRenderDevice implements RenderDevice {
     private final DeviceFunctions functions = new DeviceFunctions(this);
 
     private boolean isActive;
-    private GlTessellation activeTessellation;
 
     @Override
     public CommandList createCommandList() {
@@ -48,7 +44,7 @@ public class GLRenderDevice implements RenderDevice {
 
     @Override
     public GLCapabilities getCapabilities() {
-        return GL.getCapabilities();
+        return null;
     }
 
     @Override
@@ -83,56 +79,12 @@ public class GLRenderDevice implements RenderDevice {
         }
 
         @Override
-        public void bindVertexArray(GlVertexArray array) {
-            GL30C.glBindVertexArray(array.handle());
-
-        }
-
-        @Override
-        public void unbindVertexArray() {
-            GL30C.glBindVertexArray(GlVertexArray.NULL_ARRAY_ID);
-
-        }
-
-        @Override
-        public void deleteVertexArray(GlVertexArray vertexArray) {
-            this.stateTracker.notifyVertexArrayDeleted(vertexArray);
-
-            int handle = vertexArray.handle();
-            vertexArray.invalidateHandle();
-
-            GL30C.glDeleteVertexArrays(handle);
-        }
-
-        @Override
         public void flush() {
             // NO-OP
         }
-
-        @Override
-        public DrawCommandList beginTessellating(GlTessellation tessellation) {
-            GLRenderDevice.this.activeTessellation = tessellation;
-            GLRenderDevice.this.activeTessellation.bind(GLRenderDevice.this.commandList);
-
-            return GLRenderDevice.this.drawCommandList;
-        }
-
-        @Override
-        public void deleteTessellation(GlTessellation tessellation) {
-            tessellation.delete(this);
-        }
-
         @Override
         public void flushMappedRange(GpuBufferSlice.MappedView map, int start, int i) {
 
-        }
-
-        @Override
-        public GlTessellation createTessellation(GlPrimitiveType primitiveType, TessellationBinding[] bindings) {
-            GlVertexArrayTessellation tessellation = new GlVertexArrayTessellation(new GlVertexArray(), primitiveType, bindings);
-            tessellation.init(this);
-
-            return tessellation;
         }
     }
 
@@ -142,28 +94,12 @@ public class GLRenderDevice implements RenderDevice {
         }
 
         @Override
-        public void multiDrawElementsBaseVertex(MultiDrawBatch batch, GlIndexType indexType) {
-            GlPrimitiveType primitiveType = GLRenderDevice.this.activeTessellation.getPrimitiveType();
-
-            GL32C.nglMultiDrawElementsBaseVertex(primitiveType.getId(),
-                    batch.pElementCount,
-                    indexType.getFormatId(),
-                    batch.pElementPointer,
-                    batch.size,
-                    batch.pBaseVertex);
-        }
-
-        @Override
         public void endTessellating() {
-            GLRenderDevice.this.activeTessellation.unbind(GLRenderDevice.this.commandList);
-            GLRenderDevice.this.activeTessellation = null;
         }
 
         @Override
         public void flush() {
-            if (GLRenderDevice.this.activeTessellation != null) {
-                this.endTessellating();
-            }
+
         }
     }
 }

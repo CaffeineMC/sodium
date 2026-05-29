@@ -80,8 +80,8 @@ void main() {
     vec4 color = u_UseRGSS ? sampleRGSS(u_BlockTex, v_TexCoord, u_TexelSize) : sampleNearest(u_BlockTex, v_TexCoord, u_TexelSize);
     color *= v_Color; // Apply per-vertex color modulator
 
-#ifdef USE_FRAGMENT_DISCARD
-    if (color.a < 0.5) {
+#ifdef ALPHA_CUTOUT
+    if (color.a < ALPHA_CUTOUT) {
         discard;
     }
 #endif

@@ -10,7 +10,6 @@ import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gl.util.EnumBitField;
 import net.caffeinemc.mods.sodium.client.util.MathUtil;
-import net.caffeinemc.mods.sodium.client.gl.buffer.*;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
