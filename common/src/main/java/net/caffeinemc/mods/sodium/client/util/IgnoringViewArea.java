@@ -7,6 +7,8 @@ import net.minecraft.core.SectionPos;
 import org.jspecify.annotations.Nullable;
 
 public class IgnoringViewArea extends ViewArea {
+    private SectionPos ppos;
+
     public IgnoringViewArea(SectionRenderDispatcher sectionRenderDispatcher) {
         super(sectionRenderDispatcher, 0, 0, 0, 0, 0, null);
     }
@@ -18,6 +20,11 @@ public class IgnoringViewArea extends ViewArea {
 
     @Override
     public boolean repositionCamera(SectionPos cameraSectionPos) {
+        if (!cameraSectionPos.equals(this.ppos)) {
+            this.ppos = cameraSectionPos;
+            return true;
+        }
+
         return false;
     }
 
