@@ -94,6 +94,7 @@ public class RenderSectionManager {
     private final JobDurationEstimator jobDurationEstimator = new JobDurationEstimator();
     private final MeshTaskSizeEstimator meshTaskSizeEstimator;
     private final UploadDurationEstimator jobUploadDurationEstimator = new UploadDurationEstimator();
+    private final int maxRegions;
     private ChunkJobCollector lastBlockingCollector;
     private int thisFrameBlockingTasks;
     private int nextFrameBlockingTasks;
@@ -159,10 +160,10 @@ public class RenderSectionManager {
         int regionsX = (renderDistanceDiameter + 7) / 8;
         int regionsY = (totalVerticalDistance + 3) / 4;
 
-        int totalRegions = regionsX * regionsY * regionsX;
+        this.maxRegions = regionsX * regionsY * regionsX * 2;
 
         this.sectionTimeInfo = RenderSystem.getDevice().createBuffer(() -> "Section time info", GpuBuffer.USAGE_UNIFORM_TEXEL_BUFFER | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_WRITE,
-                (long) totalRegions * 256L * Integer.BYTES);
+                (long) maxRegions * 256L * Integer.BYTES);
         if (RenderSystem.getDevice().getDeviceInfo().features().persistentMapping()) {
             this.sectionTimeInfoMap = sectionTimeInfo.map(false, true);
         } else {
