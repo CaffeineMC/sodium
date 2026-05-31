@@ -4,10 +4,12 @@ import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.checks.ResourcePackScanner;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
+import net.caffeinemc.mods.sodium.client.util.FrameTimeStatistics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.util.profiling.ProfilerFiller;
 import org.lwjgl.opengl.GL32C;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -89,5 +91,16 @@ public class MinecraftMixin {
     @Inject(method = "reloadResourcePacks()Ljava/util/concurrent/CompletableFuture;", at = @At("TAIL"))
     private void postResourceReload(CallbackInfoReturnable<CompletableFuture<Void>> cir) {
         ResourcePackScanner.checkIfCoreShaderLoaded(this.resourceManager);
+    }
+
+    /**
+     * hook the vanilla fps update to update our fps display only when it does too, once a second
+      */
+    @Inject(
+            method = "runTick",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;fps:I", opcode = Opcodes.PUTSTATIC, shift = At.Shift.AFTER)
+    )
+    private void sodium$updatePercentileCache(boolean advanceGameTime, CallbackInfo ci) {
+        FrameTimeStatistics.INSTANCE.invalidate();
     }
 }
