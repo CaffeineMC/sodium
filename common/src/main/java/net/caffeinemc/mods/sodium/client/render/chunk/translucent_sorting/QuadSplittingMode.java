@@ -5,7 +5,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
 public enum QuadSplittingMode implements TextProvider {
-    OFF("/", 1.0f, true, "options.off"),
+    OFF("/", 1.0f, true, "sodium.options.quad_splitting.off"),
     SAFE("S", 2.0f, true, "sodium.options.quad_splitting.safe"),
     UNLIMITED("U", Float.POSITIVE_INFINITY, false, "sodium.options.quad_splitting.unlimited");
 
