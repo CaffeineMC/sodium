@@ -75,6 +75,12 @@ public class RenderRegionManager {
             }
 
             if (result instanceof ChunkBuildOutput chunkBuildOutput) {
+                int meshTime = -1;
+
+                if (result.section.consumeFade()) {
+                    meshTime = Math.toIntExact(System.currentTimeMillis() - region.getCreationTime());
+                }
+
                 for (TerrainRenderPass pass : DefaultTerrainRenderPasses.ALL) {
                     var storage = region.getStorage(pass);
 
@@ -84,12 +90,6 @@ public class RenderRegionManager {
                     }
 
                     BuiltSectionMeshParts mesh = chunkBuildOutput.getMesh(pass);
-
-                    int meshTime = -1;
-
-                    if (result.section.consumeFade()) {
-                        meshTime = Math.toIntExact(System.currentTimeMillis() - region.getCreationTime());
-                    }
 
                     if (mesh != null) {
                         uploads.add(new PendingSectionMeshUpload(result.section, meshTime, mesh, pass,
