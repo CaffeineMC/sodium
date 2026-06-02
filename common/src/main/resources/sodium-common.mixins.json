@@ -90,7 +90,7 @@
     "features.textures.animations.tracking.TextureAtlasSpriteMixin",
     "features.textures.animations.tracking.TextureSheetParticleMixin",
     "features.textures.scan.TextureAtlasSpriteMixin",
-    "workarounds.context_creation.RenderSystemMixin",
+    "workarounds.context_creation.GlSurfaceMixin",
     "workarounds.context_creation.WindowMixin",
     "workarounds.event_loop.RenderSystemMixin",
     "workarounds.window_minimized_state.GameRendererMixin"

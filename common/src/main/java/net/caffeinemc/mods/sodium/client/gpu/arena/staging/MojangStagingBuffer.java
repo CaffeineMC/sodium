@@ -1,8 +1,7 @@
-package net.caffeinemc.mods.sodium.client.gl.arena.staging;
+package net.caffeinemc.mods.sodium.client.gpu.arena.staging;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 
 import java.nio.ByteBuffer;
 
@@ -18,22 +17,22 @@ public class MojangStagingBuffer implements StagingBuffer {
     }
 
     @Override
-    public void enqueueCopy(CommandList commandList, ByteBuffer data, GpuBuffer dst, long writeOffset) {
+    public void enqueueCopy(ByteBuffer data, GpuBuffer dst, long writeOffset) {
         if (this.staging == null) {
             RenderSystem.getDevice().createCommandEncoder().writeToBuffer(dst.slice(writeOffset, data.remaining()), data);
         } else {
-            staging.enqueueCopy(commandList, data, dst, writeOffset);
+            staging.enqueueCopy(data, dst, writeOffset);
         }
     }
 
     @Override
-    public void flush(CommandList commandList) {
-        if (staging != null) staging.flush(commandList);
+    public void flush() {
+        if (staging != null) staging.flush();
     }
 
     @Override
-    public void delete(CommandList commandList) {
-        if (staging != null) staging.delete(commandList);
+    public void delete() {
+        if (staging != null) staging.delete();
     }
 
     @Override

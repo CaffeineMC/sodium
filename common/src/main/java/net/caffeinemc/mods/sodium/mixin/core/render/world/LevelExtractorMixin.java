@@ -1,7 +1,6 @@
 package net.caffeinemc.mods.sodium.mixin.core.render.world;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.caffeinemc.mods.sodium.client.render.viewport.ViewportProvider;
 import net.caffeinemc.mods.sodium.client.util.FlawlessFrames;
@@ -11,12 +10,10 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.extract.LevelExtractor;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.SectionPos;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -42,14 +39,9 @@ public class LevelExtractorMixin {
 
     @Inject(method = "setLevel", at = @At("RETURN"))
     private void sodium$setRenderer(ClientLevel level, CallbackInfo ci) {
-        RenderDevice.enterManagedCode();
         checkRenderer();
 
-        try {
-            this.renderer.setLevel(level);
-        } finally {
-            RenderDevice.exitManagedCode();
-        }
+        this.renderer.setLevel(level);
     }
 
     @Unique
@@ -122,13 +114,7 @@ public class LevelExtractorMixin {
         var viewport = ((ViewportProvider) frustum).sodium$createViewport();
         var updateChunksImmediately = FlawlessFrames.isActive();
 
-        RenderDevice.enterManagedCode();
-
-        try {
-            this.renderer.setupTerrain(camera, viewport, ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters(), Minecraft.getInstance().player != null && Minecraft.getInstance().player.isSpectator(), updateChunksImmediately, ((FrustumAccessor) frustum).sodium$getMatrix());
-        } finally {
-            RenderDevice.exitManagedCode();
-        }
+        this.renderer.setupTerrain(camera, viewport, ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters(), Minecraft.getInstance().player != null && Minecraft.getInstance().player.isSpectator(), updateChunksImmediately, ((FrustumAccessor) frustum).sodium$getMatrix());
     }
 
     @Redirect(method = "extract", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/extract/LevelExtractor;applyFrustum(Lnet/minecraft/client/renderer/culling/Frustum;)V"))

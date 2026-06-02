@@ -3,12 +3,9 @@ package net.caffeinemc.mods.sodium.client.render.chunk.region;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
-import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.gl.arena.PendingUpload;
-import net.caffeinemc.mods.sodium.client.gl.arena.staging.MojangStagingBuffer;
-import net.caffeinemc.mods.sodium.client.gl.arena.staging.StagingBuffer;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
-import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
+import net.caffeinemc.mods.sodium.client.gpu.arena.PendingUpload;
+import net.caffeinemc.mods.sodium.client.gpu.arena.staging.MojangStagingBuffer;
+import net.caffeinemc.mods.sodium.client.gpu.arena.staging.StagingBuffer;
 import net.caffeinemc.mods.sodium.client.render.chunk.IntPool;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
@@ -36,39 +33,37 @@ public class RenderRegionManager {
     private final IntPool freeIds = new IntPool();
     private final RenderSectionManager parent;
 
-    public RenderRegionManager(RenderSectionManager parent, CommandList commandList) {
+    public RenderRegionManager(RenderSectionManager parent) {
         this.parent = parent;
-        this.stagingBuffer = createStagingBuffer(commandList);
+        this.stagingBuffer = createStagingBuffer();
     }
 
     public void update() {
         this.stagingBuffer.flip();
 
-        try (CommandList commandList = RenderDevice.INSTANCE.createCommandList()) {
-            Iterator<RenderRegion> it = this.regions.values()
-                    .iterator();
+        Iterator<RenderRegion> it = this.regions.values()
+                .iterator();
 
-            while (it.hasNext()) {
-                RenderRegion region = it.next();
-                region.update(commandList);
+        while (it.hasNext()) {
+            RenderRegion region = it.next();
+            region.update();
 
-                if (region.isEmpty()) {
-                    region.delete(commandList);
-                    freeIds.release(region.getId());
+            if (region.isEmpty()) {
+                region.delete();
+                freeIds.release(region.getId());
 
-                    it.remove();
-                }
+                it.remove();
             }
         }
     }
 
-    public void uploadResults(CommandList commandList, Collection<BuilderTaskOutput> results) {
+    public void uploadResults(Collection<BuilderTaskOutput> results) {
         for (var entry : this.createMeshUploadQueues(results)) {
-            this.uploadResults(commandList, entry.getKey(), entry.getValue());
+            this.uploadResults(entry.getKey(), entry.getValue());
         }
     }
 
-    private void uploadResults(CommandList commandList, RenderRegion region, Collection<BuilderTaskOutput> results) {
+    private void uploadResults(RenderRegion region, Collection<BuilderTaskOutput> results) {
         var uploads = new ArrayList<PendingSectionMeshUpload>();
         var indexUploads = new ArrayList<PendingSectionIndexBufferUpload>();
 
@@ -149,20 +144,20 @@ public class RenderRegionManager {
 
         var cameraPosition = Minecraft.getInstance().gameRenderer.mainCamera().position();
 
-        var resources = region.createResources(commandList);
+        var resources = region.createResources();
         var regionFillFractionInv = region.getFillFractionInv();
 
         profiler.push("upload_vertices");
 
         if (!uploads.isEmpty()) {
             var arena = resources.getGeometryArena();
-            boolean bufferChanged = arena.upload(commandList, uploads.stream()
+            boolean bufferChanged = arena.upload(uploads.stream()
                     .map(upload -> upload.vertexUpload), regionFillFractionInv);
 
             // If any of the buffers changed, the tessellation will need to be updated
             // Once invalidated the tessellation will be re-created on the next attempted use
             if (bufferChanged) {
-                region.refreshTesselation(commandList);
+                region.refreshTesselation();
                 region.clearAllCachedBatches();
             }
 
@@ -188,7 +183,7 @@ public class RenderRegionManager {
 
         if (!indexUploads.isEmpty()) {
             var arena = resources.getIndexArena();
-            indexBufferChanged = arena.upload(commandList, indexUploads.stream()
+            indexBufferChanged = arena.upload(indexUploads.stream()
                     .map(upload -> upload.indexBufferUpload), regionFillFractionInv);
 
             for (PendingSectionIndexBufferUpload upload : indexUploads) {
@@ -198,11 +193,11 @@ public class RenderRegionManager {
         }
 
         if (needsSharedIndexUpdate) {
-            indexBufferChanged |= translucentStorage.updateSharedIndexData(commandList, resources.getIndexArena(), regionFillFractionInv);
+            indexBufferChanged |= translucentStorage.updateSharedIndexData(resources.getIndexArena(), regionFillFractionInv);
         }
 
         if (indexBufferChanged) {
-            region.refreshIndexedTesselation(commandList);
+            region.refreshIndexedTesselation();
             region.clearCachedBatchFor(DefaultTerrainRenderPasses.TRANSLUCENT);
         }
 
@@ -220,14 +215,14 @@ public class RenderRegionManager {
         return map.reference2ReferenceEntrySet();
     }
 
-    public void delete(CommandList commandList) {
+    public void delete() {
         for (RenderRegion region : this.regions.values()) {
-            region.delete(commandList);
+            region.delete();
             freeIds.release(region.getId());
         }
 
         this.regions.clear();
-        this.stagingBuffer.delete(commandList);
+        this.stagingBuffer.delete();
     }
 
     public Collection<RenderRegion> getLoadedRegions() {
@@ -268,7 +263,7 @@ public class RenderRegionManager {
     private record PendingSectionIndexBufferUpload(RenderSection section, PendingUpload indexBufferUpload) {
     }
 
-    private static StagingBuffer createStagingBuffer(CommandList commandList) {
+    private static StagingBuffer createStagingBuffer() {
         return new MojangStagingBuffer(32_000_000);
     }
 }

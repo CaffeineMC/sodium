@@ -1,4 +1,4 @@
-package net.caffeinemc.mods.sodium.client.gl.util;
+package net.caffeinemc.mods.sodium.client.gpu.util;
 
 import java.util.Arrays;
 import java.util.EnumSet;

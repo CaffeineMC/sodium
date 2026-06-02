@@ -11,9 +11,7 @@ import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.*;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
-import net.caffeinemc.mods.sodium.client.gl.device.GLRenderDevice;
-import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
+import net.caffeinemc.mods.sodium.client.gpu.GPULimits;
 import net.caffeinemc.mods.sodium.client.render.chunk.async.CullTask;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
@@ -147,10 +145,10 @@ public class RenderSectionManager {
     private final GpuBuffer sectionTimeInfo;
     private final GpuBufferSlice.MappedView sectionTimeInfoMap;
 
-    public RenderSectionManager(ClientLevel level, int renderDistance, SortBehavior sortBehavior, CommandList commandList) {
+    public RenderSectionManager(ClientLevel level, int renderDistance, SortBehavior sortBehavior) {
         this.meshTaskSizeEstimator = new MeshTaskSizeEstimator(level);
 
-        this.chunkRenderer = new DefaultChunkRenderer(RenderDevice.INSTANCE, ChunkMeshFormats.COMPACT);
+        this.chunkRenderer = new DefaultChunkRenderer(ChunkMeshFormats.COMPACT);
 
         this.uniformData = new MappableRingBuffer(() -> "Sodium uniform buffer", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, 256);
 
@@ -182,7 +180,7 @@ public class RenderSectionManager {
             this.sortTriggering = null;
         }
 
-        this.regions = new RenderRegionManager(this, commandList);
+        this.regions = new RenderRegionManager(this);
         this.sectionCache = new ClonedChunkSectionCache(this.level);
 
         this.renderLists = SortedRenderLists.empty();
@@ -215,6 +213,7 @@ public class RenderSectionManager {
         if (this.cameraChanged) {
             this.invalidateRenderLists();
         }
+        this.chunkRenderer.rotate();
     }
 
     public void prepareRenderTrees(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
@@ -480,23 +479,18 @@ public class RenderSectionManager {
     }
 
     public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters, GpuSampler terrainSampler) {
-        RenderDevice device = RenderDevice.INSTANCE;
-        CommandList commandList = device.createCommandList();
-
         if (this.uboUpdateFrame != this.frame) {
             this.uboUpdateFrame = this.frame;
             this.updateUbo(matrices, fogParameters);
         }
 
-        this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z), fogParameters, this.sortBehavior != SortBehavior.OFF, terrainSampler, uniformData.currentBuffer(), sectionTimeInfo);
-
-        commandList.flush();
+        this.chunkRenderer.render(matrices, this.renderLists, pass, new CameraTransform(x, y, z), fogParameters, this.sortBehavior != SortBehavior.OFF, terrainSampler, uniformData.currentBuffer(), sectionTimeInfo);
     }
 
     private void updateUbo(ChunkRenderMatrices matrices, FogParameters fogParameters) {
         uniformData.rotate();
 
-        double subTexelPrecision = (1 << GLRenderDevice.INSTANCE.getSubTexelPrecisionBits());
+        double subTexelPrecision = (1 << GPULimits.getSubTexelPrecisionBits());
         double subTexelOffset = 1.0f / CompactChunkVertex.TEXTURE_MAX_VALUE;
 
         var textureAtlas = (TextureAtlasAccessor) Minecraft.getInstance()
@@ -672,7 +666,7 @@ public class RenderSectionManager {
         }
 
         var uploadStart = System.nanoTime();
-        this.regions.uploadResults(RenderDevice.INSTANCE.createCommandList(), outputs);
+        this.regions.uploadResults(outputs);
         var uploadDuration = System.nanoTime() - uploadStart;
 
         // insert and update the upload duration estimator with the total upload size,
@@ -989,10 +983,8 @@ public class RenderSectionManager {
 
         this.renderLists = SortedRenderLists.empty();
 
-        try (CommandList commandList = RenderDevice.INSTANCE.createCommandList()) {
-            this.regions.delete(commandList);
-            this.chunkRenderer.delete(commandList);
-        }
+        this.regions.delete();
+        this.chunkRenderer.delete();
     }
 
     public int getTotalSections() {

@@ -1,6 +1,5 @@
 package net.caffeinemc.mods.sodium.mixin.workarounds.context_creation;
 
-import com.mojang.blaze3d.TracyFrameCapture;
 import com.mojang.blaze3d.opengl.GlSurface;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.client.compatibility.checks.ModuleScanner;
@@ -9,22 +8,19 @@ import net.caffeinemc.mods.sodium.client.compatibility.environment.GlContextInfo
 import net.caffeinemc.mods.sodium.client.platform.NativeWindowHandle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Util;
-import org.apache.logging.log4j.LogManager;
 import org.lwjgl.glfw.GLFWNativeWin32;
 import org.lwjgl.opengl.WGL;
 import org.lwjgl.system.MemoryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GlSurface.class)
-public class RenderSystemMixin {
+public class GlSurfaceMixin {
     @Unique
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium-GlSurface");
 

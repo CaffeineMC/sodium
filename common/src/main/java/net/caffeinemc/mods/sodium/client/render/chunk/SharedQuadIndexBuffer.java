@@ -3,7 +3,6 @@ package net.caffeinemc.mods.sodium.client.render.chunk;
 import com.mojang.blaze3d.IndexType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
 
 import java.nio.ByteBuffer;
@@ -19,12 +18,12 @@ public class SharedQuadIndexBuffer {
 
     private int maxPrimitives;
 
-    public SharedQuadIndexBuffer(CommandList commandList, IndexFormat indexFormat) {
+    public SharedQuadIndexBuffer(IndexFormat indexFormat) {
         this.indexFormat = indexFormat;
-        ensureCapacity(commandList, 1);
+        ensureCapacity(1);
     }
 
-    public void ensureCapacity(CommandList commandList, int elementCount) {
+    public void ensureCapacity(int elementCount) {
         if (elementCount > this.indexFormat.getMaxElementCount()) {
             throw new IllegalArgumentException("Tried to reserve storage for more vertices in this buffer than it can hold");
         }
@@ -32,7 +31,7 @@ public class SharedQuadIndexBuffer {
         int primitiveCount = elementCount / ELEMENTS_PER_PRIMITIVE;
 
         if (primitiveCount > this.maxPrimitives) {
-            this.grow(commandList, this.getNextSize(primitiveCount));
+            this.grow(this.getNextSize(primitiveCount));
         }
     }
 
@@ -40,7 +39,7 @@ public class SharedQuadIndexBuffer {
         return Math.min(Math.max(this.maxPrimitives * 2, primitiveCount + 16384), this.indexFormat.getMaxPrimitiveCount());
     }
 
-    private void grow(CommandList commandList, int primitiveCount) {
+    private void grow(int primitiveCount) {
         if (this.buffer != null) this.buffer.close();
 
         var bufferSize = primitiveCount * this.indexFormat.getBytesPerElement() * ELEMENTS_PER_PRIMITIVE;
@@ -68,7 +67,7 @@ public class SharedQuadIndexBuffer {
         return this.buffer;
     }
 
-    public void delete(CommandList commandList) {
+    public void delete() {
         if (this.buffer != null) this.buffer.close();
     }
 

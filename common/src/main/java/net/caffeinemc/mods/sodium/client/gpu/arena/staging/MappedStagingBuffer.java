@@ -1,15 +1,17 @@
-package net.caffeinemc.mods.sodium.client.gl.arena.staging;
+package net.caffeinemc.mods.sodium.client.gpu.arena.staging;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.GpuFence;
+import com.mojang.blaze3d.opengl.GlBuffer;
+import com.mojang.blaze3d.opengl.GlDevice;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.PriorityQueue;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
-import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
-import net.caffeinemc.mods.sodium.client.gl.util.EnumBitField;
+import net.caffeinemc.mods.sodium.client.gpu.device.backend.DrawBackend;
+import net.caffeinemc.mods.sodium.client.gpu.device.batch.MultiDrawBatch;
 import net.caffeinemc.mods.sodium.client.util.MathUtil;
+import net.caffeinemc.mods.sodium.mixin.core.GpuDeviceAccessor;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -39,7 +41,7 @@ public class MappedStagingBuffer implements StagingBuffer {
     }
 
     @Override
-    public void enqueueCopy(CommandList commandList, ByteBuffer data, GpuBuffer dst, long writeOffset) {
+    public void enqueueCopy(ByteBuffer data, GpuBuffer dst, long writeOffset) {
         int length = data.remaining();
 
         if (length > this.remaining) {
@@ -72,16 +74,22 @@ public class MappedStagingBuffer implements StagingBuffer {
     }
 
     @Override
-    public void flush(CommandList commandList) {
+    public void flush() {
         if (this.pendingCopies.isEmpty()) {
             return;
         }
 
-        if (this.pos < this.start) {
-            commandList.flushMappedRange(this.mappedBuffer.map, this.start, this.capacity - this.start);
-            commandList.flushMappedRange(this.mappedBuffer.map, 0, this.pos);
-        } else {
-            commandList.flushMappedRange(this.mappedBuffer.map, this.start, this.pos - this.start);
+        // All memory is HOST_COHERENT currently in Vulkan.
+        if (DrawBackend.BACKEND == DrawBackend.OPENGL) {
+            var dsa = ((GlDevice) ((GpuDeviceAccessor) RenderSystem.getDevice()).sodium$getBackend()).directStateAccess();
+            var buffer = ((GlBuffer) this.mappedBuffer.buffer).handle();
+            var usage = this.mappedBuffer.buffer.usage();
+            if (this.pos < this.start) {
+                dsa.flushMappedBufferRange(buffer, this.start, this.capacity - this.start, usage);
+                dsa.flushMappedBufferRange(buffer, 0, this.pos, usage);
+            } else {
+                dsa.flushMappedBufferRange(buffer, this.start, this.pos - this.start, usage);
+            }
         }
 
         int bytes = 0;
@@ -121,7 +129,7 @@ public class MappedStagingBuffer implements StagingBuffer {
     }
 
     @Override
-    public void delete(CommandList commandList) {
+    public void delete() {
         while (!this.fencedRegions.isEmpty()) {
             var region = this.fencedRegions.dequeue();
             var fence = region.fence();
@@ -129,7 +137,7 @@ public class MappedStagingBuffer implements StagingBuffer {
             fence.close();
         }
 
-        this.mappedBuffer.delete(commandList);
+        this.mappedBuffer.delete();
         this.pendingCopies.clear();
     }
 
@@ -179,7 +187,7 @@ public class MappedStagingBuffer implements StagingBuffer {
 
     private record MappedBuffer(GpuBuffer buffer,
                                 GpuBufferSlice.MappedView map, long mapAddr) {
-        public void delete(CommandList commandList) {
+        public void delete() {
             this.map.close();
             this.buffer.close();
         }

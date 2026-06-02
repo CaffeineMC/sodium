@@ -2,25 +2,14 @@ package net.caffeinemc.mods.sodium.client.render.chunk;
 
 import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.opengl.GlConst;
-import com.mojang.blaze3d.opengl.GlDevice;
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.opengl.GlTexture;
 import com.mojang.blaze3d.pipeline.*;
 import com.mojang.blaze3d.shaders.UniformType;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
-import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
-import net.caffeinemc.mods.sodium.mixin.core.CommandEncoderAccessor;
-import net.caffeinemc.mods.sodium.mixin.core.GlCommandEncoderAccessor;
-import net.caffeinemc.mods.sodium.mixin.core.GpuDeviceAccessor;
-import net.minecraft.client.renderer.ShaderDefines;
 import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
@@ -39,12 +28,9 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
     protected final ChunkVertexType vertexType;
     protected final VertexFormat vertexFormat;
 
-    protected final RenderDevice device;
-
     protected RenderPipeline activeProgram;
 
-    public ShaderChunkRenderer(RenderDevice device, ChunkVertexType vertexType) {
-        this.device = device;
+    public ShaderChunkRenderer(ChunkVertexType vertexType) {
         this.vertexType = vertexType;
         this.vertexFormat = vertexType.getVertexFormat();
     }
@@ -109,7 +95,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
     }
 
     @Override
-    public void delete(CommandList commandList) {
+    public void delete() {
     }
 
 }

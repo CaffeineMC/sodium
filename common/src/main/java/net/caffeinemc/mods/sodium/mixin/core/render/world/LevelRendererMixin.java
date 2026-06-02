@@ -1,8 +1,5 @@
 package net.caffeinemc.mods.sodium.mixin.core.render.world;
 
-import com.llamalad7.mixinextras.expression.Definition;
-import com.llamalad7.mixinextras.expression.Expression;
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
@@ -10,7 +7,6 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.textures.FilterMode;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
 import net.caffeinemc.mods.sodium.client.util.GameRendererStorage;
@@ -28,7 +24,6 @@ import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
-import net.minecraft.client.renderer.chunk.SectionCompiler;
 import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
@@ -159,13 +154,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         this.cloudRenderer.markForRebuild();
         LeavesBlock.setCutoutLeaves(options.cutoutLeaves().get());
 
-        RenderDevice.enterManagedCode();
-
-        try {
-            this.renderer.reload();
-        } finally {
-            RenderDevice.exitManagedCode();
-        }
+        this.renderer.reload();
 
         this.sectionRenderDispatcher = new IgnoringSectionRenderDispatcher(Util.backgroundExecutor(), this.renderBuffers, null, this.sectionOcclusionGraph::schedulePropagationFrom);
         this.viewArea = new IgnoringViewArea(sectionRenderDispatcher);

@@ -2,10 +2,9 @@ package net.caffeinemc.mods.sodium.client.render.chunk.region;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
-import net.caffeinemc.mods.sodium.client.gl.arena.GlBufferArena;
-import net.caffeinemc.mods.sodium.client.gl.arena.staging.StagingBuffer;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
-import net.caffeinemc.mods.sodium.client.gl.device.MultiDrawBatch;
+import net.caffeinemc.mods.sodium.client.gpu.arena.GlBufferArena;
+import net.caffeinemc.mods.sodium.client.gpu.arena.staging.StagingBuffer;
+import net.caffeinemc.mods.sodium.client.gpu.device.batch.MultiDrawBatch;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionFlags;
@@ -124,7 +123,7 @@ public class RenderRegion {
         return this.getChunkZ() << 4;
     }
 
-    public void delete(CommandList commandList) {
+    public void delete() {
         for (var storage : this.sectionRenderData.values()) {
             storage.delete();
         }
@@ -132,7 +131,7 @@ public class RenderRegion {
         this.sectionRenderData.clear();
 
         if (this.resources != null) {
-            this.resources.delete(commandList);
+            this.resources.delete();
             this.resources = null;
         }
 
@@ -163,7 +162,7 @@ public class RenderRegion {
             return batch;
         }
 
-        batch = new MultiDrawBatch((ModelQuadFacing.COUNT * RenderRegion.REGION_SIZE) + 1);
+        batch = MultiDrawBatch.newBatch((ModelQuadFacing.COUNT * RenderRegion.REGION_SIZE) + 1);
         this.cachedBatches.put(pass, batch);
         return batch;
     }
@@ -187,13 +186,13 @@ public class RenderRegion {
         return storage;
     }
 
-    public void refreshTesselation(CommandList commandList) {
+    public void refreshTesselation() {
         for (var storage : this.sectionRenderData.values()) {
             storage.onBufferResized();
         }
     }
 
-    public void refreshIndexedTesselation(CommandList commandList) {
+    public void refreshIndexedTesselation() {
         this.sectionRenderData.get(DefaultTerrainRenderPasses.TRANSLUCENT).onIndexBufferResized();
     }
 
@@ -288,17 +287,17 @@ public class RenderRegion {
         return this.resources;
     }
 
-    public DeviceResources createResources(CommandList commandList) {
+    public DeviceResources createResources() {
         if (this.resources == null) {
-            this.resources = new DeviceResources(commandList, this.stagingBuffer);
+            this.resources = new DeviceResources(this.stagingBuffer);
         }
 
         return this.resources;
     }
 
-    public void update(CommandList commandList) {
+    public void update() {
         if (this.resources != null && this.resources.shouldDelete()) {
-            this.resources.delete(commandList);
+            this.resources.delete();
             this.resources = null;
         }
     }
@@ -323,11 +322,11 @@ public class RenderRegion {
          * two can't easily be combined because integers and vertices require different
          * amounts of data which makes the returned offsets incompatible.
          */
-        public DeviceResources(CommandList commandList, StagingBuffer stagingBuffer) {
+        public DeviceResources(StagingBuffer stagingBuffer) {
             int stride = ChunkMeshFormats.COMPACT.getVertexFormat().getVertexSize();
 
-            this.geometryArena = new GlBufferArena(commandList, REGION_SIZE * SECTION_VERTEX_COUNT_ESTIMATE, stride, stagingBuffer);
-            this.indexArena = new GlBufferArena(commandList, REGION_SIZE * SECTION_INDEX_COUNT_ESTIMATE, Integer.BYTES, stagingBuffer);
+            this.geometryArena = new GlBufferArena(REGION_SIZE * SECTION_VERTEX_COUNT_ESTIMATE, stride, stagingBuffer);
+            this.indexArena = new GlBufferArena(REGION_SIZE * SECTION_INDEX_COUNT_ESTIMATE, Integer.BYTES, stagingBuffer);
         }
 
         public GpuBuffer getGeometryBuffer() {
@@ -338,9 +337,9 @@ public class RenderRegion {
             return this.indexArena.getBufferObject();
         }
 
-        public void delete(CommandList commandList) {
-            this.geometryArena.delete(commandList);
-            this.indexArena.delete(commandList);
+        public void delete() {
+            this.geometryArena.delete();
+            this.indexArena.delete();
         }
 
         public GlBufferArena getGeometryArena() {

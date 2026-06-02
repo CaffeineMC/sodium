@@ -1,4 +1,4 @@
-package net.caffeinemc.mods.sodium.client.gl.arena;
+package net.caffeinemc.mods.sodium.client.gpu.arena;
 
 import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
 

@@ -9,11 +9,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.vulkan.VulkanCommandEncoder;
-import com.mojang.blaze3d.vulkan.VulkanRenderPass;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
-import net.caffeinemc.mods.sodium.client.gl.device.MultiDrawBatch;
-import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
+import net.caffeinemc.mods.sodium.client.gpu.device.backend.DrawBackend;
+import net.caffeinemc.mods.sodium.client.gpu.device.batch.MultiDrawBatch;
+import net.caffeinemc.mods.sodium.client.gpu.device.context.DrawContext;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.data.SectionRenderDataStorage;
 import net.caffeinemc.mods.sodium.client.render.chunk.data.SectionRenderDataUnsafe;
@@ -26,7 +25,6 @@ import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.util.BitwiseMath;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.client.util.UInt32;
-import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import net.caffeinemc.mods.sodium.mixin.core.CommandEncoderAccessor;
 import net.caffeinemc.mods.sodium.mixin.core.GlRenderPassAccessor;
 import net.caffeinemc.mods.sodium.mixin.core.RenderPassAccessor;
@@ -36,7 +34,6 @@ import net.minecraft.client.renderer.MappableRingBuffer;
 import org.lwjgl.opengl.GL46C;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.system.Pointer;
 import org.lwjgl.vulkan.VK13;
 import org.lwjgl.vulkan.VkCommandBuffer;
 
@@ -45,23 +42,13 @@ import java.util.Optional;
 import java.util.OptionalDouble;
 
 public class DefaultChunkRenderer extends ShaderChunkRenderer {
-    public static final int PUSH_CONSTANT_RANGE = 20;
-
     private final SharedQuadIndexBuffer sharedIndexBuffer;
-    private final MappableRingBuffer ringBuffer;
+    private final DrawContext drawContext = DrawContext.create();
 
-    private int currentFrameOffset = 0;
-    private GpuBuffer lastUBO;
+    public DefaultChunkRenderer(ChunkVertexType vertexType) {
+        super(vertexType);
 
-    public DefaultChunkRenderer(RenderDevice device, ChunkVertexType vertexType) {
-        super(device, vertexType);
-
-        this.sharedIndexBuffer = new SharedQuadIndexBuffer(device.createCommandList(), SharedQuadIndexBuffer.IndexFormat.INTEGER);
-        if (!MultiDrawBatch.supportsMultiDraw) {
-            this.ringBuffer = new MappableRingBuffer(() -> "Indirect storage buffer", GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_INDIRECT_PARAMETERS, 8_000_000);
-        } else {
-            this.ringBuffer = null;
-        }
+        this.sharedIndexBuffer = new SharedQuadIndexBuffer(SharedQuadIndexBuffer.IndexFormat.INTEGER);
     }
 
     /**
@@ -71,7 +58,6 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
      */
     @Override
     public void render(ChunkRenderMatrices matrices,
-                       CommandList commandList,
                        ChunkRenderListIterable renderLists,
                        TerrainRenderPass renderPass,
                        CameraTransform camera,
@@ -80,18 +66,10 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                        GpuSampler terrainSampler, GpuBuffer uniformData, GpuBuffer sectionTimeInfo) {
         super.begin(renderPass, parameters, terrainSampler);
 
-        if (lastUBO != uniformData) {
-            lastUBO = uniformData;
-            currentFrameOffset = 0;
-            if (ringBuffer != null) ringBuffer.rotate();
-        }
-
         final boolean useBlockFaceCulling = SodiumClientMod.options().performance.useBlockFaceCulling;
         final boolean useIndexedTessellation = renderPass.isTranslucent() && indexedRenderingEnabled;
 
         Iterator<ChunkRenderList> iterator = renderLists.iterator(renderPass.isTranslucent());
-
-        int sizes = 0;
 
         while (iterator.hasNext()) {
             ChunkRenderList renderList = iterator.next();
@@ -108,8 +86,6 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                 fillCommandBuffer(batch, region, storage, renderList, camera, renderPass, useBlockFaceCulling, useIndexedTessellation);
             }
 
-            sizes += batch.size;
-
             if (batch.isEmpty()) {
                 continue;
             }
@@ -117,7 +93,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
             // When the shared index buffer is being used, we must ensure the storage has been allocated *before*
             // the tessellation is prepared.
             if (!useIndexedTessellation) {
-                this.sharedIndexBuffer.ensureCapacity(commandList, batch.getIndexBufferSize());
+                this.sharedIndexBuffer.ensureCapacity(batch.getIndexBufferSize());
             }
 
         }
@@ -125,39 +101,19 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         iterator = renderLists.iterator(renderPass.isTranslucent());
 
         var encoder = RenderSystem.getDevice().createCommandEncoder();
-        var commandBackend = ((CommandEncoderAccessor) encoder).sodium$getBackend();
-        boolean isGL = !(commandBackend instanceof VulkanCommandEncoder); // TODO
-
-        GpuBufferSlice.MappedView map = MultiDrawBatch.supportsMultiDraw ? null : ringBuffer.currentBuffer().map(false, true);
 
         try (RenderPass pass = encoder.createRenderPass(() -> "Terrain",
                 renderPass.getTarget().getColorTextureView(), Optional.empty(),
                 renderPass.getTarget().getDepthTextureView(), OptionalDouble.empty())) {
             pass.setPipeline(this.activeProgram);
+            drawContext.setContext(pass, this.activeProgram);
+
             if (!useIndexedTessellation && sharedIndexBuffer.getBufferObject() != null) pass.setIndexBuffer(sharedIndexBuffer.getBufferObject(), IndexType.INT);
 
             pass.setUniform("u_Globals", uniformData);
             pass.setUniform("u_SectionTimeInfo", sectionTimeInfo);
             pass.bindTexture("u_LightTex", Minecraft.getInstance().gameRenderer.lightmap(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
             pass.bindTexture("u_BlockTex", renderPass.getAtlas(), terrainSampler);
-
-            int programId = 0, regionUniform = 0, timeUniform = 0, idUniform = 0;
-
-            VkCommandBuffer cmdBuf = null;
-            long layout = 0;
-
-            if (isGL) {
-                GlRenderPassAccessor passBackend = (GlRenderPassAccessor) ((RenderPassAccessor) pass).getBackend();
-                programId = passBackend.getPipeline().program().getProgramId();
-                GlStateManager._glUseProgram(programId);
-                regionUniform = GL46C.glGetUniformLocation(programId, "u_RegionOffset");
-                timeUniform = GL46C.glGetUniformLocation(programId, "u_CurrentTime");
-                idUniform = GL46C.glGetUniformLocation(programId, "u_RegionID");
-            } else {
-                VulkanRenderPassAccessor passBackend = (VulkanRenderPassAccessor) ((RenderPassAccessor) pass).getBackend();
-                layout = passBackend.sodium$getPipeline().pipelineLayout();
-                cmdBuf = passBackend.sodium$getCommandBuffer();
-            }
 
             while (iterator.hasNext()) {
                 ChunkRenderList renderList = iterator.next();
@@ -181,19 +137,20 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
 
                 pass.setVertexBuffer(0, region.getResources().getGeometryBuffer().slice());
 
-                if (isGL) {
-                    setModelMatrixUniforms(programId, regionUniform, timeUniform, idUniform, region, camera);
-                    batch.drawGL(pass);
-                } else {
-                    setModelMatrixConstants(cmdBuf, layout, region, camera);
-                    currentFrameOffset += batch.drawVK(currentFrameOffset, map, pass);
-                }
+                drawContext.updateData(region, camera);
+
+                batch.draw(drawContext);
             }
         }
 
-        if (map != null) map.close();
+        drawContext.endDraw();
 
         super.end(renderPass);
+    }
+
+    @Override
+    public void rotate() {
+        drawContext.rotate();
     }
 
     private static void fillCommandBuffer(MultiDrawBatch batch,
@@ -388,42 +345,11 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         return planes;
     }
 
-    private static void setModelMatrixUniforms(int programId, int regionUniform, int timeUniform, int idUniform, RenderRegion region, CameraTransform camera) {
-        float x = getCameraTranslation(region.getOriginX(), camera.intX, camera.fracX);
-        float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
-        float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
-
-        GL46C.glUniform3f(regionUniform, x, y, z);
-        GL46C.glUniform1i(timeUniform, Math.toIntExact(System.currentTimeMillis() - region.getCreationTime()));
-        GL46C.glUniform1ui(idUniform, region.getId());
-    }
-
-    private void setModelMatrixConstants(VkCommandBuffer cmdBuf, long layout, RenderRegion region, CameraTransform camera) {
-        float x = getCameraTranslation(region.getOriginX(), camera.intX, camera.fracX);
-        float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
-        float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
-
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            long memory = stack.nmalloc(PUSH_CONSTANT_RANGE);
-            MemoryUtil.memPutFloat(memory, x);
-            MemoryUtil.memPutFloat(memory + 4, y);
-            MemoryUtil.memPutFloat(memory + 8, z);
-            MemoryUtil.memPutInt(memory + 12, Math.toIntExact(System.currentTimeMillis() - region.getCreationTime()));
-            MemoryUtil.memPutInt(memory + 16, region.getId());
-
-            VK13.nvkCmdPushConstants(cmdBuf, layout, VK13.VK_SHADER_STAGE_ALL, 0, PUSH_CONSTANT_RANGE, memory);
-        }
-    }
-
-    private static float getCameraTranslation(int chunkBlockPos, int cameraBlockPos, float cameraPos) {
-        return (chunkBlockPos - cameraBlockPos) - cameraPos;
-    }
-
     @Override
-    public void delete(CommandList commandList) {
-        super.delete(commandList);
+    public void delete() {
+        super.delete();
 
-        this.sharedIndexBuffer.delete(commandList);
-        if (this.ringBuffer != null) this.ringBuffer.close();
+        this.sharedIndexBuffer.delete();
+        this.drawContext.delete();
     }
 }

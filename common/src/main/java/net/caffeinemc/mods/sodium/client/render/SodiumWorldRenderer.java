@@ -4,8 +4,6 @@ import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
-import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.ChunkRenderList;
@@ -125,9 +123,7 @@ public class SodiumWorldRenderer {
     private void loadLevel(ClientLevel level) {
         this.level = level;
 
-        try (CommandList commandList = RenderDevice.INSTANCE.createCommandList()) {
-            this.initRenderer(commandList);
-        }
+        this.initRenderer();
     }
 
     private void unloadLevel() {
@@ -290,12 +286,10 @@ public class SodiumWorldRenderer {
             return;
         }
 
-        try (CommandList commandList = RenderDevice.INSTANCE.createCommandList()) {
-            this.initRenderer(commandList);
-        }
+        this.initRenderer();
     }
 
-    private void initRenderer(CommandList commandList) {
+    private void initRenderer() {
         if (this.renderSectionManager != null) {
             this.renderSectionManager.destroy();
             this.renderSectionManager = null;
@@ -311,7 +305,7 @@ public class SodiumWorldRenderer {
 
         this.renderDistance = this.client.options.getEffectiveRenderDistance();
 
-        this.renderSectionManager = new RenderSectionManager(this.level, this.renderDistance, sortBehavior, commandList);
+        this.renderSectionManager = new RenderSectionManager(this.level, this.renderDistance, sortBehavior);
 
         var tracker = ChunkTrackerHolder.get(this.level);
         ChunkTracker.forEachChunk(tracker.getReadyChunks(), this.renderSectionManager::onChunkAdded);

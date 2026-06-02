@@ -1,9 +1,8 @@
-package net.caffeinemc.mods.sodium.client.gl.arena;
+package net.caffeinemc.mods.sodium.client.gpu.arena;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.caffeinemc.mods.sodium.client.gl.arena.staging.StagingBuffer;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
+import net.caffeinemc.mods.sodium.client.gpu.arena.staging.StagingBuffer;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -38,7 +37,7 @@ public class GlBufferArena {
     private static final GpuBuffer[] freeBuffers = new GpuBuffer[8];
     private static int freeBufferCount = 0;
 
-    public GlBufferArena(CommandList commands, int initialCapacity, int stride, StagingBuffer stagingBuffer) {
+    public GlBufferArena(int initialCapacity, int stride, StagingBuffer stagingBuffer) {
         this.capacity = initialCapacity;
 
         this.stride = stride;
@@ -46,13 +45,13 @@ public class GlBufferArena {
         this.head = new GlBufferSegment(this, 0, this.capacity);
         this.head.setFree(true);
 
-        this.arenaBuffer = getBufferOfSizeAtLeast(commands, this.capacity * stride);
+        this.arenaBuffer = getBufferOfSizeAtLeast(this.capacity * stride);
         this.capacity = this.arenaBuffer.size() / stride;
 
         this.stagingBuffer = stagingBuffer;
     }
 
-    private void resize(CommandList commandList, long newCapacity) {
+    private void resize(long newCapacity) {
         if (this.used > newCapacity) {
             throw new UnsupportedOperationException("New capacity must be larger than used size");
         }
@@ -64,7 +63,7 @@ public class GlBufferArena {
         List<GlBufferSegment> usedSegments = this.getUsedSegments();
         List<PendingBufferCopyCommand> pendingCopies = this.buildTransferList(usedSegments, tail);
 
-        this.transferSegments(commandList, pendingCopies, newCapacity);
+        this.transferSegments(pendingCopies, newCapacity);
 
         this.head = new GlBufferSegment(this, 0, tail);
         this.head.setFree(true);
@@ -123,7 +122,7 @@ public class GlBufferArena {
         return pendingCopies;
     }
 
-    private static GpuBuffer getBufferOfSizeAtLeast(CommandList commandList, long size) {
+    private static GpuBuffer getBufferOfSizeAtLeast(long size) {
         GpuBuffer buffer = null;
 
         if (freeBufferCount > 0) {
@@ -155,7 +154,7 @@ public class GlBufferArena {
         return buffer;
     }
 
-    private static void releaseBufferForReuse(CommandList commandList, GpuBuffer buffer) {
+    private static void releaseBufferForReuse(GpuBuffer buffer) {
         // find an empty slot if there is one
         if (freeBufferCount < freeBuffers.length) {
             for (int i = 0; i < freeBuffers.length; i++) {
@@ -173,21 +172,21 @@ public class GlBufferArena {
         freeBuffers[evictIndex] = buffer;
     }
 
-    private void transferSegments(CommandList commandList, Collection<PendingBufferCopyCommand> list, long capacity) {
+    private void transferSegments(Collection<PendingBufferCopyCommand> list, long capacity) {
         long bufferSize = capacity * this.stride;
         if (bufferSize >= (1L << 32)) {
             throw new IllegalArgumentException("Maximum arena buffer size is 4 GiB");
         }
 
         var srcBufferObj = this.arenaBuffer;
-        var dstBufferObj = getBufferOfSizeAtLeast(commandList, bufferSize);
+        var dstBufferObj = getBufferOfSizeAtLeast(bufferSize);
 
         for (PendingBufferCopyCommand cmd : list) {
             RenderSystem.getDevice().createCommandEncoder().copyToBuffer(srcBufferObj.slice(cmd.getReadOffset() * this.stride, cmd.getLength() * this.stride),
                     dstBufferObj.slice(cmd.getWriteOffset() * this.stride, cmd.getLength() * this.stride));
         }
 
-        releaseBufferForReuse(commandList, srcBufferObj);
+        releaseBufferForReuse(srcBufferObj);
 
         this.arenaBuffer = dstBufferObj;
         
@@ -305,7 +304,7 @@ public class GlBufferArena {
         this.checkAssertions();
     }
 
-    public void delete(CommandList commands) {
+    public void delete() {
         if (this.arenaBuffer != null) this.arenaBuffer.close();
     }
 
@@ -317,7 +316,7 @@ public class GlBufferArena {
         return this.arenaBuffer;
     }
 
-    public boolean upload(CommandList commandList, Stream<PendingUpload> stream, float regionFillFractionInv) {
+    public boolean upload(Stream<PendingUpload> stream, float regionFillFractionInv) {
         // Record the buffer object before we start any work
         // If the arena needs to re-allocate a buffer, this will allow us to check and return an appropriate flag
         GpuBuffer buffer = this.arenaBuffer;
@@ -333,16 +332,16 @@ public class GlBufferArena {
         // Try to upload all the data into free segments first,
         // but only attempt this if there is enough free space assuming no fragmentation
         if (totalUploadSize < (this.capacity - this.used) * this.stride) {
-            this.tryUploads(commandList, queue);
+            this.tryUploads(queue);
         }
 
         // If we weren't able to upload some buffers, they will have been left behind in the queue
         if (!queue.isEmpty()) {
             // resize to the new estimated capacity
-            this.resize(commandList, estimateNewCapacity(regionFillFractionInv, queue));
+            this.resize(estimateNewCapacity(regionFillFractionInv, queue));
 
             // Try again to upload any buffers that failed last time
-            this.tryUploads(commandList, queue);
+            this.tryUploads(queue);
 
             // If we still had failures, something has gone wrong
             if (!queue.isEmpty()) {
@@ -404,12 +403,12 @@ public class GlBufferArena {
         return remainingElements + this.used;
     }
 
-    private void tryUploads(CommandList commandList, List<PendingUpload> queue) {
-        queue.removeIf(upload -> this.tryUpload(commandList, upload));
-        this.stagingBuffer.flush(commandList);
+    private void tryUploads(List<PendingUpload> queue) {
+        queue.removeIf(upload -> this.tryUpload(upload));
+        this.stagingBuffer.flush();
     }
 
-    private boolean tryUpload(CommandList commandList, PendingUpload upload) {
+    private boolean tryUpload(PendingUpload upload) {
         ByteBuffer data = upload.getDataBuffer()
                 .getDirectBuffer();
 
@@ -422,7 +421,7 @@ public class GlBufferArena {
         }
 
         // Copy the data into our staging buffer, then copy it into the arena's buffer
-        this.stagingBuffer.enqueueCopy(commandList, data, this.arenaBuffer, dst.getOffset() * this.stride);
+        this.stagingBuffer.enqueueCopy(data, this.arenaBuffer, dst.getOffset() * this.stride);
 
         upload.setResult(dst);
 
