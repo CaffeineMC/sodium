@@ -154,6 +154,9 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext imp
         this.offset.set(x + offset.x, y + offset.y, z + offset.z);
         defaultAo = allowAO && blockState.getLightEmission() == 0;
 
+        this.useAmbientOcclusion = allowAO;
+        this.defaultLightMode = useAmbientOcclusion && defaultAo ? LightMode.SMOOTH : LightMode.FLAT;
+
         this.lightDataCache.reset(pos, level);
         this.prepareCulling(enableCulling);
 
@@ -178,7 +181,7 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext imp
         if (aoMode == TriState.DEFAULT) {
             lightMode = this.defaultLightMode;
         } else {
-            lightMode = this.useAmbientOcclusion && aoMode != TriState.FALSE && defaultAo ? LightMode.SMOOTH : LightMode.FLAT;
+            lightMode = this.useAmbientOcclusion && aoMode != TriState.FALSE ? LightMode.SMOOTH : LightMode.FLAT;
         }
         final boolean emissive = quad.emissive();
 
