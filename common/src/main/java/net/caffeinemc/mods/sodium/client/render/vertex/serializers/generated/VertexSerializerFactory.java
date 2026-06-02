@@ -181,7 +181,7 @@ public class VertexSerializerFactory {
             var srcOffset = srcVertexFormat.getElement(elementType.name()).offset();
             var dstOffset = elementType.offset();
 
-            ops.add(new MemoryTransfer(srcOffset, dstOffset, elementType.format().blockSize()));
+            ops.add(new MemoryTransfer(srcOffset, dstOffset, elementType.format().pixelSize()));
         }
 
         return mergeAdjacentMemoryTransfers(ops);
