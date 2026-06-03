@@ -25,6 +25,7 @@ public class VKIndirectContext extends VKDrawContext {
 
     @Override
     public void delete() {
+        mappedView.close();
         ringBuffer.close();
     }
 
