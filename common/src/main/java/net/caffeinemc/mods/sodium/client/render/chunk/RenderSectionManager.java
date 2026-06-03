@@ -499,7 +499,8 @@ public class RenderSectionManager {
 
         try (var data = uniformData.currentBuffer().map(false, true)) {
             Std140Builder.intoBuffer(data.data())
-                    .putMat4f(new Matrix4f(matrices.projection()).mul(matrices.modelView()))
+                    .putMat4f(new Matrix4f(matrices.projection()))
+                    .putMat4f(new Matrix4f(matrices.modelView()))
                     .putVec4(fogParameters.red(), fogParameters.green(), fogParameters.blue(), fogParameters.alpha())
                     .putVec2(fogParameters.environmentalStart(), fogParameters.environmentalEnd())
                     .putVec2(fogParameters.renderStart(), fogParameters.renderEnd())

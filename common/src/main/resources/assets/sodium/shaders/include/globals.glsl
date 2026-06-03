@@ -1,5 +1,6 @@
 layout(std140) uniform u_Globals {
-    mat4 u_ModelViewProjectionMatrix; 
+    mat4 u_ProjectionMatrix;
+    mat4 u_ModelViewMatrix;
 
     vec4 u_FogColor;
     vec2 u_EnvironmentFog;

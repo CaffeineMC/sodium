@@ -19,7 +19,7 @@ import java.util.Optional;
 
 public abstract class ShaderChunkRenderer implements ChunkRenderer {
     private static final Map<TerrainRenderPass, RenderPipeline> programs = new Object2ObjectOpenHashMap<>();
-    private static final BindGroupLayout BIND_GROUP = BindGroupLayout.builder()
+    public static final BindGroupLayout BIND_GROUP = BindGroupLayout.builder()
             .withSampler("u_LightTex")
             .withSampler("u_BlockTex")
             .withUniform("u_Globals", UniformType.UNIFORM_BUFFER)
