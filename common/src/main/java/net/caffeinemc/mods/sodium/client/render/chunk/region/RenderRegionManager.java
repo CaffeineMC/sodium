@@ -50,7 +50,7 @@ public class RenderRegionManager {
 
             if (region.isEmpty()) {
                 region.delete();
-                freeIds.release(region.getId());
+                if (region.getId() != -1) freeIds.release(region.getId());
 
                 it.remove();
             }
@@ -171,7 +171,7 @@ public class RenderRegionManager {
                     double distanceToPlayer = dx * dx + dy * dy + dz * dz;
 
                     int relativeBuiltTime = distanceToPlayer < 768.0 ? -1 : upload.relativeBuiltTime;
-                    parent.writeMeshTimes(region.getId(), upload.section.getSectionIndex(), relativeBuiltTime);
+                    parent.writeMeshTimes(region.getOrAcquireId(freeIds), upload.section.getSectionIndex(), relativeBuiltTime);
                 }
                 storage.setVertexData(upload.section.getSectionIndex(),
                         upload.vertexUpload.getResult(), upload.meshData.getVertexSegments());
@@ -218,7 +218,7 @@ public class RenderRegionManager {
     public void delete() {
         for (RenderRegion region : this.regions.values()) {
             region.delete();
-            freeIds.release(region.getId());
+            if (region.getId() != -1) freeIds.release(region.getId());
         }
 
         this.regions.clear();
@@ -251,7 +251,7 @@ public class RenderRegionManager {
         var instance = this.regions.get(key);
 
         if (instance == null) {
-            this.regions.put(key, instance = new RenderRegion(x, y, z, this.stagingBuffer, this.freeIds.acquire()));
+            this.regions.put(key, instance = new RenderRegion(x, y, z, this.stagingBuffer));
         }
 
         return instance;

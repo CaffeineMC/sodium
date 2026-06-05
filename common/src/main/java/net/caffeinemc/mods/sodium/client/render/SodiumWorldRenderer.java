@@ -174,13 +174,13 @@ public class SodiumWorldRenderer {
                              Matrix4f cullMatrix) {
         NativeBuffer.reclaim(false);
 
-        this.processChunkEvents();
-
         this.useEntityCulling = SodiumClientMod.options().performance.useEntityCulling;
+        this.processChunkEvents();
 
         if (this.client.options.getEffectiveRenderDistance() != this.renderDistance) {
             this.reload();
         }
+
 
         ProfilerFiller profiler = Profiler.get();
         profiler.push("camera_setup");

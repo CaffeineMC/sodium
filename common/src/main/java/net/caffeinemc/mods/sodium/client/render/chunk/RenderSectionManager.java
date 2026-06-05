@@ -155,8 +155,8 @@ public class RenderSectionManager {
         int renderDistanceDiameter = (2 * renderDistance) + 1;
         int totalVerticalDistance = level.getMaxSectionY() - level.getMinSectionY() + 1;
 
-        int regionsX = (renderDistanceDiameter + 7) / 8;
-        int regionsY = (totalVerticalDistance + 3) / 4;
+        int regionsX = (renderDistanceDiameter + (2 * RenderRegion.REGION_WIDTH) - 2) / RenderRegion.REGION_WIDTH;
+        int regionsY = (totalVerticalDistance + (2 * RenderRegion.REGION_HEIGHT) - 2) / RenderRegion.REGION_HEIGHT;
 
         this.maxRegions = regionsX * regionsY * regionsX * 2;
 
@@ -1250,6 +1250,7 @@ public class RenderSectionManager {
     }
 
     public void writeMeshTimes(int id, int sectionIndex, int relativeBuiltTime) {
+        if ((((id * 256L) + sectionIndex) * 4L) >= this.sectionTimeInfo.size()) throw new IllegalStateException("Overflowed the mesh time buffer at " + id + "x" + sectionIndex);
         if (this.sectionTimeInfoMap != null) {
             MemoryUtil.memPutInt(MemoryUtil.memAddress(this.sectionTimeInfoMap.data()) + (((id * 256L) + sectionIndex) * 4L), relativeBuiltTime);
         } else {

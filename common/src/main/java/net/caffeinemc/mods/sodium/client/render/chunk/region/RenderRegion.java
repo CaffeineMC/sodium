@@ -6,6 +6,7 @@ import net.caffeinemc.mods.sodium.client.gpu.arena.GlBufferArena;
 import net.caffeinemc.mods.sodium.client.gpu.arena.staging.StagingBuffer;
 import net.caffeinemc.mods.sodium.client.gpu.device.batch.MultiDrawBatch;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
+import net.caffeinemc.mods.sodium.client.render.chunk.IntPool;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionFlags;
 import net.caffeinemc.mods.sodium.client.render.chunk.data.BuiltSectionInfo;
@@ -66,14 +67,13 @@ public class RenderRegion {
     private DeviceResources resources;
 
     private final Map<TerrainRenderPass, MultiDrawBatch> cachedBatches = new Reference2ReferenceOpenHashMap<>();
-    private final int uniqueId;
+    private int uniqueId = -1;
 
-    public RenderRegion(int x, int y, int z, StagingBuffer stagingBuffer, int uniqueId) {
+    public RenderRegion(int x, int y, int z, StagingBuffer stagingBuffer) {
         this.x = x;
         this.y = y;
         this.z = z;
         this.creationTime = System.currentTimeMillis();
-        this.uniqueId = uniqueId;
 
         this.stagingBuffer = stagingBuffer;
         this.renderList = new ChunkRenderList(this);
@@ -304,6 +304,13 @@ public class RenderRegion {
 
     public ChunkRenderList getRenderList() {
         return this.renderList;
+    }
+
+    public int getOrAcquireId(IntPool pool) {
+        if (uniqueId == -1) {
+            uniqueId = pool.acquire();
+        }
+        return uniqueId;
     }
 
     public int getId() {

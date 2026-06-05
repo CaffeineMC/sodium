@@ -270,7 +270,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setBinding(value -> {
                                     var monitor = this.getMonitor();
                                     if (monitor != null) {
-                                        this.window.setPreferredFullscreenVideoMode(0 == value ? Optional.empty() : Optional.of(monitor.getMode(value - 1)));
+                                        this.window.setPreferredFullscreenVideoMode(0 == value ? Optional.empty() : Optional.of(monitor.mode(value - 1)));
                                     }
                                 }, () -> {
                                     var monitor = this.getMonitor();
@@ -278,13 +278,13 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                         return 0;
                                     } else {
                                         Optional<VideoMode> optional = this.window.getPreferredFullscreenVideoMode();
-                                        return optional.map((videoMode) -> monitor.getVideoModeIndex(videoMode) + 1).orElse(0);
+                                        return optional.map((videoMode) -> monitor.indexOfMode(videoMode) + 1).orElse(0);
                                     }
                                 })
                                 .setEnabledProvider(
                                         (state) -> {
                                             var monitor = this.getMonitor();
-                                            if (monitor == null || monitor.getModeCount() <= 0) {
+                                            if (monitor == null || monitor.modeCount() <= 0) {
                                                 return false;
                                             }
                                             var os = OsUtils.getOs();
