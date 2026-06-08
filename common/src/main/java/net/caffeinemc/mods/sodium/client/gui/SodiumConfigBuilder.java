@@ -21,6 +21,7 @@ import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
+import net.caffeinemc.mods.sodium.client.render.chunk.map.ChunkTrackerHolder;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.minecraft.client.*;
 import net.minecraft.client.renderer.texture.MipmapStrategy;
@@ -573,6 +574,24 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setDefaultValue(DEFAULTS.performance.useBlockFaceCulling)
                                 .setBinding(value -> this.sodiumOpts.performance.useBlockFaceCulling = value, () -> this.sodiumOpts.performance.useBlockFaceCulling)
                                 .setImpact(OptionImpact.MEDIUM)
+                                .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
+                )
+                .addOption(
+                        builder.createBooleanOption(Identifier.parse("sodium:performance.render_loaded_chunk_edges"))
+                                .setStorageHandler(this.sodiumStorage)
+                                .setName(Component.translatable("sodium.options.render_loaded_chunk_edges.name"))
+                                .setTooltip(Component.translatable("sodium.options.render_loaded_chunk_edges.tooltip"))
+                                .setDefaultValue(DEFAULTS.performance.renderLoadedChunkEdges)
+                                .setBinding(value -> {
+                                    this.sodiumOpts.performance.renderLoadedChunkEdges = value;
+
+                                    var level = Minecraft.getInstance().level;
+
+                                    if (level != null) {
+                                        ChunkTrackerHolder.get(level).refreshReadyChunks();
+                                    }
+                                }, () -> this.sodiumOpts.performance.renderLoadedChunkEdges)
+                                .setImpact(OptionImpact.LOW)
                                 .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                 )
                 .addOption(

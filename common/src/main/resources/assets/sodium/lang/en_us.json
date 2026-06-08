@@ -40,6 +40,8 @@
   "sodium.options.mipmap_levels.tooltip": "Controls the number of mipmaps which will be used for block model textures. Higher values provide better rendering of blocks in the distance, but could adversely affect performance with resource packs that use many animated textures.",
   "sodium.options.use_block_face_culling.name": "Use Block Face Culling",
   "sodium.options.use_block_face_culling.tooltip": "If enabled, only the faces of blocks which are facing the camera will be submitted for rendering. This can eliminate a large number of block faces very early in the rendering process, which greatly improves rendering performance. Some resource packs may have issues with this option, so try disabling it if you're seeing holes in blocks.",
+  "sodium.options.render_loaded_chunk_edges.name": "Render Loaded Chunk Edges",
+  "sodium.options.render_loaded_chunk_edges.tooltip": "If enabled, chunks with complete block and light data may render after chunk loading has been quiet for a short time, even when some neighbors are missing. This can reduce visible holes at loaded chunk borders, but may increase chunk meshing work.",
   "sodium.options.use_fog_occlusion.name": "Use Fog Occlusion",
   "sodium.options.use_fog_occlusion.tooltip": "If enabled, chunks which are determined to be fully hidden by fog effects will not be rendered, helping to improve performance. The improvement can be more dramatic when fog effects are heavier (such as while underwater), but it may cause undesirable visual artifacts between the sky and fog in some scenarios.",
   "sodium.options.use_entity_culling.name": "Use Entity Culling",

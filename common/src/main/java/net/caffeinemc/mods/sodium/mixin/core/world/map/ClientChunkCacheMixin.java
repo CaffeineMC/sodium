@@ -28,6 +28,24 @@ public class ClientChunkCacheMixin {
     @Final
     ClientLevel level;
 
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void onCreate(ClientLevel level, int viewDistance, CallbackInfo ci) {
+        ChunkTrackerHolder.get(level)
+                .updateLoadDistance(viewDistance);
+    }
+
+    @Inject(method = "updateViewCenter", at = @At("RETURN"))
+    private void onViewCenterChanged(int chunkX, int chunkZ, CallbackInfo ci) {
+        ChunkTrackerHolder.get(this.level)
+                .updateMapCenter(chunkX, chunkZ);
+    }
+
+    @Inject(method = "updateViewRadius", at = @At("RETURN"))
+    private void onViewRadiusChanged(int viewDistance, CallbackInfo ci) {
+        ChunkTrackerHolder.get(this.level)
+                .updateLoadDistance(viewDistance);
+    }
+
     @Inject(
             method = "drop",
             at = @At(

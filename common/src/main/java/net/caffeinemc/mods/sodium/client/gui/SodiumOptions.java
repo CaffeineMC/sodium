@@ -51,6 +51,7 @@ public class SodiumOptions {
         public boolean useEntityCulling = true;
         public boolean useFogOcclusion = true;
         public boolean useBlockFaceCulling = true;
+        public boolean renderLoadedChunkEdges = false;
         public boolean useNoErrorGLContext = true;
 
         public QuadSplittingMode quadSplittingMode = QuadSplittingMode.SAFE;
