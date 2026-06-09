@@ -22,6 +22,7 @@ import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.map.ChunkTrackerHolder;
+import net.caffeinemc.mods.sodium.client.render.chunk.map.LoadedChunkEdgeRendering;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.minecraft.client.*;
 import net.minecraft.client.renderer.texture.MipmapStrategy;
@@ -577,21 +578,21 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                 )
                 .addOption(
-                        builder.createBooleanOption(Identifier.parse("sodium:performance.render_loaded_chunk_edges"))
+                        builder.createEnumOption(Identifier.parse("sodium:performance.render_loaded_chunk_edges"), LoadedChunkEdgeRendering.class)
                                 .setStorageHandler(this.sodiumStorage)
                                 .setName(Component.translatable("sodium.options.render_loaded_chunk_edges.name"))
                                 .setTooltip(Component.translatable("sodium.options.render_loaded_chunk_edges.tooltip"))
-                                .setDefaultValue(DEFAULTS.performance.renderLoadedChunkEdges)
+                                .setDefaultValue(DEFAULTS.performance.loadedChunkEdgeRendering)
                                 .setBinding(value -> {
-                                    this.sodiumOpts.performance.renderLoadedChunkEdges = value;
+                                    this.sodiumOpts.performance.loadedChunkEdgeRendering = value;
 
                                     var level = Minecraft.getInstance().level;
 
                                     if (level != null) {
-                                        ChunkTrackerHolder.get(level).refreshReadyChunks();
+                                        ChunkTrackerHolder.get(level).onLoadedChunkEdgeRenderingChanged();
                                     }
-                                }, () -> this.sodiumOpts.performance.renderLoadedChunkEdges)
-                                .setImpact(OptionImpact.LOW)
+                                }, () -> this.sodiumOpts.performance.loadedChunkEdgeRendering)
+                                .setImpact(OptionImpact.MEDIUM)
                                 .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                 )
                 .addOption(

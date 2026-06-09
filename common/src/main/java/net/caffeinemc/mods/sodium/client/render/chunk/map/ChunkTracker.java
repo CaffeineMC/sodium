@@ -23,18 +23,18 @@ public class ChunkTracker implements ClientChunkEventListener {
 
     public ChunkTracker() {
         this.chunkReadyEdgeMasks.defaultReturnValue(CHUNK_NOT_READY);
-        this.deferEdgeRendering();
+        this.deferEdgeRenderingForPerformanceMode();
     }
 
     @Override
     public void updateMapCenter(int chunkX, int chunkZ) {
-        this.deferEdgeRendering();
+        this.deferEdgeRenderingForPerformanceMode();
         this.refreshReadyChunks();
     }
 
     @Override
     public void updateLoadDistance(int loadDistance) {
-        this.deferEdgeRendering();
+        this.deferEdgeRenderingForPerformanceMode();
         this.refreshReadyChunks();
     }
 
@@ -74,7 +74,7 @@ public class ChunkTracker implements ClientChunkEventListener {
     }
 
     private void updateAfterChunkStatusChanged(int x, int z) {
-        if (this.deferEdgeRendering()) {
+        if (this.deferEdgeRenderingForPerformanceMode()) {
             this.refreshReadyChunks();
         } else {
             this.updateNeighbors(x, z);
@@ -143,7 +143,17 @@ public class ChunkTracker implements ClientChunkEventListener {
     }
 
     private boolean canRenderLoadedChunkEdges() {
-        return SodiumClientMod.options().performance.renderLoadedChunkEdges && !this.edgeRenderSettling;
+        var mode = SodiumClientMod.options().performance.loadedChunkEdgeRendering;
+
+        if (mode == null) {
+            return false;
+        }
+
+        return switch (mode) {
+            case OFF -> false;
+            case PERFORMANCE -> !this.edgeRenderSettling;
+            case IMMEDIATE -> true;
+        };
     }
 
     private void setChunkReady(long key, int edgeMask) {
@@ -199,7 +209,12 @@ public class ChunkTracker implements ClientChunkEventListener {
         }
     }
 
-    private boolean deferEdgeRendering() {
+    private boolean deferEdgeRenderingForPerformanceMode() {
+        if (SodiumClientMod.options().performance.loadedChunkEdgeRendering != LoadedChunkEdgeRendering.PERFORMANCE) {
+            this.edgeRenderSettling = false;
+            return false;
+        }
+
         boolean wasRenderingLoadedChunkEdges = this.canRenderLoadedChunkEdges();
 
         this.edgeRenderAllowedAfter = System.nanoTime() + EDGE_RENDER_SETTLE_DELAY_NANOS;
@@ -209,6 +224,10 @@ public class ChunkTracker implements ClientChunkEventListener {
     }
 
     private void refreshIfEdgeRenderingSettled() {
+        if (SodiumClientMod.options().performance.loadedChunkEdgeRendering != LoadedChunkEdgeRendering.PERFORMANCE) {
+            return;
+        }
+
         if (!this.edgeRenderSettling || System.nanoTime() < this.edgeRenderAllowedAfter) {
             return;
         }
@@ -238,6 +257,19 @@ public class ChunkTracker implements ClientChunkEventListener {
         }
 
         this.unloadChunksRemovedDuringRefresh(previousReadyEdgeMasks);
+    }
+
+    public void onLoadedChunkEdgeRenderingChanged() {
+        var mode = SodiumClientMod.options().performance.loadedChunkEdgeRendering;
+
+        if (mode == LoadedChunkEdgeRendering.PERFORMANCE) {
+            this.edgeRenderAllowedAfter = System.nanoTime() + EDGE_RENDER_SETTLE_DELAY_NANOS;
+            this.edgeRenderSettling = true;
+        } else {
+            this.edgeRenderSettling = false;
+        }
+
+        this.refreshReadyChunks();
     }
 
     public LongCollection getReadyChunks() {

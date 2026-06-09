@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.blaze3d.textures.FilterMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
+import net.caffeinemc.mods.sodium.client.render.chunk.map.LoadedChunkEdgeRendering;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.client.util.FileUtil;
@@ -51,7 +52,7 @@ public class SodiumOptions {
         public boolean useEntityCulling = true;
         public boolean useFogOcclusion = true;
         public boolean useBlockFaceCulling = true;
-        public boolean renderLoadedChunkEdges = false;
+        public LoadedChunkEdgeRendering loadedChunkEdgeRendering = LoadedChunkEdgeRendering.OFF;
         public boolean useNoErrorGLContext = true;
 
         public QuadSplittingMode quadSplittingMode = QuadSplittingMode.SAFE;
