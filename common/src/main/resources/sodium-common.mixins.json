@@ -35,8 +35,6 @@
     "core.render.immediate.consumer.BufferBuilderMixin",
     "core.render.immediate.consumer.SheetedDecalTextureGeneratorMixin",
     "core.render.immediate.consumer.SpriteCoordinateExpanderMixin",
-    "core.render.immediate.consumer.VertexMultiConsumerMixin$DoubleMixin",
-    "core.render.immediate.consumer.VertexMultiConsumerMixin$MultipleMixin",
     "core.render.texture.TextureAtlasAccessor",
     "core.render.world.ChunkSectionsToRenderMixin",
     "core.render.world.EntityRendererAccessor",
