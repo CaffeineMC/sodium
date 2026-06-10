@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.caffeinemc.mods.sodium.api.vertex.format.common.EntityVertex;
 import net.caffeinemc.mods.sodium.client.render.immediate.model.EntityRenderer;
 import net.caffeinemc.mods.sodium.client.render.immediate.model.ModelCuboid;
 import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
@@ -38,7 +39,7 @@ public class CubeMixin {
 
     @Inject(method = "compile", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack$Pose;pose()Lorg/joml/Matrix4f;"), cancellable = true)
     private void onCompile(PoseStack.Pose pose, VertexConsumer buffer, int light, int overlay, int color, CallbackInfo ci) {
-        VertexBufferWriter writer = VertexConsumerUtils.convertOrLog(buffer);
+        VertexBufferWriter writer = VertexConsumerUtils.convertOrLog(buffer, EntityVertex.FORMAT);
 
         if (writer == null) {
             return;

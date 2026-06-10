@@ -38,6 +38,11 @@ public abstract class EntityOutlineGeneratorMixin implements VertexBufferWriter 
     }
 
     @Override
+    public boolean canUseIntrinsics(VertexFormat format) {
+        return this.canUseIntrinsics && VertexBufferWriter.tryOf(this.delegate, format) != null;
+    }
+
+    @Override
     public void push(MemoryStack stack, long ptr, int count, VertexFormat format) {
         transform(ptr, count, format,
                 this.color);

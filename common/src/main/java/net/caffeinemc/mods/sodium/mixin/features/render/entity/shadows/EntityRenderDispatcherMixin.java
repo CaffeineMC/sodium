@@ -37,7 +37,7 @@ public class EntityRenderDispatcherMixin {
      */
     @Inject(method = "renderBlockShadow", at = @At("HEAD"), cancellable = true)
     private static void renderShadowPartFast(PoseStack.Pose matrices, VertexConsumer vertices, ChunkAccess chunk, LevelReader level, BlockPos pos, double x, double y, double z, float radius, float opacity, CallbackInfo ci) {
-        var writer = VertexConsumerUtils.convertOrLog(vertices);
+        var writer = VertexConsumerUtils.convertOrLog(vertices, EntityVertex.FORMAT);
 
         if (writer == null) {
             return;

@@ -55,7 +55,7 @@ public abstract class SingleQuadParticleMixin extends Particle {
      */
     @Inject(method = "render(Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/client/Camera;F)V", at = @At("HEAD"), cancellable = true)
     protected void render(VertexConsumer vertexConsumer, Camera camera, float tickDelta, CallbackInfo ci) {
-        final var writer = VertexConsumerUtils.convertOrLog(vertexConsumer);
+        final var writer = VertexConsumerUtils.convertOrLog(vertexConsumer, ParticleVertex.FORMAT);
 
         if (writer == null) {
             return;
@@ -100,7 +100,7 @@ public abstract class SingleQuadParticleMixin extends Particle {
      */
     @Inject(method = "renderRotatedQuad(Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/client/Camera;Lorg/joml/Quaternionf;F)V", at = @At("HEAD"), cancellable = true)
     protected void renderRotatedQuad(VertexConsumer vertexConsumer, Camera camera, Quaternionf quaternion, float tickDelta, CallbackInfo ci) {
-        final var writer = VertexConsumerUtils.convertOrLog(vertexConsumer);
+        final var writer = VertexConsumerUtils.convertOrLog(vertexConsumer, ParticleVertex.FORMAT);
 
         if (writer == null) {
             return;

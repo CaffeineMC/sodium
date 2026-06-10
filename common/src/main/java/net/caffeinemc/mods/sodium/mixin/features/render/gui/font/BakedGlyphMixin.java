@@ -53,7 +53,7 @@ public class BakedGlyphMixin {
      */
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void drawFast(boolean italic, float x, float y, Matrix4f matrix, VertexConsumer vertexConsumer, float red, float green, float blue, float alpha, int light, CallbackInfo ci) {
-        var writer = VertexConsumerUtils.convertOrLog(vertexConsumer);
+        var writer = VertexConsumerUtils.convertOrLog(vertexConsumer, GlyphVertex.FORMAT);
 
         if (writer == null) {
             return;

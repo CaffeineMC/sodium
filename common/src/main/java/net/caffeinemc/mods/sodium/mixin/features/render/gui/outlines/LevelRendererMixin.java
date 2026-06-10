@@ -29,7 +29,7 @@ public class LevelRendererMixin {
     private static void drawBoxFast(PoseStack matrices, VertexConsumer vertexConsumer, double x1, double y1, double z1,
                                     double x2, double y2, double z2, float red, float green, float blue, float alpha,
                                     float xAxisRed, float yAxisGreen, float zAxisBlue, CallbackInfo ci) {
-        var writer = VertexConsumerUtils.convertOrLog(vertexConsumer);
+        var writer = VertexConsumerUtils.convertOrLog(vertexConsumer, LineVertex.FORMAT);
 
         if (writer == null) {
             return;

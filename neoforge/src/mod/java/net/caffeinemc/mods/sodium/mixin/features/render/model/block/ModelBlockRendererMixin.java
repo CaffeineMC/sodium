@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.caffeinemc.mods.sodium.api.vertex.format.common.EntityVertex;
 import net.caffeinemc.mods.sodium.client.model.quad.BakedQuadView;
 import net.caffeinemc.mods.sodium.client.render.immediate.model.BakedModelEncoder;
 import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
@@ -60,7 +61,7 @@ public class ModelBlockRendererMixin {
      */
     @Inject(method = "renderModel(Lcom/mojang/blaze3d/vertex/PoseStack$Pose;Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/client/resources/model/BakedModel;FFFIILnet/neoforged/neoforge/client/model/data/ModelData;Lnet/minecraft/client/renderer/RenderType;)V", at = @At("HEAD"), cancellable = true)
     private void renderFast(PoseStack.Pose entry, VertexConsumer vertexConsumer, BlockState blockState, BakedModel bakedModel, float red, float green, float blue, int light, int overlay, ModelData modelData, RenderType renderType, CallbackInfo ci) {
-        var writer = VertexConsumerUtils.convertOrLog(vertexConsumer);
+        var writer = VertexConsumerUtils.convertOrLog(vertexConsumer, EntityVertex.FORMAT);
         if (writer == null) {
             return;
         }

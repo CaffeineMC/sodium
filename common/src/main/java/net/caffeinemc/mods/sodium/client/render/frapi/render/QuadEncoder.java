@@ -16,7 +16,7 @@ import org.lwjgl.system.MemoryStack;
 
 public class QuadEncoder {
     public static void writeQuadVertices(MutableQuadViewImpl quad, VertexConsumer vertexConsumer, int overlay, Matrix4f matPosition, boolean trustedNormals, Matrix3f matNormal) {
-        VertexBufferWriter writer = VertexConsumerUtils.convertOrLog(vertexConsumer);
+        VertexBufferWriter writer = VertexConsumerUtils.convertOrLog(vertexConsumer, EntityVertex.FORMAT);
 
         if (writer != null) {
             writeQuadVertices(quad, writer, overlay, matPosition, trustedNormals, matNormal);
