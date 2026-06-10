@@ -128,6 +128,7 @@ public class RenderSectionManager {
     private boolean needsGraphUpdate = true;
     private boolean needsRenderListUpdate = true;
     private boolean cameraChanged = false;
+    private int cameraStableSince = -1;
 
     private @Nullable Vector3dc cameraPosition;
 
@@ -267,12 +268,12 @@ public class RenderSectionManager {
             this.averageCullDurationNanos = MathUtil.exponentialMovingAverage(this.averageCullDurationNanos, elapsedNanos, CULL_DURATION_UPDATE_RATIO);
         }
 
-        var treeLocal = result.getCullTreeLocal();
-        var treeRegular = result.getCullTreeRegular();
-        var treeWide = result.getCullTreeWide();
-        this.cullResults.put(CullType.LOCAL, treeLocal);
-        this.cullResults.put(CullType.REGULAR, treeRegular);
-        this.cullResults.put(CullType.WIDE, treeWide);
+        // reject local tree result if camera has changed since we submitted this task, as it would be constructed using different camera parameters (such as the frustum) and thus have false positive culls when interpreted with the current camera parameters.
+        if (this.cameraStableSince <= this.pendingTask.getFrame()) {
+            this.cullResults.put(CullType.LOCAL, result.getCullTreeLocal());
+        }
+        this.cullResults.put(CullType.REGULAR, result.getCullTreeRegular());
+        this.cullResults.put(CullType.WIDE, result.getCullTreeWide());
 
         this.taskLists = result.getPendingTaskLists();
 
@@ -372,6 +373,7 @@ public class RenderSectionManager {
 
     public void notifyChangedCamera() {
         this.cameraChanged = true;
+        this.cameraStableSince = this.frame;
     }
 
     public boolean needsUpdate() {
