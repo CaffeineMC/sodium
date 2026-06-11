@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.caffeinemc.mods.sodium.api.vertex.format.common.EntityVertex;
 import net.caffeinemc.mods.sodium.client.model.quad.BakedQuadView;
 import net.caffeinemc.mods.sodium.client.render.immediate.model.BakedModelEncoder;
 import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
@@ -59,7 +60,7 @@ public class ItemRendererMixin {
      */
     @WrapOperation(method = "renderModelLists", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/ItemRenderer;renderQuadList(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;Ljava/util/List;Lnet/minecraft/world/item/ItemStack;II)V"))
     private void renderModelFast(ItemRenderer itemRenderer, PoseStack poseStack, VertexConsumer vertexConsumer, List<BakedQuad> quads, ItemStack itemStack, int light, int overlay, Operation<Void> original) {
-        var writer = VertexConsumerUtils.convertOrLog(vertexConsumer);
+        var writer = VertexConsumerUtils.convertOrLog(vertexConsumer, EntityVertex.FORMAT);
 
         if (writer == null) {
             original.call(itemRenderer, poseStack, vertexConsumer, quads, itemStack, light, overlay);

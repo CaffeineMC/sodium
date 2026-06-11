@@ -38,6 +38,24 @@ public interface VertexBufferWriter {
         return null;
     }
 
+    /**
+     * Converts a {@link VertexConsumer} into a {@link VertexBufferWriter} if possible and only if it can use optimized
+     * writes with the requested vertex format.
+     *
+     * @param consumer The vertex consumer to create a writer for
+     * @param format   The vertex format that will be written
+     * @return An implementation of {@link VertexBufferWriter}, or null if the vertex consumer does not support optimized
+     * writes for the requested vertex format
+     */
+    @Nullable
+    static VertexBufferWriter tryOf(VertexConsumer consumer, VertexFormat format) {
+        if (consumer instanceof VertexBufferWriter writer && writer.canUseIntrinsics(format)) {
+            return writer;
+        }
+
+        return null;
+    }
+
     private static RuntimeException createUnsupportedVertexConsumerThrowable(VertexConsumer consumer) {
         var clazz = consumer.getClass();
         var name = clazz.getName();
@@ -71,6 +89,16 @@ public interface VertexBufferWriter {
      */
     default boolean canUseIntrinsics() {
         return true;
+    }
+
+    /**
+     * Checks whether this writer can use optimized writes for vertices with the specified format.
+     *
+     * @param format The vertex format that will be written
+     * @return true if this writer and any nested consumers can use intrinsics for the vertex format
+     */
+    default boolean canUseIntrinsics(VertexFormat format) {
+        return this.canUseIntrinsics();
     }
 
     /**

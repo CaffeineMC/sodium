@@ -38,6 +38,13 @@ public class VertexMultiConsumerMixin {
         }
 
         @Override
+        public boolean canUseIntrinsics(VertexFormat format) {
+            return this.canUseIntrinsics &&
+                    VertexBufferWriter.tryOf(this.first, format) != null &&
+                    VertexBufferWriter.tryOf(this.second, format) != null;
+        }
+
+        @Override
         public void push(MemoryStack stack, long ptr, int count, VertexFormat format) {
             VertexBufferWriter.copyInto(VertexBufferWriter.of(this.first), stack, ptr, count, format);
             VertexBufferWriter.copyInto(VertexBufferWriter.of(this.second), stack, ptr, count, format);
@@ -72,6 +79,21 @@ public class VertexMultiConsumerMixin {
         @Override
         public boolean canUseIntrinsics() {
             return this.canUseIntrinsics;
+        }
+
+        @Override
+        public boolean canUseIntrinsics(VertexFormat format) {
+            if (!this.canUseIntrinsics) {
+                return false;
+            }
+
+            for (var delegate : this.delegates) {
+                if (VertexBufferWriter.tryOf(delegate, format) == null) {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         @Override

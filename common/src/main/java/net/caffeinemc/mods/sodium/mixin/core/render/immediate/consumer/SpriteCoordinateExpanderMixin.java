@@ -48,6 +48,11 @@ public class SpriteCoordinateExpanderMixin implements VertexBufferWriter {
     }
 
     @Override
+    public boolean canUseIntrinsics(VertexFormat format) {
+        return this.canUseIntrinsics && VertexBufferWriter.tryOf(this.delegate, format) != null;
+    }
+
+    @Override
     public void push(MemoryStack stack, final long ptr, int count, VertexFormat format) {
         transform(ptr, count, format,
                 this.minU, this.minV, this.maxU, this.maxV);
