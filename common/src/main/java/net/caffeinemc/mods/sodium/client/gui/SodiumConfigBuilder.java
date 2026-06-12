@@ -18,6 +18,8 @@ import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
 import net.caffeinemc.mods.sodium.client.config.structure.Config;
+import net.caffeinemc.mods.sodium.client.gui.options.FullscreenMode;
+import net.caffeinemc.mods.sodium.client.gui.options.Toggle;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
@@ -82,12 +84,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
             return null;
         }
         return this.window.findBestMonitor();
-    }
-
-    public enum FullscreenMode {
-        OFF,
-        EXCLUSIVE,
-        BORDERLESS
     }
 
     public static void registerIcon(TextureManager textureManager) {
@@ -568,32 +564,41 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         qualityPage.addOptionGroup(builder.createOptionGroup()
                 .addOption(
-                        builder.createBooleanOption(Identifier.parse("sodium:quality.hidden_fluid_culling"))
+                        builder.createEnumOption(Identifier.parse("sodium:quality.hidden_fluid_culling"), Toggle.class)
                                 .setStorageHandler(this.sodiumStorage)
                                 .setName(Component.translatable("sodium.options.hidden_fluid_culling.name"))
                                 .setTooltip(Component.translatable("sodium.options.hidden_fluid_culling.tooltip"))
+                                .setElementNameProvider(EnumOptionBuilder.nameProviderFrom(
+                                        Component.translatable("sodium.options.hidden_fluid_culling.default"),
+                                        Component.translatable("sodium.options.hidden_fluid_culling.optimized")))
                                 .setImpact(OptionImpact.MEDIUM)
-                                .setDefaultValue(DEFAULTS.quality.hiddenFluidCulling)
-                                .setBinding(value -> this.sodiumOpts.quality.hiddenFluidCulling = value, () -> this.sodiumOpts.quality.hiddenFluidCulling)
+                                .setDefaultValue(Toggle.fromBoolean(DEFAULTS.quality.hiddenFluidCulling))
+                                .setBinding(value -> this.sodiumOpts.quality.hiddenFluidCulling = value.toBoolean(), () -> Toggle.fromBoolean(this.sodiumOpts.quality.hiddenFluidCulling))
                                 .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                 )
                 .addOption(
-                        builder.createBooleanOption(Identifier.parse("sodium:quality.improved_fluid_shaping"))
+                        builder.createEnumOption(Identifier.parse("sodium:quality.improved_fluid_shaping"), Toggle.class)
                                 .setStorageHandler(this.sodiumStorage)
                                 .setName(Component.translatable("sodium.options.improved_fluid_shaping.name"))
                                 .setTooltip(Component.translatable("sodium.options.improved_fluid_shaping.tooltip"))
-                                .setDefaultValue(DEFAULTS.quality.improvedFluidShaping)
-                                .setBinding(value -> this.sodiumOpts.quality.improvedFluidShaping = value, () -> this.sodiumOpts.quality.improvedFluidShaping)
+                                .setElementNameProvider(EnumOptionBuilder.nameProviderFrom(
+                                        Component.translatable("sodium.options.improved_fluid_shaping.default"),
+                                        Component.translatable("sodium.options.improved_fluid_shaping.alternative")))
+                                .setDefaultValue(Toggle.fromBoolean(DEFAULTS.quality.improvedFluidShaping))
+                                .setBinding(value -> this.sodiumOpts.quality.improvedFluidShaping = value.toBoolean(), () -> Toggle.fromBoolean(this.sodiumOpts.quality.improvedFluidShaping))
                                 .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                 )
                 .addOption(
-                        builder.createBooleanOption(Identifier.parse("sodium:quality.closest_point_entity_sort"))
+                        builder.createEnumOption(Identifier.parse("sodium:quality.closest_point_entity_sort"), Toggle.class)
                                 .setStorageHandler(this.sodiumStorage)
                                 .setName(Component.translatable("sodium.options.closest_point_entity_sort.name"))
                                 .setTooltip(Component.translatable("sodium.options.closest_point_entity_sort.tooltip"))
+                                .setElementNameProvider(EnumOptionBuilder.nameProviderFrom(
+                                        Component.translatable("sodium.options.closest_point_entity_sort.default"),
+                                        Component.translatable("sodium.options.closest_point_entity_sort.enhanced")))
                                 .setImpact(OptionImpact.MEDIUM)
-                                .setDefaultValue(DEFAULTS.quality.useClosestPointEntitySort)
-                                .setBinding(value -> this.sodiumOpts.quality.useClosestPointEntitySort = value, () -> this.sodiumOpts.quality.useClosestPointEntitySort)
+                                .setDefaultValue(Toggle.fromBoolean(DEFAULTS.quality.useClosestPointEntitySort))
+                                .setBinding(value -> this.sodiumOpts.quality.useClosestPointEntitySort = value.toBoolean(), () -> Toggle.fromBoolean(this.sodiumOpts.quality.useClosestPointEntitySort))
                 )
         );
         return qualityPage;
