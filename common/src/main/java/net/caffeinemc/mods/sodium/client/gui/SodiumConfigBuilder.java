@@ -15,6 +15,7 @@ import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
 import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
+import net.caffeinemc.mods.sodium.client.gui.options.Toggle;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
@@ -417,13 +418,16 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
         );
         qualityPage.addOptionGroup(builder.createOptionGroup()
                 .addOption(
-                        builder.createBooleanOption(ResourceLocation.parse("sodium:quality.closest_point_entity_sort"))
+                        builder.createEnumOption(ResourceLocation.parse("sodium:quality.closest_point_entity_sort"), Toggle.class)
                                 .setStorageHandler(this.sodiumStorage)
                                 .setName(Component.translatable("sodium.options.closest_point_entity_sort.name"))
                                 .setTooltip(Component.translatable("sodium.options.closest_point_entity_sort.tooltip"))
+                                .setElementNameProvider(EnumOptionBuilder.nameProviderFrom(
+                                        Component.translatable("sodium.options.closest_point_entity_sort.default"),
+                                        Component.translatable("sodium.options.closest_point_entity_sort.enhanced")))
                                 .setImpact(OptionImpact.MEDIUM)
-                                .setDefaultValue(DEFAULTS.quality.useClosestPointEntitySort)
-                                .setBinding(value -> this.sodiumOpts.quality.useClosestPointEntitySort = value, () -> this.sodiumOpts.quality.useClosestPointEntitySort)
+                                .setDefaultValue(Toggle.fromBoolean(DEFAULTS.quality.useClosestPointEntitySort))
+                                .setBinding(value -> this.sodiumOpts.quality.useClosestPointEntitySort = value.toBoolean(), () -> Toggle.fromBoolean(this.sodiumOpts.quality.useClosestPointEntitySort))
                 )
         );
         return qualityPage;
