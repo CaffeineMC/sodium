@@ -11,3 +11,4 @@ This is the first version to *experimentally* support Vulkan. To access it, use 
 - Updated to Minecraft 26.2
 - Moved all rendering to Mojang's Blaze3D API
 - Added Asynchronous Graph Culling and Frame-Independent Task Scheduling ([#2887](https://github.com/CaffeineMC/sodium/pull/2887))
+- Improve the presentation and wording of some video options ([#3700](https://github.com/CaffeineMC/sodium/pull/3700))
