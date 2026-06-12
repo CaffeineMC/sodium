@@ -1,6 +1,6 @@
 # Used when a developer decides to publish a release
 # This makes use of caching for faster builds and uploads the resulting artifacts
-name: Release GH+MR+CF
+name: Release on Platforms
 permissions:
   contents: write # Needed to publish a GitHub release
 
@@ -14,6 +14,13 @@ on:
           - both
           - fabric
           - neoforge
+      destination:
+        type: choice
+        description: Destination
+        options:
+          - GH+MR+CF
+          - GH+MR
+          - GH
 
 jobs:
   build:
@@ -55,7 +62,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
           MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
-        run: ./gradlew publishMods -Pbuild.release=true -Pbuild.release.platform=${{ inputs.platform }}
+        run: ./gradlew publishMods -Pbuild.release=true -Pbuild.release.platform=${{ inputs.platform }} -Pbuild.release.destination=${{ inputs.destination }}
 
       - name: Publish Tag Release to CaffeineMC Maven
         env:
