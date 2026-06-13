@@ -165,15 +165,6 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         this.clearVisibleSections();
     }
 
-    // Exclusive to NeoForge, allow to fail.
-    @SuppressWarnings("all")
-    @Inject(method = "iterateVisibleBlockEntities", at = @At("HEAD"), cancellable = true, expect = 0, require = 0)
-    public void replaceBlockEntityIteration(Consumer<BlockEntity> blockEntityConsumer, CallbackInfo ci) {
-        ci.cancel();
-
-        this.renderer.iterateVisibleBlockEntities(blockEntityConsumer);
-    }
-
     /**
      * @reason Allow control of the texture filtering mode
      * @author pajic

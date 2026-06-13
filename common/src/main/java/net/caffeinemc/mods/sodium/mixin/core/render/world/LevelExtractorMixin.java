@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.extract.LevelExtractor;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -23,6 +24,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.function.Consumer;
 
 @Mixin(LevelExtractor.class)
 public class LevelExtractorMixin {
@@ -55,6 +58,16 @@ public class LevelExtractorMixin {
 
         this.renderer.extractBlockEntities(camera, f, this.level.destructionProgress(), levelRenderState);
     }
+
+    // Exclusive to NeoForge, allow to fail.
+    @SuppressWarnings("all")
+    @Inject(method = "iterateVisibleBlockEntities", at = @At("HEAD"), cancellable = true, expect = 0, require = 0)
+    public void replaceBlockEntityIteration(Consumer<BlockEntity> blockEntityConsumer, CallbackInfo ci) {
+        ci.cancel();
+
+        this.renderer.iterateVisibleBlockEntities(blockEntityConsumer);
+    }
+
 
     /**
      * @reason Replace the debug string

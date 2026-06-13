@@ -26,7 +26,6 @@
     "core.gui.LevelLoadTrackerMixin",
     "core.model.colors.BlockColorsMixin",
     "core.render.BlockEntityTypeMixin",
-    "core.render.RenderPipelinesMixin",
     "core.render.TextureAtlasMixin",
     "core.render.VertexFormatMixin",
     "core.render.frustum.CameraMixin",
