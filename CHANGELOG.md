@@ -21,13 +21,12 @@ It includes the backport of our Config API and other conventions that will hopef
 Please participate in testing this release, coordinating on mod compatibility, and giving feedback on [our discord server](https://caffeinemc.net/discord). In the thread in #testing-builds we have more information. Report any issues you may have in the thread.
 
 Known incompatibilities at the time of this release:
-- sodiumleafculling does not work
-- C2ME's latest version works
-- Create Aeronautics does not work
-- Veil has an update that works, Sable has a patch that works but no update
-- Iris has a test build on discord that works
-- More culling's latest version works
+- Create Aeronautics works as of 1.3.0
+- Sable works as of 2.0.0
+- Veil works as of 4.1.2
+- Iris works as of 1.8.13 (unreleased on platforms at the time of this release)
 - Voxy does not work
+- sodiumleafculling does not work
 - EBE animations don’t work
 
 ### Alpha Series Changelog
@@ -35,3 +34,10 @@ Known incompatibilities at the time of this release:
 - Potentially fix issues with publishing by making the buildscript more similar to that used in 1.21.11
 - Fix the corrupted config screen to show up properly
 - Revert "Update texture light coords math to match Vanilla (#3311)" as this was mistakenly applied to 1.21.1
+
+### Beta Series Changelog
+- Added the display of fps percentiles. This gives a more accurate idea of the typical frame rate and lets you identify how smooth it is.
+- Fix crash when using `-Dmixin.debug=true` ([#3689](https://github.com/CaffeineMC/sodium/pull/3689))
+- Added checks to prevent crashes when using the vertex writing fast path ([#3716](https://github.com/CaffeineMC/sodium/pull/3716))
+- Only make environment changes if the early window will create a gl context early ([#3697](https://github.com/CaffeineMC/sodium/pull/3697))
+- Improve the presentation and wording of some video options ([#3700](https://github.com/CaffeineMC/sodium/pull/3700))
