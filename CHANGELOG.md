@@ -5,7 +5,7 @@ Everything above the line is ignored and not included in the changelog. Everythi
 changelog on GitHub, Modrinth and CurseForge.
 ----------
 ### Overview
-Sodium [SodiumVersion]() is a backport of modern Sodium 0.8 to Minecraft [MCVersion](). This experiment has graduated to alpha status. The degree to which we commit to supporting this branch will be determined by testing and by how well it works and integrates with the ecosystem. The quality of this version is expected to further improve it gets used, we discover quirks, and receive feedback.
+Sodium [SodiumVersion]() is a backport of modern Sodium 0.8 to Minecraft [MCVersion]().
 
 - Significantly improved the performance of rendering the world (up to +115%) on some computers.
 - Greatly improved the rendering of transparent objects with complex models, especially when submerged in water.
