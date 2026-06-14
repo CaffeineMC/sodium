@@ -299,7 +299,7 @@ public class QuadViewImpl implements QuadView, ModelQuadView {
 
     @Override
     public int getColor(int idx) {
-        return ColorHelper.toVanillaColor(color(idx));
+        return color(idx);
     }
 
     @Override
