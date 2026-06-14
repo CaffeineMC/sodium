@@ -126,7 +126,7 @@ public class FluidRendererImpl extends FluidRenderer {
         public ColorProvider<FluidState> getColorProvider(Fluid fluid) {
             var override = this.colorProviderRegistry.getColorProvider(fluid);
 
-            if (!hasModOverride && override != null) {
+            if (hasModOverride && override != null) {
                 return override;
             }
 
