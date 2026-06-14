@@ -227,20 +227,6 @@ public class QuadViewImpl implements ModelQuadView {
         return data[baseIndex + HEADER_TAG];
     }
 
-    public final void toVanilla(int[] target, int targetIndex) {
-        System.arraycopy(data, baseIndex + HEADER_STRIDE, target, targetIndex, QUAD_STRIDE);
-
-        // The color is the fourth integer in each vertex.
-        // EncodingFormat.VERTEX_COLOR is not used because it also
-        // contains the header size; vanilla quads do not have a header.
-        int colorIndex = targetIndex + 3;
-
-        for (int i = 0; i < 4; i++) {
-            target[colorIndex] = ColorHelper.toVanillaColor(target[colorIndex]);
-            colorIndex += EncodingFormat.VANILLA_VERTEX_STRIDE;
-        }
-    }
-
     @Override
     public float getX(int idx) {
         return Float.intBitsToFloat(data[baseIndex + idx * VERTEX_STRIDE + VERTEX_X]);
