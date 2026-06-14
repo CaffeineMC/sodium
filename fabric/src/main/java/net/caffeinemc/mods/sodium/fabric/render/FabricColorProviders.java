@@ -2,8 +2,8 @@ package net.caffeinemc.mods.sodium.fabric.render;
 
 import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
 import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
+import net.caffeinemc.mods.sodium.client.render.helper.ColorHelper;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
 import net.minecraft.client.color.block.BlockTintSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.material.FluidState;
@@ -30,7 +30,9 @@ public class FabricColorProviders {
                 return;
             }
 
-            Arrays.fill(output, 0xFF000000 | this.handler.colorInWorld(state.createLegacyBlock(), slice, pos));
+            var color = this.handler.colorInWorld(state.createLegacyBlock(), slice, pos);
+            color = ColorHelper.makeOpaqueIfTransparent(color);
+            Arrays.fill(output, color);
         }
     }
 }
