@@ -79,17 +79,17 @@ public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Override
     public int getColor(int idx) {
-        return 0xFFFFFFFF;//this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.COLOR_INDEX]; // TODO: Implement vertex colors
+        return 0xFFFFFFFF;
     }
 
     @Override
     public int getVertexNormal(int idx) {
-        return 0;//this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.NORMAL_INDEX];
+        return this.normal;
     }
 
     @Override
     public int getLight(int idx) {
-        return 0;//this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.LIGHT_INDEX];
+        return 0;
     }
 
     @Override
