@@ -9,6 +9,7 @@ import net.caffeinemc.mods.sodium.client.gpu.arena.staging.StagingBuffer;
 import net.caffeinemc.mods.sodium.client.render.chunk.IntPool;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
+import net.caffeinemc.mods.sodium.client.render.chunk.UniformBufferManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkSortOutput;
@@ -57,13 +58,13 @@ public class RenderRegionManager {
         }
     }
 
-    public void uploadResults(Collection<BuilderTaskOutput> results) {
+    public void uploadResults(Collection<BuilderTaskOutput> results, UniformBufferManager uniforms) {
         for (var entry : this.createMeshUploadQueues(results)) {
-            this.uploadResults(entry.getKey(), entry.getValue());
+            this.uploadResults(entry.getKey(), entry.getValue(), uniforms);
         }
     }
 
-    private void uploadResults(RenderRegion region, Collection<BuilderTaskOutput> results) {
+    private void uploadResults(RenderRegion region, Collection<BuilderTaskOutput> results, UniformBufferManager uniforms) {
         var uploads = new ArrayList<PendingSectionMeshUpload>();
         var indexUploads = new ArrayList<PendingSectionIndexBufferUpload>();
 
@@ -171,7 +172,9 @@ public class RenderRegionManager {
                     double distanceToPlayer = dx * dx + dy * dy + dz * dz;
 
                     int relativeBuiltTime = distanceToPlayer < 768.0 ? -1 : upload.relativeBuiltTime;
-                    parent.writeMeshTimes(region.getOrAcquireId(freeIds), upload.section.getSectionIndex(), relativeBuiltTime);
+
+                    // TODO: improve the plumbing of this to be less cumbersome
+                    uniforms.writeMeshTimes(region.getOrAcquireId(this.freeIds), upload.section.getSectionIndex(), relativeBuiltTime);
                 }
                 storage.setVertexData(upload.section.getSectionIndex(),
                         upload.vertexUpload.getResult(), upload.meshData.getVertexSegments());
