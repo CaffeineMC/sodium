@@ -138,8 +138,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                         Colors.THEME, Colors.THEME_LIGHTER, Colors.THEME_DARKER))
                 .addPage(this.buildGeneralPage(builder))
                 .addPage(this.buildQualityPage(builder))
-                .addPage(this.buildPerformancePage(builder))
-                .addPage(this.buildAdvancedPage(builder));
+                .addPage(this.buildPerformancePage(builder));
     }
 
     private OptionPageBuilder buildGeneralPage(ConfigBuilder builder) {
@@ -723,26 +722,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                 })
                 .setImpact(OptionImpact.LOW)
                 .setFlags(OptionFlag.REQUIRES_GAME_RESTART);
-    }
-
-    private OptionPageBuilder buildAdvancedPage(ConfigBuilder builder) {
-        var advancedPage = builder.createOptionPage().setName(Component.translatable("sodium.options.pages.advanced"));
-
-
-        advancedPage.addOptionGroup(builder.createOptionGroup()
-                .addOption(
-                        builder.createBooleanOption(Identifier.parse("sodium:advanced.use_persistent_mapping"))
-                                .setStorageHandler(this.sodiumStorage)
-                                .setName(Component.translatable("sodium.options.use_persistent_mapping.name"))
-                                .setTooltip(Component.translatable("sodium.options.use_persistent_mapping.tooltip"))
-                                .setDefaultValue(DEFAULTS.advanced.useAdvancedStagingBuffers)
-                                .setBinding(value -> this.sodiumOpts.advanced.useAdvancedStagingBuffers = value, () -> this.sodiumOpts.advanced.useAdvancedStagingBuffers)
-                                .setEnabled(false)
-                                .setImpact(OptionImpact.MEDIUM)
-                                .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
-                )
-        );
-        return advancedPage;
     }
 
 }

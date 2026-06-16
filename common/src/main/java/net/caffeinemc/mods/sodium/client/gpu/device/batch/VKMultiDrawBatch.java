@@ -9,6 +9,7 @@ import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.VkMultiDrawIndexedInfoEXT;
 
 public final class VKMultiDrawBatch extends MultiDrawBatch {
+    private static final int COMMAND_INT_STRIDE = (VkMultiDrawIndexedInfoEXT.SIZEOF) / 4;
     private final long pCommands;
 
     public VKMultiDrawBatch(int capacity) {
@@ -36,7 +37,7 @@ public final class VKMultiDrawBatch extends MultiDrawBatch {
 
     @Override
     public void draw(DrawContext context) {
-        context.getPass().multiDrawIndexed(MemoryUtil.memIntBuffer(pCommands, size * 3), 1, 0, size);
+        context.getPass().multiDrawIndexed(MemoryUtil.memIntBuffer(pCommands, size * COMMAND_INT_STRIDE), 1, 0, size);
     }
 
     @Override
