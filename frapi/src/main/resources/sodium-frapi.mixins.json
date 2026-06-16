@@ -10,7 +10,7 @@
     "requireAnnotations": true
   },
   "client": [
-    "ItemFeatureRendererMixin",
+    "FeatureRenderDispatcherMixin",
     "ItemFeatureRendererAccessor",
     "MutableQuadViewImplMixin",
     "QuadViewImplMixin"

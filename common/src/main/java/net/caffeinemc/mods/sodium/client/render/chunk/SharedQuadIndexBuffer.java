@@ -1,99 +1,77 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBufferMapFlags;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBufferUsage;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlMutableBuffer;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
-import net.caffeinemc.mods.sodium.client.gl.tessellation.GlIndexType;
-import net.caffeinemc.mods.sodium.client.gl.util.EnumBitField;
+import com.mojang.blaze3d.IndexType;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
 
 public class SharedQuadIndexBuffer {
     private static final int ELEMENTS_PER_PRIMITIVE = 6;
     private static final int VERTICES_PER_PRIMITIVE = 4;
 
-    private final GlMutableBuffer buffer;
-    private final IndexType indexType;
+    private GpuBuffer buffer;
+    private final IndexFormat indexFormat;
 
     private int maxPrimitives;
 
-    public SharedQuadIndexBuffer(CommandList commandList, IndexType indexType) {
-        this.buffer = commandList.createMutableBuffer();
-        this.indexType = indexType;
+    public SharedQuadIndexBuffer(IndexFormat indexFormat) {
+        this.indexFormat = indexFormat;
+        ensureCapacity(1);
     }
 
-    public void ensureCapacity(CommandList commandList, int elementCount) {
-        if (elementCount > this.indexType.getMaxElementCount()) {
+    public void ensureCapacity(int elementCount) {
+        if (elementCount > this.indexFormat.getMaxElementCount()) {
             throw new IllegalArgumentException("Tried to reserve storage for more vertices in this buffer than it can hold");
         }
 
         int primitiveCount = elementCount / ELEMENTS_PER_PRIMITIVE;
 
         if (primitiveCount > this.maxPrimitives) {
-            this.grow(commandList, this.getNextSize(primitiveCount));
+            this.grow(this.getNextSize(primitiveCount));
         }
     }
 
     private int getNextSize(int primitiveCount) {
-        return Math.min(Math.max(this.maxPrimitives * 2, primitiveCount + 16384), this.indexType.getMaxPrimitiveCount());
+        return Math.min(Math.max(this.maxPrimitives * 2, primitiveCount + 16384), this.indexFormat.getMaxPrimitiveCount());
     }
 
-    private void grow(CommandList commandList, int primitiveCount) {
-        var bufferSize = primitiveCount * this.indexType.getBytesPerElement() * ELEMENTS_PER_PRIMITIVE;
+    private void grow(int primitiveCount) {
+        if (this.buffer != null) this.buffer.close();
 
-        commandList.allocateStorage(this.buffer, bufferSize, GlBufferUsage.STATIC_DRAW);
+        var bufferSize = primitiveCount * this.indexFormat.getBytesPerElement() * ELEMENTS_PER_PRIMITIVE;
 
-        var mapped = commandList.mapBuffer(this.buffer, 0, bufferSize, EnumBitField.of(GlBufferMapFlags.INVALIDATE_BUFFER, GlBufferMapFlags.WRITE, GlBufferMapFlags.UNSYNCHRONIZED));
-        this.indexType.createIndexBuffer(mapped.getMemoryBuffer(), primitiveCount);
+        this.buffer = RenderSystem.getDevice().createBuffer(() -> "Shared index buffer", GpuBuffer.USAGE_INDEX | GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_WRITE, bufferSize);
 
-        commandList.unmap(mapped);
+        var mapped = buffer.map(false, true);
+        this.indexFormat.createIndexBuffer(mapped.data(), primitiveCount);
+
+        mapped.close();
 
         this.maxPrimitives = primitiveCount;
     }
 
-    public static NativeBuffer createIndexBuffer(IndexType indexType, int primitiveCount) {
-        var bufferSize = primitiveCount * indexType.getBytesPerElement() * ELEMENTS_PER_PRIMITIVE;
+    public static NativeBuffer createIndexBuffer(IndexFormat indexFormat, int primitiveCount) {
+        var bufferSize = primitiveCount * indexFormat.getBytesPerElement() * ELEMENTS_PER_PRIMITIVE;
         var buffer = new NativeBuffer(bufferSize);
 
-        indexType.createIndexBuffer(buffer.getDirectBuffer(), primitiveCount);
+        indexFormat.createIndexBuffer(buffer.getDirectBuffer(), primitiveCount);
 
         return buffer;
     }
 
-    public GlBuffer getBufferObject() {
+    public GpuBuffer getBufferObject() {
         return this.buffer;
     }
 
-    public void delete(CommandList commandList) {
-        commandList.deleteBuffer(this.buffer);
+    public void delete() {
+        if (this.buffer != null) this.buffer.close();
     }
 
-    public enum IndexType {
-        SHORT(GlIndexType.UNSIGNED_SHORT, 64 * 1024) {
-            @Override
-            public void createIndexBuffer(ByteBuffer byteBuffer, int primitiveCount) {
-                ShortBuffer shortBuffer = byteBuffer.asShortBuffer();
-
-                for (int primitiveIndex = 0; primitiveIndex < primitiveCount; primitiveIndex++) {
-                    int indexOffset = primitiveIndex * ELEMENTS_PER_PRIMITIVE;
-                    int vertexOffset = primitiveIndex * VERTICES_PER_PRIMITIVE;
-
-                    shortBuffer.put(indexOffset + 0, (short) (vertexOffset + 0));
-                    shortBuffer.put(indexOffset + 1, (short) (vertexOffset + 1));
-                    shortBuffer.put(indexOffset + 2, (short) (vertexOffset + 2));
-
-                    shortBuffer.put(indexOffset + 3, (short) (vertexOffset + 2));
-                    shortBuffer.put(indexOffset + 4, (short) (vertexOffset + 3));
-                    shortBuffer.put(indexOffset + 5, (short) (vertexOffset + 0));
-                }
-            }
-        },
-        INTEGER(GlIndexType.UNSIGNED_INT, Integer.MAX_VALUE) {
+    public enum IndexFormat {
+        INTEGER(IndexType.INT, Integer.MAX_VALUE) {
             @Override
             public void createIndexBuffer(ByteBuffer byteBuffer, int primitiveCount) {
                 IntBuffer intBuffer = byteBuffer.asIntBuffer();
@@ -113,12 +91,10 @@ public class SharedQuadIndexBuffer {
             }
         };
 
-        public static final IndexType[] VALUES = IndexType.values();
-
-        private final GlIndexType format;
+        private final IndexType format;
         private final int maxElementCount;
 
-        IndexType(GlIndexType format, int maxElementCount) {
+        IndexFormat(IndexType format, int maxElementCount) {
             this.format = format;
             this.maxElementCount = maxElementCount;
         }
@@ -126,10 +102,10 @@ public class SharedQuadIndexBuffer {
         public abstract void createIndexBuffer(ByteBuffer buffer, int primitiveCount);
 
         public int getBytesPerElement() {
-            return this.format.getStride();
+            return this.format.bytes;
         }
 
-        public GlIndexType getFormat() {
+        public IndexType getFormat() {
             return this.format;
         }
 

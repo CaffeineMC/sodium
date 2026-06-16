@@ -4,17 +4,18 @@ import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
-import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
+import net.caffeinemc.mods.sodium.client.render.chunk.UniformBufferManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.ChunkRenderList;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.SortedRenderLists;
 import net.caffeinemc.mods.sodium.client.render.chunk.map.ChunkTracker;
 import net.caffeinemc.mods.sodium.client.render.chunk.map.ChunkTrackerHolder;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.DefaultTerrainRenderPasses;
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.CameraMovement;
+import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
@@ -72,8 +73,10 @@ public class SodiumWorldRenderer {
     private Matrix4f cullMatrix;
 
     private boolean useEntityCulling;
+    private boolean useTranslucencySorting;
 
     private RenderSectionManager renderSectionManager;
+    private UniformBufferManager uniformBufferManager;
 
     /**
      * @return The SodiumWorldRenderer based on the current dimension
@@ -125,17 +128,22 @@ public class SodiumWorldRenderer {
     private void loadLevel(ClientLevel level) {
         this.level = level;
 
-        try (CommandList commandList = RenderDevice.INSTANCE.createCommandList()) {
-            this.initRenderer(commandList);
-        }
+        this.initRenderer();
     }
 
-    private void unloadLevel() {
+    private void deleteRendererState() {
         if (this.renderSectionManager != null) {
             this.renderSectionManager.destroy();
             this.renderSectionManager = null;
         }
+        if (this.uniformBufferManager != null) {
+            this.uniformBufferManager.delete();
+            this.uniformBufferManager = null;
+        }
+    }
 
+    private void unloadLevel() {
+        this.deleteRendererState();
         this.level = null;
     }
 
@@ -178,13 +186,13 @@ public class SodiumWorldRenderer {
                              Matrix4f cullMatrix) {
         NativeBuffer.reclaim(false);
 
-        this.processChunkEvents();
-
         this.useEntityCulling = SodiumClientMod.options().performance.useEntityCulling;
+        this.processChunkEvents();
 
         if (this.client.options.getEffectiveRenderDistance() != this.renderDistance) {
             this.reload();
         }
+
 
         ProfilerFiller profiler = Profiler.get();
         profiler.push("camera_setup");
@@ -223,6 +231,7 @@ public class SodiumWorldRenderer {
         this.lastFogParameters = fogParameters;
 
         this.renderSectionManager.prepareFrame(pos);
+        this.uniformBufferManager.prepareFrame();
 
         if (cameraLocationChanged) {
             profiler.popPush("translucent_triggering");
@@ -247,7 +256,7 @@ public class SodiumWorldRenderer {
 
             profiler.popPush("chunk_upload");
 
-            this.renderSectionManager.processChunkBuilds(viewport);
+            this.renderSectionManager.processChunkBuilds(viewport, this.uniformBufferManager);
 
             if (!this.renderSectionManager.needsUpdate()) {
                 break;
@@ -278,11 +287,19 @@ public class SodiumWorldRenderer {
      */
     public void drawChunkLayer(ChunkSectionLayerGroup group, ChunkRenderMatrices matrices, double x, double y, double z, GpuSampler terrainSampler) {
         if (group == ChunkSectionLayerGroup.OPAQUE) {
-            this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.SOLID, x, y, z, this.lastFogParameters, terrainSampler);
-            this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.CUTOUT, x, y, z, this.lastFogParameters, terrainSampler);
+            this.renderLayer(matrices, DefaultTerrainRenderPasses.SOLID, x, y, z, this.lastFogParameters, terrainSampler);
+            this.renderLayer(matrices, DefaultTerrainRenderPasses.CUTOUT, x, y, z, this.lastFogParameters, terrainSampler);
         } else if (group == ChunkSectionLayerGroup.TRANSLUCENT) {
-            this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.TRANSLUCENT, x, y, z, this.lastFogParameters, terrainSampler);
+            this.renderLayer(matrices, DefaultTerrainRenderPasses.TRANSLUCENT, x, y, z, this.lastFogParameters, terrainSampler);
         }
+    }
+
+    public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters, GpuSampler terrainSampler) {
+        this.uniformBufferManager.update(matrices, fogParameters);
+
+        this.renderSectionManager.getChunkRenderer().render(matrices, this.renderSectionManager.getRenderLists(), pass,
+                new CameraTransform(x, y, z), fogParameters, this.useTranslucencySorting,
+                terrainSampler, this.uniformBufferManager.getUniformBuffer(), this.uniformBufferManager.getSectionTimeInfo());
     }
 
     public void reload() {
@@ -290,28 +307,20 @@ public class SodiumWorldRenderer {
             return;
         }
 
-        try (CommandList commandList = RenderDevice.INSTANCE.createCommandList()) {
-            this.initRenderer(commandList);
-        }
+        this.initRenderer();
     }
 
-    private void initRenderer(CommandList commandList) {
-        if (this.renderSectionManager != null) {
-            this.renderSectionManager.destroy();
-            this.renderSectionManager = null;
-        }
+    private void initRenderer() {
+        this.deleteRendererState();
 
         // translucency sorting can be disabled in development environments by setting the debug option in the config file
-        var sortBehavior = SortBehavior.DYNAMIC_DEFER_NEARBY_ZERO_FRAMES;
-
-        if (PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()
-                && !SodiumClientMod.options().debug.terrainSortingEnabled) {
-            sortBehavior = SortBehavior.OFF;
-        }
+        this.useTranslucencySorting = !PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment() || SodiumClientMod.options().debug.terrainSortingEnabled;
+        var sortBehavior = this.useTranslucencySorting ? SortBehavior.DYNAMIC_DEFER_NEARBY_ZERO_FRAMES : SortBehavior.OFF;
 
         this.renderDistance = this.client.options.getEffectiveRenderDistance();
 
-        this.renderSectionManager = new RenderSectionManager(this.level, this.renderDistance, sortBehavior, commandList);
+        this.renderSectionManager = new RenderSectionManager(this.level, this.renderDistance, sortBehavior);
+        this.uniformBufferManager = new UniformBufferManager(this.level, this.renderDistance);
 
         var tracker = ChunkTrackerHolder.get(this.level);
         ChunkTracker.forEachChunk(tracker.getReadyChunks(), this.renderSectionManager::onChunkAdded);
@@ -343,7 +352,7 @@ public class SodiumWorldRenderer {
                 }
 
                 for (BlockEntity blockEntity : blockEntities) {
-                    extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState);
+                    extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState, false);
                 }
             }
         }
@@ -356,12 +365,12 @@ public class SodiumWorldRenderer {
             }
 
             for (var blockEntity : blockEntities) {
-                extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState);
+                extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState, true);
             }
         }
     }
 
-    private void extractBlockEntity(BlockEntity blockEntity, PoseStack poseStack, Camera camera, float tickDelta, Long2ObjectMap<SortedSet<BlockDestructionProgress>> progression, LevelRenderState levelRenderState) {
+    private void extractBlockEntity(BlockEntity blockEntity, PoseStack poseStack, Camera camera, float tickDelta, Long2ObjectMap<SortedSet<BlockDestructionProgress>> progression, LevelRenderState levelRenderState, boolean global) {
         BlockPos blockPos = blockEntity.getBlockPos();
         SortedSet<BlockDestructionProgress> sortedSet = progression.get(blockPos.asLong());
         ModelFeatureRenderer.CrumblingOverlay crumblingOverlay;
@@ -374,7 +383,7 @@ public class SodiumWorldRenderer {
             crumblingOverlay = null;
         }
 
-        BlockEntityRenderState blockEntityRenderState = Minecraft.getInstance().getBlockEntityRenderDispatcher().tryExtractRenderState(blockEntity, tickDelta, crumblingOverlay);
+        BlockEntityRenderState blockEntityRenderState = Minecraft.getInstance().getBlockEntityRenderDispatcher().tryExtractRenderState(blockEntity, tickDelta, crumblingOverlay, global);
         if (blockEntityRenderState != null) {
             levelRenderState.blockEntityRenderStates.add(blockEntityRenderState);
         }

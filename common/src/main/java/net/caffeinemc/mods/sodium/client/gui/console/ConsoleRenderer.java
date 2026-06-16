@@ -12,6 +12,7 @@ import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
@@ -169,7 +170,9 @@ public class ConsoleRenderer {
     }
 
     private record ActiveMessage(MessageLevel level, Component text, double duration, double timestamp) {
-        private static final FontDescription UNIFORM = new FontDescription.Resource(Minecraft.UNIFORM_FONT);
+        private static final Identifier UNIFORM_FONT = Identifier.withDefaultNamespace("uniform");
+
+        private static final FontDescription UNIFORM = new FontDescription.Resource(UNIFORM_FONT);
 
         public static ActiveMessage create(Message message, double timestamp) {
             var text = (message.translated() ? Component.translatable(message.text()) : Component.literal(message.text()))

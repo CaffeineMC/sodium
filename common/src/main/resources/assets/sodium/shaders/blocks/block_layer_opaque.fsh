@@ -1,26 +1,19 @@
 #version 330 core
 
-#import <sodium:include/fog.glsl>
-#import <sodium:include/chunk_material.glsl>
+#moj_import <sodium:globals.glsl>
+#moj_import <sodium:fog.glsl>
+#moj_import <sodium:chunk_material.glsl>
 
 in vec4 v_Color; // The interpolated vertex color
 in vec2 v_TexCoord; // The interpolated block texture coordinates
 in vec2 v_FragDistance; // The fragment's distance from the camera (cylindrical and spherical)
 in float fadeFactor;
 
-flat in uint v_Material;
-
 uniform sampler2D u_BlockTex; // The block texture
-
-uniform vec4 u_FogColor; // The color of the shader fog
-uniform vec2 u_EnvironmentFog; // The start and end position for environmental fog
-uniform vec2 u_RenderFog; // The start and end position for border fog
-uniform vec2 u_TexelSize;
-uniform bool u_UseRGSS;
 
 out vec4 fragColor; // The output fragment for the color framebuffer
 
-vec4 sampleNearest(sampler2D sampler, vec2 uv, vec2 pixelSize, vec2 du, vec2 dv, vec2 texelScreenSize) {
+vec4 sampleNearest(sampler2D source, vec2 uv, vec2 pixelSize, vec2 du, vec2 dv, vec2 texelScreenSize) {
     // Convert our UV back up to texel coordinates and find out how far over we are from the center of each pixel
     vec2 uvTexelCoords = uv / pixelSize;
     vec2 texelCenter = round(uvTexelCoords) - 0.5f;
@@ -31,7 +24,7 @@ vec4 sampleNearest(sampler2D sampler, vec2 uv, vec2 pixelSize, vec2 du, vec2 dv,
     texelOffset = clamp(texelOffset, 0.0f, 1.0f);
 
     uv = (texelCenter + texelOffset) * pixelSize;
-    return textureGrad(sampler, uv, du, dv);
+    return textureGrad(source, uv, du, dv);
 }
 
 vec4 sampleNearest(sampler2D source, vec2 uv, vec2 pixelSize) {
@@ -87,8 +80,8 @@ void main() {
     vec4 color = u_UseRGSS ? sampleRGSS(u_BlockTex, v_TexCoord, u_TexelSize) : sampleNearest(u_BlockTex, v_TexCoord, u_TexelSize);
     color *= v_Color; // Apply per-vertex color modulator
 
-#ifdef USE_FRAGMENT_DISCARD
-    if (color.a < _material_alpha_cutoff(v_Material)) {
+#ifdef ALPHA_CUTOUT
+    if (color.a < ALPHA_CUTOUT) {
         discard;
     }
 #endif

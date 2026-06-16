@@ -39,7 +39,7 @@ public abstract class LevelRendererMixin {
         // This prevents the sky from being visible through chunks culled by Sodium's fog occlusion.
         // Fixes https://bugs.mojang.com/browse/MC-152504.
         // Credit to bytzo for noticing the change in 1.18.2.
-        if (Minecraft.getInstance().gameRenderer.getMainCamera().getFluidInCamera() != FogType.NONE) {
+        if (Minecraft.getInstance().gameRenderer.mainCamera().getFluidInCamera() != FogType.NONE) {
             return true;
         }
 

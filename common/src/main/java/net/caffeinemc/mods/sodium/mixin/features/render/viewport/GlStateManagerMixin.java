@@ -19,7 +19,7 @@ public class GlStateManagerMixin {
 
     @WrapWithCondition(
             method = "_viewport",
-            at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL11;glViewport(IIII)V")
+            at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL33C;glViewport(IIII)V")
     )
     private static boolean skipRedundantViewport(int x, int y, int w, int h) {
         if (x == lastViewportX && y == lastViewportY && w == lastViewportWidth && h == lastViewportHeight) {

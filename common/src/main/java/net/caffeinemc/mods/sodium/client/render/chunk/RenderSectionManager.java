@@ -1,14 +1,11 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
-import com.mojang.blaze3d.textures.GpuSampler;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMaps;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.*;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
-import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.render.chunk.async.CullTask;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
@@ -24,7 +21,6 @@ import net.caffeinemc.mods.sodium.client.render.chunk.lists.*;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.*;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegionManager;
-import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior.PriorityMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.*;
@@ -33,7 +29,6 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigge
 import net.caffeinemc.mods.sodium.client.render.chunk.tree.RemovableMultiForest;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
 import net.caffeinemc.mods.sodium.client.render.util.RenderAsserts;
-import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
@@ -128,10 +123,10 @@ public class RenderSectionManager {
 
     private final AsyncCameraTimingControl cameraTimingControl = new AsyncCameraTimingControl();
 
-    public RenderSectionManager(ClientLevel level, int renderDistance, SortBehavior sortBehavior, CommandList commandList) {
+    public RenderSectionManager(ClientLevel level, int renderDistance, SortBehavior sortBehavior) {
         this.meshTaskSizeEstimator = new MeshTaskSizeEstimator(level);
 
-        this.chunkRenderer = new DefaultChunkRenderer(RenderDevice.INSTANCE, ChunkMeshFormats.COMPACT);
+        this.chunkRenderer = new DefaultChunkRenderer(ChunkMeshFormats.COMPACT);
 
         this.level = level;
         this.builder = new ChunkBuilder(level, ChunkMeshFormats.COMPACT);
@@ -145,7 +140,7 @@ public class RenderSectionManager {
             this.sortTriggering = null;
         }
 
-        this.regions = new RenderRegionManager(commandList);
+        this.regions = new RenderRegionManager(this);
         this.sectionCache = new ClonedChunkSectionCache(this.level);
 
         this.renderLists = SortedRenderLists.empty();
@@ -178,6 +173,7 @@ public class RenderSectionManager {
         if (this.cameraChanged) {
             this.invalidateRenderLists();
         }
+        this.chunkRenderer.rotate();
     }
 
     public void prepareRenderTrees(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
@@ -439,17 +435,8 @@ public class RenderSectionManager {
 
         section.delete();
 
-        // force update to remove section from render lists
+        // force update to remove sections from render lists
         this.markGraphDirty();
-    }
-
-    public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters, GpuSampler terrainSampler) {
-        RenderDevice device = RenderDevice.INSTANCE;
-        CommandList commandList = device.createCommandList();
-
-        this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z), fogParameters, this.sortBehavior != SortBehavior.OFF, terrainSampler);
-
-        commandList.flush();
     }
 
     public void tickVisibleRenders() {
@@ -495,7 +482,7 @@ public class RenderSectionManager {
         return this.renderTree == null || this.renderTree.isBoxVisible(x1, y1, z1, x2, y2, z2, this::isSectionEmpty);
     }
 
-    public void processChunkBuilds(Viewport viewport) {
+    public void processChunkBuilds(Viewport viewport, UniformBufferManager uniforms) {
         var results = this.collectChunkBuildResults();
 
         if (results.isEmpty()) {
@@ -503,7 +490,7 @@ public class RenderSectionManager {
         }
 
         // processing build results can cause invalidation of the render lists or change the connectivity of the graph. They don't necessarily imply each other, so they're tracked separately.
-        int changes = this.processChunkBuildResults(results, viewport);
+        int changes = this.processChunkBuildResults(results, viewport, uniforms);
         if ((changes & SectionInfoChange.GRAPH) != 0) {
             this.markGraphDirty();
         }
@@ -546,7 +533,7 @@ public class RenderSectionManager {
                         || this.isSectionFrustumVisible(viewport, section.adjacentEast));
     }
 
-    private int processChunkBuildResults(ArrayList<BuilderTaskOutput> results, Viewport viewport) {
+    private int processChunkBuildResults(ArrayList<BuilderTaskOutput> results, Viewport viewport, UniformBufferManager uniforms) {
         var sectionsWithOutputs = applyBuildOutputs(results);
         var outputs = new ArrayList<BuilderTaskOutput>();
 
@@ -607,7 +594,7 @@ public class RenderSectionManager {
         }
 
         var uploadStart = System.nanoTime();
-        this.regions.uploadResults(RenderDevice.INSTANCE.createCommandList(), outputs);
+        this.regions.uploadResults(outputs, uniforms);
         var uploadDuration = System.nanoTime() - uploadStart;
 
         // insert and update the upload duration estimator with the total upload size,
@@ -919,10 +906,8 @@ public class RenderSectionManager {
 
         this.renderLists = SortedRenderLists.empty();
 
-        try (CommandList commandList = RenderDevice.INSTANCE.createCommandList()) {
-            this.regions.delete(commandList);
-            this.chunkRenderer.delete(commandList);
-        }
+        this.regions.delete();
+        this.chunkRenderer.delete();
     }
 
     public int getTotalSections() {
@@ -1163,6 +1148,14 @@ public class RenderSectionManager {
 
     public @NonNull SortedRenderLists getRenderLists() {
         return this.renderLists;
+    }
+
+    public ChunkRenderer getChunkRenderer() {
+        return this.chunkRenderer;
+    }
+
+    public int getFrame() {
+        return this.frame;
     }
 
     public boolean isSectionBuilt(int x, int y, int z) {

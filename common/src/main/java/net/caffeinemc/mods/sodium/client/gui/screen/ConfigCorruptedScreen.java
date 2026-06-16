@@ -43,11 +43,11 @@ public class ConfigCorruptedScreen extends Screen {
             Console.instance().logMessage(MessageLevel.INFO, "sodium.console.corrupt_config.console.config_file_was_reset", true, 3.0);
 
             SodiumClientMod.restoreDefaultOptions();
-            Minecraft.getInstance().setScreen(this.nextScreen.apply(this.prevScreen));
+            Minecraft.getInstance().gui.setScreen(this.nextScreen.apply(this.prevScreen));
         }).bounds(this.width - SCREEN_PADDING - BUTTON_WIDTH, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT).build());
 
         this.addRenderableWidget(Button.builder(Component.literal("Go back"), (btn) -> {
-            Minecraft.getInstance().setScreen(this.prevScreen);
+            Minecraft.getInstance().gui.setScreen(this.prevScreen);
         }).bounds(SCREEN_PADDING, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT).build());
     }
 

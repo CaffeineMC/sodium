@@ -8,6 +8,7 @@ import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.ColorAttribute;
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.TextureAttribute;
+import net.caffeinemc.mods.sodium.client.render.vertex.VertexFormatOffsetCache;
 import net.minecraft.core.Direction;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import org.joml.Matrix3f;
@@ -79,10 +80,12 @@ public class SheetedDecalTextureGeneratorMixin implements VertexBufferWriter {
                                   Matrix3f inverseNormalMatrix, Matrix4f inverseTextureMatrix, float textureScale) {
         long stride = format.getVertexSize();
 
-        var offsetPosition = format.getOffset(VertexFormatElement.POSITION);
-        var offsetColor = format.getOffset(VertexFormatElement.COLOR);
-        var offsetNormal = format.getOffset(VertexFormatElement.NORMAL);
-        var offsetTexture = format.getOffset(VertexFormatElement.UV0);
+        var cache = VertexFormatOffsetCache.getInstance().getCachedOffsets(format);
+
+        var offsetPosition = cache[VertexFormatOffsetCache.POSITION];
+        var offsetColor = cache[VertexFormatOffsetCache.COLOR];
+        var offsetNormal = cache[VertexFormatOffsetCache.NORMAL];
+        var offsetTexture = cache[VertexFormatOffsetCache.UV];
 
         int color = ColorABGR.pack(1.0f, 1.0f, 1.0f, 1.0f);
 

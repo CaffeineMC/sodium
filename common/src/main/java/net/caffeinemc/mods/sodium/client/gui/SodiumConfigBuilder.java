@@ -18,8 +18,6 @@ import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
 import net.caffeinemc.mods.sodium.client.config.structure.Config;
-import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
-import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gui.options.FullscreenMode;
 import net.caffeinemc.mods.sodium.client.gui.options.Toggle;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
@@ -36,6 +34,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.server.packs.resources.ResourceManager;
+import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
@@ -139,8 +138,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                         Colors.THEME, Colors.THEME_LIGHTER, Colors.THEME_DARKER))
                 .addPage(this.buildGeneralPage(builder))
                 .addPage(this.buildQualityPage(builder))
-                .addPage(this.buildPerformancePage(builder))
-                .addPage(this.buildAdvancedPage(builder));
+                .addPage(this.buildPerformancePage(builder));
     }
 
     private OptionPageBuilder buildGeneralPage(ConfigBuilder builder) {
@@ -267,7 +265,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setBinding(value -> {
                                     var monitor = this.getMonitor();
                                     if (monitor != null) {
-                                        this.window.setPreferredFullscreenVideoMode(0 == value ? Optional.empty() : Optional.of(monitor.getMode(value - 1)));
+                                        this.window.setPreferredFullscreenVideoMode(0 == value ? Optional.empty() : Optional.of(monitor.mode(value - 1)));
                                     }
                                 }, () -> {
                                     var monitor = this.getMonitor();
@@ -275,13 +273,13 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                         return 0;
                                     } else {
                                         Optional<VideoMode> optional = this.window.getPreferredFullscreenVideoMode();
-                                        return optional.map((videoMode) -> monitor.getVideoModeIndex(videoMode) + 1).orElse(0);
+                                        return optional.map((videoMode) -> monitor.indexOfMode(videoMode) + 1).orElse(0);
                                     }
                                 })
                                 .setEnabledProvider(
                                         (state) -> {
                                             var monitor = this.getMonitor();
-                                            if (monitor == null || monitor.getModeCount() <= 0) {
+                                            if (monitor == null || monitor.modeCount() <= 0) {
                                                 return false;
                                             }
                                             var os = OsUtils.getOs();
@@ -330,6 +328,24 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setBinding(this.vanillaOpts.showAutosaveIndicator()::set, this.vanillaOpts.showAutosaveIndicator()::get)
                 )
         );
+        generalPage.addOptionGroup(builder.createOptionGroup().addOption(builder.createEnumOption(Identifier.fromNamespaceAndPath("sodium", "general.graphics_api"),
+                PreferredGraphicsApi.class)
+                .setStorageHandler(this.vanillaStorage)
+                .setName(Component.translatable("options.graphicsApi"))
+                .setTooltip(i -> {
+                    if (i == PreferredGraphicsApi.VULKAN) {
+                        return Component.translatable("options.graphicsApi.tooltip.vulkan");
+                    } else {
+                        return Component.translatable("options.graphicsApi.tooltip");
+                    }
+                })
+                .setElementNameProvider(EnumOptionBuilder.nameProviderFrom(
+                        Component.translatable("options.graphicsApi.default"),
+                        Component.translatable("options.graphicsApi.opengl"),
+                        Component.literal("Prefer Vulkan")))
+                .setDefaultValue(PreferredGraphicsApi.DEFAULT)
+                .setFlags(OptionFlag.REQUIRES_GAME_RESTART)
+                .setBinding((value) -> this.vanillaOpts.preferredGraphicsBackend().set(value), () -> this.vanillaOpts.preferredGraphicsBackend().get())));
         return generalPage;
     }
 
@@ -363,10 +379,10 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setBinding((value) -> {
                                     this.vanillaOpts.cloudStatus().set(value);
 
-                                    if (Minecraft.useShaderTransparency()) {
-                                        RenderTarget framebuffer = Minecraft.getInstance().levelRenderer.getCloudsTarget();
+                                    if (Minecraft.getInstance().gameRenderer.gameRenderState().useShaderTransparency()) {
+                                        RenderTarget framebuffer = Minecraft.getInstance().levelRenderer.cloudsTarget();
                                         if (framebuffer != null) {
-                                            RenderSystem.getDevice().createCommandEncoder().clearColorAndDepthTextures(framebuffer.getColorTexture(), 0xFFFFFFFF, framebuffer.getDepthTexture(), 1.0f);
+                                            RenderSystem.getDevice().createCommandEncoder().clearColorAndDepthTextures(framebuffer.getColorTexture(), new Vector4f(1.0f), framebuffer.getDepthTexture(), 1.0f);
                                         }
                                     }
                                 }, () -> this.vanillaOpts.cloudStatus().get())
@@ -382,7 +398,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setBinding((value) -> {
                                     this.vanillaOpts.cloudRange().set(value);
 
-                                    Minecraft.getInstance().levelRenderer.getCloudRenderer().markForRebuild();
+                                    Minecraft.getInstance().levelRenderer.cloudRenderer().markForRebuild();
                                 }, () -> this.vanillaOpts.cloudRange().get())
                                 .setImpact(OptionImpact.LOW)
                                 .setValueFormatter(ControlValueFormatterImpls.translateVariable("options.chunks"))
@@ -539,7 +555,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setDefaultValue(FilterMode.NEAREST)
                                 .setBinding(filterMode -> {
                                     this.sodiumOpts.quality.pixelFilteringMode = filterMode;
-                                    Minecraft.getInstance().levelRenderer.resetSampler();
+                                    Minecraft.getInstance().levelExtractor.resetSampler();
                                 }, () -> this.sodiumOpts.quality.pixelFilteringMode)
                                 .setImpact(OptionImpact.MEDIUM)
                 )
@@ -699,46 +715,13 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                 .setDefaultValue(DEFAULTS.performance.useNoErrorGLContext)
                 .setBinding(value -> this.sodiumOpts.performance.useNoErrorGLContext = value, () -> this.sodiumOpts.performance.useNoErrorGLContext)
                 .setEnabledProvider((state) -> {
+                    if (!RenderSystem.getDevice().getDeviceInfo().backendName().contains("OpenGL")) return false;
                     GLCapabilities capabilities = GL.getCapabilities();
                     return (capabilities.OpenGL46 || capabilities.GL_KHR_no_error)
                             && !Workarounds.isWorkaroundEnabled(Workarounds.Reference.NO_ERROR_CONTEXT_UNSUPPORTED);
                 })
                 .setImpact(OptionImpact.LOW)
                 .setFlags(OptionFlag.REQUIRES_GAME_RESTART);
-    }
-
-    private OptionPageBuilder buildAdvancedPage(ConfigBuilder builder) {
-        var advancedPage = builder.createOptionPage().setName(Component.translatable("sodium.options.pages.advanced"));
-
-        boolean isPersistentMappingSupported = MappedStagingBuffer.isSupported(RenderDevice.INSTANCE);
-
-        advancedPage.addOptionGroup(builder.createOptionGroup()
-                .addOption(
-                        builder.createBooleanOption(Identifier.parse("sodium:advanced.use_persistent_mapping"))
-                                .setStorageHandler(this.sodiumStorage)
-                                .setName(Component.translatable("sodium.options.use_persistent_mapping.name"))
-                                .setTooltip(Component.translatable("sodium.options.use_persistent_mapping.tooltip"))
-                                .setDefaultValue(DEFAULTS.advanced.useAdvancedStagingBuffers)
-                                .setBinding(value -> this.sodiumOpts.advanced.useAdvancedStagingBuffers = value, () -> this.sodiumOpts.advanced.useAdvancedStagingBuffers)
-                                .setEnabled(isPersistentMappingSupported)
-                                .setImpact(OptionImpact.MEDIUM)
-                                .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
-                )
-        );
-
-        advancedPage.addOptionGroup(builder.createOptionGroup()
-                .addOption(
-                        builder.createIntegerOption(Identifier.parse("sodium:advanced.cpu_render_ahead_limit"))
-                                .setStorageHandler(this.sodiumStorage)
-                                .setName(Component.translatable("sodium.options.cpu_render_ahead_limit.name"))
-                                .setValueFormatter(ControlValueFormatterImpls.translateVariable("sodium.options.cpu_render_ahead_limit.value"))
-                                .setTooltip(Component.translatable("sodium.options.cpu_render_ahead_limit.tooltip"))
-                                .setRange(0, 9, 1)
-                                .setDefaultValue(DEFAULTS.advanced.cpuRenderAheadLimit)
-                                .setBinding(value -> this.sodiumOpts.advanced.cpuRenderAheadLimit = value, () -> this.sodiumOpts.advanced.cpuRenderAheadLimit)
-                )
-        );
-        return advancedPage;
     }
 
 }

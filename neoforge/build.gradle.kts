@@ -15,7 +15,7 @@ repositories {
     maven("https://maven.neoforged.net/releases/")
     maven {
         name = "Maven for PR #pr299pr28793" // https://github.com/neoforged/NeoForge/pull/2815
-        url = uri("https://prmaven.neoforged.net/NeoForge/pr2879")
+        url = uri("https://prmaven.neoforged.net/NeoForge/pr3198")
         content {
             includeModule("net.neoforged", "neoforge")
             includeModule("net.neoforged", "testframework")

@@ -3,14 +3,13 @@ package net.caffeinemc.mods.sodium.client.render.chunk.region;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
-import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.gl.arena.PendingUpload;
-import net.caffeinemc.mods.sodium.client.gl.arena.staging.FallbackStagingBuffer;
-import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
-import net.caffeinemc.mods.sodium.client.gl.arena.staging.StagingBuffer;
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
-import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
+import net.caffeinemc.mods.sodium.client.gpu.arena.PendingUpload;
+import net.caffeinemc.mods.sodium.client.gpu.arena.staging.MojangStagingBuffer;
+import net.caffeinemc.mods.sodium.client.gpu.arena.staging.StagingBuffer;
+import net.caffeinemc.mods.sodium.client.render.chunk.IntPool;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
+import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
+import net.caffeinemc.mods.sodium.client.render.chunk.UniformBufferManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkSortOutput;
@@ -32,38 +31,40 @@ public class RenderRegionManager {
     private final Long2ReferenceOpenHashMap<RenderRegion> regions = new Long2ReferenceOpenHashMap<>();
 
     private final StagingBuffer stagingBuffer;
+    private final IntPool freeIds = new IntPool();
+    private final RenderSectionManager parent;
 
-    public RenderRegionManager(CommandList commandList) {
-        this.stagingBuffer = createStagingBuffer(commandList);
+    public RenderRegionManager(RenderSectionManager parent) {
+        this.parent = parent;
+        this.stagingBuffer = createStagingBuffer();
     }
 
     public void update() {
         this.stagingBuffer.flip();
 
-        try (CommandList commandList = RenderDevice.INSTANCE.createCommandList()) {
-            Iterator<RenderRegion> it = this.regions.values()
-                    .iterator();
+        Iterator<RenderRegion> it = this.regions.values()
+                .iterator();
 
-            while (it.hasNext()) {
-                RenderRegion region = it.next();
-                region.update(commandList);
+        while (it.hasNext()) {
+            RenderRegion region = it.next();
+            region.update();
 
-                if (region.isEmpty()) {
-                    region.delete(commandList);
+            if (region.isEmpty()) {
+                region.delete();
+                if (region.getId() != -1) freeIds.release(region.getId());
 
-                    it.remove();
-                }
+                it.remove();
             }
         }
     }
 
-    public void uploadResults(CommandList commandList, Collection<BuilderTaskOutput> results) {
+    public void uploadResults(Collection<BuilderTaskOutput> results, UniformBufferManager uniforms) {
         for (var entry : this.createMeshUploadQueues(results)) {
-            this.uploadResults(commandList, entry.getKey(), entry.getValue());
+            this.uploadResults(entry.getKey(), entry.getValue(), uniforms);
         }
     }
 
-    private void uploadResults(CommandList commandList, RenderRegion region, Collection<BuilderTaskOutput> results) {
+    private void uploadResults(RenderRegion region, Collection<BuilderTaskOutput> results, UniformBufferManager uniforms) {
         var uploads = new ArrayList<PendingSectionMeshUpload>();
         var indexUploads = new ArrayList<PendingSectionIndexBufferUpload>();
 
@@ -142,22 +143,22 @@ public class RenderRegionManager {
             return;
         }
 
-        var cameraPosition = Minecraft.getInstance().gameRenderer.getMainCamera().position();
+        var cameraPosition = Minecraft.getInstance().gameRenderer.mainCamera().position();
 
-        var resources = region.createResources(commandList);
+        var resources = region.createResources();
         var regionFillFractionInv = region.getFillFractionInv();
 
         profiler.push("upload_vertices");
 
         if (!uploads.isEmpty()) {
             var arena = resources.getGeometryArena();
-            boolean bufferChanged = arena.upload(commandList, uploads.stream()
+            boolean bufferChanged = arena.upload(uploads.stream()
                     .map(upload -> upload.vertexUpload), regionFillFractionInv);
 
             // If any of the buffers changed, the tessellation will need to be updated
             // Once invalidated the tessellation will be re-created on the next attempted use
             if (bufferChanged) {
-                region.refreshTesselation(commandList);
+                region.onBufferResized();
                 region.clearAllCachedBatches();
             }
 
@@ -171,7 +172,9 @@ public class RenderRegionManager {
                     double distanceToPlayer = dx * dx + dy * dy + dz * dz;
 
                     int relativeBuiltTime = distanceToPlayer < 768.0 ? -1 : upload.relativeBuiltTime;
-                    resources.writeMeshTimes(upload.section.getSectionIndex(), relativeBuiltTime);
+
+                    // TODO: improve the plumbing of this to be less cumbersome
+                    uniforms.writeMeshTimes(region.getOrAcquireId(this.freeIds), upload.section.getSectionIndex(), relativeBuiltTime);
                 }
                 storage.setVertexData(upload.section.getSectionIndex(),
                         upload.vertexUpload.getResult(), upload.meshData.getVertexSegments());
@@ -183,7 +186,7 @@ public class RenderRegionManager {
 
         if (!indexUploads.isEmpty()) {
             var arena = resources.getIndexArena();
-            indexBufferChanged = arena.upload(commandList, indexUploads.stream()
+            indexBufferChanged = arena.upload(indexUploads.stream()
                     .map(upload -> upload.indexBufferUpload), regionFillFractionInv);
 
             for (PendingSectionIndexBufferUpload upload : indexUploads) {
@@ -193,11 +196,11 @@ public class RenderRegionManager {
         }
 
         if (needsSharedIndexUpdate) {
-            indexBufferChanged |= translucentStorage.updateSharedIndexData(commandList, resources.getIndexArena(), regionFillFractionInv);
+            indexBufferChanged |= translucentStorage.updateSharedIndexData(resources.getIndexArena(), regionFillFractionInv);
         }
 
         if (indexBufferChanged) {
-            region.refreshIndexedTesselation(commandList);
+            region.onIndexBufferResized();
             region.clearCachedBatchFor(DefaultTerrainRenderPasses.TRANSLUCENT);
         }
 
@@ -215,13 +218,14 @@ public class RenderRegionManager {
         return map.reference2ReferenceEntrySet();
     }
 
-    public void delete(CommandList commandList) {
+    public void delete() {
         for (RenderRegion region : this.regions.values()) {
-            region.delete(commandList);
+            region.delete();
+            if (region.getId() != -1) freeIds.release(region.getId());
         }
 
         this.regions.clear();
-        this.stagingBuffer.delete(commandList);
+        this.stagingBuffer.delete();
     }
 
     public Collection<RenderRegion> getLoadedRegions() {
@@ -262,11 +266,7 @@ public class RenderRegionManager {
     private record PendingSectionIndexBufferUpload(RenderSection section, PendingUpload indexBufferUpload) {
     }
 
-    private static StagingBuffer createStagingBuffer(CommandList commandList) {
-        if (SodiumClientMod.options().advanced.useAdvancedStagingBuffers && MappedStagingBuffer.isSupported(RenderDevice.INSTANCE)) {
-            return new MappedStagingBuffer(commandList);
-        }
-
-        return new FallbackStagingBuffer(commandList);
+    private static StagingBuffer createStagingBuffer() {
+        return new MojangStagingBuffer(32_000_000);
     }
 }

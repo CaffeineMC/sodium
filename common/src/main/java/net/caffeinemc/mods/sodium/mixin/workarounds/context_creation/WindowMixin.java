@@ -3,7 +3,6 @@ package net.caffeinemc.mods.sodium.mixin.workarounds.context_creation;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.platform.DisplayData;
-import com.mojang.blaze3d.platform.ScreenManager;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.platform.WindowEventHandler;
 import net.caffeinemc.mods.sodium.client.compatibility.checks.ModuleScanner;

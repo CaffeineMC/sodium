@@ -78,7 +78,7 @@ public class ChunkBuildBuffers {
             return null;
         }
 
-        var mergedBuffer = new NativeBuffer(vertexTotal * this.vertexType.getVertexFormat().getStride());
+        var mergedBuffer = new NativeBuffer(vertexTotal * this.vertexType.getVertexFormat().getVertexSize());
         var mergedBufferBuilder = mergedBuffer.getDirectBuffer();
 
         if (sliceReordering) {
@@ -143,7 +143,7 @@ public class ChunkBuildBuffers {
 
         var builder = this.builders.get(DefaultTerrainRenderPasses.TRANSLUCENT);
 
-        var stride = this.vertexType.getVertexFormat().getStride();
+        var stride = this.vertexType.getVertexFormat().getVertexSize();
         var vertexTotal = TranslucentData.quadCountToVertexCount(updatedQuads.getMeshQuadCount());
         var mergedBuffer = new NativeBuffer(vertexTotal * stride);
         var mergedBufferBuilder = mergedBuffer.getDirectBuffer();

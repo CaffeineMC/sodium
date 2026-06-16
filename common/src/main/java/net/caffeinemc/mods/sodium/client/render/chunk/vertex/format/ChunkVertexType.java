@@ -1,9 +1,9 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.vertex.format;
 
-import net.caffeinemc.mods.sodium.client.gl.attribute.GlVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 
 public interface ChunkVertexType {
-    GlVertexFormat getVertexFormat();
+    VertexFormat getVertexFormat();
 
     ChunkVertexEncoder getEncoder();
 }

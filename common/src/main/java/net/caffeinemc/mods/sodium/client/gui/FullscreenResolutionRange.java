@@ -16,7 +16,7 @@ public class FullscreenResolutionRange implements SteppedValidator {
         if (window != null) {
             var monitor = window.findBestMonitor();
             if (monitor != null) {
-                return monitor.getModeCount() - 1;
+                return monitor.modeCount() - 1;
             }
         }
         return 1;

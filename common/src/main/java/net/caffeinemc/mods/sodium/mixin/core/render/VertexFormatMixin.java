@@ -18,7 +18,7 @@ public class VertexFormatMixin implements VertexFormatExtensions {
     private int sodium$globalId;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void afterInit(List<VertexFormatElement> elements, List<String> names, IntList offsets, int vertexSize, CallbackInfo ci) {
+    private void afterInit(List elements, int vertexSize, int stepRate, CallbackInfo ci) {
         this.sodium$globalId = VertexFormatRegistry.instance()
                 .allocateGlobalId((VertexFormat) (Object) this);
     }

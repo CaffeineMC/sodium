@@ -4,6 +4,7 @@ import net.caffeinemc.mods.sodium.client.world.BiomeSeedProvider;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.extract.LevelExtractor;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -23,16 +24,7 @@ public class ClientLevelMixin implements BiomeSeedProvider {
     private long biomeZoomSeed;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void captureSeed(ClientPacketListener packetListener,
-                             ClientLevel.ClientLevelData levelData,
-                             ResourceKey<Level> dimension,
-                             Holder<DimensionType> dimensionType,
-                             int loadDistance,
-                             int simulationDistance,
-                             LevelRenderer renderer,
-                             boolean isDebug,
-                             long biomeZoomSeed, int k,
-                             CallbackInfo ci) {
+    private void captureSeed(ClientPacketListener connection, ClientLevel.ClientLevelData levelData, ResourceKey dimension, Holder dimensionType, int serverChunkRadius, int serverSimulationDistance, LevelExtractor levelExtractor, boolean isDebug, long biomeZoomSeed, int seaLevel, CallbackInfo ci) {
         this.biomeZoomSeed = biomeZoomSeed;
     }
 

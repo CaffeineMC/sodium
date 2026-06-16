@@ -1,8 +1,8 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl;
 
+import com.mojang.blaze3d.GpuFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
-import net.caffeinemc.mods.sodium.client.gl.attribute.GlVertexFormat;
-import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.minecraft.util.Mth;
@@ -11,12 +11,11 @@ import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 public class CompactChunkVertex implements ChunkVertexType {
     public static final int STRIDE = 20;
 
-    public static final GlVertexFormat VERTEX_FORMAT = GlVertexFormat.builder(STRIDE)
-            .addElement(DefaultChunkMeshAttributes.POSITION, ChunkShaderBindingPoints.ATTRIBUTE_POSITION, 0)
-            .addElement(DefaultChunkMeshAttributes.COLOR, ChunkShaderBindingPoints.ATTRIBUTE_COLOR, 8)
-            .addElement(DefaultChunkMeshAttributes.TEXTURE, ChunkShaderBindingPoints.ATTRIBUTE_TEXTURE, 12)
-            .addElement(DefaultChunkMeshAttributes.LIGHT_MATERIAL_INDEX, ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_MATERIAL_INDEX, 16)
-            .build();
+    public static final VertexFormat VERTEX_FORMAT = VertexFormat.builder(0)
+            .addAttribute("a_Position", GpuFormat.RG32_UINT)
+            .addAttribute("a_Color", GpuFormat.RGBA8_UNORM)
+            .addAttribute("a_TexCoord", GpuFormat.RG16_UINT)
+            .addAttribute("a_LightAndData", GpuFormat.RGBA8_UINT).build();
 
     public static final int POSITION_MAX_VALUE = 1 << 20;
     public static final int TEXTURE_MAX_VALUE = 1 << 15;
@@ -25,7 +24,7 @@ public class CompactChunkVertex implements ChunkVertexType {
     private static final float MODEL_RANGE = 32.0f;
 
     @Override
-    public GlVertexFormat getVertexFormat() {
+    public VertexFormat getVertexFormat() {
         return VERTEX_FORMAT;
     }
 

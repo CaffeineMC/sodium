@@ -38,11 +38,11 @@ public class GameRendererMixin {
     @Unique
     private static boolean HAS_RENDERED_OVERLAY_ONCE = false;
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/render/GuiRenderer;render(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;)V"))
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/render/GuiRenderer;render()V"))
     private void onRender(DeltaTracker deltaTracker, boolean bl, CallbackInfo ci) {
         // Do not start updating the console overlay until the font renderer is ready
         // This prevents the console from using tofu boxes for everything during early startup
-        if (Minecraft.getInstance().getOverlay() != null) {
+        if (Minecraft.getInstance().gui.overlay() != null) {
             if (!HAS_RENDERED_OVERLAY_ONCE) {
                 return;
             }
