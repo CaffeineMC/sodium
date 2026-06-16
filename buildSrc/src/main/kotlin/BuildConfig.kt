@@ -2,13 +2,13 @@ import org.gradle.api.Project
 
 object BuildConfig {
     val MINECRAFT_VERSION: String = "26.2"
-    val NEOFORGE_VERSION: String = "26.2.0-alpha.0+rc-1.20260611.132638"
+    val NEOFORGE_VERSION: String = "26.2.0.0-beta"
     val FABRIC_LOADER_VERSION: String = "0.19.2"
     val FABRIC_API_VERSION: String = "0.152.1+26.2"
     val SUPPORT_FRAPI : Boolean = true
 
     // https://semver.org/
-    val MOD_VERSION: String = "0.9.0-beta.3"
+    val MOD_VERSION: String = "0.9.0"
 
     val MINECRAFT_VERSION_SHORT: String = MINECRAFT_VERSION
             .replace("-snapshot-", "s")
