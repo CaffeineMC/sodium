@@ -186,13 +186,13 @@ public class RenderRegion {
         return storage;
     }
 
-    public void refreshTesselation() {
+    public void onBufferResized() {
         for (var storage : this.sectionRenderData.values()) {
             storage.onBufferResized();
         }
     }
 
-    public void refreshIndexedTesselation() {
+    public void onIndexBufferResized() {
         this.sectionRenderData.get(DefaultTerrainRenderPasses.TRANSLUCENT).onIndexBufferResized();
     }
 

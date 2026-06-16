@@ -157,7 +157,7 @@ public class RenderRegionManager {
             // If any of the buffers changed, the tessellation will need to be updated
             // Once invalidated the tessellation will be re-created on the next attempted use
             if (bufferChanged) {
-                region.refreshTesselation();
+                region.onBufferResized();
                 region.clearAllCachedBatches();
             }
 
@@ -197,7 +197,7 @@ public class RenderRegionManager {
         }
 
         if (indexBufferChanged) {
-            region.refreshIndexedTesselation();
+            region.onIndexBufferResized();
             region.clearCachedBatchFor(DefaultTerrainRenderPasses.TRANSLUCENT);
         }
 
