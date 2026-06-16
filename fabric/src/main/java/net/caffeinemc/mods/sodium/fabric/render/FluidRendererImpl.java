@@ -11,6 +11,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.FluidRend
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
+import net.caffeinemc.mods.sodium.client.render.helper.ColorHelper;
 import net.caffeinemc.mods.sodium.client.services.FluidRendererFactory;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
@@ -19,10 +20,10 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderingRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockTintSource;
 import net.minecraft.client.renderer.BiomeColors;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.client.renderer.block.FluidStateModelSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -135,7 +136,7 @@ public class FluidRendererImpl extends FluidRenderer {
         public ColorProvider<FluidState> getColorProvider(Fluid fluid, @Nullable BlockTintSource blockTintSource) {
             var override = this.colorProviderRegistry.getColorProvider(fluid);
 
-            if (!hasModOverride && override != null) {
+            if (this.hasModOverride && override != null) {
                 return override;
             }
 
@@ -161,7 +162,7 @@ public class FluidRendererImpl extends FluidRenderer {
             return new BlendedColorProvider<>() {
                 @Override
                 protected int getColor(LevelSlice slice, FluidState state, BlockPos pos) {
-                    return BiomeColors.getAverageWaterColor(slice, pos) | 0xFF000000;
+                    return ColorHelper.makeOpaqueIfTransparent(BiomeColors.getAverageWaterColor(slice, pos));
                 }
             };
         }
@@ -171,7 +172,7 @@ public class FluidRendererImpl extends FluidRenderer {
             return new BlendedColorProvider<>() {
                 @Override
                 protected int getColor(LevelSlice slice, BlockState state, BlockPos pos) {
-                    return BiomeColors.getAverageWaterColor(slice, pos) | 0xFF000000;
+                    return ColorHelper.makeOpaqueIfTransparent(BiomeColors.getAverageWaterColor(slice, pos));
                 }
             };
         }

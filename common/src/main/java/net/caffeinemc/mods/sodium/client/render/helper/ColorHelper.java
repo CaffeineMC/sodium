@@ -59,4 +59,14 @@ public abstract class ColorHelper {
     public static int fromVanillaColor(int color) {
         return ColorARGB.fromABGR(ColorABGR.fromNativeByteOrder(color));
     }
+
+    /**
+     * Makes the alpha component of an A___ (ARGB or ABGR) color opaque if it is transparent.
+     *
+     * @param color the color
+     * @return the color with the alpha component made opaque if it was previously zero.
+     */
+    public static int makeOpaqueIfTransparent(int color) {
+        return (color & 0xFF000000) == 0 ? color | 0xFF000000 : color;
+    }
 }

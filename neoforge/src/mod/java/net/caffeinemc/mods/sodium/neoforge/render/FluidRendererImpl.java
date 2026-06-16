@@ -11,6 +11,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.FluidRend
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
+import net.caffeinemc.mods.sodium.client.render.helper.ColorHelper;
 import net.caffeinemc.mods.sodium.client.services.FluidRendererFactory;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.client.Minecraft;
@@ -155,7 +156,16 @@ public class FluidRendererImpl extends FluidRenderer {
                             .getFluidStateModelSet()
                             .get(state)
                             .fluidTintSource();
-                    return tintSource != null ? tintSource.colorInWorld(state, state.createLegacyBlock(), slice, pos) | 0xFF000000 : -1;
+
+                    // if the tint source gives a zero alpha color, the intent is probably for full opacity.
+                    // if there is some non-zero value given, they probably want that value and not 255.
+                    // TODO: does this regress https://github.com/CaffeineMC/sodium/issues/3576 ? why or why not?
+                    if (tintSource == null) {
+                        return -1;
+                    } else {
+                        var color = tintSource.colorInWorld(state, state.createLegacyBlock(), slice, pos);
+                        return ColorHelper.makeOpaqueIfTransparent(color);
+                    }
                 }
             };
         }
@@ -170,7 +180,13 @@ public class FluidRendererImpl extends FluidRenderer {
                             .getFluidStateModelSet()
                             .get(state.getFluidState().isEmpty() ? Fluids.WATER.defaultFluidState() : state.getFluidState())
                             .fluidTintSource();
-                    return tintSource != null ? tintSource.colorInWorld(state, slice, pos) | 0xFF000000 : -1;
+
+                    if (tintSource == null) {
+                        return -1;
+                    } else {
+                        var color = tintSource.colorInWorld(state, slice, pos);
+                        return ColorHelper.makeOpaqueIfTransparent(color);
+                    }
                 }
             };
         }
