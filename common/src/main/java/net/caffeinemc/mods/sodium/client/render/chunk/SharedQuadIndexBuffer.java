@@ -7,7 +7,6 @@ import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
 
 public class SharedQuadIndexBuffer {
     private static final int ELEMENTS_PER_PRIMITIVE = 6;
@@ -72,25 +71,6 @@ public class SharedQuadIndexBuffer {
     }
 
     public enum IndexFormat {
-        SHORT(IndexType.SHORT, 64 * 1024) {
-            @Override
-            public void createIndexBuffer(ByteBuffer byteBuffer, int primitiveCount) {
-                ShortBuffer shortBuffer = byteBuffer.asShortBuffer();
-
-                for (int primitiveIndex = 0; primitiveIndex < primitiveCount; primitiveIndex++) {
-                    int indexOffset = primitiveIndex * ELEMENTS_PER_PRIMITIVE;
-                    int vertexOffset = primitiveIndex * VERTICES_PER_PRIMITIVE;
-
-                    shortBuffer.put(indexOffset + 0, (short) (vertexOffset + 0));
-                    shortBuffer.put(indexOffset + 1, (short) (vertexOffset + 1));
-                    shortBuffer.put(indexOffset + 2, (short) (vertexOffset + 2));
-
-                    shortBuffer.put(indexOffset + 3, (short) (vertexOffset + 2));
-                    shortBuffer.put(indexOffset + 4, (short) (vertexOffset + 3));
-                    shortBuffer.put(indexOffset + 5, (short) (vertexOffset + 0));
-                }
-            }
-        },
         INTEGER(IndexType.INT, Integer.MAX_VALUE) {
             @Override
             public void createIndexBuffer(ByteBuffer byteBuffer, int primitiveCount) {
@@ -110,8 +90,6 @@ public class SharedQuadIndexBuffer {
                 }
             }
         };
-
-        public static final IndexFormat[] VALUES = IndexFormat.values();
 
         private final IndexType format;
         private final int maxElementCount;
