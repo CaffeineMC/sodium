@@ -88,7 +88,7 @@
     "ocrenderfix_sodium" : "*",
     "betterfpsdist" : "<=1.21-4.5",
     "bobby" : "<5.2.4",
-    "chunksfadein" : "<2.0.2-1.21.2",
+    "chunksfadein" : "<3.0.22-1.21",
     "cull-less-leaves" : "<=1.3.0",
     "cullleaves" : "<=3.4.0-fabric",
     "custom_hud" : "<3.4.2",
@@ -99,11 +99,16 @@
     "notenoughcrashes" : "<4.4.8",
     "noxesium" : "<2.3.3",
     "reeses-sodium-options" : "<1.8.0",
-    "sodium-extra" : "<0.6.0",
-    "sspb" : "<4.0.0",
-    "moreculling": "<1.0.4",
+    "sodium-extra" : "<0.8.7",
+    "sspb" : "<4.1.0",
+    "moreculling": "<1.0.8",
     "simply-no-shading": "<7.6.2",
-    "betterend": "<=21.0.11"
+    "betterend": "<=21.0.11",
+    "sodiumoptionsapi": "*",
+    "sodiumoptionsmodcompat": "*",
+    "sodiumextras": "*",
+    "sodiumdynamiclights": "*",
+    "sodiumleafculling": "*"
   },
   "provides" : [
     "indium"
