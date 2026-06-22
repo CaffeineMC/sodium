@@ -244,6 +244,7 @@ public class RenderRegion {
         if (this.resources != null && this.resources.shouldDelete()) {
             this.resources.delete(commandList);
             this.resources = null;
+            this.clearAllCachedBatches();
         }
     }
 
