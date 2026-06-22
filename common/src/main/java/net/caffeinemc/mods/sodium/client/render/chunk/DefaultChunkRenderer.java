@@ -70,6 +70,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         final boolean useIndexedTessellation = renderPass.isTranslucent() && indexedRenderingEnabled;
 
         Iterator<ChunkRenderList> iterator = renderLists.iterator(renderPass.isTranslucent());
+        boolean hasDrawBatches = false;
 
         while (iterator.hasNext()) {
             ChunkRenderList renderList = iterator.next();
@@ -90,12 +91,20 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                 continue;
             }
 
+            hasDrawBatches = true;
+
             // When the shared index buffer is being used, we must ensure the storage has been allocated *before*
             // the tessellation is prepared.
             if (!useIndexedTessellation) {
                 this.sharedIndexBuffer.ensureCapacity(batch.getIndexBufferSize());
             }
 
+        }
+
+        // Avoid binding Sodium's shader when no vanilla draw call will run to refresh the GL program cache.
+        if (!hasDrawBatches) {
+            super.end(renderPass);
+            return;
         }
 
         iterator = renderLists.iterator(renderPass.isTranslucent());
