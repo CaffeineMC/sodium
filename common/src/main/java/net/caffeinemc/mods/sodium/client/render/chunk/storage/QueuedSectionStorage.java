@@ -50,7 +50,7 @@ public class QueuedSectionStorage implements SectionStorage {
     @Override
     public boolean hasSectionConsistent(long key) {
         if (this.isQueueing) {
-            return this.sections.containsKey(key) || this.queuedPuts.containsKey(key);
+            return this.sections.containsKey(key) && !this.queuedRemovals.contains(key) || this.queuedPuts.containsKey(key);
         } else {
             return this.sections.containsKey(key);
         }
