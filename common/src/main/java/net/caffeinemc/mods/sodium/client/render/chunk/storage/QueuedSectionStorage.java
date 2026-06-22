@@ -69,13 +69,15 @@ public class QueuedSectionStorage implements SectionStorage {
     @Override
     public RenderSection queueRemove(long key) {
         if (this.isQueueing) {
-            this.queuedPuts.remove(key);
-            var section = this.sections.get(key);
-            if (section == null) {
-                return null;
+            var present = this.sections.get(key);
+            if (present != null) {
+                this.queuedRemovals.add(key);
             }
-            this.queuedRemovals.add(key);
-            return section;
+            var removedPut = this.queuedPuts.remove(key);
+            if (removedPut != null) {
+                return removedPut;
+            }
+            return present;
         } else {
             return this.sections.remove(key);
         }
