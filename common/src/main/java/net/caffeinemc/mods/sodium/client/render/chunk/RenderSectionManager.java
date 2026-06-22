@@ -54,6 +54,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class RenderSectionManager {
     private static final float NEARBY_REBUILD_DISTANCE = Mth.square(16.0f);
@@ -897,9 +898,18 @@ public class RenderSectionManager {
     }
 
     public void destroy() {
-        this.builder.shutdown(); // stop all the workers, and cancel any tasks
+        // stop all the workers and cancel any tasks
+        this.builder.shutdown();
 
+        // shutdown async task executor and wait for it to terminate
         this.asyncCullExecutor.shutdownNow();
+        try {
+            if (!this.asyncCullExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                throw new RuntimeException("Shutting down async culling task executor timed out");
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted while waiting for async culling task executor to shutdown", e);
+        }
 
         for (var result : this.collectChunkBuildResults()) {
             result.destroy(); // delete resources for any pending tasks (including those that were cancelled)
