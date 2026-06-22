@@ -37,6 +37,9 @@ public class QueuedSectionStorage implements SectionStorage {
             if (result == null) {
                 return this.queuedPuts.get(key);
             } else {
+                if (this.queuedRemovals.contains(key)) {
+                    return null;
+                }
                 return result;
             }
         } else {

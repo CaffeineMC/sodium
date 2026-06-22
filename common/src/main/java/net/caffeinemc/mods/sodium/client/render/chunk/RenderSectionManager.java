@@ -208,10 +208,10 @@ public class RenderSectionManager {
     }
 
     private void consumeCullTaskResults(boolean waitForCompletion) {
-        // end the safe read phase even if the pending task is null since it might have been canceled
-        this.renderSections.endSafeReadPhase();
-
         if (this.pendingTask == null) {
+            // end the safe read phase even if the pending task is null since it might have been canceled
+            this.renderSections.endSafeReadPhase();
+
             return;
         }
 
@@ -219,6 +219,8 @@ public class RenderSectionManager {
         if (!waitForCompletion && !this.pendingTask.isDone()) {
             return;
         }
+
+        this.renderSections.endSafeReadPhase();
 
         var result = this.pendingTask.getResult();
 
