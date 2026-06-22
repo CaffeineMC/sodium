@@ -8,19 +8,19 @@ import net.caffeinemc.mods.sodium.api.vertex.attributes.common.PositionAttribute
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.TextureAttribute;
 
 public final class GlyphVertex  {
-    public static final VertexFormat FORMAT = DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP;
+    public static final VertexFormat FORMAT = DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR;
 
     public static final int STRIDE = 28;
 
     private static final int OFFSET_POSITION = 0;
-    private static final int OFFSET_COLOR = 12;
-    private static final int OFFSET_TEXTURE = 16;
-    private static final int OFFSET_LIGHT = 24;
+    private static final int OFFSET_TEXTURE = 12;
+    private static final int OFFSET_LIGHTMAP = 20;
+    private static final int OFFSET_COLOR = 24;
 
     public static void put(long ptr, float x, float y, float z, int color, float u, float v, int light) {
         PositionAttribute.put(ptr + OFFSET_POSITION, x, y, z);
         ColorAttribute.set(ptr + OFFSET_COLOR, color);
         TextureAttribute.put(ptr + OFFSET_TEXTURE, u, v);
-        LightAttribute.set(ptr + OFFSET_LIGHT, light);
+        LightAttribute.set(ptr + OFFSET_LIGHTMAP, light);
     }
 }
