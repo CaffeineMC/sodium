@@ -1,8 +1,5 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
-import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
-import it.unimi.dsi.fastutil.longs.Long2ReferenceMaps;
-import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.*;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
@@ -21,6 +18,8 @@ import net.caffeinemc.mods.sodium.client.render.chunk.lists.*;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.*;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegionManager;
+import net.caffeinemc.mods.sodium.client.render.chunk.storage.QueuedSectionStorage;
+import net.caffeinemc.mods.sodium.client.render.chunk.storage.SectionStorage;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior.PriorityMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.*;
@@ -69,7 +68,7 @@ public class RenderSectionManager {
     private final RenderRegionManager regions;
     private final ClonedChunkSectionCache sectionCache;
 
-    private final Long2ReferenceMap<RenderSection> sectionByPosition = new Long2ReferenceOpenHashMap<>();
+    private final SectionStorage renderSections = new QueuedSectionStorage();
 
     private final ConcurrentLinkedDeque<ChunkJobResult<? extends BuilderTaskOutput>> buildResults = new ConcurrentLinkedDeque<>();
     private final JobDurationEstimator jobDurationEstimator = new JobDurationEstimator();
@@ -144,7 +143,7 @@ public class RenderSectionManager {
         this.sectionCache = new ClonedChunkSectionCache(this.level);
 
         this.renderLists = SortedRenderLists.empty();
-        this.occlusionCuller = new OcclusionCuller(Long2ReferenceMaps.unmodifiable(this.sectionByPosition), this.level);
+        this.occlusionCuller = new OcclusionCuller(this.renderSections, this.level);
 
         this.renderableSectionTree = new RemovableMultiForest(renderDistance);
 
@@ -209,6 +208,9 @@ public class RenderSectionManager {
     }
 
     private void consumeCullTaskResults(boolean waitForCompletion) {
+        // end the safe read phase even if the pending task is null since it might have been canceled
+        this.renderSections.endSafeReadPhase();
+
         if (this.pendingTask == null) {
             return;
         }
@@ -257,6 +259,7 @@ public class RenderSectionManager {
 
         var useOcclusionCulling = this.shouldUseOcclusionCulling(camera, spectator);
         this.pendingTask = new CullTask(viewport, searchDistanceRegular, searchDistanceLocal, this.frame, this.occlusionCuller, useOcclusionCulling, this.level);
+        this.renderSections.startSafeReadPhase();
         this.pendingTask.submitTo(this.asyncCullExecutor);
 
         // only clear the graph update if we actually scheduled a task. Otherwise, the currently running task might not pick up on the change and no additional task would have been scheduled.
@@ -309,7 +312,7 @@ public class RenderSectionManager {
 
     private void renderOutOfGraph(Viewport viewport, FogParameters fogParameters) {
         var searchDistance = this.getSearchDistance(fogParameters);
-        var visitor = new FallbackVisibleChunkCollector(viewport, searchDistance, this.frame, this.sectionByPosition, this.regions, this.level);
+        var visitor = new FallbackVisibleChunkCollector(viewport, searchDistance, this.frame, this.renderSections, this.regions, this.level);
 
         this.renderableSectionTree.prepareForTraversal();
         this.renderableSectionTree.traverse(visitor, viewport, searchDistance);
@@ -323,7 +326,9 @@ public class RenderSectionManager {
 
     private boolean isOutOfGraph(SectionPos pos) {
         var sectionY = pos.getY();
-        return this.level.getMinSectionY() <= sectionY && sectionY <= this.level.getMaxSectionY() && !this.sectionByPosition.containsKey(pos.asLong());
+        return this.level.getMinSectionY() <= sectionY &&
+                sectionY <= this.level.getMaxSectionY() &&
+                !this.renderSections.hasSectionConsistent(pos.asLong());
     }
 
     public void markGraphDirty() {
@@ -383,7 +388,7 @@ public class RenderSectionManager {
     public void onSectionAdded(int x, int y, int z) {
         long key = SectionPos.asLong(x, y, z);
 
-        if (this.sectionByPosition.containsKey(key)) {
+        if (this.renderSections.hasSectionConsistent(key)) {
             return;
         }
 
@@ -392,7 +397,7 @@ public class RenderSectionManager {
         RenderSection renderSection = new RenderSection(region, x, y, z);
         region.addSection(renderSection);
 
-        this.sectionByPosition.put(key, renderSection);
+        this.renderSections.queuePut(key, renderSection);
 
         ChunkAccess chunk = this.level.getChunk(x, z);
         LevelChunkSection section = chunk.getSections()[this.level.getSectionIndexFromSectionY(y)];
@@ -412,7 +417,7 @@ public class RenderSectionManager {
 
     public void onSectionRemoved(int x, int y, int z) {
         long sectionPos = SectionPos.asLong(x, y, z);
-        RenderSection section = this.sectionByPosition.remove(sectionPos);
+        RenderSection section = this.renderSections.queueRemove(sectionPos);
 
         if (section == null) {
             return;
@@ -467,8 +472,7 @@ public class RenderSectionManager {
     }
 
     private boolean isSectionEmpty(int x, int y, int z) {
-        long key = SectionPos.asLong(x, y, z);
-        RenderSection section = this.sectionByPosition.get(key);
+        RenderSection section = this.renderSections.getCurrent(x, y, z);
 
         if (section == null) {
             return true;
@@ -764,7 +768,7 @@ public class RenderSectionManager {
         }
 
         while (!this.taskLists.isEmpty() && collector.hasBudgetRemaining() && uploadBudget.isAvailable()) {
-            var section = this.sectionByPosition.get(this.taskLists.dequeueNextSectionPos());
+            var section = this.renderSections.getConsistent(this.taskLists.dequeueNextSectionPos());
             if (section != null) {
                 submitSectionTask(collector, section, uploadBudget);
             }
@@ -898,9 +902,7 @@ public class RenderSectionManager {
             result.destroy(); // delete resources for any pending tasks (including those that were cancelled)
         }
 
-        for (var section : this.sectionByPosition.values()) {
-            section.delete();
-        }
+        this.renderSections.deleteAll();
 
         this.sectionsWithGlobalEntities.clear();
 
@@ -911,7 +913,7 @@ public class RenderSectionManager {
     }
 
     public int getTotalSections() {
-        return this.sectionByPosition.size();
+        return this.renderSections.size();
     }
 
     public int getVisibleChunkCount() {
@@ -951,7 +953,7 @@ public class RenderSectionManager {
     }
 
     public void scheduleSort(long sectionPos, boolean isDirectTrigger) {
-        RenderSection section = this.sectionByPosition.get(sectionPos);
+        RenderSection section = this.renderSections.getConsistent(sectionPos);
 
         if (section != null) {
             int pendingUpdate = ChunkUpdateTypes.SORT;
@@ -969,9 +971,10 @@ public class RenderSectionManager {
     public void scheduleRebuild(int x, int y, int z, boolean playerChanged) {
         RenderAsserts.validateCurrentThread();
 
-        this.sectionCache.invalidate(x, y, z);
+        var key = SectionPos.asLong(x, y, z);
+        this.sectionCache.invalidate(key);
 
-        RenderSection section = this.sectionByPosition.get(SectionPos.asLong(x, y, z));
+        RenderSection section = this.renderSections.getConsistent(key);
 
         if (section != null && section.isBuilt()) {
             int pendingUpdate;
@@ -1036,7 +1039,7 @@ public class RenderSectionManager {
     }
 
     private RenderSection getRenderSection(int x, int y, int z) {
-        return this.sectionByPosition.get(SectionPos.asLong(x, y, z));
+        return this.renderSections.getConsistent(SectionPos.asLong(x, y, z));
     }
 
     public Collection<String> getDebugStrings(boolean verbose) {
@@ -1116,7 +1119,11 @@ public class RenderSectionManager {
 
         var cullState = this.pendingTask == null ? "Idle" : this.pendingTask.isDone() ? "Done" : "Running";
         var cullDuration = this.averageCullDurationNanos == -1 ? "?" : String.format("%.1fms", this.averageCullDurationNanos / 1_000_000.0);
-        list.add(String.format("Async Culling: %s (avg %s)", cullState, cullDuration));
+        if (verbose) {
+            list.add(String.format("%s AC: %s (avg %s)", this.renderSections.getDebugInfo(), cullState, cullDuration));
+        } else {
+            list.add(String.format("Async Culling: %s (avg %s)", cullState, cullDuration));
+        }
 
         return list;
     }

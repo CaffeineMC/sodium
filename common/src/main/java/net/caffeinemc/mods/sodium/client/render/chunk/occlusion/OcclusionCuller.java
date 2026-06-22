@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.occlusion;
 
-import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
+import net.caffeinemc.mods.sodium.client.render.chunk.storage.SectionStorage;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.util.collections.DoubleBufferedQueue;
@@ -19,7 +19,7 @@ import net.minecraft.world.level.Level;
  * Not wide visible implies not regular visible implies not frustum visible.
  */
 public class OcclusionCuller {
-    private final Long2ReferenceMap<RenderSection> sections;
+    private final SectionStorage sections;
     private final Level level;
     private final DoubleBufferedQueue<RenderSection> queue = new DoubleBufferedQueue<>();
 
@@ -204,7 +204,7 @@ public class OcclusionCuller {
     }
 
 
-    public OcclusionCuller(Long2ReferenceMap<RenderSection> sections, Level level) {
+    public OcclusionCuller(SectionStorage sections, Level level) {
         this.sections = sections;
         this.level = level;
     }
@@ -246,7 +246,7 @@ public class OcclusionCuller {
             }
         }
 
-        if (this.getRenderSection(this.origin) == null) {
+        if (this.sections.getCurrent(this.origin) == null) {
             // origin outside of world
             this.inBoundsOrigin = null;
         }
@@ -506,7 +506,7 @@ public class OcclusionCuller {
                         continue;
                     }
 
-                    var section = this.getRenderSection(originX + dx, originY + dy, originZ + dz);
+                    var section = this.sections.getCurrent(originX + dx, originY + dy, originZ + dz);
 
                     // additionally render not yet visited but visible sections
                     if (section != null && section.getSearchToken() != this.token && isWithinNearbySectionFrustum(viewport, section)) {
@@ -538,7 +538,7 @@ public class OcclusionCuller {
     }
 
     private void initWithinWorld(WriteQueue<RenderSection> queue) {
-        var originSection = this.getRenderSection(this.origin.getX(), this.origin.getY(), this.origin.getZ());
+        var originSection = this.sections.getCurrent(this.origin);
 
         if (originSection == null) {
             return;
@@ -639,20 +639,12 @@ public class OcclusionCuller {
     }
 
     private void tryInitNode(WriteQueue<RenderSection> queue, int x, int y, int z, int direction) {
-        var section = this.getRenderSection(x, y, z);
+        var section = this.sections.getCurrent(x, y, z);
 
         if (section == null) {
             return;
         }
 
         this.visitNode(queue, section, direction, true, true, true);
-    }
-
-    private RenderSection getRenderSection(int x, int y, int z) {
-        return this.sections.get(SectionPos.asLong(x, y, z));
-    }
-
-    private RenderSection getRenderSection(SectionPos pos) {
-        return this.sections.get(pos.asLong());
     }
 }
