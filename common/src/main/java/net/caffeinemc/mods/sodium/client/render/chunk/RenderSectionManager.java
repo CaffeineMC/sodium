@@ -179,6 +179,9 @@ public class RenderSectionManager {
         // cancel task if not in progress
         if (this.pendingTask != null && this.pendingTask.cancelIfNotStarted()) {
             this.pendingTask = null;
+
+            // end the safe read phase on cancellation
+            this.renderSections.endSafeReadPhase();
         }
 
         // consume the results of completed tasks
@@ -209,9 +212,6 @@ public class RenderSectionManager {
 
     private void consumeCullTaskResults(boolean waitForCompletion) {
         if (this.pendingTask == null) {
-            // end the safe read phase even if the pending task is null since it might have been canceled
-            this.renderSections.endSafeReadPhase();
-
             return;
         }
 
@@ -219,8 +219,6 @@ public class RenderSectionManager {
         if (!waitForCompletion && !this.pendingTask.isDone()) {
             return;
         }
-
-        this.renderSections.endSafeReadPhase();
 
         var result = this.pendingTask.getResult();
 
@@ -242,6 +240,9 @@ public class RenderSectionManager {
 
         this.invalidateRenderLists();
         this.pendingTask = null;
+
+        // exit safe read phase of the section storage
+        this.renderSections.endSafeReadPhase();
     }
 
     private static Thread makeAsyncCullThread(Runnable runnable) {
