@@ -3,7 +3,8 @@ package net.caffeinemc.mods.sodium.client.render.chunk.region;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.caffeinemc.mods.sodium.client.gl.arena.GlBufferArena;
 import net.caffeinemc.mods.sodium.client.gl.arena.staging.StagingBuffer;
-import net.caffeinemc.mods.sodium.client.gl.buffer.*;
+import net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer;
+import net.caffeinemc.mods.sodium.client.gl.buffer.GlBufferStreamer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.MultiDrawBatch;
 import net.caffeinemc.mods.sodium.client.gl.tessellation.GlTessellation;
@@ -250,6 +251,7 @@ public class RenderRegion {
         if (this.resources != null && this.resources.shouldDelete()) {
             this.resources.delete(commandList);
             this.resources = null;
+            this.clearAllCachedBatches();
         }
     }
 
