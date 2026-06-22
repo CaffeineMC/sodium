@@ -180,7 +180,7 @@ public class RenderSectionManager {
         if (this.pendingTask != null && this.pendingTask.cancelIfNotStarted()) {
             this.pendingTask = null;
 
-            // end the safe read phase on cancellation
+            // end the safe read phase on task cancellation
             this.renderSections.endSafeReadPhase();
         }
 
@@ -241,7 +241,7 @@ public class RenderSectionManager {
         this.invalidateRenderLists();
         this.pendingTask = null;
 
-        // exit safe read phase of the section storage
+        // end the safe read phase on task completion
         this.renderSections.endSafeReadPhase();
     }
 
