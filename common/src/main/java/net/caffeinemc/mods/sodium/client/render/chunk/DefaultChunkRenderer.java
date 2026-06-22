@@ -82,6 +82,12 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                 continue;
             }
 
+            var resources = region.getResources();
+            if (resources == null) {
+                region.clearCachedBatchFor(renderPass);
+                continue;
+            }
+
             var batch = region.getCachedBatch(renderPass);
             if (!batch.isFilled) {
                 fillCommandBuffer(batch, region, storage, renderList, camera, renderPass, useBlockFaceCulling, useIndexedTessellation);
@@ -134,6 +140,11 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                     continue;
                 }
 
+                var resources = region.getResources();
+                if (resources == null) {
+                    continue;
+                }
+
                 var batch = region.getCachedBatch(renderPass);
                 if (batch.isEmpty()) {
                     continue;
@@ -141,10 +152,10 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
 
 
                 if (useIndexedTessellation) {
-                    pass.setIndexBuffer(region.getResources().getIndexBuffer(), IndexType.INT);
+                    pass.setIndexBuffer(resources.getIndexBuffer(), IndexType.INT);
                 }
 
-                pass.setVertexBuffer(0, region.getResources().getGeometryBuffer().slice());
+                pass.setVertexBuffer(0, resources.getGeometryBuffer().slice());
 
                 drawContext.updateData(region, camera);
 
