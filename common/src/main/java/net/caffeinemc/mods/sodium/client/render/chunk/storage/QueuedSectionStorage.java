@@ -32,28 +32,25 @@ public class QueuedSectionStorage implements SectionStorage {
 
     @Override
     public RenderSection getConsistent(long key) {
-        if (this.isQueueing) {
-            var result = this.sections.get(key);
-            if (result == null) {
-                return this.queuedPuts.get(key);
-            } else {
-                if (this.queuedRemovals.contains(key)) {
-                    return null;
-                }
-                return result;
-            }
-        } else {
+        if (!this.isQueueing) {
             return this.sections.get(key);
         }
+
+        var queuedPut = this.queuedPuts.get(key);
+        if (queuedPut != null) {
+            return queuedPut;
+        }
+
+        if (this.queuedRemovals.contains(key)) {
+            return null;
+        }
+
+        return this.sections.get(key);
     }
 
     @Override
     public boolean hasSectionConsistent(long key) {
-        if (this.isQueueing) {
-            return this.sections.containsKey(key) && !this.queuedRemovals.contains(key) || this.queuedPuts.containsKey(key);
-        } else {
-            return this.sections.containsKey(key);
-        }
+        return this.getConsistent(key) != null;
     }
 
     @Override
