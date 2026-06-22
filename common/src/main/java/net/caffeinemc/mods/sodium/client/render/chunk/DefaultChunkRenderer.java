@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
 import com.mojang.blaze3d.textures.GpuSampler;
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
@@ -24,7 +25,6 @@ import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.util.BitwiseMath;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.client.util.UInt32;
-import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.lwjgl.system.Pointer;
 
 import java.util.Iterator;
@@ -73,6 +73,12 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                 continue;
             }
 
+            var resources = region.getResources();
+            if (resources == null) {
+                region.clearCachedBatchFor(renderPass);
+                continue;
+            }
+
             var batch = region.getCachedBatch(renderPass);
             if (!batch.isFilled) {
                 fillCommandBuffer(batch, region, storage, renderList, camera, renderPass, useBlockFaceCulling, useIndexedTessellation);
@@ -91,12 +97,12 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
             GlTessellation tessellation;
 
             if (useIndexedTessellation) {
-                tessellation = this.prepareIndexedTessellation(commandList, region);
+                tessellation = this.prepareIndexedTessellation(commandList, resources);
             } else {
-                tessellation = this.prepareTessellation(commandList, region);
+                tessellation = this.prepareTessellation(commandList, resources);
             }
 
-            setModelMatrixUniforms(shader, region, camera, region.getResources().prepareChunkData(commandList));
+            setModelMatrixUniforms(shader, region, camera, resources.prepareChunkData(commandList));
             executeDrawBatch(commandList, tessellation, batch);
         }
 
@@ -320,9 +326,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         return (chunkBlockPos - cameraBlockPos) - cameraPos;
     }
 
-    private GlTessellation prepareTessellation(CommandList commandList, RenderRegion region) {
-        var resources = region.getResources();
-
+    private GlTessellation prepareTessellation(CommandList commandList, RenderRegion.DeviceResources resources) {
         GlTessellation tessellation = resources.getTessellation();
         if (tessellation == null) {
             tessellation = this.createRegionTessellation(commandList, resources, true);
@@ -332,9 +336,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         return tessellation;
     }
 
-    private GlTessellation prepareIndexedTessellation(CommandList commandList, RenderRegion region) {
-        var resources = region.getResources();
-
+    private GlTessellation prepareIndexedTessellation(CommandList commandList, RenderRegion.DeviceResources resources) {
         GlTessellation tessellation = resources.getIndexedTessellation();
         if (tessellation == null) {
             tessellation = this.createRegionTessellation(commandList, resources, false);
