@@ -73,8 +73,8 @@ public class DynamicTopoData extends DynamicData {
     }
 
     @Override
-    public DynamicSorter getSorter() {
-        return new DynamicTopoSorter(this.getInputQuadCount(), this.pendingTriggerIsDirect, this.consecutiveTopoSortFailures, this.GFNITrigger, this.directTrigger);
+    public DynamicSorter getSorter(boolean initial) {
+        return new DynamicTopoSorter(this.getInputQuadCount(), this.pendingTriggerIsDirect, initial, this.consecutiveTopoSortFailures, this.GFNITrigger, this.directTrigger, this.quads, this.centroids, this.distancesByNormal);
     }
 
     public boolean GFNITriggerEnabled() {
@@ -96,7 +96,12 @@ public class DynamicTopoData extends DynamicData {
     public boolean checkAndApplyGFNITriggerOff(DynamicTopoSorter sorter) {
         if (this.GFNITrigger && !sorter.GFNITrigger) {
             this.GFNITrigger = false;
-            this.checkDirectSortingFallback();
+
+            // once the GFNI trigger is turned off, the topo sort data is never used again, so it can be freed to save memory.
+            this.computeCentroids(this.quads);
+            this.quads = null;
+            this.distancesByNormal = null;
+
             return true;
         }
         return false;
@@ -126,24 +131,6 @@ public class DynamicTopoData extends DynamicData {
         }
     }
 
-    private void copyStateFrom(DynamicTopoSorter sorter) {
-        this.GFNITrigger = sorter.GFNITrigger;
-        this.directTrigger = sorter.directTrigger;
-        this.consecutiveTopoSortFailures = sorter.consecutiveTopoSortFailuresNew;
-
-        this.checkDirectSortingFallback();
-    }
-
-    private void checkDirectSortingFallback() {
-        // once the GFNI trigger is turned off, the topo sort data is never used again, so it can be freed to save memory.
-        if (!this.GFNITrigger && this.quads != null) {
-            this.computeCentroids(this.quads);
-
-            this.quads = null;
-            this.distancesByNormal = null;
-        }
-    }
-
     @Override
     public void prepareTrigger(boolean isDirectTrigger) {
         this.pendingTriggerIsDirect = isDirectTrigger;
@@ -151,6 +138,7 @@ public class DynamicTopoData extends DynamicData {
 
     public class DynamicTopoSorter extends DynamicSorter implements IntConsumer {
         private final boolean isDirectTrigger;
+        private final boolean initial;
         private final int consecutiveTopoSortFailures;
 
         private boolean directTrigger;
@@ -159,13 +147,22 @@ public class DynamicTopoData extends DynamicData {
 
         private IntBuffer intBuffer;
 
-        private DynamicTopoSorter(int quadCount, boolean isDirectTrigger, int consecutiveTopoSortFailures, boolean GFNITrigger, boolean directTrigger) {
+        private final TQuad[] quads;
+        private final Vector3fc[] centroids;
+        private final Object2ReferenceMap<Vector3fc, float[]> distancesByNormal;
+
+        private DynamicTopoSorter(int quadCount, boolean isDirectTrigger, boolean initial, int consecutiveTopoSortFailures, boolean GFNITrigger, boolean directTrigger, TQuad[] quads, Vector3fc[] centroids, Object2ReferenceMap<Vector3fc, float[]> distancesByNormal) {
             super(quadCount, DynamicTopoData.this);
             this.isDirectTrigger = isDirectTrigger;
+            this.initial = initial;
             this.consecutiveTopoSortFailures = consecutiveTopoSortFailures;
             this.consecutiveTopoSortFailuresNew = consecutiveTopoSortFailures;
             this.GFNITrigger = GFNITrigger;
             this.directTrigger = directTrigger;
+
+            this.quads = quads;
+            this.centroids = centroids;
+            this.distancesByNormal = distancesByNormal;
         }
 
         private static int getAttemptsForTime(long ns) {
@@ -186,23 +183,23 @@ public class DynamicTopoData extends DynamicData {
         }
 
         @Override
-        void writeSort(CombinedCameraPos cameraPos, boolean initial) {
+        void writeSort(CombinedCameraPos cameraPos) {
             // uses a topo sort or a distance sort depending on what is enabled
             IntBuffer indexBuffer = this.getIntBuffer();
 
             if (this.GFNITrigger && !this.isDirectTrigger) {
                 this.intBuffer = indexBuffer;
-                var sortStart = initial ? 0 : System.nanoTime();
-                var result = TopoGraphSorting.topoGraphSort(this, DynamicTopoData.this.quads, DynamicTopoData.this.distancesByNormal, cameraPos.getRelativeCameraPos(), false);
+                var sortStart = this.initial ? 0 : System.nanoTime();
+                var result = TopoGraphSorting.topoGraphSort(this, this.quads, this.distancesByNormal, cameraPos.getRelativeCameraPos(), false);
                 this.intBuffer = null;
 
-                var sortTime = initial ? 0 : System.nanoTime() - sortStart;
+                var sortTime = this.initial ? 0 : System.nanoTime() - sortStart;
 
                 // if we've already failed, there's reduced patience for sorting since the
                 // probability of failure and wasted compute time is higher. Initial sorting is
-                // often very slow when the cpu is loaded and the JIT isn't ready yet, so it's
+                // often very slow when the cpu is loaded, and the JIT isn't ready yet, so it's
                 // ignored here.
-                if (!initial && sortTime > (this.consecutiveTopoSortFailuresNew > 0
+                if (!this.initial && sortTime > (this.consecutiveTopoSortFailuresNew > 0
                         ? MAX_FAILING_TOPO_SORT_TIME_NS
                         : MAX_TOPO_SORT_TIME_NS)) {
                     this.directTrigger = true;
@@ -227,11 +224,7 @@ public class DynamicTopoData extends DynamicData {
 
             if (this.directTrigger) {
                 indexBuffer.rewind();
-                distanceSortDirect(indexBuffer, DynamicTopoData.this.centroids, DynamicTopoData.this.quads, cameraPos.getRelativeCameraPos());
-            }
-
-            if (initial) {
-                DynamicTopoData.this.copyStateFrom(this);
+                distanceSortDirect(indexBuffer, this.centroids, this.quads, cameraPos.getRelativeCameraPos());
             }
         }
     }

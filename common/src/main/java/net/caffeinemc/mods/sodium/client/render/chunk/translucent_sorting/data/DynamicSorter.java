@@ -9,12 +9,12 @@ public abstract class DynamicSorter extends PresentSorter {
         this.sourceData = sourceData;
     }
 
-    abstract void writeSort(CombinedCameraPos cameraPos, boolean initial);
+    abstract void writeSort(CombinedCameraPos cameraPos);
 
     @Override
-    public void writeIndexBuffer(CombinedCameraPos cameraPos, boolean initial) {
+    public void writeIndexBuffer(CombinedCameraPos cameraPos) {
         this.initBufferWithQuadLength(this.quadCount);
-        this.writeSort(cameraPos, initial);
+        this.writeSort(cameraPos);
     }
 
     public int getQuadCount() {

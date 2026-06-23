@@ -20,7 +20,7 @@ public abstract class DynamicData extends PresentTranslucentData {
         return SortType.DYNAMIC;
     }
 
-    public abstract DynamicSorter getSorter();
+    public abstract DynamicSorter getSorter(boolean initial);
 
     public GeometryPlanes getGeometryPlanes() {
         return this.geometryPlanes;

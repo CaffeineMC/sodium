@@ -16,7 +16,7 @@ public record SharedIndexSorter(int quadCount) implements Sorter {
     }
 
     @Override
-    public void writeIndexBuffer(CombinedCameraPos cameraPos, boolean initial) {
+    public void writeIndexBuffer(CombinedCameraPos cameraPos) {
         // no-op
     }
 

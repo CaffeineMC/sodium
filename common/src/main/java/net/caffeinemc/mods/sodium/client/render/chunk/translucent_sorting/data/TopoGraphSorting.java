@@ -258,6 +258,10 @@ public class TopoGraphSorting {
             IntConsumer indexConsumer, TQuad[] allQuads,
             Object2ReferenceMap<Vector3fc, float[]> distancesByNormal,
             Vector3fc cameraPos, boolean failOnIntersection) {
+        if (allQuads == null) {
+            var debug = true;
+        }
+
         // if enabled, check for visibility and produce a mapping of indices
         TQuad[] quads;
         int[] activeToRealIndex = null;

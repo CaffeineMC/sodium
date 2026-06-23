@@ -26,7 +26,7 @@ public class StaticNormalRelativeData extends PresentTranslucentData {
     }
 
     @Override
-    public Sorter getSorter() {
+    public Sorter getSorter(boolean initial) {
         var sorter = this.sorterOnce;
         if (sorter == null) {
             throw new IllegalStateException("Sorter already used!");
