@@ -63,7 +63,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                        CameraTransform camera,
                        FogParameters parameters,
                        boolean indexedRenderingEnabled,
-                       GpuSampler terrainSampler, GpuBuffer uniformData, GpuBuffer sectionTimeInfo) {
+                       GpuSampler terrainSampler, GpuBufferSlice uniformData, GpuBuffer sectionTimeInfo) {
         super.begin(renderPass, parameters, terrainSampler);
 
         final boolean useBlockFaceCulling = SodiumClientMod.options().performance.useBlockFaceCulling;
