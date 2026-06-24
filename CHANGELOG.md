@@ -4,7 +4,7 @@
 Everything above the line is ignored and not included in the changelog. Everything below will be in the
 changelog on GitHub, Modrinth and CurseForge.
 ----------
-Sodium [SodiumVersion]() for Minecraft [MCVersion]() introduces asynchronous occlusion culling alongside some other small improvements and bug fixes.
+Sodium [SodiumVersion]() for Minecraft [MCVersion]() introduces asynchronous occlusion culling alongside other small improvements and fixes for crashes to improve stability.
 
 This generally improves performance and avoids the frame rate dropping when the camera is moved, especially at high render distances. This feature has been in the works for a long time now, and together with the release for Minecraft 26.2, we've decided to release it. More work is planned, including improvements to the task scheduling system and optimizations to improve responsiveness.
 
@@ -16,3 +16,6 @@ This generally improves performance and avoids the frame rate dropping when the 
 - Fix water color handling
 - Fix broken block tinting by not incorrectly converting to the wrong color format
 - Fix fluid color overrides not being applied ([#3729](https://github.com/CaffeineMC/sodium/pull/3729))
+- Fix crash "getResources is null" ([#3752](https://github.com/CaffeineMC/sodium/pull/3752))
+- Fix crash "centroid is null," "allQuads is null," and "geometryPlanes is null" ([#3757](https://github.com/CaffeineMC/sodium/pull/3757))
+- Fix crashes resulting from unsafe concurrency in async culling "ArrayIndexOutOfBoundsException" ([#3756](https://github.com/CaffeineMC/sodium/pull/3756))
