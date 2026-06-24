@@ -1,8 +1,8 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.quad.TQuad;
 import net.minecraft.core.SectionPos;
 
 /**
@@ -17,7 +17,7 @@ public abstract class PresentTranslucentData extends TranslucentData {
         this.inputQuadCount = inputQuadCount;
     }
 
-    public abstract Sorter getSorter();
+    public abstract Sorter getSorter(boolean initial);
 
     @Override
     public boolean oldDataMatches(TranslucentGeometryCollector collector, SortType sortType, TQuad[] quads) {

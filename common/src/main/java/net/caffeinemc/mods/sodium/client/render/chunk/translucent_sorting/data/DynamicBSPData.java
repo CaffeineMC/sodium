@@ -41,11 +41,11 @@ public class DynamicBSPData extends DynamicData {
 
     private class DynamicBSPSorter extends DynamicSorter {
         private DynamicBSPSorter(int quadCount) {
-            super(quadCount, DynamicBSPData.this);
+            super(quadCount, DynamicBSPData.this, DynamicBSPData.this.geometryPlanes);
         }
 
         @Override
-        void writeSort(CombinedCameraPos cameraPos, boolean initial) {
+        void writeSort(CombinedCameraPos cameraPos) {
             DynamicBSPData.this.rootNode.collectSortedQuads(this.getIndexBuffer(), cameraPos.getRelativeCameraPos());
         }
     }
@@ -62,7 +62,7 @@ public class DynamicBSPData extends DynamicData {
     }
 
     @Override
-    public DynamicSorter getSorter() {
+    public DynamicSorter getSorter(boolean initial) {
         // release references to the modified quad list,
         // since we sort during the meshing task for the first time (in particular, when there was a non-null updated quad list)
         this.updatedQuadsList = null;

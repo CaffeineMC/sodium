@@ -237,8 +237,8 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
                 output.markAsNotContainingNewIndexData();
             } else if (translucentData instanceof PresentTranslucentData present) {
                 try {
-                    var sorter = present.getSorter();
-                    sorter.writeIndexBuffer(this, true);
+                    var sorter = present.getSorter(true);
+                    sorter.writeIndexBuffer(this);
                     output.setSorter(sorter);
                 } catch (Exception ex) {
                     // Create a new crash report for exceptions thrown during sorting

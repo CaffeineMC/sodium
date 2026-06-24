@@ -4,9 +4,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicData;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicTopoData;
-import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.*;
 import net.minecraft.core.SectionPos;
 import org.joml.Vector3dc;
 import org.joml.Vector3fc;
@@ -21,7 +19,7 @@ import java.util.function.BiConsumer;
  * <p>
  * TODO:
  * - investigate why there's a similar number of STA and DYN sections. This might be normal, the counters might be broken or the heuristic is actually wrong.
- * 
+ *
  * @author douira (the translucent_sorting package)
  */
 public class SortTriggering {
@@ -63,13 +61,11 @@ public class SortTriggering {
         void processTriggers(SortTriggering ts, CameraMovement movement);
 
         void removeSection(long sectionPos, TranslucentData data);
-
-        void integrateSection(SortTriggering ts, SectionPos sectionPos, T data, CameraMovement movement);
     }
 
     /**
      * Triggers the sections that the given camera movement crosses face planes of.
-     * 
+     *
      * @param triggerSectionCallback called for each section that is triggered
      * @param movement               the camera movement to trigger for
      */
@@ -165,7 +161,7 @@ public class SortTriggering {
     /**
      * Removes a section from direct and GFNI triggering. This removes all its face
      * planes.
-     * 
+     *
      * @param oldData    the data of the section to remove
      * @param sectionPos the section to remove
      */
@@ -179,12 +175,9 @@ public class SortTriggering {
     }
 
     /**
-     * Integrates the data from a geometry collector into GFNI. The geometry
-     * collector contains the translucent face planes of a single section. This
-     * method may also remove the section if it has become irrelevant.
+     * Integrates the data from a geometry collector into GFNI or direct triggering.
      */
-    public void integrateTranslucentData(TranslucentData oldData, TranslucentData newData, Vector3dc cameraPos,
-                                         BiConsumer<Long, Boolean> triggerSectionCallback) {
+    public void integrateTranslucentData(TranslucentData oldData, TranslucentData newData, Sorter sorter, Vector3dc cameraPos, BiConsumer<Long, Boolean> triggerSectionCallback) {
         if (oldData == newData) {
             return;
         }
@@ -200,20 +193,22 @@ public class SortTriggering {
             this.catchupData = dynamicData;
             var movement = new CameraMovement(dynamicData.getInitialCameraPos(), cameraPos);
 
+            // retrieve the geometry planes for integrating this section from the sorter that was used.
+            /* This ensures that even if we delete the geometry planes from the data itself, any sorters that still have reference to it are able to re-integrate the dynamic TS data. The scenario is that when there are two racing meshing tasks, of which the second one can reuse the original data but the first one makes new data. The first one makes it so the old and new data are different, and then the second one re-uses the previous old data, which is still available because they were dispatched at the same time and before the first task was completed to update the TS data on the RS. This means that the old and new data are different, so that integration is necessary, but the new data was already integrated two results ago. The solution is that we store the geometry planes necessary for integration on the sorter, since it can hold a reference to them even if they get cleared from the TS data after it's been integrated.*/
+            var geometryPlanes = ((DynamicSorter) sorter).getGeometryPlanes();
+
             if (dynamicData instanceof DynamicTopoData topoSortData) {
                 if (topoSortData.GFNITriggerEnabled()) {
-                    this.gfni.integrateSection(this, pos, topoSortData, movement);
-                } else {
-                    // remove the trigger data since this section is never going to get gfni
-                    // triggering (there's no option to add sections to GFNI later currently)
-                    topoSortData.discardGeometryPlanes();
+                    this.gfni.integrateSection(this, pos, geometryPlanes, movement);
                 }
                 if (topoSortData.directTriggerEnabled()) {
                     this.direct.integrateSection(this, pos, topoSortData, movement);
                 }
             } else {
-                this.gfni.integrateSection(this, pos, dynamicData, movement);
+                this.gfni.integrateSection(this, pos, geometryPlanes, movement);
             }
+
+            dynamicData.discardGeometryPlanesAfterIntegration();
 
             this.triggerSectionCallback = null;
             this.catchupData = null;

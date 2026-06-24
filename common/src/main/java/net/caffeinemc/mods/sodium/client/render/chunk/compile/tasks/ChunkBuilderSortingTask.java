@@ -28,7 +28,7 @@ public class ChunkBuilderSortingTask extends ChunkBuilderTask<ChunkSortOutput> {
         ProfilerFiller profiler = Profiler.get();
         profiler.push("translucency sorting");
 
-        this.sorter.writeIndexBuffer(this, false);
+        this.sorter.writeIndexBuffer(this);
 
         profiler.pop();
         return new ChunkSortOutput(this.section, this.submitTime, this.sorter);
@@ -36,7 +36,7 @@ public class ChunkBuilderSortingTask extends ChunkBuilderTask<ChunkSortOutput> {
 
     public static ChunkBuilderSortingTask createTask(RenderSection render, int frame, Vector3dc absoluteCameraPos) {
         if (render.getTranslucentData() instanceof DynamicData dynamicData) {
-            return new ChunkBuilderSortingTask(render, frame, absoluteCameraPos, dynamicData.getSorter());
+            return new ChunkBuilderSortingTask(render, frame, absoluteCameraPos, dynamicData.getSorter(false));
         }
         return null;
     }

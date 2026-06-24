@@ -211,7 +211,6 @@ class DirectTriggers implements SectionTriggers<DynamicTopoData> {
         }
     }
 
-    @Override
     public void integrateSection(SortTriggering ts, SectionPos sectionPos, DynamicTopoData data,
             CameraMovement movement) {
         // create data with last camera position
