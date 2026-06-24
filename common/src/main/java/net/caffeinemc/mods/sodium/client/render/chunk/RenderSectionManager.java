@@ -176,7 +176,7 @@ public class RenderSectionManager {
         this.chunkRenderer.rotate();
     }
 
-    public void prepareRenderTrees(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
+    public void prepareRenderTrees(Viewport viewport, FogParameters fogParameters, boolean useOcclusionCulling) {
         // cancel task if not in progress
         if (this.pendingTask != null && this.pendingTask.cancelIfNotStarted()) {
             this.pendingTask = null;
@@ -195,7 +195,7 @@ public class RenderSectionManager {
 
         // if the origin exists in the graph, schedule new async culling task
         if (!this.isOutOfGraph(viewport.getChunkCoord()) && (this.cameraChanged || this.needsGraphUpdate)) {
-            this.scheduleAsyncWork(camera, viewport, fogParameters, spectator);
+            this.scheduleAsyncWork(viewport, fogParameters, useOcclusionCulling);
         }
     }
 
@@ -252,7 +252,7 @@ public class RenderSectionManager {
         return thread;
     }
 
-    private void scheduleAsyncWork(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
+    private void scheduleAsyncWork(Viewport viewport, FogParameters fogParameters, boolean useOcclusionCulling) {
         if (this.pendingTask != null) {
             return;
         }
@@ -261,7 +261,6 @@ public class RenderSectionManager {
         var searchDistanceRegular = this.getSearchDistanceForCullType(CullType.REGULAR, fogParameters);
         var searchDistanceLocal = this.getSearchDistanceForCullType(CullType.LOCAL, fogParameters);
 
-        var useOcclusionCulling = this.shouldUseOcclusionCulling(camera, spectator);
         this.pendingTask = new CullTask(viewport, searchDistanceRegular, searchDistanceLocal, this.frame, this.occlusionCuller, useOcclusionCulling, this.level);
         this.renderSections.startSafeReadPhase();
         this.pendingTask.submitTo(this.asyncCullExecutor);

@@ -181,7 +181,7 @@ public class SodiumWorldRenderer {
     public void setupTerrain(Camera camera,
                              Viewport viewport,
                              FogParameters fogParameters,
-                             boolean spectator,
+                             boolean useOcclusionCulling,
                              boolean updateChunksImmediately,
                              Matrix4f cullMatrix) {
         NativeBuffer.reclaim(false);
@@ -247,7 +247,7 @@ public class SodiumWorldRenderer {
 
             profiler.popPush("chunk_render_lists");
 
-            this.renderSectionManager.prepareRenderTrees(camera, viewport, fogParameters, spectator);
+            this.renderSectionManager.prepareRenderTrees(viewport, fogParameters, useOcclusionCulling);
 
             profiler.popPush("chunk_update");
 

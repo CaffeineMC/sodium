@@ -32,6 +32,10 @@ public class LevelExtractorMixin {
     @Shadow
     private @Nullable ClientLevel level;
 
+    @Shadow
+    @Final
+    private LevelRenderState levelRenderState;
+
     @Unique
     private SodiumWorldRenderer renderer;
 
@@ -127,7 +131,8 @@ public class LevelExtractorMixin {
         var viewport = ((ViewportProvider) frustum).sodium$createViewport();
         var updateChunksImmediately = FlawlessFrames.isActive();
 
-        this.renderer.setupTerrain(camera, viewport, ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters(), Minecraft.getInstance().player != null && Minecraft.getInstance().player.isSpectator(), updateChunksImmediately, ((FrustumAccessor) frustum).sodium$getMatrix());
+        boolean useOcclusionCulling = this.levelRenderState.cameraRenderState.smartCull;
+        this.renderer.setupTerrain(camera, viewport, ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters(), useOcclusionCulling, updateChunksImmediately, ((FrustumAccessor) frustum).sodium$getMatrix());
     }
 
     @Redirect(method = "extract", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/extract/LevelExtractor;applyFrustum(Lnet/minecraft/client/renderer/culling/Frustum;)V"))
