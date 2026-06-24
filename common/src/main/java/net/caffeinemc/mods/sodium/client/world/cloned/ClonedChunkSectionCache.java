@@ -1,14 +1,14 @@
 package net.caffeinemc.mods.sodium.client.world.cloned;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceLinkedOpenHashMap;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
-import java.util.concurrent.TimeUnit;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
+import java.util.concurrent.TimeUnit;
 
 public class ClonedChunkSectionCache {
     private static final int MAX_CACHE_SIZE = 512; /* number of entries */
@@ -68,8 +68,8 @@ public class ClonedChunkSectionCache {
         return new ClonedChunkSection(this.level, chunk, section, SectionPos.of(x, y, z));
     }
 
-    public void invalidate(int x, int y, int z) {
-        this.positionToEntry.remove(SectionPos.asLong(x, y, z));
+    public void invalidate(long key) {
+        this.positionToEntry.remove(key);
     }
 
     private static long getMonotonicTimeSource() {
