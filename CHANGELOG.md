@@ -41,3 +41,4 @@ Known incompatibilities at the time of this release:
 - Added checks to prevent crashes when using the vertex writing fast path ([#3716](https://github.com/CaffeineMC/sodium/pull/3716))
 - Only make environment changes if the early window will create a gl context early ([#3697](https://github.com/CaffeineMC/sodium/pull/3697))
 - Improve the presentation and wording of some video options ([#3700](https://github.com/CaffeineMC/sodium/pull/3700))
+- Fix crash "getResources is null" ([#3752](https://github.com/CaffeineMC/sodium/pull/3752))
