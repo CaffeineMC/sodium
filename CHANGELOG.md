@@ -11,3 +11,4 @@ Sodium [SodiumVersion]() fixes some bugs and improves the wording of some video 
 - Improve the presentation and wording of some video options ([#3700](https://github.com/CaffeineMC/sodium/pull/3700))
 - Fixes the fabric version of sodium overriding all fluid BlockTintSources while rendering ([#3729](https://github.com/CaffeineMC/sodium/pull/3729))
 - Fix block tinting by not incorrectly converting to the wrong color format
+- Fix crash "getResources is null" ([#3752](https://github.com/CaffeineMC/sodium/pull/3752))
