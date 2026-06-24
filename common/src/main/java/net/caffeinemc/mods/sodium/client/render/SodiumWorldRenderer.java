@@ -310,6 +310,12 @@ public class SodiumWorldRenderer {
         this.initRenderer();
     }
 
+    public void endFrame() {
+        if (this.uniformBufferManager != null) {
+            this.uniformBufferManager.endFrame();
+        }
+    }
+
     private void initRenderer() {
         this.deleteRendererState();
 

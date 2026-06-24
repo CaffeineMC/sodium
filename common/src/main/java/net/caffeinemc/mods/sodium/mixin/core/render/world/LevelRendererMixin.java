@@ -119,6 +119,11 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         this.renderer.scheduleTerrainUpdate();
     }
 
+    @Inject(method = "endFrame", at = @At("RETURN"))
+    private void sodium$endFrame(CallbackInfo ci) {
+        this.renderer.endFrame();
+    }
+
     /**
      * @reason Redirect to our renderer
      * @author IMS

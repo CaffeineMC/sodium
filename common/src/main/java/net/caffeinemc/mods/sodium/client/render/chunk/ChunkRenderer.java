@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.textures.GpuSampler;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.ChunkRenderListIterable;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
@@ -22,10 +23,10 @@ public interface ChunkRenderer {
      * @param parameters              The current fog state
      * @param indexedRenderingEnabled Whether indexed rendering is enabled
      * @param terrainSampler          The sampler to use for the atlas
-     * @param uniformData             The buffer containing the uniform data for this frame
+     * @param uniformData             The buffer slice containing the uniform data for this frame
      * @param sectionTimeInfo         The storage buffer containing fade timings
      */
-    void render(ChunkRenderMatrices matrices, ChunkRenderListIterable renderLists, TerrainRenderPass pass, CameraTransform camera, FogParameters parameters, boolean indexedRenderingEnabled, GpuSampler terrainSampler, GpuBuffer uniformData, GpuBuffer sectionTimeInfo);
+    void render(ChunkRenderMatrices matrices, ChunkRenderListIterable renderLists, TerrainRenderPass pass, CameraTransform camera, FogParameters parameters, boolean indexedRenderingEnabled, GpuSampler terrainSampler, GpuBufferSlice uniformData, GpuBuffer sectionTimeInfo);
 
     /**
      * Rotates the data for a new frame.
