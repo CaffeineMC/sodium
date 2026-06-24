@@ -6,7 +6,7 @@ import net.minecraft.core.SectionPos;
 import org.joml.Vector3dc;
 
 public abstract class DynamicData extends PresentTranslucentData {
-    private GeometryPlanes geometryPlanes;
+    protected GeometryPlanes geometryPlanes;
     private final Vector3dc initialCameraPos;
 
     DynamicData(SectionPos sectionPos, int inputQuadCount, GeometryPlanes geometryPlanes, Vector3dc initialCameraPos) {
@@ -20,13 +20,10 @@ public abstract class DynamicData extends PresentTranslucentData {
         return SortType.DYNAMIC;
     }
 
+    @Override
     public abstract DynamicSorter getSorter(boolean initial);
 
-    public GeometryPlanes getGeometryPlanes() {
-        return this.geometryPlanes;
-    }
-
-    public void discardGeometryPlanes() {
+    public void discardGeometryPlanesAfterIntegration() {
         this.geometryPlanes = null;
     }
 

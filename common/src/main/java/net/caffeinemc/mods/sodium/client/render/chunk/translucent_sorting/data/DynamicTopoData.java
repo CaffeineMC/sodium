@@ -152,7 +152,7 @@ public class DynamicTopoData extends DynamicData {
         private final Object2ReferenceMap<Vector3fc, float[]> distancesByNormal;
 
         private DynamicTopoSorter(int quadCount, boolean isDirectTrigger, boolean initial, int consecutiveTopoSortFailures, boolean GFNITrigger, boolean directTrigger, TQuad[] quads, Vector3fc[] centroids, Object2ReferenceMap<Vector3fc, float[]> distancesByNormal) {
-            super(quadCount, DynamicTopoData.this);
+            super(quadCount, DynamicTopoData.this, DynamicTopoData.this.geometryPlanes);
             this.isDirectTrigger = isDirectTrigger;
             this.initial = initial;
             this.consecutiveTopoSortFailures = consecutiveTopoSortFailures;

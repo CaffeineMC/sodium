@@ -59,10 +59,8 @@ class GFNITriggers implements SectionTriggers<DynamicData> {
         this.normalLists.values().removeIf(normalList -> this.removeSectionFromList(normalList, sectionPos));
     }
 
-    @Override
-    public void integrateSection(SortTriggering ts, SectionPos pos, DynamicData data, CameraMovement movement) {
-        long sectionPos = pos.asLong();
-        var geometryPlanes = data.getGeometryPlanes();
+    public void integrateSection(SortTriggering ts, SectionPos pos, GeometryPlanes geometryPlanes, CameraMovement movement) {
+        var sectionPos = pos.asLong();
 
         // go through all normal lists and check against the normals that the group
         // builder has. if the normal list has data for the section, but the group
@@ -104,8 +102,6 @@ class GFNITriggers implements SectionTriggers<DynamicData> {
                 this.addSectionInNewNormalLists(normalPlane);
             }
         }
-
-        data.discardGeometryPlanes();
 
         // check if catchup trigger is necessary
         if (movement.hasChanged()) {
