@@ -371,19 +371,6 @@ public class RenderSectionManager {
         return distance;
     }
 
-    private boolean shouldUseOcclusionCulling(Camera camera, boolean spectator) {
-        final boolean useOcclusionCulling;
-        BlockPos origin = camera.blockPosition();
-
-        if (spectator && this.level.getBlockState(origin)
-                .isSolidRender()) {
-            useOcclusionCulling = false;
-        } else {
-            useOcclusionCulling = Minecraft.getInstance().smartCull;
-        }
-        return useOcclusionCulling;
-    }
-
     public void beforeSectionUpdates() {
         this.renderableSectionTree.ensureCapacity(this.getRenderDistance());
     }
