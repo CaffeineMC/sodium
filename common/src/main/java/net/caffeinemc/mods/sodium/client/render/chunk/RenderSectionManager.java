@@ -483,7 +483,6 @@ public class RenderSectionManager {
             return;
         }
 
-        // processing build results can cause invalidation of the render lists or change the connectivity of the graph. They don't necessarily imply each other, so they're tracked separately.
         int changes = this.processChunkBuildResults(results, viewport, uniforms);
         if ((changes & SectionInfoChange.GRAPH) != 0) {
             this.markGraphDirty();
@@ -498,15 +497,26 @@ public class RenderSectionManager {
     }
 
     private boolean isSectionFrustumVisible(Viewport viewport, RenderSection section) {
-        // unloaded sections are considered visible as to not be an impossible requirement for immediate presentation
-        return section == null || this.renderTree == null || this.renderTree.isSectionVisible(viewport, section);
+        return section == null || this.renderTree.isSectionVisible(viewport, section);
     }
 
     private boolean isSectionImmediatePresentationCandidate(Viewport viewport, RenderSection section) {
         if (this.cameraPosition == null) {
             return false;
         }
-        var distanceSquared = section.getSquaredDistance(
+
+        if (this.renderTree == null) {
+            return true;
+        }
+
+        int camChunkX = (int) this.cameraPosition.x() >> 4;
+        int camChunkZ = (int) this.cameraPosition.z() >> 4;
+
+        if (Math.abs(section.getChunkX() - camChunkX) > 5 || Math.abs(section.getChunkZ() - camChunkZ) > 5) {
+            return false;
+        }
+
+        double distanceSquared = section.getSquaredDistance(
                 (float) this.cameraPosition.x(),
                 (float) this.cameraPosition.y(),
                 (float) this.cameraPosition.z()
@@ -517,7 +527,6 @@ public class RenderSectionManager {
         }
 
         return distanceSquared < IMMEDIATE_PRESENT_DISTANCE &&
-                // check that visible or adjacent to a visible section
                 (this.isSectionFrustumVisible(viewport, section)
                         || this.isSectionFrustumVisible(viewport, section.adjacentDown)
                         || this.isSectionFrustumVisible(viewport, section.adjacentUp)
@@ -526,6 +535,8 @@ public class RenderSectionManager {
                         || this.isSectionFrustumVisible(viewport, section.adjacentWest)
                         || this.isSectionFrustumVisible(viewport, section.adjacentEast));
     }
+
+
 
     private int processChunkBuildResults(ArrayList<BuilderTaskOutput> results, Viewport viewport, UniformBufferManager uniforms) {
         var sectionsWithOutputs = applyBuildOutputs(results);
