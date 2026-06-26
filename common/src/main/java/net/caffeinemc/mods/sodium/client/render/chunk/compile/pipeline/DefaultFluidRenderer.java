@@ -146,9 +146,10 @@ public class DefaultFluidRenderer {
      * @param selfBlockState The state of the block in the level
      * @param facing         The facing direction of the side to check
      * @param fluidShape     The shape of the fluid
+     * @param fluidHeight    The actual height of the fluid
      * @return True if the fluid side facing {@param facing} is self-visible, otherwise false
      */
-    private boolean isFluidSelfVisible(BlockState selfBlockState, Direction facing, VoxelShape fluidShape) {
+    private boolean isFluidSelfVisible(BlockState selfBlockState, Direction facing, VoxelShape fluidShape, float fluidHeight) {
         // only perform self-occlusion if the own block state can't occlude
         if (selfBlockState.canOcclude()) {
             var selfShape = selfBlockState.getFaceOcclusionShape(facing);
@@ -157,7 +158,7 @@ public class DefaultFluidRenderer {
             if (!ShapeComparisonCache.isEmptyShape(selfShape)) {
                 // a full self-shape occludes everything
                 if (ShapeComparisonCache.isFullShape(selfShape) && ShapeComparisonCache.isFullShape(fluidShape)) {
-                    return false;
+                    return facing == Direction.UP && fluidHeight < 1.0f;
                 }
 
                 // perform occlusion of the fluid by the block it's contained in
@@ -168,10 +169,14 @@ public class DefaultFluidRenderer {
         return true;
     }
 
-    private boolean isFullBlockFluidSelfVisible(BlockState blockState, Direction dir) {
-        return this.isFluidSelfVisible(blockState, dir, Shapes.block());
+    private boolean isFullBlockFluidSelfVisible(BlockState blockState, Direction dir, float fluidHeight) {
+        return this.isFluidSelfVisible(blockState, dir, Shapes.block(), fluidHeight);
     }
 
+    private boolean isFullBlockFluidSelfVisible(BlockState blockState, Direction dir) {
+        // Assume when not given the fluid height is 1.0f for default behavior
+        return this.isFluidSelfVisible(blockState, dir, Shapes.block(), 1.0f);
+    }
     private boolean isFluidSideExposed(BlockAndTintGetter world, BlockState ownBlockState, BlockPos neighborPos, Direction facing, float height) {
         return this.isFluidSideExposed(ownBlockState, world.getBlockState(neighborPos), facing, height);
     }
@@ -232,7 +237,11 @@ public class DefaultFluidRenderer {
      * Calculates the combined visibility of a fluid face based on the neighboring block states and the fluid state.
      */
     private boolean isFullBlockFluidVisible(BlockAndTintGetter world, BlockPos pos, Direction dir, BlockState blockState, FluidState fluid) {
-        return isFullBlockFluidSelfVisible(blockState, dir) && this.isFullBlockFluidSideVisible(world, pos, dir, fluid);
+        float fluidHeight = sampleFluidHeight(world, fluid.getType(), pos);
+        // DISCARD_SAMPLE returned is treated as 1.0f for default behavior
+        fluidHeight = (fluidHeight == DISCARD_SAMPLE) ? 1.0f : fluidHeight;
+
+        return isFullBlockFluidSelfVisible(blockState, dir, fluidHeight) && this.isFullBlockFluidSideVisible(world, pos, dir, fluid);
     }
 
     /**
