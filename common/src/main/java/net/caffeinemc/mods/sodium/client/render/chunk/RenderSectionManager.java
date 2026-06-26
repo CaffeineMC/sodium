@@ -483,6 +483,7 @@ public class RenderSectionManager {
             return;
         }
 
+        // processing build results can cause invalidation of the render lists or change the connectivity of the graph. They don't necessarily imply each other, so they're tracked separately.
         int changes = this.processChunkBuildResults(results, viewport, uniforms);
         if ((changes & SectionInfoChange.GRAPH) != 0) {
             this.markGraphDirty();
