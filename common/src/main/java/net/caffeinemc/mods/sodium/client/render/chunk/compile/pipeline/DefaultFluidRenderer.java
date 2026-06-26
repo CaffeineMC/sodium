@@ -146,10 +146,9 @@ public class DefaultFluidRenderer {
      * @param selfBlockState The state of the block in the level
      * @param facing         The facing direction of the side to check
      * @param fluidShape     The shape of the fluid
-     * @param fluidHeight    The actual height of the fluid
      * @return True if the fluid side facing {@param facing} is self-visible, otherwise false
      */
-    private boolean isFluidSelfVisible(BlockState selfBlockState, Direction facing, VoxelShape fluidShape, float fluidHeight) {
+    private boolean isFluidSelfVisible(BlockState selfBlockState, Direction facing, VoxelShape fluidShape) {
         // only perform self-occlusion if the own block state can't occlude
         if (selfBlockState.canOcclude()) {
             var selfShape = selfBlockState.getFaceOcclusionShape(facing);
@@ -157,8 +156,8 @@ public class DefaultFluidRenderer {
             // only a non-empty self-shape can occlude anything
             if (!ShapeComparisonCache.isEmptyShape(selfShape)) {
                 // a full self-shape occludes everything
-                if (ShapeComparisonCache.isFullShape(selfShape) && ShapeComparisonCache.isFullShape(fluidShape)) {
-                    return facing == Direction.UP && fluidHeight < 1.0f;
+                if (ShapeComparisonCache.isFullShape(selfShape)) {
+                    return !ShapeComparisonCache.isFullShape(fluidShape);
                 }
 
                 // perform occlusion of the fluid by the block it's contained in
@@ -170,12 +169,20 @@ public class DefaultFluidRenderer {
     }
 
     private boolean isFullBlockFluidSelfVisible(BlockState blockState, Direction dir, float fluidHeight) {
-        return this.isFluidSelfVisible(blockState, dir, Shapes.block(), fluidHeight);
+        // Compute a more accurate Voxel Shape for the fluid from the actual fluid height given
+        VoxelShape fluidShape;
+        if (fluidHeight >= 1.0F) {
+            fluidShape = Shapes.block();
+        } else {
+            fluidShape = Shapes.box(0.0D, 0.0D, 0.0D, 1.0D, fluidHeight, 1.0D);
+        }
+
+        return this.isFluidSelfVisible(blockState, dir, fluidShape);
     }
 
     private boolean isFullBlockFluidSelfVisible(BlockState blockState, Direction dir) {
         // Assume when not given the fluid height is 1.0f for default behavior
-        return this.isFluidSelfVisible(blockState, dir, Shapes.block(), 1.0f);
+        return this.isFluidSelfVisible(blockState, dir, Shapes.block());
     }
     private boolean isFluidSideExposed(BlockAndTintGetter world, BlockState ownBlockState, BlockPos neighborPos, Direction facing, float height) {
         return this.isFluidSideExposed(ownBlockState, world.getBlockState(neighborPos), facing, height);
