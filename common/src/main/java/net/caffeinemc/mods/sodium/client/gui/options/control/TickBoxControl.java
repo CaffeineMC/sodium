@@ -52,7 +52,7 @@ public class TickBoxControl implements Control {
         public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
             super.extractRenderState(graphics, mouseX, mouseY, delta);
 
-            if (!this.option.showControl() || this.isResetOverlayActive()) {
+            if (this.option.shouldHideControl() || this.isResetOverlayActive()) {
                 return;
             }
 
