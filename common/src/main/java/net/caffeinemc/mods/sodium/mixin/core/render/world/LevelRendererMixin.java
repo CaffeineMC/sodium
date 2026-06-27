@@ -157,13 +157,13 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     @Overwrite
     private ChunkSectionsToRender prepareChunkRenders(Matrix4fc matrix4fc, double x, double y, double z) {
         ChunkSectionsToRender chunkSectionsToRender = new ChunkSectionsToRender(this.minecraft.getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView(), STATIC_MAP, -1, new GpuBufferSlice[0]);
-        ((SodiumChunkSection) (Object) chunkSectionsToRender).sodium$setRendering(renderer, matrices, x, y, z);
+        ((SodiumChunkSection) (Object) chunkSectionsToRender).sodium$setRendering(this.renderer, this.matrices, x, y, z);
         return chunkSectionsToRender;
     }
 
     @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;cullTerrain(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;Z)V"))
     private void getRenderState(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean bl, Camera camera, Matrix4f matrix4f, Matrix4f matrix4f2, Matrix4f matrix4f3, GpuBufferSlice gpuBufferSlice, Vector4f fogColor, boolean bl2, CallbackInfo ci) {
-        matrices = new ChunkRenderMatrices(matrix4f2, matrix4f);
+        this.matrices = new ChunkRenderMatrices(matrix4f2, matrix4f);
 
         // update the fog color here with the actual fog color being used to render the sky, since the fog color that SodiumWorldRenderer still has stored from FogRendererMixin is outdated.
         this.renderer.updateFogColor(fogColor);
@@ -192,7 +192,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         RenderDevice.enterManagedCode();
 
         try {
-            this.renderer.setupTerrain(camera, viewport, ((FogStorage) this.minecraft.gameRenderer).sodium$getFogParameters(), spectator, updateChunksImmediately, matrices);
+            this.renderer.setupTerrain(camera, viewport, ((FogStorage) this.minecraft.gameRenderer).sodium$getFogParameters(), spectator, updateChunksImmediately, this.matrices);
         } finally {
             RenderDevice.exitManagedCode();
         }

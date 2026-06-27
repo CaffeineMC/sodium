@@ -24,29 +24,27 @@ import net.caffeinemc.mods.sodium.api.util.ColorMixer;
 import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.ExtendedMutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.helper.ColorHelper;
 import net.caffeinemc.mods.sodium.client.render.model.*;
-import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MeshViewImpl;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
 import net.caffeinemc.mods.sodium.mixin.frapi.ItemRendererAccessor;
 import net.fabricmc.fabric.api.renderer.v1.mesh.MeshView;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadAtlas;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.api.renderer.v1.render.ItemRenderTypeGetter;
-import net.fabricmc.fabric.api.renderer.v1.render.RenderLayerHelper;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
-import org.jspecify.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -63,14 +61,14 @@ public class ItemRenderContext extends AbstractRenderContext {
 
     public class ItemEmitter extends MutableQuadViewImpl {
         {
-            data = new int[EncodingFormat.TOTAL_STRIDE];
-            clear();
+            this.data = new int[EncodingFormat.TOTAL_STRIDE];
+            this.clear();
         }
 
 
         @Override
         public void emitDirectly() {
-            renderQuad(this);
+            ItemRenderContext.this.renderQuad(this);
         }
     }
 
@@ -80,8 +78,8 @@ public class ItemRenderContext extends AbstractRenderContext {
 
     private final RandomSource random = new SingleThreadedRandomSource(ITEM_RANDOM_SEED);
     private final Supplier<RandomSource> randomSupplier = () -> {
-        random.setSeed(ITEM_RANDOM_SEED);
-        return random;
+        this.random.setSeed(ITEM_RANDOM_SEED);
+        return this.random;
     };
 
     private ItemDisplayContext transformMode;
@@ -103,17 +101,17 @@ public class ItemRenderContext extends AbstractRenderContext {
 
     @Override
     public MutableQuadViewImpl getForEmitting() {
-        editorQuad.clear();
-        return editorQuad;
+        this.editorQuad.clear();
+        return this.editorQuad;
     }
 
     public void renderItem(ItemDisplayContext displayContext, PoseStack poseStack, MultiBufferSource bufferSource, int lightmap, int overlay, int[] colors, List<BakedQuad> vanillaQuads, MeshView mesh, RenderType layer, ItemStackRenderState.FoilType glint, @Nullable ItemRenderTypeGetter renderTypeGetter, boolean ignoreQuadGlint) {
         this.transformMode = displayContext;
-        matPosition = poseStack.last().pose();
+        this.matPosition = poseStack.last().pose();
         this.poseStack = poseStack;
 
-        trustedNormals = this.poseStack.last().trustedNormals;
-        matNormal = this.poseStack.last().normal();
+        this.trustedNormals = this.poseStack.last().trustedNormals;
+        this.matNormal = this.poseStack.last().normal();
         this.bufferSource = bufferSource;
         this.lightmap = lightmap;
         this.overlay = overlay;
@@ -121,10 +119,10 @@ public class ItemRenderContext extends AbstractRenderContext {
         this.ignoreQuadGlint = ignoreQuadGlint;
         this.renderTypeGetter = renderTypeGetter;
 
-        defaultLayer = layer;
-        defaultGlint = glint;
+        this.defaultLayer = layer;
+        this.defaultGlint = glint;
 
-        bufferQuads(vanillaQuads, mesh);
+        this.bufferQuads(vanillaQuads, mesh);
 
         this.poseStack = null;
         this.bufferSource = null;
@@ -132,12 +130,12 @@ public class ItemRenderContext extends AbstractRenderContext {
         this.renderTypeGetter = null;
 
         this.specialGlintEntry = null;
-        Arrays.fill(vertexConsumerCache, null);
+        Arrays.fill(this.vertexConsumerCache, null);
     }
 
 
     private void bufferQuads(List<BakedQuad> vanillaQuads, MeshView mesh) {
-        QuadEmitter emitter = ((ExtendedMutableQuadViewImpl) getForEmitting()).getWrapper();
+        QuadEmitter emitter = ((ExtendedMutableQuadViewImpl) this.getForEmitting()).getWrapper();
 
         final int vanillaQuadCount = vanillaQuads.size();
 
@@ -152,18 +150,18 @@ public class ItemRenderContext extends AbstractRenderContext {
 
     private void renderQuad(MutableQuadViewImpl quad) {
         final boolean emissive = quad.emissive();
-        final VertexConsumer vertexConsumer = getVertexConsumer(quad.getQuadAtlas(), quad.getRenderType(), quad.glint());
+        final VertexConsumer vertexConsumer = this.getVertexConsumer(quad.getQuadAtlas(), quad.getRenderType(), quad.glint());
 
-        tintQuad(quad);
-        shadeQuad(quad, emissive);
-        bufferQuad(quad, vertexConsumer, quad.getQuadAtlas() == SodiumQuadAtlas.ITEM);
+        this.tintQuad(quad);
+        this.shadeQuad(quad, emissive);
+        this.bufferQuad(quad, vertexConsumer, quad.getQuadAtlas() == SodiumQuadAtlas.ITEM);
     }
 
     private void tintQuad(MutableQuadViewImpl quad) {
         final int tintIndex = quad.getTintIndex();
 
-        if (tintIndex != -1 && tintIndex < colors.length) {
-            final int color = colors[tintIndex];
+        if (tintIndex != -1 && tintIndex < this.colors.length) {
+            final int color = this.colors[tintIndex];
 
             for (int i = 0; i < 4; i++) {
                 quad.setColor(i, ColorMixer.mulComponentWise(color, quad.baseColor(i)));
@@ -186,7 +184,7 @@ public class ItemRenderContext extends AbstractRenderContext {
     }
 
     private void bufferQuad(MutableQuadViewImpl quad, VertexConsumer vertexConsumer, boolean wasItemAtlas) {
-        QuadEncoder.writeQuadVertices(quad, vertexConsumer, overlay, matPosition, trustedNormals, matNormal);
+        QuadEncoder.writeQuadVertices(quad, vertexConsumer, this.overlay, this.matPosition, this.trustedNormals, this.matNormal);
         var sprite = quad.sprite(wasItemAtlas ? SpriteFinderCache.forItemAtlas() : SpriteFinderCache.forBlockAtlas());
         if (sprite != null) {
             SpriteUtil.INSTANCE.markSpriteActive(sprite);
@@ -202,18 +200,18 @@ public class ItemRenderContext extends AbstractRenderContext {
         RenderType layer;
         ItemStackRenderState.FoilType glint;
 
-        if (renderTypeGetter != null) {
-            layer = renderTypeGetter.renderType(quadAtlas == SodiumQuadAtlas.BLOCK ? QuadAtlas.BLOCK : QuadAtlas.ITEM, quadRenderLayer);
+        if (this.renderTypeGetter != null) {
+            layer = this.renderTypeGetter.renderType(quadAtlas == SodiumQuadAtlas.BLOCK ? QuadAtlas.BLOCK : QuadAtlas.ITEM, quadRenderLayer);
 
             if (layer == null) {
-                layer = defaultLayer;
+                layer = this.defaultLayer;
             }
         } else {
-            layer = defaultLayer;
+            layer = this.defaultLayer;
         }
 
-        if (ignoreQuadGlint || quadGlint == null) {
-            glint = defaultGlint;
+        if (this.ignoreQuadGlint || quadGlint == null) {
+            glint = this.defaultGlint;
         } else {
             glint = quadGlint;
         }
@@ -227,15 +225,15 @@ public class ItemRenderContext extends AbstractRenderContext {
         } else if (layer == Sheets.translucentBlockItemSheet()) {
             cacheIndex = 2 * GLINT_COUNT;
         } else {
-            return createVertexConsumer(layer, glint);
+            return this.createVertexConsumer(layer, glint);
         }
 
         cacheIndex += glint.ordinal();
-        VertexConsumer vertexConsumer = vertexConsumerCache[cacheIndex];
+        VertexConsumer vertexConsumer = this.vertexConsumerCache[cacheIndex];
 
         if (vertexConsumer == null) {
-            vertexConsumer = createVertexConsumer(layer, glint);
-            vertexConsumerCache[cacheIndex] = vertexConsumer;
+            vertexConsumer = this.createVertexConsumer(layer, glint);
+            this.vertexConsumerCache[cacheIndex] = vertexConsumer;
         }
 
         return vertexConsumer;
@@ -243,20 +241,20 @@ public class ItemRenderContext extends AbstractRenderContext {
 
     private VertexConsumer createVertexConsumer(RenderType type, ItemStackRenderState.FoilType glint) {
         if (glint == ItemStackRenderState.FoilType.SPECIAL) {
-            if (specialGlintEntry == null) {
-                specialGlintEntry = poseStack.last().copy();
+            if (this.specialGlintEntry == null) {
+                this.specialGlintEntry = this.poseStack.last().copy();
 
-                if (transformMode == ItemDisplayContext.GUI) {
-                    MatrixUtil.mulComponentWise(specialGlintEntry.pose(), 0.5F);
-                } else if (transformMode.firstPerson()) {
-                    MatrixUtil.mulComponentWise(specialGlintEntry.pose(), 0.75F);
+                if (this.transformMode == ItemDisplayContext.GUI) {
+                    MatrixUtil.mulComponentWise(this.specialGlintEntry.pose(), 0.5F);
+                } else if (this.transformMode.firstPerson()) {
+                    MatrixUtil.mulComponentWise(this.specialGlintEntry.pose(), 0.75F);
                 }
             }
 
-            return ItemRendererAccessor.sodium$getSpecialFoilBuffer(bufferSource, type, specialGlintEntry);
+            return ItemRendererAccessor.sodium$getSpecialFoilBuffer(this.bufferSource, type, this.specialGlintEntry);
         }
 
-        return ItemRenderer.getFoilBuffer(bufferSource, type, true, glint != ItemStackRenderState.FoilType.NONE);
+        return ItemRenderer.getFoilBuffer(this.bufferSource, type, true, glint != ItemStackRenderState.FoilType.NONE);
     }
 
     /** used to accept a method reference from the ItemRenderer. */

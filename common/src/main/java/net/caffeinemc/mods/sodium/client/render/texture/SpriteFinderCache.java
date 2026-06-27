@@ -1,7 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.texture;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.data.AtlasIds;
 
 /**

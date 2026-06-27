@@ -39,13 +39,13 @@ import java.util.function.Supplier;
 public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     public class BlockEmitter extends MutableQuadViewImpl {
         {
-            data = new int[EncodingFormat.TOTAL_STRIDE];
-            clear();
+            this.data = new int[EncodingFormat.TOTAL_STRIDE];
+            this.clear();
         }
 
         @Override
         public void emitDirectly() {
-            renderQuad(this);
+            AbstractBlockRenderContext.this.renderQuad(this);
         }
 
         public void markInvalidToDowngrade() {
@@ -201,7 +201,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     protected void prepareAoInfo(boolean modelAo) {
         this.useAmbientOcclusion = Minecraft.useAmbientOcclusion();
         // Ignore the incorrect IDEA warning here.
-        this.defaultLightMode = this.useAmbientOcclusion && modelAo && (state != null && PlatformBlockAccess.getInstance().getLightEmission(state, level, pos) == 0) ? LightMode.SMOOTH : LightMode.FLAT;
+        this.defaultLightMode = this.useAmbientOcclusion && modelAo && (this.state != null && PlatformBlockAccess.getInstance().getLightEmission(this.state, this.level, this.pos) == 0) ? LightMode.SMOOTH : LightMode.FLAT;
     }
 
     protected void shadeQuad(MutableQuadViewImpl quad, LightMode lightMode, boolean emissive, SodiumShadeMode shadeMode) {
@@ -229,7 +229,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
         MutableQuadViewImpl editorQuad = this.editorQuad;
         this.prepareAoInfo(part.useAmbientOcclusion());
 
-        ChunkSectionLayer renderType = PlatformModelAccess.getInstance().getPartRenderType(part, state, this.defaultRenderType);
+        ChunkSectionLayer renderType = PlatformModelAccess.getInstance().getPartRenderType(part, this.state, this.defaultRenderType);
         ChunkSectionLayer defaultType = this.defaultRenderType;
         this.defaultRenderType = renderType;
 
@@ -241,9 +241,9 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
             }
 
             // TODO NeoForge 1.21.5
-            AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, state, renderType, slice, pos);
+            AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, this.state, renderType, this.slice, this.pos);
 
-            final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, part, state, cullFace, random, renderType);
+            final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(this.level, this.pos, part, this.state, cullFace, this.random, renderType);
             final int count = quads.size();
 
             for (int j = 0; j < count; j++) {

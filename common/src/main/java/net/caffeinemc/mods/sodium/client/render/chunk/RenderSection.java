@@ -399,7 +399,7 @@ public class RenderSection {
     }
 
     public float getCurrentVisibility() {
-        int currentTime = Math.toIntExact(System.currentTimeMillis() - region.getCreationTime());
+        int currentTime = Math.toIntExact(System.currentTimeMillis() - this.region.getCreationTime());
         int fadeTime = currentTime - this.fadeTime;
         float elapsed = (float) fadeTime;
         return Math.clamp(elapsed / ((float) (Minecraft.getInstance().options.chunkSectionFadeInTime().get() * 1000)), 0.0f, 1.0f);

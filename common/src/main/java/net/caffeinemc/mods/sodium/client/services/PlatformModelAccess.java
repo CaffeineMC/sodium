@@ -1,7 +1,6 @@
 package net.caffeinemc.mods.sodium.client.services;
 
 import net.caffeinemc.mods.sodium.client.render.helper.ListStorage;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;

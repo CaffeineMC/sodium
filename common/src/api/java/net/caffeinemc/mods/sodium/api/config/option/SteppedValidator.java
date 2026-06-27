@@ -38,7 +38,7 @@ public interface SteppedValidator extends Validator<Integer> {
 
     @Override
     default Integer getValidatedValue(Integer value, Supplier<Integer> defaultValueSupplier) {
-        if (isValueValid(value)) {
+        if (this.isValueValid(value)) {
             return value;
         }
         return defaultValueSupplier.get();

@@ -267,7 +267,7 @@ public class OptionListWidget extends AbstractOptionList {
         }
 
         protected String truncateLabelToFit(String name, int padding) {
-            return truncateTextToFit(name, this.getWidth() - padding - this.rightReservedWidth());
+            return this.truncateTextToFit(name, this.getWidth() - padding - this.rightReservedWidth());
         }
 
         @Override

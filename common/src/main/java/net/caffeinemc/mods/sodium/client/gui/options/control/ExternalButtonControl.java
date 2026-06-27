@@ -107,7 +107,7 @@ public class ExternalButtonControl implements Control {
 
         @Override
         public boolean keyPressed(KeyEvent event) {
-            if (!isFocused()) return false;
+            if (!this.isFocused()) return false;
 
             if (event.isSelection()) {
                 this.openScreen(this.screen);

@@ -16,15 +16,10 @@
 
 package net.caffeinemc.mods.sodium.client.render.helper;
 
-import java.util.Arrays;
-import java.util.List;
-
-import com.google.common.collect.ImmutableList;
-import org.jspecify.annotations.Nullable;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.Direction;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Arrays;
 
 /**
  * Collection of utilities for model implementations.

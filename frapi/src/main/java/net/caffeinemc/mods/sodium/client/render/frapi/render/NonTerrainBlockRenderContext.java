@@ -25,8 +25,8 @@ import net.caffeinemc.mods.sodium.client.model.light.LightMode;
 import net.caffeinemc.mods.sodium.client.model.light.LightPipelineProvider;
 import net.caffeinemc.mods.sodium.client.model.light.data.SingleBlockLightDataCache;
 import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.ExtendedMutableQuadViewImpl;
-import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
+import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.QuadEncoder;
 import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
@@ -34,7 +34,6 @@ import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
 import net.fabricmc.fabric.api.renderer.v1.render.BlockVertexConsumerProvider;
 import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
@@ -79,8 +78,8 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
         this.lightDataCache.reset(pos, blockView);
         this.prepareCulling(cull);
 
-        random.setSeed(seed);
-        ((FabricBlockStateModel) model).emitQuads(((ExtendedMutableQuadViewImpl) getForEmitting()).getWrapper(), blockView, pos, state, this.random, this::isFaceCulled);
+        this.random.setSeed(seed);
+        ((FabricBlockStateModel) model).emitQuads(((ExtendedMutableQuadViewImpl) this.getForEmitting()).getWrapper(), blockView, pos, state, this.random, this::isFaceCulled);
 
         this.defaultRenderType = null;
         this.level = null;
@@ -100,15 +99,15 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
         }
         final boolean emissive = quad.emissive();
 
-        VertexConsumer vertexConsumer = getVertexConsumer(quad.getRenderType());
+        VertexConsumer vertexConsumer = this.getVertexConsumer(quad.getRenderType());
 
-        tintQuad(quad);
-        shadeQuad(quad, lightMode, emissive, shadeMode);
-        bufferQuad(quad, vertexConsumer);
+        this.tintQuad(quad);
+        this.shadeQuad(quad, lightMode, emissive, shadeMode);
+        this.bufferQuad(quad, vertexConsumer);
     }
 
     private VertexConsumer getVertexConsumer(ChunkSectionLayer blendMode) {
-        return vertexConsumer.getBuffer(blendMode == null ? defaultRenderType : blendMode);
+        return this.vertexConsumer.getBuffer(blendMode == null ? this.defaultRenderType : blendMode);
     }
 
     private void tintQuad(MutableQuadViewImpl quad) {
@@ -133,7 +132,7 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
     }
 
     private void bufferQuad(MutableQuadViewImpl quad, VertexConsumer vertexConsumer) {
-        QuadEncoder.writeQuadVertices(quad, vertexConsumer, overlay, matPosition, trustedNormals, matNormal);
+        QuadEncoder.writeQuadVertices(quad, vertexConsumer, this.overlay, this.matPosition, this.trustedNormals, this.matNormal);
         var sprite = quad.sprite(SpriteFinderCache.forBlockAtlas());
         if (sprite != null) {
             SpriteUtil.INSTANCE.markSpriteActive(sprite);

@@ -13,7 +13,7 @@ public class QuadViewImplMixin implements ExtendedQuadViewImpl {
 
     @Override
     public QuadViewWrapper getWrapper() {
-        if (wrapper == null) wrapper = new QuadViewWrapper((QuadViewImpl) (Object) this);
-        return wrapper;
+        if (this.wrapper == null) this.wrapper = new QuadViewWrapper((QuadViewImpl) (Object) this);
+        return this.wrapper;
     }
 }

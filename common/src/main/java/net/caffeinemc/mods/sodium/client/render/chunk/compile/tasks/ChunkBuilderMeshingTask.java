@@ -149,10 +149,10 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
             }
         } catch (ReportedException ex) {
             // Propagate existing crashes (add context)
-            throw fillCrashInfo(ex.getReport(), slice, blockPos);
+            throw this.fillCrashInfo(ex.getReport(), slice, blockPos);
         } catch (Exception ex) {
             // Create a new crash report for other exceptions (e.g. thrown in getQuads)
-            throw fillCrashInfo(CrashReport.forThrowable(ex, "Encountered exception while building chunk meshes"), slice, blockPos);
+            throw this.fillCrashInfo(CrashReport.forThrowable(ex, "Encountered exception while building chunk meshes"), slice, blockPos);
         }
         profiler.popPush("mesh appenders");
 
@@ -189,7 +189,7 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
                 translucentData = collector.getTranslucentData(oldData, this);
             } catch (Exception ex) {
                 // Create a new crash report for exceptions thrown during sort preparation
-                throw fillCrashInfo(CrashReport.forThrowable(ex, "Encountered exception while preparing for translucency sorting"), slice, null);
+                throw this.fillCrashInfo(CrashReport.forThrowable(ex, "Encountered exception while preparing for translucency sorting"), slice, null);
             }
             reuseUploadedData = !this.forceSort && translucentData == oldData;
         }
@@ -237,7 +237,7 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
                     output.setSorter(sorter);
                 } catch (Exception ex) {
                     // Create a new crash report for exceptions thrown during sorting
-                    throw fillCrashInfo(CrashReport.forThrowable(ex, "Encountered exception while writing index buffer for translucent geometry"), slice, null);
+                    throw this.fillCrashInfo(CrashReport.forThrowable(ex, "Encountered exception while writing index buffer for translucent geometry"), slice, null);
                 }
             }
         }

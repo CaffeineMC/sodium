@@ -82,15 +82,15 @@ class EnumOptionBuilderImpl<E extends Enum<E>> extends StatefulOptionBuilderImpl
     }
 
     Class<E> getEnumClass() {
-        return getFirstNotNull(this.enumClass, EnumOption::getEnumClass);
+        return this.getFirstNotNull(this.enumClass, EnumOption::getEnumClass);
     }
 
     DependentValue<Set<E>> getAllowedValues() {
-        return getFirstNotNull(this.allowedValues, EnumOption::getAllowedValues);
+        return this.getFirstNotNull(this.allowedValues, EnumOption::getAllowedValues);
     }
 
     Function<E, Component> getElementNameProvider() {
-        return getFirstNotNull(this.elementNameProvider, EnumOption::getElementNameProvider);
+        return this.getFirstNotNull(this.elementNameProvider, EnumOption::getElementNameProvider);
     }
 
     @Override

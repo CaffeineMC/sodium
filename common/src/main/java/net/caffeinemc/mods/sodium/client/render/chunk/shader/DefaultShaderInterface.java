@@ -89,7 +89,7 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
                 1.0f / textureAtlas.sodium$getHeight()
         );
 
-        uniformFadePeriod.setFloat((float) (1.0 / (Minecraft.getInstance().options.chunkSectionFadeInTime().get() * 1000.0))); // this is in seconds!
+        this.uniformFadePeriod.setFloat((float) (1.0 / (Minecraft.getInstance().options.chunkSectionFadeInTime().get() * 1000.0))); // this is in seconds!
 
         this.uniformRGSS.setBool(Minecraft.getInstance().options.textureFiltering().get() == TextureFilteringMethod.RGSS);
 
@@ -116,8 +116,8 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
 
     @Override
     public void setChunkData(GlBuffer data, int time) {
-        uniformChunkData.bindBuffer(data);
-        uniformCurrentTime.set(time);
+        this.uniformChunkData.bindBuffer(data);
+        this.uniformCurrentTime.set(time);
     }
 
     @Override

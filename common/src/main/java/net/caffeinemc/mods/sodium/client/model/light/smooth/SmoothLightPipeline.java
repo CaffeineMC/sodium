@@ -232,13 +232,13 @@ public class SmoothLightPipeline implements LightPipeline {
         final float w1 = AoNeighborInfo.get(lightFace).getDepth(quad.getX(vertexIndex), quad.getY(vertexIndex), quad.getZ(vertexIndex));
 
         if (Mth.equal(w1, 0)) {
-            return getCachedFaceData(blockPos, lightFace, true, shade);
+            return this.getCachedFaceData(blockPos, lightFace, true, shade);
         } else if (Mth.equal(w1, 1)) {
-            return getCachedFaceData(blockPos, lightFace, false, shade);
+            return this.getCachedFaceData(blockPos, lightFace, false, shade);
         } else {
-            tmpFace.reset();
+            this.tmpFace.reset();
             final float w0 = 1 - w1;
-            return AoFaceData.weightedMean(getCachedFaceData(blockPos, lightFace, true, shade), w0, getCachedFaceData(blockPos, lightFace, false, shade), w1, tmpFace);
+            return AoFaceData.weightedMean(this.getCachedFaceData(blockPos, lightFace, true, shade), w0, this.getCachedFaceData(blockPos, lightFace, false, shade), w1, this.tmpFace);
         }
     }
 
@@ -253,7 +253,7 @@ public class SmoothLightPipeline implements LightPipeline {
 
         for (int i = 0; i < 4; i++) {
             // TODO: Avoid this if the accurate normal is the face normal
-            Vector3f normal = NormI8.unpack(quad.getAccurateNormal(i), vertexNormal);
+            Vector3f normal = NormI8.unpack(quad.getAccurateNormal(i), this.vertexNormal);
             float ao = 0, sky = 0, block = 0, maxAo = 0;
             float maxSky = 0, maxBlock = 0;
 
@@ -261,7 +261,7 @@ public class SmoothLightPipeline implements LightPipeline {
 
             if (!Mth.equal(0f, x)) {
                 final Direction face = x > 0 ? Direction.EAST : Direction.WEST;
-                final AoFaceData fd = gatherInsetFace(quad, blockPos, i, face, shade);
+                final AoFaceData fd = this.gatherInsetFace(quad, blockPos, i, face, shade);
                 AoNeighborInfo.get(face).calculateCornerWeights(quad.getX(i), quad.getY(i), quad.getZ(i), w);
                 final float n = x * x;
                 final float a = fd.getBlendedShade(w) * this.getAmbientBrightness(face, shade);
@@ -279,7 +279,7 @@ public class SmoothLightPipeline implements LightPipeline {
 
             if (!Mth.equal(0f, y)) {
                 final Direction face = y > 0 ? Direction.UP : Direction.DOWN;
-                final AoFaceData fd = gatherInsetFace(quad, blockPos, i, face, shade);
+                final AoFaceData fd = this.gatherInsetFace(quad, blockPos, i, face, shade);
                 AoNeighborInfo.get(face).calculateCornerWeights(quad.getX(i), quad.getY(i), quad.getZ(i), w);
                 final float n = y * y;
                 final float a = fd.getBlendedShade(w) * this.getAmbientBrightness(face, shade);
@@ -297,7 +297,7 @@ public class SmoothLightPipeline implements LightPipeline {
 
             if (!Mth.equal(0f, z)) {
                 final Direction face = z > 0 ? Direction.SOUTH : Direction.NORTH;
-                final AoFaceData fd = gatherInsetFace(quad, blockPos, i, face, shade);
+                final AoFaceData fd = this.gatherInsetFace(quad, blockPos, i, face, shade);
                 AoNeighborInfo.get(face).calculateCornerWeights(quad.getX(i), quad.getY(i), quad.getZ(i), w);
                 final float n = z * z;
                 final float a = fd.getBlendedShade(w) * this.getAmbientBrightness(face, shade);

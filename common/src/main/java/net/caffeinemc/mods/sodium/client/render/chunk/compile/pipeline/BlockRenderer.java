@@ -21,8 +21,8 @@ import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.parameter
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
-import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
+import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelEmitter;
@@ -36,8 +36,8 @@ import net.minecraft.util.TriState;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import net.minecraft.world.phys.Vec3;
-import org.jspecify.annotations.Nullable;
 import org.joml.Vector3f;
+import org.jspecify.annotations.Nullable;
 
 public class BlockRenderer extends AbstractBlockRenderContext {
     private final ColorProviderRegistry colorProviderRegistry;
@@ -94,8 +94,8 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         this.allowDowngrade = true;
 
 
-        random.setSeed(state.getSeed(pos));
-        PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, getForEmitting(), random, level, pos, state, this::bufferDefaultModel);
+        this.random.setSeed(state.getSeed(pos));
+        PlatformModelEmitter.getInstance().emitModel(model, this::isFaceCulled, this.getForEmitting(), this.random, this.level, pos, state, this::bufferDefaultModel);
 
         this.defaultRenderType = null;
     }
@@ -116,7 +116,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         final boolean emissive = quad.emissive();
 
         final ChunkSectionLayer blendMode = quad.getRenderType();
-        final Material material = DefaultMaterials.forChunkLayer(blendMode == null ? defaultRenderType : blendMode);
+        final Material material = DefaultMaterials.forChunkLayer(blendMode == null ? this.defaultRenderType : blendMode);
 
         this.tintQuad(quad);
         this.shadeQuad(quad, lightMode, emissive, shadeMode);
@@ -131,7 +131,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
 
             if (colorProvider != null) {
                 int[] vertexColors = this.vertexColors;
-                colorProvider.getColors(this.slice, this.pos, this.scratchPos, this.state, quad, vertexColors, slice.hasBiomeBlend());
+                colorProvider.getColors(this.slice, this.pos, this.scratchPos, this.state, quad, vertexColors, this.slice.hasBiomeBlend());
 
                 for (int i = 0; i < 4; i++) {
                     quad.setColor(i, ColorMixer.mulComponentWise(vertexColors[i], quad.baseColor(i)));
@@ -171,7 +171,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         // attempt render pass downgrade if possible
         var pass = material.pass;
 
-        var downgradedPass = attemptPassDowngrade(atlasSprite, pass);
+        var downgradedPass = this.attemptPassDowngrade(atlasSprite, pass);
         if (downgradedPass != null) {
             pass = downgradedPass;
         }
@@ -216,7 +216,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
     }
 
     private @Nullable TerrainRenderPass attemptPassDowngrade(TextureAtlasSprite sprite, TerrainRenderPass pass) {
-        if (!allowDowngrade || Workarounds.isWorkaroundEnabled(Workarounds.Reference.INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE)) {
+        if (!this.allowDowngrade || Workarounds.isWorkaroundEnabled(Workarounds.Reference.INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE)) {
             return null;
         }
 
@@ -233,7 +233,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         }
 
         if (attemptDowngrade) {
-            attemptDowngrade = validateQuadUVs(sprite);
+            attemptDowngrade = this.validateQuadUVs(sprite);
         }
 
         if (attemptDowngrade) {

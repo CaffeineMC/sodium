@@ -223,10 +223,10 @@ public class ImprovedItemModelBuilder {
 
             if (opaque) {
                 // Try insert per-pixel side quads for each side of the pixel.
-                tryInsertFace(up, SideDirection.UP, sprite, frame, pixelX, pixelY, width, height);
-                tryInsertFace(down, SideDirection.DOWN, sprite, frame, pixelX, pixelY, width, height);
-                tryInsertFace(left, SideDirection.LEFT, sprite, frame, pixelX, pixelY, width, height);
-                tryInsertFace(right, SideDirection.RIGHT, sprite, frame, pixelX, pixelY, width, height);
+                tryInsertFace(this.up, SideDirection.UP, sprite, frame, pixelX, pixelY, width, height);
+                tryInsertFace(this.down, SideDirection.DOWN, sprite, frame, pixelX, pixelY, width, height);
+                tryInsertFace(this.left, SideDirection.LEFT, sprite, frame, pixelX, pixelY, width, height);
+                tryInsertFace(this.right, SideDirection.RIGHT, sprite, frame, pixelX, pixelY, width, height);
             }
         }
 
@@ -234,10 +234,10 @@ public class ImprovedItemModelBuilder {
             var output = new ReferenceArrayList<SideFace>();
 
             // Merges and collects all faces from different directions.
-            buildMergedFaces(output, up, SideDirection.UP);
-            buildMergedFaces(output, down, SideDirection.DOWN);
-            buildMergedFaces(output, left, SideDirection.LEFT);
-            buildMergedFaces(output, right, SideDirection.RIGHT);
+            buildMergedFaces(output, this.up, SideDirection.UP);
+            buildMergedFaces(output, this.down, SideDirection.DOWN);
+            buildMergedFaces(output, this.left, SideDirection.LEFT);
+            buildMergedFaces(output, this.right, SideDirection.RIGHT);
 
             return output;
         }

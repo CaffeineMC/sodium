@@ -88,7 +88,7 @@ public class RenderRegion {
     }
 
     public long getCreationTime() {
-        return creationTime;
+        return this.creationTime;
     }
 
     public int getChunkX() {
@@ -283,7 +283,7 @@ public class RenderRegion {
         }
 
         public void writeMeshTimes(int sectionIndex, int millisecondToCompare) {
-            chunkFades.writeData(sectionIndex, millisecondToCompare);
+            this.chunkFades.writeData(sectionIndex, millisecondToCompare);
         }
 
         public void updateTessellation(CommandList commandList, GlTessellation tessellation) {
@@ -311,7 +311,7 @@ public class RenderRegion {
         }
 
         public GlBuffer prepareChunkData(CommandList commandList) {
-            return chunkFades.prepare(commandList);
+            return this.chunkFades.prepare(commandList);
         }
 
         public void deleteTessellation(CommandList commandList) {

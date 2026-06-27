@@ -40,57 +40,57 @@ public class MutableMeshImpl extends MeshViewImpl implements MutableMesh {
         // Necessary because the validity of geometry is not encoded; reading mesh data always
         // uses QuadViewImpl#load(), which assumes valid geometry. Built immutable meshes
         // should also have valid geometry for better performance.
-        computeGeometry();
-        limit += EncodingFormat.TOTAL_STRIDE;
-        ensureCapacity(EncodingFormat.TOTAL_STRIDE);
-        baseIndex = limit;
+        this.computeGeometry();
+        MutableMeshImpl.this.limit += EncodingFormat.TOTAL_STRIDE;
+        MutableMeshImpl.this.ensureCapacity(EncodingFormat.TOTAL_STRIDE);
+        this.baseIndex = MutableMeshImpl.this.limit;
     }
 };
 
     public MutableMeshImpl() {
-        data = new int[8 * EncodingFormat.TOTAL_STRIDE];
-        limit = 0;
+        this.data = new int[8 * EncodingFormat.TOTAL_STRIDE];
+        this.limit = 0;
 
-        ensureCapacity(EncodingFormat.TOTAL_STRIDE);
-        emitter.data = data;
-        emitter.baseIndex = limit;
-        emitter.clear();
+        this.ensureCapacity(EncodingFormat.TOTAL_STRIDE);
+        this.emitter.data = this.data;
+        this.emitter.baseIndex = this.limit;
+        this.emitter.clear();
     }
 
     private void ensureCapacity(int stride) {
-        if (stride > data.length - limit) {
-            final int[] bigger = new int[data.length * 2];
-            System.arraycopy(data, 0, bigger, 0, limit);
-            data = bigger;
-            emitter.data = data;
+        if (stride > this.data.length - this.limit) {
+            final int[] bigger = new int[this.data.length * 2];
+            System.arraycopy(this.data, 0, bigger, 0, this.limit);
+            this.data = bigger;
+            this.emitter.data = this.data;
         }
     }
 
     @Override
     public QuadEmitter emitter() {
-        emitter.clear();
-        return ((ExtendedMutableQuadViewImpl) emitter).getWrapper();
+        this.emitter.clear();
+        return ((ExtendedMutableQuadViewImpl) this.emitter).getWrapper();
     }
 
     @Override
     public void forEachMutable(Consumer<? super MutableQuadView> action) {
         // emitDirectly will not be called by forEach, so just reuse the main emitter.
-        forEach((a) -> action.accept((MutableQuadView) a), ((ExtendedMutableQuadViewImpl) emitter).getWrapper()); // TODO: probably wrong
-        emitter.data = data;
-        emitter.baseIndex = limit;
+        this.forEach((a) -> action.accept((MutableQuadView) a), ((ExtendedMutableQuadViewImpl) this.emitter).getWrapper()); // TODO: probably wrong
+        this.emitter.data = this.data;
+        this.emitter.baseIndex = this.limit;
     }
 
     @Override
     public Mesh immutableCopy() {
-        final int[] packed = new int[limit];
-        System.arraycopy(data, 0, packed, 0, limit);
+        final int[] packed = new int[this.limit];
+        System.arraycopy(this.data, 0, packed, 0, this.limit);
         return new MeshImpl(packed);
     }
 
     @Override
     public void clear() {
-        limit = 0;
-        emitter.baseIndex = limit;
-        emitter.clear();
+        this.limit = 0;
+        this.emitter.baseIndex = this.limit;
+        this.emitter.clear();
     }
 }

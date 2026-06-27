@@ -1,15 +1,14 @@
 package net.caffeinemc.mods.sodium.client.gl.shader;
 
 import com.google.common.base.Objects;
-import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import net.minecraft.resources.Identifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ShaderLoader {
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium-ShaderLoader");

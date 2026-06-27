@@ -29,17 +29,17 @@ public class ItemFeatureRendererMixin {
     @Inject(method = "render", at = @At("RETURN"))
     private void onReturnRender(SubmitNodeCollection submitNodeCollection, MultiBufferSource.BufferSource bufferSource, OutlineBufferSource outlineBufferSource, CallbackInfo ci) {
         for (MeshItemCommand itemCommand : ((SubmitNodeCollectionExtension) submitNodeCollection).sodium_getMeshItemCommands()) {
-            poseStack.pushPose();
-            poseStack.last().set(itemCommand.positionMatrix());
+            this.poseStack.pushPose();
+            this.poseStack.last().set(itemCommand.positionMatrix());
 
-            itemRenderContext.renderItem(itemCommand.displayContext(), poseStack, bufferSource, itemCommand.lightCoords(), itemCommand.overlayCoords(), itemCommand.tintLayers(), itemCommand.quads(), itemCommand.mesh(), itemCommand.renderType(), itemCommand.glintType(), itemCommand.renderTypeGetter(), false);
+            this.itemRenderContext.renderItem(itemCommand.displayContext(), this.poseStack, bufferSource, itemCommand.lightCoords(), itemCommand.overlayCoords(), itemCommand.tintLayers(), itemCommand.quads(), itemCommand.mesh(), itemCommand.renderType(), itemCommand.glintType(), itemCommand.renderTypeGetter(), false);
 
             if (itemCommand.outlineColor() != 0) {
                 outlineBufferSource.setColor(itemCommand.outlineColor());
-                itemRenderContext.renderItem(itemCommand.displayContext(), poseStack, outlineBufferSource, itemCommand.lightCoords(), itemCommand.overlayCoords(), itemCommand.tintLayers(), itemCommand.quads(), itemCommand.mesh(), itemCommand.renderType(), ItemStackRenderState.FoilType.NONE, itemCommand.renderTypeGetter(), true);
+                this.itemRenderContext.renderItem(itemCommand.displayContext(), this.poseStack, outlineBufferSource, itemCommand.lightCoords(), itemCommand.overlayCoords(), itemCommand.tintLayers(), itemCommand.quads(), itemCommand.mesh(), itemCommand.renderType(), ItemStackRenderState.FoilType.NONE, itemCommand.renderTypeGetter(), true);
             }
 
-            poseStack.popPose();
+            this.poseStack.popPose();
         }
     }
 }

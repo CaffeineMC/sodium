@@ -1,7 +1,5 @@
 package net.caffeinemc.mods.sodium.mixin.core.render;
 
-import java.util.function.Predicate;
-
 import net.caffeinemc.mods.sodium.api.blockentity.BlockEntityRenderPredicate;
 import net.caffeinemc.mods.sodium.client.render.chunk.ExtendedBlockEntityType;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -17,23 +15,23 @@ public class BlockEntityTypeMixin<T extends BlockEntity> implements ExtendedBloc
 
     @Override
     public BlockEntityRenderPredicate<T>[] sodium$getRenderPredicates() {
-        return sodium$renderPredicates;
+        return this.sodium$renderPredicates;
     }
 
     @Override
     public void sodium$addRenderPredicate(BlockEntityRenderPredicate<T> predicate) {
-        sodium$renderPredicates = ArrayUtils.add(sodium$renderPredicates, predicate);
+        this.sodium$renderPredicates = ArrayUtils.add(this.sodium$renderPredicates, predicate);
     }
 
     @Override
     public boolean sodium$removeRenderPredicate(BlockEntityRenderPredicate<T> predicate) {
-        int index = ArrayUtils.indexOf(sodium$renderPredicates, predicate);
+        int index = ArrayUtils.indexOf(this.sodium$renderPredicates, predicate);
 
         if (index == ArrayUtils.INDEX_NOT_FOUND) {
             return false;
         }
 
-        sodium$renderPredicates = ArrayUtils.remove(sodium$renderPredicates, index);
+        this.sodium$renderPredicates = ArrayUtils.remove(this.sodium$renderPredicates, index);
         return true;
     }
 }

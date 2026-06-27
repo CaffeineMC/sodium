@@ -341,7 +341,7 @@ public class SodiumWorldRenderer {
                 }
 
                 for (BlockEntity blockEntity : blockEntities) {
-                    extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState);
+                    this.extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState);
                 }
             }
         }
@@ -354,7 +354,7 @@ public class SodiumWorldRenderer {
             }
 
             for (var blockEntity : blockEntities) {
-                extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState);
+                this.extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState);
             }
         }
     }
@@ -482,7 +482,7 @@ public class SodiumWorldRenderer {
     public String getChunksDebugString() {
         // C: visible/total D: distance
         // TODO: add dirty and queued counts
-        if (renderSectionManager == null) {
+        if (this.renderSectionManager == null) {
             return null;
         }
 

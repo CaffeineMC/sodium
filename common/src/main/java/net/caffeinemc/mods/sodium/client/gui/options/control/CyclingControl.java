@@ -82,7 +82,7 @@ public class CyclingControl<T extends Enum<T>> implements Control {
             if (this.isResetOverlayActive()) return false;
 
             if (this.option.isEnabled() && event.button() == 0 && this.isMouseOver(event.x(), event.y())) {
-                cycleControl(Minecraft.getInstance().hasShiftDown());
+                this.cycleControl(Minecraft.getInstance().hasShiftDown());
                 return true;
             }
 
@@ -91,10 +91,10 @@ public class CyclingControl<T extends Enum<T>> implements Control {
 
         @Override
         public boolean keyPressed(KeyEvent event) {
-            if (!isFocused()) return false;
+            if (!this.isFocused()) return false;
 
             if (event.isSelection()) {
-                cycleControl(Minecraft.getInstance().hasShiftDown());
+                this.cycleControl(Minecraft.getInstance().hasShiftDown());
                 return true;
             }
 

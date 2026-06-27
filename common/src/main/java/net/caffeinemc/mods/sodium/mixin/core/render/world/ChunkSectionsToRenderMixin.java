@@ -32,13 +32,13 @@ public class ChunkSectionsToRenderMixin implements SodiumChunkSection {
 
     @Inject(method = "renderGroup", at = @At("HEAD"), cancellable = true)
     private void sodium$renderGroup(ChunkSectionLayerGroup chunkSectionLayerGroup, GpuSampler gpuSampler, CallbackInfo ci) {
-        if (renderer != null) {
+        if (this.renderer != null) {
             ci.cancel();
 
             RenderDevice.enterManagedCode();
 
             try {
-                renderer.drawChunkLayer(chunkSectionLayerGroup, matrices, x, y, z, gpuSampler);
+                this.renderer.drawChunkLayer(chunkSectionLayerGroup, this.matrices, this.x, this.y, this.z, gpuSampler);
             } finally {
                 RenderDevice.exitManagedCode();
             }

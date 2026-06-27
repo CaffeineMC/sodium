@@ -261,7 +261,7 @@ public class TranslucentGeometryCollector {
         }
 
         int alignedNormalCount = Integer.bitCount(this.alignedFacingBitmap);
-        int planeCount = getPlaneCount(alignedNormalCount);
+        int planeCount = this.getPlaneCount(alignedNormalCount);
 
         int unalignedNormalCount = this.untrackedUnalignedNormalCount;
         if (this.unalignedANormal != -1) {
@@ -390,7 +390,7 @@ public class TranslucentGeometryCollector {
         }
         this.quadLists = null; // they're not needed anymore
 
-        this.sortType = filterSortType(sortTypeHeuristic(), this.sortBehavior);
+        this.sortType = filterSortType(this.sortTypeHeuristic(), this.sortBehavior);
         return this.sortType;
     }
 

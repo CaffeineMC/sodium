@@ -21,15 +21,14 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.ExtendedMutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.helper.ColorHelper;
-import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
+import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.QuadEncoder;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
 import net.fabricmc.fabric.api.renderer.v1.render.BlockVertexConsumerProvider;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
@@ -61,14 +60,14 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
     @Override
     protected void processQuad(MutableQuadViewImpl quad) {
         final ChunkSectionLayer quadRenderLayer = quad.getRenderType();
-        final ChunkSectionLayer renderLayer = quadRenderLayer == null ? defaultRenderType : quadRenderLayer;
+        final ChunkSectionLayer renderLayer = quadRenderLayer == null ? this.defaultRenderType : quadRenderLayer;
         final VertexConsumer vertexConsumer;
 
-        if (renderLayer == lastRenderLayer) {
-            vertexConsumer = lastVertexConsumer;
+        if (renderLayer == this.lastRenderLayer) {
+            vertexConsumer = this.lastVertexConsumer;
         } else {
-            lastVertexConsumer = vertexConsumer = vertexConsumers.getBuffer(renderLayer);
-            lastRenderLayer = renderLayer;
+            this.lastVertexConsumer = vertexConsumer = this.vertexConsumers.getBuffer(renderLayer);
+            this.lastRenderLayer = renderLayer;
         }
 
         if (quad.getTintIndex() != -1) {
@@ -93,13 +92,13 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
             }
         }
 
-        QuadEncoder.writeQuadVertices(quad, vertexConsumer, overlay, matrices.pose(), matrices.trustedNormals, matrices.normal());
+        QuadEncoder.writeQuadVertices(quad, vertexConsumer, this.overlay, this.matrices.pose(), this.matrices.trustedNormals, this.matrices.normal());
 
         SpriteUtil.INSTANCE.markSpriteActive(quad.sprite(SpriteFinderCache.forBlockAtlas()));
     }
 
     public void bufferModel(PoseStack.Pose entry, BlockVertexConsumerProvider vertexConsumers, BlockStateModel model, float red, float green, float blue, int light, int overlay, BlockAndTintGetter blockView, BlockPos pos, BlockState state) {
-        matrices = entry;
+        this.matrices = entry;
         this.overlay = overlay;
 
         this.prepareAoInfo(true);
@@ -114,15 +113,15 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
         this.state = state;
         this.pos = pos;
 
-        random.setSeed(42L);
+        this.random.setSeed(42L);
 
-        ((FabricBlockStateModel) model).emitQuads(((ExtendedMutableQuadViewImpl) getForEmitting()).getWrapper(), blockView, pos, state, random, cullFace -> false);
+        ((FabricBlockStateModel) model).emitQuads(((ExtendedMutableQuadViewImpl) this.getForEmitting()).getWrapper(), blockView, pos, state, this.random, cullFace -> false);
 
         this.level = null;
         this.state = null;
         this.pos = null;
         this.vertexConsumers = null;
-        lastRenderLayer = null;
-        lastVertexConsumer = null;
+        this.lastRenderLayer = null;
+        this.lastVertexConsumer = null;
     }
 }

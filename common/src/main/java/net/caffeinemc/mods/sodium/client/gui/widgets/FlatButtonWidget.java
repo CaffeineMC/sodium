@@ -100,7 +100,7 @@ public class FlatButtonWidget extends AbstractWidget implements Renderable {
         }
 
         if (event.button() == 0 && this.isMouseOver(event.x(), event.y())) {
-            doAction();
+            this.doAction();
 
             return true;
         }
@@ -114,7 +114,7 @@ public class FlatButtonWidget extends AbstractWidget implements Renderable {
             return false;
 
         if (event.isSelection()) {
-            doAction();
+            this.doAction();
             return true;
         }
 
