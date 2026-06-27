@@ -64,7 +64,7 @@ public abstract class AsyncRenderTask<T> implements Callable<T>, CancellationTok
     }
 
     @Override
-    public T call() throws Exception {
+    public T call() {
         if (this.state == CANCELLED) {
             return null;
         }

@@ -138,7 +138,7 @@ public class RenderSectionManager {
             this.sortTriggering = null;
         }
 
-        this.regions = new RenderRegionManager(this);
+        this.regions = new RenderRegionManager();
         this.sectionCache = new ClonedChunkSectionCache(this.level);
 
         this.renderLists = SortedRenderLists.empty();

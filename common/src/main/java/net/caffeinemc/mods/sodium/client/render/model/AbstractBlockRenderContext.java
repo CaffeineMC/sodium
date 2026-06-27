@@ -1,7 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.model;
 
 import com.google.common.base.Suppliers;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.caffeinemc.mods.sodium.client.model.light.LightMode;
 import net.caffeinemc.mods.sodium.client.model.light.LightPipeline;
 import net.caffeinemc.mods.sodium.client.model.light.LightPipelineProvider;
@@ -213,8 +212,6 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
             }
         }
     }
-
-    private List<BlockStateModelPart> parts = new ObjectArrayList<>();
 
     /* Handling of vanilla models - this is the hot path for non-modded models */
     public void bufferDefaultModel(BlockStateModelPart part, Predicate<Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {

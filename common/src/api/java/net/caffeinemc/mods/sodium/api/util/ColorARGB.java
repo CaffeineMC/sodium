@@ -172,7 +172,7 @@ public class ColorARGB implements ColorU8 {
         float cmax = Math.max(r, Math.max(g, b));
         float cmin = Math.min(r, Math.min(g, b));
         float diff = cmax - cmin;
-        float h = -1, s = -1;
+        float h = -1, s;
 
         if (cmax == cmin) {
             h = 0;

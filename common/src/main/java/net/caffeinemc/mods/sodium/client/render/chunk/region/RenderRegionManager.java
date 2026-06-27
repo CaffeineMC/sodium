@@ -8,7 +8,6 @@ import net.caffeinemc.mods.sodium.client.gpu.arena.staging.MojangStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gpu.arena.staging.StagingBuffer;
 import net.caffeinemc.mods.sodium.client.render.chunk.IntPool;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
-import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.UniformBufferManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
@@ -32,10 +31,8 @@ public class RenderRegionManager {
 
     private final StagingBuffer stagingBuffer;
     private final IntPool freeIds = new IntPool();
-    private final RenderSectionManager parent;
 
-    public RenderRegionManager(RenderSectionManager parent) {
-        this.parent = parent;
+    public RenderRegionManager() {
         this.stagingBuffer = createStagingBuffer();
     }
 

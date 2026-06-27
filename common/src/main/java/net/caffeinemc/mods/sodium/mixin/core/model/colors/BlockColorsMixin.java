@@ -31,7 +31,7 @@ public class BlockColorsMixin implements BlockColorsExtension {
             // it means a mod is using custom logic, and we need to disable per-vertex coloring
             if (this.blocksToColor.put(block, layers.toArray(BlockTintSource[]::new)) != null) {
                 this.overridenBlocks.add(block);
-                SodiumClientMod.logger().info("Block {} had its color provider replaced with {} and will not use per-vertex coloring", BuiltInRegistries.BLOCK.getKey(block), layers.toString());
+                SodiumClientMod.logger().info("Block {} had its color provider replaced with {} and will not use per-vertex coloring", BuiltInRegistries.BLOCK.getKey(block), layers);
             }
         }
     }

@@ -24,7 +24,7 @@ public class GameRendererMixin implements GameRendererStorage {
     private FogRenderer fogRenderer;
 
     @Unique
-    private Matrix4f projection = new Matrix4f();
+    private final Matrix4f projection = new Matrix4f();
 
     @Override
     public FogParameters sodium$getFogParameters() {

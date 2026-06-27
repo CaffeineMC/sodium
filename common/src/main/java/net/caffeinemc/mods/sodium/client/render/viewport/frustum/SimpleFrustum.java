@@ -9,12 +9,12 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 
 public final class SimpleFrustum implements Frustum {
-    private float nxX, nxY, nxZ, negNxW;
-    private float pxX, pxY, pxZ, negPxW;
-    private float nyX, nyY, nyZ, negNyW;
-    private float pyX, pyY, pyZ, negPyW;
-    private float nzX, nzY, nzZ, negNzW;
-    private float pzX, pzY, pzZ, negPzW;
+    private final float nxX, nxY, nxZ, negNxW;
+    private final float pxX, pxY, pxZ, negPxW;
+    private final float nyX, nyY, nyZ, negNyW;
+    private final float pyX, pyY, pyZ, negPyW;
+    private final float nzX, nzY, nzZ, negNzW;
+    private final float pzX, pzY, pzZ, negPzW;
 
     private final FrustumIntersection frustum;
 

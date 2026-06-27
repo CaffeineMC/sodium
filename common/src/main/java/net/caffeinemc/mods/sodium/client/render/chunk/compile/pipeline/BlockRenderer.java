@@ -46,7 +46,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
     @Nullable
     private ColorProvider<BlockState> colorProvider;
     private TranslucentGeometryCollector collector;
-    private boolean cutoutLeaves;
+    private final boolean cutoutLeaves;
 
     private final ColorProvider<BlockState> mutableColorProvider = PlatformModelAccess.getInstance().createMutableColorProvider();
 
