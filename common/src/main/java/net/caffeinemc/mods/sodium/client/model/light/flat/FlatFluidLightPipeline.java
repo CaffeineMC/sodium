@@ -28,13 +28,13 @@ public class FlatFluidLightPipeline extends FlatLightPipeline {
     public void calculate(ModelQuadView quad, BlockPos pos, QuadLightData out, Direction cullFace, Direction lightFace, boolean shade, boolean enhanced) {
         // this first part is a reduced implementation of FlatLightPipeline
         if (cullFace != null) {
-            Arrays.fill(out.br, getShade(this.lightCache.getLevel(), lightFace, shade));
+            Arrays.fill(out.br, this.getShade(this.lightCache.getLevel(), lightFace, shade));
         } else {
             int flags = quad.getFlags();
             if ((flags & ModelQuadFlags.IS_ALIGNED) != 0 || ((flags & ModelQuadFlags.IS_PARALLEL) != 0 && unpackFC(this.lightCache.get(pos)))) {
-                Arrays.fill(out.br, getShade(this.lightCache.getLevel(), lightFace, shade));
+                Arrays.fill(out.br, this.getShade(this.lightCache.getLevel(), lightFace, shade));
             } else {
-                Arrays.fill(out.br, enhanced ? PlatformBlockAccess.getInstance().getNormalVectorShade(quad, this.lightCache.getLevel(), shade) : getShade(this.lightCache.getLevel(), lightFace, shade));
+                Arrays.fill(out.br, enhanced ? PlatformBlockAccess.getInstance().getNormalVectorShade(quad, this.lightCache.getLevel(), shade) : this.getShade(this.lightCache.getLevel(), lightFace, shade));
             }
         }
 

@@ -4,7 +4,6 @@ import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 
@@ -31,11 +30,11 @@ public class TerrainRenderPass {
     }
 
     public RenderPipeline getPipeline() {
-        return renderType.pipeline();
+        return this.renderType.pipeline();
     }
 
     public RenderTarget getTarget() {
-        return (isTranslucent && Minecraft.getInstance().gameRenderer.gameRenderState().useShaderTransparency()) ? Minecraft.getInstance().levelRenderer.translucentTarget() : Minecraft.getInstance().gameRenderer.mainRenderTarget();
+        return (this.isTranslucent && Minecraft.getInstance().gameRenderer.gameRenderState().useShaderTransparency()) ? Minecraft.getInstance().levelRenderer.translucentTarget() : Minecraft.getInstance().gameRenderer.mainRenderTarget();
     }
 
     public GpuTextureView getAtlas() {

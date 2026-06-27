@@ -58,7 +58,7 @@ public class DefaultColorProviders {
 
         @Override
         public void getColors(LevelSlice slice, BlockPos pos, BlockPos.MutableBlockPos scratchPos, BlockState state, ModelQuadView quad, int[] output, boolean smooth) {
-            if (quad.getTintIndex() >= color.length) {
+            if (quad.getTintIndex() >= this.color.length) {
                 Arrays.fill(output, -1);
                 return;
             }

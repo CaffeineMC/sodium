@@ -338,7 +338,7 @@ public class GlBufferArena {
         // If we weren't able to upload some buffers, they will have been left behind in the queue
         if (!queue.isEmpty()) {
             // resize to the new estimated capacity
-            this.resize(estimateNewCapacity(regionFillFractionInv, queue));
+            this.resize(this.estimateNewCapacity(regionFillFractionInv, queue));
 
             // Try again to upload any buffers that failed last time
             this.tryUploads(queue);
@@ -354,7 +354,7 @@ public class GlBufferArena {
 
     private long estimateNewCapacity(float regionFillFractionInv, List<PendingUpload> queue) {
         // Calculate the amount of memory needed for the remaining uploads
-        long requiredTotalSize = getRequiredTotalSize(queue);
+        long requiredTotalSize = this.getRequiredTotalSize(queue);
 
         int newSegmentCount = this.segmentCount + queue.size();
 

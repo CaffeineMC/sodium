@@ -1,17 +1,17 @@
 package net.caffeinemc.mods.sodium.mixin.features.render.gui.font;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.caffeinemc.mods.sodium.api.util.ColorARGB;
-import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
-import net.caffeinemc.mods.sodium.api.vertex.format.common.GlyphVertex;
-import net.minecraft.client.gui.font.glyphs.BakedGlyph;
-import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
+import net.caffeinemc.mods.sodium.api.util.ColorARGB;
+import net.caffeinemc.mods.sodium.api.vertex.format.common.GlyphVertex;
+import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
 import net.minecraft.client.gui.font.glyphs.BakedSheetGlyph;
-import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.lwjgl.system.MemoryStack;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;

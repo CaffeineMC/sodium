@@ -29,7 +29,7 @@ public interface Forest<T extends Tree> {
     boolean add(int x, int y, int z, TreeAddMethod<T> addMethod);
 
     default void add(RenderSection section) {
-        add(section.getChunkX(), section.getChunkY(), section.getChunkZ());
+        this.add(section.getChunkX(), section.getChunkY(), section.getChunkZ());
     }
 
     int getPresence(int x, int y, int z);

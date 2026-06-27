@@ -34,7 +34,6 @@ import net.minecraft.client.resources.model.sprite.AtlasManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Util;
 import net.minecraft.world.level.block.LeavesBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import org.joml.Matrix4fc;
 import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
@@ -47,7 +46,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.EnumMap;
 import java.util.List;
-import java.util.function.Consumer;
 
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin implements LevelRendererExtension {
@@ -137,8 +135,8 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     private ChunkSectionsToRender getRenderState(LevelRenderer instance, Matrix4fc modelViewMatrix, Operation<ChunkSectionsToRender> original, @Local Vector4f fogColor) {
         var chunkSectionsToRender = original.call(instance, modelViewMatrix);
 
-        matrices = new ChunkRenderMatrices(((GameRendererStorage) Minecraft.getInstance().gameRenderer).sodium$getProjectionMatrix(), modelViewMatrix);
-        ((SodiumChunkSection) (Object) chunkSectionsToRender).sodium$setRendering(renderer, matrices, this.levelRenderState.cameraRenderState.pos.x, this.levelRenderState.cameraRenderState.pos.y, this.levelRenderState.cameraRenderState.pos.z);
+        this.matrices = new ChunkRenderMatrices(((GameRendererStorage) Minecraft.getInstance().gameRenderer).sodium$getProjectionMatrix(), modelViewMatrix);
+        ((SodiumChunkSection) (Object) chunkSectionsToRender).sodium$setRendering(this.renderer, this.matrices, this.levelRenderState.cameraRenderState.pos.x, this.levelRenderState.cameraRenderState.pos.y, this.levelRenderState.cameraRenderState.pos.z);
 
         // update the fog color here with the actual fog color being used to render the sky, since the fog color that SodiumWorldRenderer still has stored from FogRendererMixin is outdated.
         this.renderer.updateFogColor(fogColor);
@@ -164,7 +162,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         this.renderer.reload();
 
         this.sectionRenderDispatcher = new IgnoringSectionRenderDispatcher(Util.backgroundExecutor(), this.renderBuffers, null, this.sectionOcclusionGraph::schedulePropagationFrom);
-        this.viewArea = new IgnoringViewArea(sectionRenderDispatcher);
+        this.viewArea = new IgnoringViewArea(this.sectionRenderDispatcher);
         this.sectionOcclusionGraph .waitAndReset(this.viewArea);
 
         this.clearVisibleSections();

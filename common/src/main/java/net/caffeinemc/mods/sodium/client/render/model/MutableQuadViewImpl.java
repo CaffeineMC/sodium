@@ -22,11 +22,11 @@ import net.caffeinemc.mods.sodium.client.render.helper.ListStorage;
 import net.caffeinemc.mods.sodium.client.render.helper.TextureHelper;
 import net.caffeinemc.mods.sodium.client.render.texture.SodiumSpriteFinder;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.core.Direction;
 import net.minecraft.util.TriState;
 import org.jetbrains.annotations.Nullable;
@@ -55,13 +55,13 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
 
     @Override
     public List<BlockStateModelPart> clearAndGet() {
-        if (cachedList == null) {
-            cachedList = new ArrayList<>();
-            return cachedList;
+        if (this.cachedList == null) {
+            this.cachedList = new ArrayList<>();
+            return this.cachedList;
         }
 
-        cachedList.clear();
-        return cachedList;
+        this.cachedList.clear();
+        return this.cachedList;
     }
 
     /** Used for quick clearing of quad buffers. Implicitly has invalid geometry. */
@@ -94,77 +94,77 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
 
     @Nullable
     public TextureAtlasSprite cachedSprite() {
-        return cachedSprite;
+        return this.cachedSprite;
     }
 
     public void cachedSprite(@Nullable TextureAtlasSprite sprite) {
-        cachedSprite = sprite;
+        this.cachedSprite = sprite;
     }
 
     public TextureAtlasSprite sprite(SodiumSpriteFinder finder) {
-        TextureAtlasSprite sprite = cachedSprite;
+        TextureAtlasSprite sprite = this.cachedSprite;
 
         if (sprite == null) {
             sprite = finder.find(this);
-            cachedSprite = sprite;
+            this.cachedSprite = sprite;
         }
 
         return sprite;
     }
 
     public void clear() {
-        System.arraycopy(DEFAULT, 0, data, baseIndex, EncodingFormat.TOTAL_STRIDE);
-        isGeometryInvalid = true;
-        nominalFace = null;
-        cachedSprite(null);
+        System.arraycopy(DEFAULT, 0, this.data, this.baseIndex, EncodingFormat.TOTAL_STRIDE);
+        this.isGeometryInvalid = true;
+        this.nominalFace = null;
+        this.cachedSprite(null);
     }
 
     @Override
     public void load() {
         super.load();
-        cachedSprite(null);
+        this.cachedSprite(null);
     }
 
     public MutableQuadViewImpl setPos(int vertexIndex, float x, float y, float z) {
-        final int index = baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_X;
-        data[index] = Float.floatToRawIntBits(x);
-        data[index + 1] = Float.floatToRawIntBits(y);
-        data[index + 2] = Float.floatToRawIntBits(z);
-        isGeometryInvalid = true;
+        final int index = this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_X;
+        this.data[index] = Float.floatToRawIntBits(x);
+        this.data[index + 1] = Float.floatToRawIntBits(y);
+        this.data[index + 2] = Float.floatToRawIntBits(z);
+        this.isGeometryInvalid = true;
         return this;
     }
 
     public MutableQuadViewImpl setColor(int vertexIndex, int color) {
-        data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_COLOR] = color;
+        this.data[this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_COLOR] = color;
         return this;
     }
 
     public MutableQuadViewImpl setUV(int vertexIndex, float u, float v) {
-        final int i = baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_U;
-        data[i] = Float.floatToRawIntBits(u);
-        data[i + 1] = Float.floatToRawIntBits(v);
-        cachedSprite(null);
+        final int i = this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_U;
+        this.data[i] = Float.floatToRawIntBits(u);
+        this.data[i + 1] = Float.floatToRawIntBits(v);
+        this.cachedSprite(null);
         return this;
     }
 
     public MutableQuadViewImpl spriteBake(TextureAtlasSprite sprite, int bakeFlags) {
         TextureHelper.bakeSprite(this, sprite, bakeFlags);
-        cachedSprite(sprite);
+        this.cachedSprite(sprite);
         return this;
     }
 
     public MutableQuadViewImpl setLight(int vertexIndex, int lightmap) {
-        data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_LIGHTMAP] = lightmap;
+        this.data[this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_LIGHTMAP] = lightmap;
         return this;
     }
 
     protected void normalFlags(int flags) {
-        data[baseIndex + HEADER_BITS] = EncodingFormat.normalFlags(data[baseIndex + HEADER_BITS], flags);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.normalFlags(this.data[this.baseIndex + HEADER_BITS], flags);
     }
 
     public MutableQuadViewImpl setNormal(int vertexIndex, float x, float y, float z) {
-        normalFlags(normalFlags() | (1 << vertexIndex));
-        data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL] = NormI8.pack(x, y, z);
+        this.normalFlags(this.normalFlags() | (1 << vertexIndex));
+        this.data[this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL] = NormI8.pack(x, y, z);
         return this;
     }
 
@@ -176,89 +176,89 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
 
         if (normalFlags == 0b1111) return;
 
-        final int packedFaceNormal = packedFaceNormal();
+        final int packedFaceNormal = this.packedFaceNormal();
 
         for (int v = 0; v < 4; v++) {
             if ((normalFlags & (1 << v)) == 0) {
-                data[baseIndex + v * VERTEX_STRIDE + VERTEX_NORMAL] = packedFaceNormal;
+                this.data[this.baseIndex + v * VERTEX_STRIDE + VERTEX_NORMAL] = packedFaceNormal;
             }
         }
 
-        normalFlags(0b1111);
+        this.normalFlags(0b1111);
     }
 
     public final MutableQuadViewImpl setCullFace(@Nullable Direction face) {
-        data[baseIndex + HEADER_BITS] = EncodingFormat.cullFace(data[baseIndex + HEADER_BITS], face);
-        setNominalFace(face);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.cullFace(this.data[this.baseIndex + HEADER_BITS], face);
+        this.setNominalFace(face);
         return this;
     }
 
     public final MutableQuadViewImpl setNominalFace(@Nullable Direction face) {
-        nominalFace = face;
+        this.nominalFace = face;
         return this;
     }
 
     public MutableQuadViewImpl setRenderType(@Nullable ChunkSectionLayer renderLayer) {
-        data[baseIndex + HEADER_BITS] = EncodingFormat.renderLayer(data[baseIndex + HEADER_BITS], renderLayer);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.renderLayer(this.data[this.baseIndex + HEADER_BITS], renderLayer);
         return this;
     }
 
     public MutableQuadViewImpl setEmissive(boolean emissive) {
-        data[baseIndex + HEADER_BITS] = EncodingFormat.emissive(data[baseIndex + HEADER_BITS], emissive);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.emissive(this.data[this.baseIndex + HEADER_BITS], emissive);
         return this;
     }
 
     public MutableQuadViewImpl setDiffuseShade(boolean shade) {
-        data[baseIndex + HEADER_BITS] = EncodingFormat.diffuseShade(data[baseIndex + HEADER_BITS], shade);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.diffuseShade(this.data[this.baseIndex + HEADER_BITS], shade);
         return this;
     }
 
     public MutableQuadViewImpl setAmbientOcclusion(TriState ao) {
         Objects.requireNonNull(ao, "ambient occlusion TriState may not be null");
-        data[baseIndex + HEADER_BITS] = EncodingFormat.ambientOcclusion(data[baseIndex + HEADER_BITS], ao);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.ambientOcclusion(this.data[this.baseIndex + HEADER_BITS], ao);
         return this;
     }
 
     public MutableQuadViewImpl setGlint(@Nullable ItemStackRenderState.FoilType glint) {
-        data[baseIndex + HEADER_BITS] = EncodingFormat.glint(data[baseIndex + HEADER_BITS], glint);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.glint(this.data[this.baseIndex + HEADER_BITS], glint);
         return this;
     }
 
     public MutableQuadViewImpl setShadeMode(SodiumShadeMode mode) {
         Objects.requireNonNull(mode, "ShadeMode may not be null");
-        data[baseIndex + HEADER_BITS] = EncodingFormat.shadeMode(data[baseIndex + HEADER_BITS], mode);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.shadeMode(this.data[this.baseIndex + HEADER_BITS], mode);
         return this;
     }
 
     public final MutableQuadViewImpl setTintIndex(int tintIndex) {
-        data[baseIndex + HEADER_TINT_INDEX] = tintIndex;
+        this.data[this.baseIndex + HEADER_TINT_INDEX] = tintIndex;
         return this;
     }
 
     public final MutableQuadViewImpl setQuadAtlas(SodiumQuadAtlas atlas) {
-        data[baseIndex + HEADER_BITS] = EncodingFormat.quadAtlas(data[baseIndex + HEADER_BITS], atlas);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.quadAtlas(this.data[this.baseIndex + HEADER_BITS], atlas);
         return this;
     }
 
     public final MutableQuadViewImpl setTag(int tag) {
-        data[baseIndex + HEADER_TAG] = tag;
+        this.data[this.baseIndex + HEADER_TAG] = tag;
         return this;
     }
 
     public MutableQuadViewImpl copyFrom(QuadViewImpl q) {
-        System.arraycopy(q.data, q.baseIndex, data, baseIndex, EncodingFormat.TOTAL_STRIDE);
-        nominalFace = q.nominalFace;
+        System.arraycopy(q.data, q.baseIndex, this.data, this.baseIndex, EncodingFormat.TOTAL_STRIDE);
+        this.nominalFace = q.nominalFace;
 
-        isGeometryInvalid = q.isGeometryInvalid;
+        this.isGeometryInvalid = q.isGeometryInvalid;
 
-        if (!isGeometryInvalid) {
-            faceNormal.set(q.faceNormal);
+        if (!this.isGeometryInvalid) {
+            this.faceNormal.set(q.faceNormal);
         }
 
         if (q instanceof MutableQuadViewImpl mutableQuad) {
-            cachedSprite(mutableQuad.cachedSprite());
+            this.cachedSprite(mutableQuad.cachedSprite());
         } else {
-            cachedSprite(null);
+            this.cachedSprite(null);
         }
 
 
@@ -269,38 +269,38 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
         boolean hasNormals = false;
 
         for (int i = 0; i < 4; i++) {
-            setPos(i, quadData.getX(i), quadData.getY(i), quadData.getZ(i));
-            setColor(i, quadData.getColor(i));
-            setUV(i, quadData.getTexU(i), quadData.getTexV(i));
-            setLight(i, quadData.getMaxLightQuad(i));
+            this.setPos(i, quadData.getX(i), quadData.getY(i), quadData.getZ(i));
+            this.setColor(i, quadData.getColor(i));
+            this.setUV(i, quadData.getTexU(i), quadData.getTexV(i));
+            this.setLight(i, quadData.getMaxLightQuad(i));
 
             int normal = quadData.getVertexNormal(i);
             if (normal != 0) hasNormals = true;
-            setNormal(i, NormI8.unpackX(normal), NormI8.unpackY(normal), NormI8.unpackZ(normal));
+            this.setNormal(i, NormI8.unpackX(normal), NormI8.unpackY(normal), NormI8.unpackZ(normal));
         }
 
-        normalFlags(hasNormals ? 0b1111 : 0);
+        this.normalFlags(hasNormals ? 0b1111 : 0);
     }
 
     public final MutableQuadViewImpl fromBakedQuad(BakedQuad quad) {
-        fromVanillaInternal(((BakedQuadView) (Object) quad));
-        setNominalFace(quad.direction());
-        setDiffuseShade(quad.materialInfo().shade());
-        setTintIndex(quad.materialInfo().tintIndex());
-        setAmbientOcclusion(((BakedQuadView) (Object) quad).hasAO() ? TriState.DEFAULT : TriState.FALSE); // TODO: TRUE, or DEFAULT?
-        setItemRenderType(quad.materialInfo().itemRenderType());
-        setRenderType(quad.materialInfo().layer());
-        setAnimated(quad.materialInfo().sprite().contents().isAnimated());
-        setEmissive(quad.materialInfo().lightEmission() == 15);
+        this.fromVanillaInternal(((BakedQuadView) (Object) quad));
+        this.setNominalFace(quad.direction());
+        this.setDiffuseShade(quad.materialInfo().shade());
+        this.setTintIndex(quad.materialInfo().tintIndex());
+        this.setAmbientOcclusion(((BakedQuadView) (Object) quad).hasAO() ? TriState.DEFAULT : TriState.FALSE); // TODO: TRUE, or DEFAULT?
+        this.setItemRenderType(quad.materialInfo().itemRenderType());
+        this.setRenderType(quad.materialInfo().layer());
+        this.setAnimated(quad.materialInfo().sprite().contents().isAnimated());
+        this.setEmissive(quad.materialInfo().lightEmission() == 15);
 
         // Copy geometry cached inside the quad
         BakedQuadView bakedView = (BakedQuadView) (Object) quad;
-        NormI8.unpack(bakedView.getFaceNormal(), faceNormal);
-        data[baseIndex + HEADER_FACE_NORMAL] = bakedView.getFaceNormal();
-        int headerBits = EncodingFormat.lightFace(data[baseIndex + HEADER_BITS], bakedView.getLightFace());
+        NormI8.unpack(bakedView.getFaceNormal(), this.faceNormal);
+        this.data[this.baseIndex + HEADER_FACE_NORMAL] = bakedView.getFaceNormal();
+        int headerBits = EncodingFormat.lightFace(this.data[this.baseIndex + HEADER_BITS], bakedView.getLightFace());
         headerBits = EncodingFormat.normalFace(headerBits, bakedView.getNormalFace());
-        data[baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(headerBits, bakedView.getFlags());
-        isGeometryInvalid = false;
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(headerBits, bakedView.getFlags());
+        this.isGeometryInvalid = false;
 
         SodiumQuadAtlas atlas = SodiumQuadAtlas.of(quad.materialInfo().sprite().atlasLocation());
 
@@ -308,8 +308,8 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
             atlas = SodiumQuadAtlas.BLOCK;
         }
 
-        setQuadAtlas(atlas);
-        cachedSprite(quad.materialInfo().sprite());
+        this.setQuadAtlas(atlas);
+        this.cachedSprite(quad.materialInfo().sprite());
         return this;
     }
 
@@ -321,7 +321,7 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
 
     public MutableQuadViewImpl translate(float x, float y, float z) {
         for (int i = 0; i < 4; i++) {
-            setPos(i, getX(i) + x,  getY(i) + y, getZ(i) + z);
+            this.setPos(i, this.getX(i) + x, this.getY(i) + y, this.getZ(i) + z);
         }
 
         return this;
@@ -331,14 +331,14 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
         ItemRenderType enumValue = ItemRenderType.RENDER_TYPE_2_ENUM.get(renderType);
 
         if (enumValue != null) {
-            data[baseIndex + HEADER_BITS] = EncodingFormat.itemRenderType(data[baseIndex + HEADER_BITS], enumValue);
+            this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.itemRenderType(this.data[this.baseIndex + HEADER_BITS], enumValue);
         }
 
         return this;
     }
 
     public MutableQuadViewImpl setAnimated(boolean b) {
-        data[baseIndex + HEADER_BITS] = EncodingFormat.animated(data[baseIndex + HEADER_BITS], b);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.animated(this.data[this.baseIndex + HEADER_BITS], b);
         return this;
     }
 }

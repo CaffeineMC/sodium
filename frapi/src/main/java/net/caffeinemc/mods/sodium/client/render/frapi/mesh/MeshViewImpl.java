@@ -16,21 +16,19 @@
 
 package net.caffeinemc.mods.sodium.client.render.frapi.mesh;
 
-import java.util.function.Consumer;
-
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.ExtendedMutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.ExtendedQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.MutableQuadViewWrapper;
 import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.QuadViewWrapper;
 import net.caffeinemc.mods.sodium.client.render.model.EncodingFormat;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.QuadViewImpl;
-import org.jetbrains.annotations.Range;
-
 import net.fabricmc.fabric.api.client.renderer.v1.mesh.MeshView;
 import net.fabricmc.fabric.api.client.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.api.client.renderer.v1.mesh.QuadView;
+import org.jetbrains.annotations.Range;
+
+import java.util.function.Consumer;
 
 public class MeshViewImpl implements MeshView {
     /** Used to satisfy external calls to {@link #forEach(Consumer)}. */
@@ -45,7 +43,7 @@ public class MeshViewImpl implements MeshView {
     @Override
     @Range(from = 0, to = Integer.MAX_VALUE)
     public int size() {
-        return limit / EncodingFormat.TOTAL_STRIDE;
+        return this.limit / EncodingFormat.TOTAL_STRIDE;
     }
 
     @Override
@@ -59,7 +57,7 @@ public class MeshViewImpl implements MeshView {
             cursor = pool.pop();
         }
 
-        forEach(action, cursor);
+        this.forEach(action, cursor);
 
         pool.push(cursor);
     }

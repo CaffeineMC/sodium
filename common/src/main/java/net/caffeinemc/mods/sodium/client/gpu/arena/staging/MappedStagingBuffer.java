@@ -9,7 +9,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.PriorityQueue;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import net.caffeinemc.mods.sodium.client.gpu.device.backend.DrawBackend;
-import net.caffeinemc.mods.sodium.client.gpu.device.batch.MultiDrawBatch;
 import net.caffeinemc.mods.sodium.client.util.MathUtil;
 import net.caffeinemc.mods.sodium.mixin.core.GpuDeviceAccessor;
 import org.lwjgl.system.MemoryUtil;

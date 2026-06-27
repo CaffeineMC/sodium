@@ -1,8 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.vertex;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
-import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 
 import java.util.Map;
@@ -37,7 +35,7 @@ public class VertexFormatOffsetCache {
     private final Map<VertexFormat, int[]> offsetCache = new Reference2ReferenceOpenHashMap<>();
 
     public int[] getCachedOffsets(VertexFormat format) {
-        return offsetCache.computeIfAbsent(format, f -> {
+        return this.offsetCache.computeIfAbsent(format, f -> {
             int[] offsets = new int[6];
 
             for (int i = 0; i < 6; i++) {

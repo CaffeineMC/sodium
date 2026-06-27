@@ -108,9 +108,11 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                 renderPass.getTarget().getColorTextureView(), Optional.empty(),
                 renderPass.getTarget().getDepthTextureView(), OptionalDouble.empty())) {
             pass.setPipeline(this.activeProgram);
-            drawContext.setContext(pass, this.activeProgram);
+            this.drawContext.setContext(pass, this.activeProgram);
 
-            if (!useIndexedTessellation && sharedIndexBuffer.getBufferObject() != null) pass.setIndexBuffer(sharedIndexBuffer.getBufferObject(), IndexType.INT);
+            if (!useIndexedTessellation && this.sharedIndexBuffer.getBufferObject() != null) {
+                pass.setIndexBuffer(this.sharedIndexBuffer.getBufferObject(), IndexType.INT);
+            }
 
             pass.setUniform("u_Globals", uniformData);
             pass.setUniform("u_SectionTimeInfo", sectionTimeInfo);
@@ -144,20 +146,20 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
 
                 pass.setVertexBuffer(0, resources.getGeometryBuffer().slice());
 
-                drawContext.updateData(region, camera);
+                this.drawContext.updateData(region, camera);
 
-                batch.draw(drawContext);
+                batch.draw(this.drawContext);
             }
         }
 
-        drawContext.endDraw();
+        this.drawContext.endDraw();
 
         super.end(renderPass);
     }
 
     @Override
     public void rotate() {
-        drawContext.rotate();
+        this.drawContext.rotate();
     }
 
     private static void fillCommandBuffer(MultiDrawBatch batch,
@@ -226,7 +228,6 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
      * Generates the draw commands for a chunk's meshes, where each mesh has a separate index buffer. This is used
      * when rendering translucent geometry, as each geometry set needs a sorted index buffer.
      */
-    @SuppressWarnings("IntegerMultiplicationImplicitCastToLong")
     private static void addLocalIndexedDrawCommands(MultiDrawBatch batch, long pMeshData, int mask) {
         int size = batch.size;
 
@@ -252,7 +253,6 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
     /**
      * Generates the draw commands for a chunk's meshes using the shared index buffer.
      */
-    @SuppressWarnings("IntegerMultiplicationImplicitCastToLong")
     private static void addSharedIndexedDrawCommands(MultiDrawBatch batch, long pMeshData, int mask) {
         // this is either zero (global shared index buffer) or the offset to the location of the shared element buffer (region shared index buffer)
         final var elementOffsetBytes = SectionRenderDataUnsafe.getBaseElement(pMeshData);

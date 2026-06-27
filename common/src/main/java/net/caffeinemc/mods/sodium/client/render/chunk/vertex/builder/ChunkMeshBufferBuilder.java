@@ -3,7 +3,6 @@ package net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
-import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.lwjgl.system.MemoryUtil;
 
 import java.lang.foreign.MemorySegment;

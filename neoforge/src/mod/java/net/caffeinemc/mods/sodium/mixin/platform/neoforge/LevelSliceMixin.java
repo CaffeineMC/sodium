@@ -5,8 +5,8 @@ import net.caffeinemc.mods.sodium.client.services.SodiumModelData;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.caffeinemc.mods.sodium.client.world.SodiumAuxiliaryLightManager;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.core.BlockPos;
 import net.minecraft.client.renderer.block.BlockAndTintGetter;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.common.world.AuxiliaryLightManager;
 import net.neoforged.neoforge.model.data.ModelData;
@@ -43,7 +43,7 @@ public abstract class LevelSliceMixin implements BlockAndTintGetter {
 
     @Override
     public ModelData getModelData(BlockPos pos) {
-        SodiumModelData modelData = getPlatformModelData(pos);
+        SodiumModelData modelData = this.getPlatformModelData(pos);
         return modelData != null ? (ModelData) (Object) modelData : null;
     }
 
@@ -52,7 +52,7 @@ public abstract class LevelSliceMixin implements BlockAndTintGetter {
         int relChunkX = pos.x() - (this.originBlockX >> 4);
         int relChunkZ = pos.z() - (this.originBlockZ >> 4);
 
-        return (AuxiliaryLightManager) auxLightManager[getLocalSectionIndex(relChunkX, 0, relChunkZ)];
+        return (AuxiliaryLightManager) this.auxLightManager[getLocalSectionIndex(relChunkX, 0, relChunkZ)];
     }
 
     @Override
@@ -61,6 +61,6 @@ public abstract class LevelSliceMixin implements BlockAndTintGetter {
         int relBlockY = pos.getY() - this.originBlockY;
         int relBlockZ = pos.getZ() - this.originBlockZ;
 
-        return (AuxiliaryLightManager) auxLightManager[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
+        return (AuxiliaryLightManager) this.auxLightManager[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
     }
 }

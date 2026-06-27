@@ -66,7 +66,7 @@ public abstract class BufferBuilderMixin implements VertexBufferWriter, BufferBu
         }
 
         this.vertices += count;
-        this.vertexPointer = (dst + length) - vertexSize;
+        this.vertexPointer = (dst + length) - this.vertexSize;
         this.elementsToFill = 0;
     }
 

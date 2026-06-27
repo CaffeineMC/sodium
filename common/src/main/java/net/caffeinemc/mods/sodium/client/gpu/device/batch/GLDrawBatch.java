@@ -1,7 +1,5 @@
 package net.caffeinemc.mods.sodium.client.gpu.device.batch;
 
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.systems.RenderPass;
 import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import net.caffeinemc.mods.sodium.client.gpu.device.context.DrawContext;
 import net.caffeinemc.mods.sodium.client.util.UInt32;
@@ -23,20 +21,20 @@ public final class GLDrawBatch extends MultiDrawBatch {
 
     @Override
     public void put(int size, int elementCount, int baseVertex, long elementOffset) {
-        MemoryIntrinsics.putInt(pElementCount + (size << 2), UInt32.uncheckedDowncast(elementCount));
-        MemoryIntrinsics.putInt(pBaseVertex + (size << 2), UInt32.uncheckedDowncast(baseVertex));
+        MemoryIntrinsics.putInt(this.pElementCount + (size << 2), UInt32.uncheckedDowncast(elementCount));
+        MemoryIntrinsics.putInt(this.pBaseVertex + (size << 2), UInt32.uncheckedDowncast(baseVertex));
 
         // * 4 to convert to bytes (the index buffer contains integers)
-        MemoryIntrinsics.putAddress(pElementPointer + (size << Pointer.POINTER_SHIFT), elementOffset << 2);
+        MemoryIntrinsics.putAddress(this.pElementPointer + (size << Pointer.POINTER_SHIFT), elementOffset << 2);
 
         this.updateMaxElementCount(elementCount);
     }
 
     @Override
     public void draw(DrawContext context) {
-        context.getPass().multiDrawIndexed(MemoryUtil.memPointerBuffer(pElementPointer, size),
-                MemoryUtil.memIntBuffer(pElementCount, size),
-                MemoryUtil.memIntBuffer(pBaseVertex, size), size);
+        context.getPass().multiDrawIndexed(MemoryUtil.memPointerBuffer(this.pElementPointer, this.size),
+                MemoryUtil.memIntBuffer(this.pElementCount, this.size),
+                MemoryUtil.memIntBuffer(this.pBaseVertex, this.size), this.size);
     }
 
     @Override

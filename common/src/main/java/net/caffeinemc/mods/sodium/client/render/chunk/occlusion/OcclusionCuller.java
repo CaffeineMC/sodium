@@ -261,7 +261,7 @@ public class OcclusionCuller {
                 this.outOfWorldRadius++;
             }
 
-            processQueue(this.queue.read(), this.queue.write());
+            this.processQueue(this.queue.read(), this.queue.write());
         }
 
         this.addNearbySections(viewport);
@@ -333,7 +333,7 @@ public class OcclusionCuller {
             outgoingRegular &= getOutwardDirectionsRegular(origin, section);
             outgoingLocal &= getOutwardDirectionsRegular(origin, section);
 
-            visitNeighbors(writeQueue, section, outgoingWide, outgoingRegular, outgoingLocal, this.inBoundsOrigin);
+            this.visitNeighbors(writeQueue, section, outgoingWide, outgoingRegular, outgoingLocal, this.inBoundsOrigin);
         }
     }
 
@@ -384,12 +384,12 @@ public class OcclusionCuller {
 
         // the viewpoint is outside the world, so the angle computations relying on propagating angle information
         // from the origin section to the others won't work.
-        tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentDown, GraphDirection.DOWN);
-        tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentUp, GraphDirection.UP);
-        tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentNorth, GraphDirection.NORTH);
-        tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentSouth, GraphDirection.SOUTH);
-        tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentWest, GraphDirection.WEST);
-        tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentEast, GraphDirection.EAST);
+        this.tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentDown, GraphDirection.DOWN);
+        this.tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentUp, GraphDirection.UP);
+        this.tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentNorth, GraphDirection.NORTH);
+        this.tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentSouth, GraphDirection.SOUTH);
+        this.tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentWest, GraphDirection.WEST);
+        this.tryVisitNode(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, section.adjacentEast, GraphDirection.EAST);
     }
 
     private void tryVisitNode(WriteQueue<RenderSection> queue, RenderSection originSection, int outgoingWide, int outgoingRegular, int outgoingLocal, RenderSection section, int outgoingDirection) {
@@ -414,7 +414,7 @@ public class OcclusionCuller {
             return;
         }
 
-        visitNode(queue, section, outgoingDirection, hasLocalPath, hasRegularPath, hasWidePath);
+        this.visitNode(queue, section, outgoingDirection, hasLocalPath, hasRegularPath, hasWidePath);
     }
 
     private void visitNode(WriteQueue<RenderSection> queue, RenderSection section, int outgoingDirection, boolean hasLocalPath, boolean hasRegularPath, boolean hasWidePath) {
@@ -574,7 +574,7 @@ public class OcclusionCuller {
             outgoingLocal = GraphDirectionSet.ALL;
         }
 
-        visitNeighbors(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, this.origin);
+        this.visitNeighbors(queue, originSection, outgoingWide, outgoingRegular, outgoingLocal, this.origin);
     }
 
     // Enqueues sections that are inside the viewport using diamond spiral iteration to avoid sorting and ensure a

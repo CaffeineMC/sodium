@@ -20,7 +20,7 @@ abstract class StaticOptionBuilderImpl<O extends StaticOption> extends OptionBui
     }
 
     Component getTooltip() {
-        return getFirstNotNull(this.tooltip, StaticOption::getTooltip);
+        return this.getFirstNotNull(this.tooltip, StaticOption::getTooltip);
     }
 
     @Override

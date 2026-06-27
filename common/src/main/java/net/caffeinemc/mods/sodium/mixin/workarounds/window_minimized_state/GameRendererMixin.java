@@ -27,7 +27,7 @@ public class GameRendererMixin {
 
     @Redirect(method = "extractWindow", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;isMinimized()Z"))
     private boolean redirectWindowMinimized(Window window) {
-        if (!sodium$redirectWindowMinimizedState) {
+        if (!this.sodium$redirectWindowMinimizedState) {
             return window.isMinimized();
         }
         try (var stack = MemoryStack.stackPush()) {

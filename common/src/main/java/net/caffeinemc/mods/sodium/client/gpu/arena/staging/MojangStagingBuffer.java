@@ -21,32 +21,32 @@ public class MojangStagingBuffer implements StagingBuffer {
         if (this.staging == null) {
             RenderSystem.getDevice().createCommandEncoder().writeToBuffer(dst.slice(writeOffset, data.remaining()), data);
         } else {
-            staging.enqueueCopy(data, dst, writeOffset);
+            this.staging.enqueueCopy(data, dst, writeOffset);
         }
     }
 
     @Override
     public void flush() {
-        if (staging != null) staging.flush();
+        if (this.staging != null) this.staging.flush();
     }
 
     @Override
     public void delete() {
-        if (staging != null) staging.delete();
+        if (this.staging != null) this.staging.delete();
     }
 
     @Override
     public void flip() {
-        if (staging != null) staging.flip();
+        if (this.staging != null) this.staging.flip();
     }
 
     @Override
     public long getUploadSizeLimit(long frameDuration) {
-        return staging != null ? staging.getUploadSizeLimit(frameDuration) : 25600000;
+        return this.staging != null ? this.staging.getUploadSizeLimit(frameDuration) : 25600000;
     }
 
     @Override
     public String toString() {
-        return staging != null ? staging.toString() : "Fallback";
+        return this.staging != null ? this.staging.toString() : "Fallback";
     }
 }

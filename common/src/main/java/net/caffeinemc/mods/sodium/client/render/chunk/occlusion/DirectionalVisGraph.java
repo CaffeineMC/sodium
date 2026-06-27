@@ -66,7 +66,7 @@ public class DirectionalVisGraph {
         // generate visibility data for each base perspective
         var results = new VisibilitySet[DIRECTION_SETS.length];
         for (int i = 0; i < DIRECTION_SETS.length; i++) {
-            results[i] = resolveWithDirections(DIRECTION_SETS[i]);
+            results[i] = this.resolveWithDirections(DIRECTION_SETS[i]);
         }
 
         return results;
@@ -102,7 +102,7 @@ public class DirectionalVisGraph {
                     for (int z = minZ; z <= maxZ; z++) {
                         int originIndex = getIndex(x, y, z);
                         if (!visited.getAndSet(originIndex)) {
-                            search(visited, visibilitySet, stackPos, stackDirs, originDirection, directionSet, originIndex);
+                            this.search(visited, visibilitySet, stackPos, stackDirs, originDirection, directionSet, originIndex);
                         }
                     }
                 }

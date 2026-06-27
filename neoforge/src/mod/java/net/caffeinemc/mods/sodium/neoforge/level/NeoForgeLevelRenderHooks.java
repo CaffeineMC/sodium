@@ -1,23 +1,23 @@
 package net.caffeinemc.mods.sodium.neoforge.level;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import java.util.List;
-import java.util.function.Function;
 import net.caffeinemc.mods.sodium.client.services.PlatformLevelRenderHooks;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.client.ClientHooks;
 import net.neoforged.neoforge.client.event.AddSectionGeometryEvent;
 import org.joml.Matrix4f;
+
+import java.util.List;
+import java.util.function.Function;
 
 public class NeoForgeLevelRenderHooks implements PlatformLevelRenderHooks {
     @Override

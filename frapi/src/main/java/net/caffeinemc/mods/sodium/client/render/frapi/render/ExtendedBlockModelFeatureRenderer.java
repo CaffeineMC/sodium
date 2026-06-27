@@ -16,9 +16,6 @@
 
 package net.caffeinemc.mods.sodium.client.render.frapi.render;
 
-import java.util.List;
-import java.util.function.Function;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.QuadInstance;
 import com.mojang.blaze3d.vertex.SheetedDecalTextureGenerator;
@@ -26,8 +23,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.ExtendedMutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.EncodingFormat;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
-import org.jspecify.annotations.Nullable;
-
+import net.fabricmc.fabric.api.client.renderer.v1.render.submit.ExtendedBlockModelSubmit;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.feature.FeatureFrameContext;
@@ -37,8 +33,10 @@ import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.core.Direction;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.LightCoordsUtil;
+import org.jspecify.annotations.Nullable;
 
-import net.fabricmc.fabric.api.client.renderer.v1.render.submit.ExtendedBlockModelSubmit;
+import java.util.List;
+import java.util.function.Function;
 
 public class ExtendedBlockModelFeatureRenderer extends RenderTypeFeatureRenderer<ExtendedBlockModelSubmit> {
 	private static final Direction[] DIRECTIONS = Direction.values();
@@ -47,13 +45,13 @@ public class ExtendedBlockModelFeatureRenderer extends RenderTypeFeatureRenderer
 	private final BufferCache bufferCache = new BufferCache();
 	private final MutableQuadViewImpl emitter = new MutableQuadViewImpl() {
 		{
-			data = new int[EncodingFormat.TOTAL_STRIDE];
-			clear();
+            this.data = new int[EncodingFormat.TOTAL_STRIDE];
+            this.clear();
 		}
 
 		@Override
         public void emitDirectly() {
-			bufferQuad(this);
+            ExtendedBlockModelFeatureRenderer.this.bufferQuad(this);
 		}
 	};
 
@@ -67,11 +65,11 @@ public class ExtendedBlockModelFeatureRenderer extends RenderTypeFeatureRenderer
 		for (ExtendedBlockModelSubmit submit : submits) {
 			bufferCache.prepare(submit.renderTypeFunction(), submit.sheetedDecalPose());
 
-			quadInstance.setLightCoords(submit.lightCoords());
-			quadInstance.setOverlayCoords(submit.overlayCoords());
+            this.quadInstance.setLightCoords(submit.lightCoords());
+            this.quadInstance.setOverlayCoords(submit.overlayCoords());
 
 			for (BlockStateModelPart part : submit.modelParts()) {
-				putPartQuads(part, submit.pose(), quadInstance, submit.tintColor(), submit.tintLayers(), bufferCache);
+                this.putPartQuads(part, submit.pose(), this.quadInstance, submit.tintColor(), submit.tintLayers(), bufferCache);
 			}
 
 			if (submit.mesh() != null) {
@@ -81,7 +79,7 @@ public class ExtendedBlockModelFeatureRenderer extends RenderTypeFeatureRenderer
 		}
 
 		bufferCache.clear();
-		submit = null;
+        this.submit = null;
 	}
 
 	private void putPartQuads(BlockStateModelPart part, PoseStack.Pose pose, QuadInstance quadInstance, int baseTintColor, int[] tintLayers, BufferCache bufferCache) {
@@ -116,7 +114,7 @@ public class ExtendedBlockModelFeatureRenderer extends RenderTypeFeatureRenderer
 	}
 
 	private void bufferQuad(MutableQuadViewImpl quad) {
-		VertexConsumer buffer = bufferCache.getBuffer(quad.getRenderType());
+		VertexConsumer buffer = this.bufferCache.getBuffer(quad.getRenderType());
 
 		if (buffer == null) {
 			return;
@@ -125,16 +123,16 @@ public class ExtendedBlockModelFeatureRenderer extends RenderTypeFeatureRenderer
 		if (quad.emissive()) {
             ((ExtendedMutableQuadViewImpl) quad).getWrapper().lightmap(LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT);
 		} else {
-            ((ExtendedMutableQuadViewImpl) quad).getWrapper().minLightmap(submit.lightCoords());
+            ((ExtendedMutableQuadViewImpl) quad).getWrapper().minLightmap(this.submit.lightCoords());
 		}
 
-		int[] tintLayers = submit.tintLayers();
-		int baseTintColor = submit.tintColor();
+		int[] tintLayers = this.submit.tintLayers();
+		int baseTintColor = this.submit.tintColor();
 
 		int tintIndex = quad.getTintIndex();
 		boolean useTintLayer = tintIndex != -1 && tintIndex < tintLayers.length;
         ((ExtendedMutableQuadViewImpl) quad).getWrapper().multiplyColor(useTintLayer ? ARGB.multiply(baseTintColor, tintLayers[tintIndex]) : baseTintColor);
-        ((ExtendedMutableQuadViewImpl) quad).getWrapper().buffer(submit.overlayCoords(), submit.pose(), buffer);
+        ((ExtendedMutableQuadViewImpl) quad).getWrapper().buffer(this.submit.overlayCoords(), this.submit.pose(), buffer);
 	}
 
 	private class BufferCache {
@@ -149,31 +147,31 @@ public class ExtendedBlockModelFeatureRenderer extends RenderTypeFeatureRenderer
 		public void prepare(Function<ChunkSectionLayer, @Nullable RenderType> renderTypeFunction, PoseStack.@Nullable Pose sheetedDecalPose) {
 			this.renderTypeFunction = renderTypeFunction;
 			this.sheetedDecalPose = sheetedDecalPose;
-			lastLayer = null;
+            this.lastLayer = null;
 		}
 
 		public void clear() {
-			renderTypeFunction = null;
-			sheetedDecalPose = null;
-			lastLayer = null;
-			lastBuffer = null;
+            this.renderTypeFunction = null;
+            this.sheetedDecalPose = null;
+            this.lastLayer = null;
+            this.lastBuffer = null;
 		}
 
 		@Nullable
 		public VertexConsumer getBuffer(ChunkSectionLayer layer) {
-			if (layer != lastLayer) {
-				lastLayer = layer;
-				RenderType renderType = renderTypeFunction.apply(layer);
+			if (layer != this.lastLayer) {
+                this.lastLayer = layer;
+				RenderType renderType = this.renderTypeFunction.apply(layer);
 
 				if (renderType == null) {
-					lastBuffer = null;
+                    this.lastBuffer = null;
 				} else {
-					VertexConsumer buffer = getVertexBuilder(renderType);
-					lastBuffer = sheetedDecalPose != null ? new SheetedDecalTextureGenerator(buffer, sheetedDecalPose, 1.0F) : buffer;
+					VertexConsumer buffer = ExtendedBlockModelFeatureRenderer.this.getVertexBuilder(renderType);
+                    this.lastBuffer = this.sheetedDecalPose != null ? new SheetedDecalTextureGenerator(buffer, this.sheetedDecalPose, 1.0F) : buffer;
 				}
 			}
 
-			return lastBuffer;
+			return this.lastBuffer;
 		}
 	}
 }

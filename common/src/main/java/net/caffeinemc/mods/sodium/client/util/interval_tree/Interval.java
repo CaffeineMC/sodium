@@ -244,7 +244,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
      * @return The newly created interval.
      */
     protected Interval<T> create(T start, boolean isStartInclusive, T end, boolean isEndInclusive) {
-        Interval<T> interval = create();
+        Interval<T> interval = this.create();
         interval.start = start;
         interval.isStartInclusive = isStartInclusive;
         interval.end = end;
@@ -287,7 +287,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
      * @return {@code true}, if the current interval contains the {@code query} point or false otherwise.
      */
     public boolean contains(T query) {
-        if (isEmpty() || query == null) {
+        if (this.isEmpty() || query == null) {
             return false;
         }
 
@@ -308,7 +308,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
      * @return The intersection of the current interval wih the {@code other} interval.
      */
     public Interval<T> getIntersection(Interval<T> other) {
-        if (other == null || isEmpty() || other.isEmpty())
+        if (other == null || this.isEmpty() || other.isEmpty())
             return null;
         // Make sure that the one with the smaller starting point gets intersected with the other.
         // If necessary, swap the intervals
@@ -352,7 +352,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
                 isNewEndInclusive = other.isEndInclusive;
             }
         }
-        Interval<T> intersection = create(newStart, isNewStartInclusive, newEnd, isNewEndInclusive);
+        Interval<T> intersection = this.create(newStart, isNewStartInclusive, newEnd, isNewEndInclusive);
         return intersection.isEmpty() ? null : intersection;
     }
 
@@ -368,7 +368,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
     public boolean intersects(Interval<T> query) {
         if (query == null)
             return false;
-        Interval<T> intersection = getIntersection(query);
+        Interval<T> intersection = this.getIntersection(query);
         return intersection != null;
     }
 
@@ -391,7 +391,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
         int compare = point.compareTo(this.start);
         if (compare != 0)
             return compare < 0;
-        return !isStartInclusive() || !inclusive;
+        return !this.isStartInclusive() || !inclusive;
     }
 
     /**
@@ -406,7 +406,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
      * interval, or {@code false} instead.
      */
     public boolean isRightOf(T point) {
-        return isRightOf(point, true);
+        return this.isRightOf(point, true);
     }
 
     /**
@@ -424,7 +424,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
     public boolean isRightOf(Interval<T> other) {
         if (other == null || other.isEmpty())
             return false;
-        return isRightOf(other.end, other.isEndInclusive());
+        return this.isRightOf(other.end, other.isEndInclusive());
     }
 
     /**
@@ -446,7 +446,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
         int compare = point.compareTo(this.end);
         if (compare != 0)
             return compare > 0;
-        return !isEndInclusive() || !inclusive;
+        return !this.isEndInclusive() || !inclusive;
     }
 
     /**
@@ -461,7 +461,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
      * interval, or {@code false} instead.
      */
     public boolean isLeftOf(T point) {
-        return isLeftOf(point, true);
+        return this.isLeftOf(point, true);
     }
 
     /**
@@ -479,7 +479,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
     public boolean isLeftOf(Interval<T> other) {
         if (other == null || other.isEmpty())
             return false;
-        return isLeftOf(other.start, other.isStartInclusive());
+        return this.isLeftOf(other.start, other.isStartInclusive());
     }
 
     /**
