@@ -22,23 +22,14 @@ public final class GLDrawBatch extends MultiDrawBatch {
     }
 
     @Override
-    public int getIndexBufferSize() {
-        int elements = 0;
-
-        for (var index = 0; index < this.size; index++) {
-            elements = Math.max(elements, MemoryIntrinsics.getInt(this.pElementCount + ((long) index * Integer.BYTES)));
-        }
-
-        return elements;
-    }
-
-    @Override
     public void put(int size, int elementCount, int baseVertex, long elementOffset) {
         MemoryIntrinsics.putInt(pElementCount + (size << 2), UInt32.uncheckedDowncast(elementCount));
         MemoryIntrinsics.putInt(pBaseVertex + (size << 2), UInt32.uncheckedDowncast(baseVertex));
 
         // * 4 to convert to bytes (the index buffer contains integers)
         MemoryIntrinsics.putAddress(pElementPointer + (size << Pointer.POINTER_SHIFT), elementOffset << 2);
+
+        this.updateMaxElementCount(elementCount);
     }
 
     @Override

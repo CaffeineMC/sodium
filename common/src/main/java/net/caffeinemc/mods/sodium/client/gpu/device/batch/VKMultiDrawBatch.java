@@ -18,21 +18,12 @@ public final class VKMultiDrawBatch extends MultiDrawBatch {
     }
 
     @Override
-    public int getIndexBufferSize() {
-        int elements = 0;
-
-        for (var index = 0; index < this.size; index++) {
-            elements = Math.max(elements, MemoryIntrinsics.getInt(this.pCommands + ((long) index * VkMultiDrawIndexedInfoEXT.SIZEOF) + VkMultiDrawIndexedInfoEXT.INDEXCOUNT));
-        }
-
-        return elements;
-    }
-
-    @Override
     public void put(int size, int elementCount, int baseVertex, long elementOffset) {
         MemoryIntrinsics.putInt(pCommands + (size * VkMultiDrawIndexedInfoEXT.SIZEOF) + VkMultiDrawIndexedInfoEXT.INDEXCOUNT, elementCount);
         MemoryIntrinsics.putInt(pCommands + (size * VkMultiDrawIndexedInfoEXT.SIZEOF) + VkMultiDrawIndexedInfoEXT.VERTEXOFFSET, UInt32.uncheckedDowncast(baseVertex));
         MemoryIntrinsics.putInt(pCommands + (size * VkMultiDrawIndexedInfoEXT.SIZEOF) + VkMultiDrawIndexedInfoEXT.FIRSTINDEX, UInt32.uncheckedDowncast(elementOffset));
+
+        this.updateMaxElementCount(elementCount);
     }
 
     @Override
