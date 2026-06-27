@@ -45,12 +45,12 @@ public abstract class ModelBlockRendererMixin {
     private BlockColors blockColors;
 
     @Unique
-    private final ThreadLocal<NonTerrainBlockRenderContext> contexts = ThreadLocal.withInitial(() -> new NonTerrainBlockRenderContext(blockColors));
+    private final ThreadLocal<NonTerrainBlockRenderContext> contexts = ThreadLocal.withInitial(() -> new NonTerrainBlockRenderContext(this.blockColors));
 
     @Inject(method = "tesselateBlock", at = @At("HEAD"), cancellable = true)
     private void onRender(BlockAndTintGetter blockView, BakedModel model, BlockState state, BlockPos pos, PoseStack matrix, VertexConsumer buffer, boolean cull, RandomSource rand, long seed, int overlay, CallbackInfo ci) {
         if (!((FabricBakedModel) model).isVanillaAdapter()) {
-            contexts.get().renderModel(blockView, model, state, pos, matrix, buffer, cull, rand, seed, overlay);
+            this.contexts.get().renderModel(blockView, model, state, pos, matrix, buffer, cull, rand, seed, overlay);
             ci.cancel();
         }
     }

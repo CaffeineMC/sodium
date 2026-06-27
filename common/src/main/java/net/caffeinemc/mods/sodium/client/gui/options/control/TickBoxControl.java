@@ -98,7 +98,7 @@ public class TickBoxControl implements Control {
             if (this.isResetOverlayActive()) return false;
 
             if (this.option.isEnabled() && button == 0 && this.isMouseOver(mouseX, mouseY)) {
-                toggleControl();
+                this.toggleControl();
                 return true;
             }
 
@@ -107,10 +107,10 @@ public class TickBoxControl implements Control {
 
         @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            if (!isFocused()) return false;
+            if (!this.isFocused()) return false;
 
             if (CommonInputs.selected(keyCode)) {
-                toggleControl();
+                this.toggleControl();
                 return true;
             }
 

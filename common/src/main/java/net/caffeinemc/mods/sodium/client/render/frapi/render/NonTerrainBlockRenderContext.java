@@ -100,9 +100,9 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
         }
         final boolean emissive = mat.emissive();
 
-        colorizeQuad(quad, colorIndex);
-        shadeQuad(quad, lightMode, emissive, shadeMode);
-        bufferQuad(quad);
+        this.colorizeQuad(quad, colorIndex);
+        this.shadeQuad(quad, lightMode, emissive, shadeMode);
+        this.bufferQuad(quad);
     }
 
     private void colorizeQuad(MutableQuadViewImpl quad, int colorIndex) {
@@ -127,7 +127,7 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
     }
 
     private void bufferQuad(MutableQuadViewImpl quad) {
-        QuadEncoder.writeQuadVertices(quad, vertexConsumer, overlay, matPosition, trustedNormals, matNormal);
+        QuadEncoder.writeQuadVertices(quad, this.vertexConsumer, this.overlay, this.matPosition, this.trustedNormals, this.matNormal);
         var sprite = quad.sprite(SpriteFinderCache.forBlockAtlas());
         if (sprite != null) {
             SpriteUtil.INSTANCE.markSpriteActive(sprite);

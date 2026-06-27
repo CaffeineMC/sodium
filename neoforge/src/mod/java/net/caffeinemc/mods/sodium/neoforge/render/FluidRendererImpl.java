@@ -30,7 +30,7 @@ public class FluidRendererImpl extends FluidRenderer {
 
     public FluidRendererImpl(ColorProviderRegistry colorProviderRegistry, LightPipelineProvider lighters) {
         this.colorProviderRegistry = colorProviderRegistry;
-        defaultRenderer = new DefaultFluidRenderer(lighters);
+        this.defaultRenderer = new DefaultFluidRenderer(lighters);
     }
 
     public void render(LevelSlice level, BlockState blockState, FluidState fluidState, BlockPos blockPos, BlockPos offset, TranslucentGeometryCollector collector, ChunkBuildBuffers buffers) {
@@ -119,12 +119,12 @@ public class FluidRendererImpl extends FluidRenderer {
                 return override;
             }
 
-            return ForgeColorProviders.adapt(handler);
+            return ForgeColorProviders.adapt(this.handler);
         }
 
         public void render() {
             this.renderer.render(this.level, this.blockState, this.fluidState, this.blockPos, this.offset, this.collector, this.meshBuilder, this.material,
-                    getColorProvider(fluidState.getType()), FluidSpriteCache.getFluidSprites(level, blockPos, fluidState));
+                    this.getColorProvider(this.fluidState.getType()), FluidSpriteCache.getFluidSprites(this.level, this.blockPos, this.fluidState));
         }
     }
 

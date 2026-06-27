@@ -57,59 +57,59 @@ public class QuadViewImpl implements QuadView, ModelQuadView {
      * The encoded data must contain valid computed geometry.
      */
     public void load() {
-        isGeometryInvalid = false;
-        nominalFace = lightFace();
-        NormI8.unpack(packedFaceNormal(), faceNormal);
+        this.isGeometryInvalid = false;
+        this.nominalFace = this.lightFace();
+        NormI8.unpack(this.packedFaceNormal(), this.faceNormal);
     }
 
     protected void computeGeometry() {
-        if (isGeometryInvalid) {
-            isGeometryInvalid = false;
+        if (this.isGeometryInvalid) {
+            this.isGeometryInvalid = false;
 
-            NormalHelper.computeFaceNormal(faceNormal, this);
-            int packedFaceNormal = NormI8.pack(faceNormal);
-            data[baseIndex + HEADER_FACE_NORMAL] = packedFaceNormal;
+            NormalHelper.computeFaceNormal(this.faceNormal, this);
+            int packedFaceNormal = NormI8.pack(this.faceNormal);
+            this.data[this.baseIndex + HEADER_FACE_NORMAL] = packedFaceNormal;
 
             // depends on face normal
             Direction lightFace = GeometryHelper.lightFace(this);
-            data[baseIndex + HEADER_BITS] = EncodingFormat.lightFace(data[baseIndex + HEADER_BITS], lightFace);
+            this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.lightFace(this.data[this.baseIndex + HEADER_BITS], lightFace);
 
             // depends on face normal
-            data[baseIndex + HEADER_BITS] = EncodingFormat.normalFace(data[baseIndex + HEADER_BITS], ModelQuadFacing.fromPackedNormal(packedFaceNormal));
+            this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.normalFace(this.data[this.baseIndex + HEADER_BITS], ModelQuadFacing.fromPackedNormal(packedFaceNormal));
 
             // depends on light face
-            data[baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(data[baseIndex + HEADER_BITS], ModelQuadFlags.getQuadFlags(this, lightFace));
+            this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(this.data[this.baseIndex + HEADER_BITS], ModelQuadFlags.getQuadFlags(this, lightFace));
         }
     }
 
     /** gets flags used for lighting - lazily computed via {@link ModelQuadFlags#getQuadFlags}. */
     public int geometryFlags() {
-        computeGeometry();
-        return EncodingFormat.geometryFlags(data[baseIndex + HEADER_BITS]);
+        this.computeGeometry();
+        return EncodingFormat.geometryFlags(this.data[this.baseIndex + HEADER_BITS]);
     }
 
     public boolean hasShade() {
-        return !material().disableDiffuse();
+        return !this.material().disableDiffuse();
     }
 
     @Override
     public float x(int vertexIndex) {
-        return Float.intBitsToFloat(data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_X]);
+        return Float.intBitsToFloat(this.data[this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_X]);
     }
 
     @Override
     public float y(int vertexIndex) {
-        return Float.intBitsToFloat(data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_Y]);
+        return Float.intBitsToFloat(this.data[this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_Y]);
     }
 
     @Override
     public float z(int vertexIndex) {
-        return Float.intBitsToFloat(data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_Z]);
+        return Float.intBitsToFloat(this.data[this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_Z]);
     }
 
     @Override
     public float posByIndex(int vertexIndex, int coordinateIndex) {
-        return Float.intBitsToFloat(data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_X + coordinateIndex]);
+        return Float.intBitsToFloat(this.data[this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_X + coordinateIndex]);
     }
 
     @Override
@@ -118,24 +118,24 @@ public class QuadViewImpl implements QuadView, ModelQuadView {
             target = new Vector3f();
         }
 
-        final int index = baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_X;
-        target.set(Float.intBitsToFloat(data[index]), Float.intBitsToFloat(data[index + 1]), Float.intBitsToFloat(data[index + 2]));
+        final int index = this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_X;
+        target.set(Float.intBitsToFloat(this.data[index]), Float.intBitsToFloat(this.data[index + 1]), Float.intBitsToFloat(this.data[index + 2]));
         return target;
     }
 
     @Override
     public int color(int vertexIndex) {
-        return data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_COLOR];
+        return this.data[this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_COLOR];
     }
 
     @Override
     public float u(int vertexIndex) {
-        return Float.intBitsToFloat(data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_U]);
+        return Float.intBitsToFloat(this.data[this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_U]);
     }
 
     @Override
     public float v(int vertexIndex) {
-        return Float.intBitsToFloat(data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_V]);
+        return Float.intBitsToFloat(this.data[this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_V]);
     }
 
     @Override
@@ -144,70 +144,70 @@ public class QuadViewImpl implements QuadView, ModelQuadView {
             target = new Vector2f();
         }
 
-        final int index = baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_U;
-        target.set(Float.intBitsToFloat(data[index]), Float.intBitsToFloat(data[index + 1]));
+        final int index = this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_U;
+        target.set(Float.intBitsToFloat(this.data[index]), Float.intBitsToFloat(this.data[index + 1]));
         return target;
     }
 
     @Override
     public int lightmap(int vertexIndex) {
-        return data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_LIGHTMAP];
+        return this.data[this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_LIGHTMAP];
     }
 
     public int normalFlags() {
-        return EncodingFormat.normalFlags(data[baseIndex + HEADER_BITS]);
+        return EncodingFormat.normalFlags(this.data[this.baseIndex + HEADER_BITS]);
     }
 
     @Override
     public boolean hasNormal(int vertexIndex) {
-        return (normalFlags() & (1 << vertexIndex)) != 0;
+        return (this.normalFlags() & (1 << vertexIndex)) != 0;
     }
 
     /** True if any vertex normal has been set. */
     public boolean hasVertexNormals() {
-        return normalFlags() != 0;
+        return this.normalFlags() != 0;
     }
 
     /** True if all vertex normals have been set. */
     public boolean hasAllVertexNormals() {
-        return (normalFlags() & 0b1111) == 0b1111;
+        return (this.normalFlags() & 0b1111) == 0b1111;
     }
 
     protected final int normalIndex(int vertexIndex) {
-        return baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL;
+        return this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL;
     }
 
     /**
      * This method will only return a meaningful value if {@link #hasNormal} returns {@code true} for the same vertex index.
      */
     public int packedNormal(int vertexIndex) {
-        return data[normalIndex(vertexIndex)];
+        return this.data[this.normalIndex(vertexIndex)];
     }
 
     @Override
     public float normalX(int vertexIndex) {
-        return hasNormal(vertexIndex) ? NormI8.unpackX(data[normalIndex(vertexIndex)]) : Float.NaN;
+        return this.hasNormal(vertexIndex) ? NormI8.unpackX(this.data[this.normalIndex(vertexIndex)]) : Float.NaN;
     }
 
     @Override
     public float normalY(int vertexIndex) {
-        return hasNormal(vertexIndex) ? NormI8.unpackY(data[normalIndex(vertexIndex)]) : Float.NaN;
+        return this.hasNormal(vertexIndex) ? NormI8.unpackY(this.data[this.normalIndex(vertexIndex)]) : Float.NaN;
     }
 
     @Override
     public float normalZ(int vertexIndex) {
-        return hasNormal(vertexIndex) ? NormI8.unpackZ(data[normalIndex(vertexIndex)]) : Float.NaN;
+        return this.hasNormal(vertexIndex) ? NormI8.unpackZ(this.data[this.normalIndex(vertexIndex)]) : Float.NaN;
     }
 
     @Override
     @Nullable
     public Vector3f copyNormal(int vertexIndex, @Nullable Vector3f target) {
-        if (hasNormal(vertexIndex)) {
+        if (this.hasNormal(vertexIndex)) {
             if (target == null) {
                 target = new Vector3f();
             }
 
-            final int normal = data[normalIndex(vertexIndex)];
+            final int normal = this.data[this.normalIndex(vertexIndex)];
             NormI8.unpack(normal, target);
             return target;
         } else {
@@ -218,56 +218,56 @@ public class QuadViewImpl implements QuadView, ModelQuadView {
     @Override
     @Nullable
     public final Direction cullFace() {
-        return EncodingFormat.cullFace(data[baseIndex + HEADER_BITS]);
+        return EncodingFormat.cullFace(this.data[this.baseIndex + HEADER_BITS]);
     }
 
     @Override
     @NotNull
     public final Direction lightFace() {
-        computeGeometry();
-        return EncodingFormat.lightFace(data[baseIndex + HEADER_BITS]);
+        this.computeGeometry();
+        return EncodingFormat.lightFace(this.data[this.baseIndex + HEADER_BITS]);
     }
 
     public final ModelQuadFacing normalFace() {
-        computeGeometry();
-        return EncodingFormat.normalFace(data[baseIndex + HEADER_BITS]);
+        this.computeGeometry();
+        return EncodingFormat.normalFace(this.data[this.baseIndex + HEADER_BITS]);
     }
 
     @Override
     @Nullable
     public final Direction nominalFace() {
-        return nominalFace;
+        return this.nominalFace;
     }
 
     public final int packedFaceNormal() {
-        computeGeometry();
-        return data[baseIndex + HEADER_FACE_NORMAL];
+        this.computeGeometry();
+        return this.data[this.baseIndex + HEADER_FACE_NORMAL];
     }
 
     @Override
     public final Vector3f faceNormal() {
-        computeGeometry();
-        return faceNormal;
+        this.computeGeometry();
+        return this.faceNormal;
     }
 
     @Override
     public final RenderMaterialImpl material() {
-        return EncodingFormat.material(data[baseIndex + HEADER_BITS]);
+        return EncodingFormat.material(this.data[this.baseIndex + HEADER_BITS]);
     }
 
     @Override
     public final int colorIndex() {
-        return data[baseIndex + HEADER_COLOR_INDEX];
+        return this.data[this.baseIndex + HEADER_COLOR_INDEX];
     }
 
     @Override
     public final int tag() {
-        return data[baseIndex + HEADER_TAG];
+        return this.data[this.baseIndex + HEADER_TAG];
     }
 
     @Override
     public final void toVanilla(int[] target, int targetIndex) {
-        System.arraycopy(data, baseIndex + HEADER_STRIDE, target, targetIndex, QUAD_STRIDE);
+        System.arraycopy(this.data, this.baseIndex + HEADER_STRIDE, target, targetIndex, QUAD_STRIDE);
 
         // The color is the fourth integer in each vertex.
         // EncodingFormat.VERTEX_COLOR is not used because it also
@@ -284,52 +284,52 @@ public class QuadViewImpl implements QuadView, ModelQuadView {
 
     @Override
     public float getX(int idx) {
-        return x(idx);
+        return this.x(idx);
     }
 
     @Override
     public float getY(int idx) {
-        return y(idx);
+        return this.y(idx);
     }
 
     @Override
     public float getZ(int idx) {
-        return z(idx);
+        return this.z(idx);
     }
 
     @Override
     public int getColor(int idx) {
-        return color(idx);
+        return this.color(idx);
     }
 
     @Override
     public float getTexU(int idx) {
-        return u(idx);
+        return this.u(idx);
     }
 
     @Override
     public float getTexV(int idx) {
-        return v(idx);
+        return this.v(idx);
     }
 
     @Override
     public int getVertexNormal(int idx) {
-        return data[normalIndex(idx)];
+        return this.data[this.normalIndex(idx)];
     }
 
     @Override
     public int getFaceNormal() {
-        return packedFaceNormal();
+        return this.packedFaceNormal();
     }
 
     @Override
     public int getLight(int idx) {
-        return lightmap(idx);
+        return this.lightmap(idx);
     }
 
     @Override
     public int getColorIndex() {
-        return material().disableColorIndex() ? -1 : colorIndex();
+        return this.material().disableColorIndex() ? -1 : this.colorIndex();
     }
 
     @Override
@@ -339,11 +339,11 @@ public class QuadViewImpl implements QuadView, ModelQuadView {
 
     @Override
     public Direction getLightFace() {
-        return lightFace();
+        return this.lightFace();
     }
 
     @Override
     public int getFlags() {
-        return geometryFlags();
+        return this.geometryFlags();
     }
 }

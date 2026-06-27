@@ -55,15 +55,15 @@ public class SodiumRenderer implements Renderer {
 
     @Override
     public RenderMaterial materialById(ResourceLocation id) {
-        return materialMap.get(id);
+        return this.materialMap.get(id);
     }
 
     @Override
     public boolean registerMaterial(ResourceLocation id, RenderMaterial material) {
-        if (materialMap.containsKey(id)) return false;
+        if (this.materialMap.containsKey(id)) return false;
 
         // cast to prevent acceptance of impostor implementations
-        materialMap.put(id, (RenderMaterialImpl) material);
+        this.materialMap.put(id, (RenderMaterialImpl) material);
         return true;
     }
 }

@@ -50,87 +50,87 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
 
     @Nullable
     public TextureAtlasSprite cachedSprite() {
-        return cachedSprite;
+        return this.cachedSprite;
     }
 
     public void cachedSprite(@Nullable TextureAtlasSprite sprite) {
-        cachedSprite = sprite;
+        this.cachedSprite = sprite;
     }
 
     public TextureAtlasSprite sprite(SpriteFinder finder) {
-        TextureAtlasSprite sprite = cachedSprite;
+        TextureAtlasSprite sprite = this.cachedSprite;
 
         if (sprite == null) {
-            cachedSprite = sprite = finder.find(this);
+            this.cachedSprite = sprite = finder.find(this);
         }
 
         return sprite;
     }
 
     public void clear() {
-        System.arraycopy(EMPTY, 0, data, baseIndex, EncodingFormat.TOTAL_STRIDE);
-        isGeometryInvalid = true;
-        nominalFace = null;
-        normalFlags(0);
-        tag(0);
-        colorIndex(-1);
-        cullFace(null);
-        material(SodiumRenderer.STANDARD_MATERIAL);
-        cachedSprite(null);
+        System.arraycopy(EMPTY, 0, this.data, this.baseIndex, EncodingFormat.TOTAL_STRIDE);
+        this.isGeometryInvalid = true;
+        this.nominalFace = null;
+        this.normalFlags(0);
+        this.tag(0);
+        this.colorIndex(-1);
+        this.cullFace(null);
+        this.material(SodiumRenderer.STANDARD_MATERIAL);
+        this.cachedSprite(null);
     }
 
     @Override
     public void load() {
         super.load();
-        cachedSprite(null);
+        this.cachedSprite(null);
     }
 
     @Override
     public MutableQuadViewImpl pos(int vertexIndex, float x, float y, float z) {
-        final int index = baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_X;
-        data[index] = Float.floatToRawIntBits(x);
-        data[index + 1] = Float.floatToRawIntBits(y);
-        data[index + 2] = Float.floatToRawIntBits(z);
-        isGeometryInvalid = true;
+        final int index = this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_X;
+        this.data[index] = Float.floatToRawIntBits(x);
+        this.data[index + 1] = Float.floatToRawIntBits(y);
+        this.data[index + 2] = Float.floatToRawIntBits(z);
+        this.isGeometryInvalid = true;
         return this;
     }
 
     @Override
     public MutableQuadViewImpl color(int vertexIndex, int color) {
-        data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_COLOR] = color;
+        this.data[this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_COLOR] = color;
         return this;
     }
 
     @Override
     public MutableQuadViewImpl uv(int vertexIndex, float u, float v) {
-        final int i = baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_U;
-        data[i] = Float.floatToRawIntBits(u);
-        data[i + 1] = Float.floatToRawIntBits(v);
-        cachedSprite(null);
+        final int i = this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_U;
+        this.data[i] = Float.floatToRawIntBits(u);
+        this.data[i + 1] = Float.floatToRawIntBits(v);
+        this.cachedSprite(null);
         return this;
     }
 
     @Override
     public MutableQuadViewImpl spriteBake(TextureAtlasSprite sprite, int bakeFlags) {
         TextureHelper.bakeSprite(this, sprite, bakeFlags);
-        cachedSprite(sprite);
+        this.cachedSprite(sprite);
         return this;
     }
 
     @Override
     public MutableQuadViewImpl lightmap(int vertexIndex, int lightmap) {
-        data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_LIGHTMAP] = lightmap;
+        this.data[this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_LIGHTMAP] = lightmap;
         return this;
     }
 
     protected void normalFlags(int flags) {
-        data[baseIndex + HEADER_BITS] = EncodingFormat.normalFlags(data[baseIndex + HEADER_BITS], flags);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.normalFlags(this.data[this.baseIndex + HEADER_BITS], flags);
     }
 
     @Override
     public MutableQuadViewImpl normal(int vertexIndex, float x, float y, float z) {
-        normalFlags(normalFlags() | (1 << vertexIndex));
-        data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL] = NormI8.pack(x, y, z);
+        this.normalFlags(this.normalFlags() | (1 << vertexIndex));
+        this.data[this.baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL] = NormI8.pack(x, y, z);
         return this;
     }
 
@@ -142,27 +142,27 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
 
         if (normalFlags == 0b1111) return;
 
-        final int packedFaceNormal = packedFaceNormal();
+        final int packedFaceNormal = this.packedFaceNormal();
 
         for (int v = 0; v < 4; v++) {
             if ((normalFlags & (1 << v)) == 0) {
-                data[baseIndex + v * VERTEX_STRIDE + VERTEX_NORMAL] = packedFaceNormal;
+                this.data[this.baseIndex + v * VERTEX_STRIDE + VERTEX_NORMAL] = packedFaceNormal;
             }
         }
 
-        normalFlags(0b1111);
+        this.normalFlags(0b1111);
     }
 
     @Override
     public final MutableQuadViewImpl cullFace(@Nullable Direction face) {
-        data[baseIndex + HEADER_BITS] = EncodingFormat.cullFace(data[baseIndex + HEADER_BITS], face);
-        nominalFace(face);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.cullFace(this.data[this.baseIndex + HEADER_BITS], face);
+        this.nominalFace(face);
         return this;
     }
 
     @Override
     public final MutableQuadViewImpl nominalFace(@Nullable Direction face) {
-        nominalFace = face;
+        this.nominalFace = face;
         return this;
     }
 
@@ -172,19 +172,19 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
             material = SodiumRenderer.STANDARD_MATERIAL;
         }
 
-        data[baseIndex + HEADER_BITS] = EncodingFormat.material(data[baseIndex + HEADER_BITS], (RenderMaterialImpl) material);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.material(this.data[this.baseIndex + HEADER_BITS], (RenderMaterialImpl) material);
         return this;
     }
 
     @Override
     public final MutableQuadViewImpl colorIndex(int colorIndex) {
-        data[baseIndex + HEADER_COLOR_INDEX] = colorIndex;
+        this.data[this.baseIndex + HEADER_COLOR_INDEX] = colorIndex;
         return this;
     }
 
     @Override
     public final MutableQuadViewImpl tag(int tag) {
-        data[baseIndex + HEADER_TAG] = tag;
+        this.data[this.baseIndex + HEADER_TAG] = tag;
         return this;
     }
 
@@ -193,15 +193,15 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
         final QuadViewImpl q = (QuadViewImpl) quad;
         q.computeGeometry();
 
-        System.arraycopy(q.data, q.baseIndex, data, baseIndex, EncodingFormat.TOTAL_STRIDE);
-        faceNormal.set(q.faceNormal);
-        nominalFace = q.nominalFace;
-        isGeometryInvalid = false;
+        System.arraycopy(q.data, q.baseIndex, this.data, this.baseIndex, EncodingFormat.TOTAL_STRIDE);
+        this.faceNormal.set(q.faceNormal);
+        this.nominalFace = q.nominalFace;
+        this.isGeometryInvalid = false;
 
         if (quad instanceof MutableQuadViewImpl mutableQuad) {
-            cachedSprite(mutableQuad.cachedSprite());
+            this.cachedSprite(mutableQuad.cachedSprite());
         } else {
-            cachedSprite(null);
+            this.cachedSprite(null);
         }
 
         return this;
@@ -213,30 +213,30 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
      * Only use this if you are also setting the geometry and sprite.
      */
     private void fromVanillaInternal(int[] quadData, int startIndex) {
-        System.arraycopy(quadData, startIndex, data, baseIndex + HEADER_STRIDE, QuadView.VANILLA_QUAD_STRIDE);
+        System.arraycopy(quadData, startIndex, this.data, this.baseIndex + HEADER_STRIDE, QuadView.VANILLA_QUAD_STRIDE);
 
-        int colorIndex = baseIndex + VERTEX_COLOR;
+        int colorIndex = this.baseIndex + VERTEX_COLOR;
 
         for (int i = 0; i < 4; i++) {
-            data[colorIndex] = ColorHelper.fromVanillaColor(data[colorIndex]);
+            this.data[colorIndex] = ColorHelper.fromVanillaColor(this.data[colorIndex]);
             colorIndex += VERTEX_STRIDE;
         }
     }
 
     @Override
     public final MutableQuadViewImpl fromVanilla(int[] quadData, int startIndex) {
-        fromVanillaInternal(quadData, startIndex);
-        isGeometryInvalid = true;
-        cachedSprite(null);
+        this.fromVanillaInternal(quadData, startIndex);
+        this.isGeometryInvalid = true;
+        this.cachedSprite(null);
         return this;
     }
 
     @Override
     public final MutableQuadViewImpl fromVanilla(BakedQuad quad, RenderMaterial material, @Nullable Direction cullFace) {
-        fromVanillaInternal(quad.getVertices(), 0);
-        data[baseIndex + HEADER_BITS] = EncodingFormat.cullFace(0, cullFace);
-        nominalFace(quad.getDirection());
-        colorIndex(quad.getTintIndex());
+        this.fromVanillaInternal(quad.getVertices(), 0);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.cullFace(0, cullFace);
+        this.nominalFace(quad.getDirection());
+        this.colorIndex(quad.getTintIndex());
 
         // TODO: Is this the same as hasShade?
         if (!((BakedQuadView) quad).hasShade()) {
@@ -247,19 +247,19 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
             material = RenderMaterialImpl.setAmbientOcclusion((RenderMaterialImpl) material, TriState.FALSE);
         }
 
-        material(material);
-        tag(0);
+        this.material(material);
+        this.tag(0);
 
         // Copy geometry cached inside the quad
         BakedQuadView bakedView = (BakedQuadView) quad;
-        NormI8.unpack(bakedView.getFaceNormal(), faceNormal);
-        data[baseIndex + HEADER_FACE_NORMAL] = bakedView.getFaceNormal();
-        int headerBits = EncodingFormat.lightFace(data[baseIndex + HEADER_BITS], bakedView.getLightFace());
+        NormI8.unpack(bakedView.getFaceNormal(), this.faceNormal);
+        this.data[this.baseIndex + HEADER_FACE_NORMAL] = bakedView.getFaceNormal();
+        int headerBits = EncodingFormat.lightFace(this.data[this.baseIndex + HEADER_BITS], bakedView.getLightFace());
         headerBits = EncodingFormat.normalFace(headerBits, bakedView.getNormalFace());
-        data[baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(headerBits, bakedView.getFlags());
-        isGeometryInvalid = false;
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(headerBits, bakedView.getFlags());
+        this.isGeometryInvalid = false;
 
-        cachedSprite(quad.getSprite());
+        this.cachedSprite(quad.getSprite());
         return this;
     }
 
@@ -271,8 +271,8 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
 
     @Override
     public final MutableQuadViewImpl emit() {
-        emitDirectly();
-        clear();
+        this.emitDirectly();
+        this.clear();
         return this;
     }
 }

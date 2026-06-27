@@ -4,7 +4,6 @@ import net.caffeinemc.mods.sodium.client.model.light.data.QuadLightData;
 import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.material.FluidState;
 
 /**
  * Light pipelines allow model quads for any location in the level to be lit using various backends, including fluids

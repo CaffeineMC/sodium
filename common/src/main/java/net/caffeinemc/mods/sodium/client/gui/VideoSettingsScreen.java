@@ -180,7 +180,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
         int topBarHeight = Layout.BUTTON_SHORT;
         this.searchWidget = new SearchWidget(this::onSearchResults, new Dim2i(x, y, w, topBarHeight));
 
-        int topBarClear = topBarHeight + ifInsetY(Layout.INNER_MARGIN);
+        int topBarClear = topBarHeight + this.ifInsetY(Layout.INNER_MARGIN);
         this.pageList = new PageListWidget(new Dim2i(x, y + topBarClear, Layout.PAGE_LIST_WIDTH, h - topBarClear), this);
         this.addRenderableWidget(this.pageList);
 
@@ -206,18 +206,18 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
                 this.pageList.getLimitX(),
                 y + topBarHeight + Layout.INNER_MARGIN,
                 Layout.OPTION_WIDTH + Layout.OPTION_LIST_SCROLLBAR_OFFSET + Layout.SCROLLBAR_WIDTH,
-                h - topBarHeight - (reserveBottomSpace ? (Layout.INNER_MARGIN * 2 + Layout.BUTTON_SHORT) : Layout.INNER_MARGIN) - ifNotInsetY(Layout.INNER_MARGIN)
+                h - topBarHeight - (reserveBottomSpace ? (Layout.INNER_MARGIN * 2 + Layout.BUTTON_SHORT) : Layout.INNER_MARGIN) - this.ifNotInsetY(Layout.INNER_MARGIN)
         );
         this.optionList = new OptionListWidget(this, optionListDim, this::onSectionFocused);
         this.addRenderableWidget(this.optionList);
 
-        var tooltipAreaY = y + topBarHeight + ifInsetY(Layout.TOOLTIP_OUTER_MARGIN);
+        var tooltipAreaY = y + topBarHeight + this.ifInsetY(Layout.TOOLTIP_OUTER_MARGIN);
         this.tooltip.setTooltipArea(
                 new Dim2i(
                         this.optionList.getLimitX(),
                         tooltipAreaY,
-                        this.getLimitX() - this.optionList.getLimitX() - ifNotInsetX(Layout.TOOLTIP_OUTER_MARGIN),
-                        this.getLimitY() - tooltipAreaY - ifNotInsetY(Layout.TOOLTIP_OUTER_MARGIN)
+                        this.getLimitX() - this.optionList.getLimitX() - this.ifNotInsetX(Layout.TOOLTIP_OUTER_MARGIN),
+                        this.getLimitY() - tooltipAreaY - this.ifNotInsetY(Layout.TOOLTIP_OUTER_MARGIN)
                 )
         );
     }
@@ -225,8 +225,8 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
     private void rebuildActionButtons(boolean stackVertically) {
         int buttonW = Layout.BUTTON_LONG;
         int buttonH = Layout.BUTTON_SHORT;
-        int closeX = this.getLimitX() - buttonW - ifNotInsetX(Layout.INNER_MARGIN);
-        int closeY = this.getLimitY() - (ifNotInsetY(Layout.INNER_MARGIN) + buttonH);
+        int closeX = this.getLimitX() - buttonW - this.ifNotInsetX(Layout.INNER_MARGIN);
+        int closeY = this.getLimitY() - (this.ifNotInsetY(Layout.INNER_MARGIN) + buttonH);
 
         int dx = stackVertically ? 0 : -(Layout.INNER_MARGIN + buttonW);
         int dy = stackVertically ? -(Layout.INNER_MARGIN + buttonH) : 0;

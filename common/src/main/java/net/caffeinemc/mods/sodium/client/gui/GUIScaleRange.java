@@ -20,6 +20,6 @@ public record GUIScaleRange(int max) implements SteppedValidator {
 
     @Override
     public boolean isValueValid(int value) {
-        return value >= min();
+        return value >= this.min();
     }
 }

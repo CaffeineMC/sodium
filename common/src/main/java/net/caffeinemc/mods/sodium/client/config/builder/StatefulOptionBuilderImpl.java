@@ -53,35 +53,35 @@ abstract class StatefulOptionBuilderImpl<O extends StatefulOption<V>, V> extends
     }
 
     StorageEventHandler getStorage() {
-        return getFirstNotNull(this.storage, StatefulOption::getStorage);
+        return this.getFirstNotNull(this.storage, StatefulOption::getStorage);
     }
 
     Function<V, Component> getTooltipProvider() {
-        return getFirstNotNull(this.tooltipProvider, StatefulOption::getTooltipProvider);
+        return this.getFirstNotNull(this.tooltipProvider, StatefulOption::getTooltipProvider);
     }
 
     OptionImpact getImpact() {
-        return getFirstNotNull(this.impact, StatefulOption::getImpact);
+        return this.getFirstNotNull(this.impact, StatefulOption::getImpact);
     }
 
     Set<ResourceLocation> getFlags() {
-        return getFirstNotNull(this.flags, StatefulOption::getFlags);
+        return this.getFirstNotNull(this.flags, StatefulOption::getFlags);
     }
 
     DependentValue<V> getDefaultValue() {
-        return getFirstNotNull(this.defaultValue, StatefulOption::getDefaultValue);
+        return this.getFirstNotNull(this.defaultValue, StatefulOption::getDefaultValue);
     }
 
     Boolean getControlHiddenWhenDisabled() {
-        return getFirstNotNull(this.controlHiddenWhenDisabled, StatefulOption::getControlHiddenWhenDisabled);
+        return this.getFirstNotNull(this.controlHiddenWhenDisabled, StatefulOption::getControlHiddenWhenDisabled);
     }
 
     OptionBinding<V> getBinding() {
-        return getFirstNotNull(this.binding, StatefulOption::getBinding);
+        return this.getFirstNotNull(this.binding, StatefulOption::getBinding);
     }
 
     Consumer<ConfigState> getApplyHook() {
-        return getFirstNotNull(this.applyHook, StatefulOption::getApplyHook);
+        return this.getFirstNotNull(this.applyHook, StatefulOption::getApplyHook);
     }
 
     @Override

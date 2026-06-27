@@ -33,8 +33,8 @@ public class FluidRendererImpl extends FluidRenderer {
 
     public FluidRendererImpl(ColorProviderRegistry colorProviderRegistry, LightPipelineProvider lighters) {
         this.colorProviderRegistry = colorProviderRegistry;
-        defaultRenderer = new DefaultFluidRenderer(lighters);
-        defaultContext = new DefaultRenderContext();
+        this.defaultRenderer = new DefaultFluidRenderer(lighters);
+        this.defaultContext = new DefaultRenderContext();
     }
 
     public void render(LevelSlice level, BlockState blockState, FluidState fluidState, BlockPos blockPos, BlockPos offset, TranslucentGeometryCollector collector, ChunkBuildBuffers buffers) {
@@ -71,12 +71,12 @@ public class FluidRendererImpl extends FluidRenderer {
         // To allow invoking this method from the injector, where there is no local Sodium context, the renderer and
         // parameters are bundled into a DefaultRenderContext which is stored in a ThreadLocal.
 
-        defaultContext.setUp(this.colorProviderRegistry, this.defaultRenderer, level, blockState, fluidState, blockPos, offset, collector, meshBuilder, material, handler, hasModOverride);
+        this.defaultContext.setUp(this.colorProviderRegistry, this.defaultRenderer, level, blockState, fluidState, blockPos, offset, collector, meshBuilder, material, handler, hasModOverride);
 
         try {
-            FluidRendering.render(handler, level, blockPos, meshBuilder.asFallbackVertexConsumer(material, collector), blockState, fluidState, defaultContext);
+            FluidRendering.render(handler, level, blockPos, meshBuilder.asFallbackVertexConsumer(material, collector), blockState, fluidState, this.defaultContext);
         } finally {
-            defaultContext.clear();
+            this.defaultContext.clear();
         }
     }
 
@@ -126,17 +126,17 @@ public class FluidRendererImpl extends FluidRenderer {
         public ColorProvider<FluidState> getColorProvider(Fluid fluid) {
             var override = this.colorProviderRegistry.getColorProvider(fluid);
 
-            if (hasModOverride && override != null) {
+            if (this.hasModOverride && override != null) {
                 return override;
             }
 
-            return FabricColorProviders.adapt(handler);
+            return FabricColorProviders.adapt(this.handler);
         }
 
         @Override
         public void render(FluidRenderHandler handler, BlockAndTintGetter world, BlockPos pos, VertexConsumer vertexConsumer, BlockState blockState, FluidState fluidState) {
             this.renderer.render(this.level, this.blockState, this.fluidState, this.blockPos, this.offset, this.collector, this.meshBuilder, this.material,
-                    getColorProvider(fluidState.getType()), handler.getFluidSprites(this.level, this.blockPos, this.fluidState));
+                    this.getColorProvider(fluidState.getType()), handler.getFluidSprites(this.level, this.blockPos, this.fluidState));
         }
     }
 

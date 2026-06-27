@@ -52,7 +52,7 @@ public class ClonedChunkSection {
         Int2ReferenceMap<BlockEntity> blockEntityMap = null;
         Int2ReferenceMap<Object> blockEntityRenderDataMap = null;
         SodiumModelDataContainer modelMap = PlatformModelAccess.getInstance().getModelDataContainer(level, pos);
-        auxLightManager = PlatformLevelAccess.INSTANCE.getLightManager(chunk, pos);
+        this.auxLightManager = PlatformLevelAccess.INSTANCE.getLightManager(chunk, pos);
 
         if (section != null) {
             if (!section.hasOnlyAir()) {
@@ -248,7 +248,7 @@ public class ClonedChunkSection {
     }
 
     public SodiumModelDataContainer getModelMap() {
-        return modelMap;
+        return this.modelMap;
     }
 
     public @Nullable DataLayer getLightArray(LightLayer lightType) {
@@ -264,6 +264,6 @@ public class ClonedChunkSection {
     }
 
     public SodiumAuxiliaryLightManager getAuxLightManager() {
-        return auxLightManager;
+        return this.auxLightManager;
     }
 }

@@ -97,7 +97,7 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
             textY += Layout.TEXT_PARAGRAPH_SPACING;
         }
 
-        for (var button : getWidgets()) {
+        for (var button : this.getWidgets()) {
             button.render(graphics, mouseX, mouseY, delta);
         }
 

@@ -30,39 +30,39 @@ import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 public class MeshBuilderImpl implements MeshBuilder {
     private int[] data = new int[256];
     private int index = 0;
-    private int limit = data.length;
+    private int limit = this.data.length;
     private final Maker maker = new Maker();
 
     public MeshBuilderImpl() {
-        ensureCapacity(EncodingFormat.TOTAL_STRIDE);
-        maker.data = data;
-        maker.baseIndex = index;
-        maker.clear();
+        this.ensureCapacity(EncodingFormat.TOTAL_STRIDE);
+        this.maker.data = this.data;
+        this.maker.baseIndex = this.index;
+        this.maker.clear();
     }
 
     protected void ensureCapacity(int stride) {
-        if (stride > limit - index) {
-            limit *= 2;
-            final int[] bigger = new int[limit];
-            System.arraycopy(data, 0, bigger, 0, index);
-            data = bigger;
-            maker.data = data;
+        if (stride > this.limit - this.index) {
+            this.limit *= 2;
+            final int[] bigger = new int[this.limit];
+            System.arraycopy(this.data, 0, bigger, 0, this.index);
+            this.data = bigger;
+            this.maker.data = this.data;
         }
     }
 
     @Override
     public QuadEmitter getEmitter() {
-        maker.clear();
-        return maker;
+        this.maker.clear();
+        return this.maker;
     }
 
     @Override
     public Mesh build() {
-        final int[] packed = new int[index];
-        System.arraycopy(data, 0, packed, 0, index);
-        index = 0;
-        maker.baseIndex = index;
-        maker.clear();
+        final int[] packed = new int[this.index];
+        System.arraycopy(this.data, 0, packed, 0, this.index);
+        this.index = 0;
+        this.maker.baseIndex = this.index;
+        this.maker.clear();
         return new MeshImpl(packed);
     }
 
@@ -75,10 +75,10 @@ public class MeshBuilderImpl implements MeshBuilder {
     private class Maker extends MutableQuadViewImpl {
         @Override
         public void emitDirectly() {
-            computeGeometry();
-            index += EncodingFormat.TOTAL_STRIDE;
-            ensureCapacity(EncodingFormat.TOTAL_STRIDE);
-            baseIndex = index;
+            this.computeGeometry();
+            MeshBuilderImpl.this.index += EncodingFormat.TOTAL_STRIDE;
+            MeshBuilderImpl.this.ensureCapacity(EncodingFormat.TOTAL_STRIDE);
+            this.baseIndex = MeshBuilderImpl.this.index;
         }
     }
 }

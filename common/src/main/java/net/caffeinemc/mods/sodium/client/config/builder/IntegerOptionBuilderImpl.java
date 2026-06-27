@@ -67,11 +67,11 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     }
 
     DependentValue<? extends SteppedValidator> getValidatorProvider() {
-        return getFirstNotNull(this.validatorProvider, IntegerOption::getValidatorProvider);
+        return this.getFirstNotNull(this.validatorProvider, IntegerOption::getValidatorProvider);
     }
 
     ControlValueFormatter getValueFormatter() {
-        return getFirstNotNull(this.valueFormatter, IntegerOption::getValueFormatter);
+        return this.getFirstNotNull(this.valueFormatter, IntegerOption::getValueFormatter);
     }
 
     @Override

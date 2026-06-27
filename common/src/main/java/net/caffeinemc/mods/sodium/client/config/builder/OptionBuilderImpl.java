@@ -70,11 +70,11 @@ public abstract class OptionBuilderImpl<O extends Option> implements OptionBuild
     }
 
     Component getName() {
-        return getFirstNotNull(this.name, Option::getName);
+        return this.getFirstNotNull(this.name, Option::getName);
     }
 
     DependentValue<Boolean> getEnabled() {
-        return getFirstNotNull(this.enabled, Option::getEnabled);
+        return this.getFirstNotNull(this.enabled, Option::getEnabled);
     }
 
     @Override

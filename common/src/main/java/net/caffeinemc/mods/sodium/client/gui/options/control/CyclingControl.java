@@ -75,7 +75,7 @@ public class CyclingControl<T extends Enum<T>> implements Control {
             if (this.isResetOverlayActive()) return false;
 
             if (this.option.isEnabled() && button == 0 && this.isMouseOver(mouseX, mouseY)) {
-                cycleControl(Screen.hasShiftDown());
+                this.cycleControl(Screen.hasShiftDown());
                 return true;
             }
 
@@ -84,10 +84,10 @@ public class CyclingControl<T extends Enum<T>> implements Control {
 
         @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            if (!isFocused()) return false;
+            if (!this.isFocused()) return false;
 
             if (CommonInputs.selected(keyCode)) {
-                cycleControl(Screen.hasShiftDown());
+                this.cycleControl(Screen.hasShiftDown());
                 return true;
             }
 

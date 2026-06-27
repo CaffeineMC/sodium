@@ -6,7 +6,6 @@ import net.caffeinemc.mods.sodium.client.render.frapi.render.AmbientOcclusionMod
 import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
 import net.caffeinemc.mods.sodium.client.services.SodiumModelData;
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry;
-import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.model.BakedModel;
@@ -78,7 +77,7 @@ public class FabricBlockAccess implements PlatformBlockAccess {
 
     @Override
     public float getNormalVectorShade(ModelQuadView quad, BlockAndTintGetter level, boolean shade) {
-        return normalShade(level, NormI8.unpackX(quad.getFaceNormal()), NormI8.unpackY(quad.getFaceNormal()), NormI8.unpackZ(quad.getFaceNormal()), shade);
+        return this.normalShade(level, NormI8.unpackX(quad.getFaceNormal()), NormI8.unpackY(quad.getFaceNormal()), NormI8.unpackZ(quad.getFaceNormal()), shade);
     }
 
     @Override

@@ -593,10 +593,10 @@ public class RenderSectionManager {
 
     private void submitSectionTasks(
             ChunkJobCollector importantCollector, ChunkJobCollector semiImportantCollector, ChunkJobCollector deferredCollector, UploadResourceBudget uploadBudget) {
-        submitSectionTasks(importantCollector, uploadBudget, TaskQueueType.ZERO_FRAME_DEFER);
-        submitSectionTasks(semiImportantCollector, uploadBudget, TaskQueueType.ONE_FRAME_DEFER);
-        submitSectionTasks(deferredCollector, uploadBudget, TaskQueueType.ALWAYS_DEFER);
-        submitSectionTasks(deferredCollector, uploadBudget, TaskQueueType.INITIAL_BUILD);
+        this.submitSectionTasks(importantCollector, uploadBudget, TaskQueueType.ZERO_FRAME_DEFER);
+        this.submitSectionTasks(semiImportantCollector, uploadBudget, TaskQueueType.ONE_FRAME_DEFER);
+        this.submitSectionTasks(deferredCollector, uploadBudget, TaskQueueType.ALWAYS_DEFER);
+        this.submitSectionTasks(deferredCollector, uploadBudget, TaskQueueType.INITIAL_BUILD);
     }
 
     private void submitSectionTasks(ChunkJobCollector collector, UploadResourceBudget uploadBudget, TaskQueueType queueType) {
@@ -615,7 +615,7 @@ public class RenderSectionManager {
             // sections for which there's a currently running task.
             var pendingUpdate = section.getPendingUpdate();
             if (pendingUpdate != 0) {
-                submitSectionTask(collector, section, pendingUpdate, uploadBudget, queueType == TaskQueueType.ZERO_FRAME_DEFER);
+                this.submitSectionTask(collector, section, pendingUpdate, uploadBudget, queueType == TaskQueueType.ZERO_FRAME_DEFER);
             }
         }
     }

@@ -60,13 +60,13 @@ public class ItemRenderContext extends AbstractRenderContext {
 
     private final MutableQuadViewImpl editorQuad = new MutableQuadViewImpl() {
         {
-            data = new int[EncodingFormat.TOTAL_STRIDE];
-            clear();
+            this.data = new int[EncodingFormat.TOTAL_STRIDE];
+            this.clear();
         }
 
         @Override
         public void emitDirectly() {
-            renderQuad(this);
+            ItemRenderContext.this.renderQuad(this);
         }
     };
 
@@ -78,8 +78,8 @@ public class ItemRenderContext extends AbstractRenderContext {
 
     private final RandomSource random = new SingleThreadedRandomSource(ITEM_RANDOM_SEED);
     private final Supplier<RandomSource> randomSupplier = () -> {
-        random.setSeed(ITEM_RANDOM_SEED);
-        return random;
+        this.random.setSeed(ITEM_RANDOM_SEED);
+        return this.random;
     };
 
     private ItemStack itemStack;
@@ -111,8 +111,8 @@ public class ItemRenderContext extends AbstractRenderContext {
 
     @Override
     public QuadEmitter getEmitter() {
-        editorQuad.clear();
-        return editorQuad;
+        this.editorQuad.clear();
+        return this.editorQuad;
     }
 
     @Override
@@ -122,85 +122,84 @@ public class ItemRenderContext extends AbstractRenderContext {
 
     @Override
     public ItemDisplayContext itemTransformationMode() {
-        return transformMode;
+        return this.transformMode;
     }
 
-    @SuppressWarnings("removal")
     @Deprecated
     @Override
     public BakedModelConsumer bakedModelConsumer() {
-        return vanillaModelConsumer;
+        return this.vanillaModelConsumer;
     }
 
     public void renderModel(ItemStack itemStack, ItemDisplayContext transformMode, boolean invert, PoseStack poseStack, MultiBufferSource bufferSource, int lightmap, int overlay, BakedModel model) {
         this.itemStack = itemStack;
         this.transformMode = transformMode;
         this.poseStack = poseStack;
-        matPosition = poseStack.last().pose();
-        trustedNormals = poseStack.last().trustedNormals;
-        matNormal = poseStack.last().normal();
+        this.matPosition = poseStack.last().pose();
+        this.trustedNormals = poseStack.last().trustedNormals;
+        this.matNormal = poseStack.last().normal();
         this.bufferSource = bufferSource;
         this.lightmap = lightmap;
         this.overlay = overlay;
-        computeOutputInfo();
+        this.computeOutputInfo();
 
-        ((FabricBakedModel) model).emitItemQuads(itemStack, randomSupplier, this);
+        ((FabricBakedModel) model).emitItemQuads(itemStack, this.randomSupplier, this);
 
         this.itemStack = null;
         this.poseStack = null;
         this.bufferSource = null;
 
-        dynamicDisplayGlintEntry = null;
-        translucentVertexConsumer = null;
-        cutoutVertexConsumer = null;
-        translucentGlintVertexConsumer = null;
-        cutoutGlintVertexConsumer = null;
-        defaultVertexConsumer = null;
+        this.dynamicDisplayGlintEntry = null;
+        this.translucentVertexConsumer = null;
+        this.cutoutVertexConsumer = null;
+        this.translucentGlintVertexConsumer = null;
+        this.cutoutGlintVertexConsumer = null;
+        this.defaultVertexConsumer = null;
     }
 
     private void computeOutputInfo() {
-        isDefaultTranslucent = true;
-        isTranslucentDirect = true;
+        this.isDefaultTranslucent = true;
+        this.isTranslucentDirect = true;
 
-        Item item = itemStack.getItem();
+        Item item = this.itemStack.getItem();
 
         if (item instanceof BlockItem blockItem) {
             BlockState state = blockItem.getBlock().defaultBlockState();
             RenderType renderType = ItemBlockRenderTypes.getChunkRenderType(state);
 
             if (renderType != RenderType.translucent()) {
-                isDefaultTranslucent = false;
+                this.isDefaultTranslucent = false;
             }
 
-            if (transformMode != ItemDisplayContext.GUI && !transformMode.firstPerson()) {
-                isTranslucentDirect = false;
+            if (this.transformMode != ItemDisplayContext.GUI && !this.transformMode.firstPerson()) {
+                this.isTranslucentDirect = false;
             }
         }
 
-        isDefaultGlint = itemStack.hasFoil();
-        isGlintDynamicDisplay = ItemRendererAccessor.sodium$hasAnimatedTexture(itemStack);
+        this.isDefaultGlint = this.itemStack.hasFoil();
+        this.isGlintDynamicDisplay = ItemRendererAccessor.sodium$hasAnimatedTexture(this.itemStack);
 
-        defaultVertexConsumer = getVertexConsumer(BlendMode.DEFAULT, TriState.DEFAULT);
+        this.defaultVertexConsumer = this.getVertexConsumer(BlendMode.DEFAULT, TriState.DEFAULT);
     }
 
     private void renderQuad(MutableQuadViewImpl quad) {
-        if (!transform(quad)) {
+        if (!this.transform(quad)) {
             return;
         }
 
         final RenderMaterial mat = quad.material();
         final int colorIndex = mat.disableColorIndex() ? -1 : quad.colorIndex();
         final boolean emissive = mat.emissive();
-        final VertexConsumer vertexConsumer = getVertexConsumer(mat.blendMode(), mat.glint());
+        final VertexConsumer vertexConsumer = this.getVertexConsumer(mat.blendMode(), mat.glint());
 
-        colorizeQuad(quad, colorIndex);
-        shadeQuad(quad, emissive);
-        bufferQuad(quad, vertexConsumer);
+        this.colorizeQuad(quad, colorIndex);
+        this.shadeQuad(quad, emissive);
+        this.bufferQuad(quad, vertexConsumer);
     }
 
     private void colorizeQuad(MutableQuadViewImpl quad, int colorIndex) {
         if (colorIndex != -1) {
-            final int itemColor = colorMap.getColor(itemStack, colorIndex);
+            final int itemColor = this.colorMap.getColor(this.itemStack, colorIndex);
 
             for (int i = 0; i < 4; i++) {
                 quad.color(i, ColorMixer.mulComponentWise(itemColor, quad.color(i)));
@@ -223,7 +222,7 @@ public class ItemRenderContext extends AbstractRenderContext {
     }
 
     private void bufferQuad(MutableQuadViewImpl quad, VertexConsumer vertexConsumer) {
-        QuadEncoder.writeQuadVertices(quad, vertexConsumer, overlay, matPosition, trustedNormals, matNormal);
+        QuadEncoder.writeQuadVertices(quad, vertexConsumer, this.overlay, this.matPosition, this.trustedNormals, this.matNormal);
         var sprite = quad.sprite(SpriteFinderCache.forBlockAtlas());
         if (sprite != null) {
             SpriteUtil.INSTANCE.markSpriteActive(sprite);
@@ -240,103 +239,102 @@ public class ItemRenderContext extends AbstractRenderContext {
         boolean glint;
 
         if (blendMode == BlendMode.DEFAULT) {
-            translucent = isDefaultTranslucent;
+            translucent = this.isDefaultTranslucent;
         } else {
             translucent = blendMode == BlendMode.TRANSLUCENT;
         }
 
         if (glintMode == TriState.DEFAULT) {
-            glint = isDefaultGlint;
+            glint = this.isDefaultGlint;
         } else {
             glint = glintMode == TriState.TRUE;
         }
 
         if (translucent) {
             if (glint) {
-                if (translucentGlintVertexConsumer == null) {
-                    translucentGlintVertexConsumer = createTranslucentVertexConsumer(true);
+                if (this.translucentGlintVertexConsumer == null) {
+                    this.translucentGlintVertexConsumer = this.createTranslucentVertexConsumer(true);
                 }
 
-                return translucentGlintVertexConsumer;
+                return this.translucentGlintVertexConsumer;
             } else {
-                if (translucentVertexConsumer == null) {
-                    translucentVertexConsumer = createTranslucentVertexConsumer(false);
+                if (this.translucentVertexConsumer == null) {
+                    this.translucentVertexConsumer = this.createTranslucentVertexConsumer(false);
                 }
 
-                return translucentVertexConsumer;
+                return this.translucentVertexConsumer;
             }
         } else {
             if (glint) {
-                if (cutoutGlintVertexConsumer == null) {
-                    cutoutGlintVertexConsumer = createCutoutVertexConsumer(true);
+                if (this.cutoutGlintVertexConsumer == null) {
+                    this.cutoutGlintVertexConsumer = this.createCutoutVertexConsumer(true);
                 }
 
-                return cutoutGlintVertexConsumer;
+                return this.cutoutGlintVertexConsumer;
             } else {
-                if (cutoutVertexConsumer == null) {
-                    cutoutVertexConsumer = createCutoutVertexConsumer(false);
+                if (this.cutoutVertexConsumer == null) {
+                    this.cutoutVertexConsumer = this.createCutoutVertexConsumer(false);
                 }
 
-                return cutoutVertexConsumer;
+                return this.cutoutVertexConsumer;
             }
         }
     }
 
     private VertexConsumer createTranslucentVertexConsumer(boolean glint) {
-        if (glint && isGlintDynamicDisplay) {
-            return createDynamicDisplayGlintVertexConsumer(Minecraft.useShaderTransparency() && !isTranslucentDirect ? Sheets.translucentItemSheet() : Sheets.translucentCullBlockSheet());
+        if (glint && this.isGlintDynamicDisplay) {
+            return this.createDynamicDisplayGlintVertexConsumer(Minecraft.useShaderTransparency() && !this.isTranslucentDirect ? Sheets.translucentItemSheet() : Sheets.translucentCullBlockSheet());
         }
 
-        if (isTranslucentDirect) {
-            return ItemRenderer.getFoilBufferDirect(bufferSource, Sheets.translucentCullBlockSheet(), true, glint);
+        if (this.isTranslucentDirect) {
+            return ItemRenderer.getFoilBufferDirect(this.bufferSource, Sheets.translucentCullBlockSheet(), true, glint);
         } else if (Minecraft.useShaderTransparency()) {
-            return ItemRenderer.getFoilBuffer(bufferSource, Sheets.translucentItemSheet(), true, glint);
+            return ItemRenderer.getFoilBuffer(this.bufferSource, Sheets.translucentItemSheet(), true, glint);
         } else {
-            return ItemRenderer.getFoilBuffer(bufferSource, Sheets.translucentItemSheet(), true, glint);
+            return ItemRenderer.getFoilBuffer(this.bufferSource, Sheets.translucentItemSheet(), true, glint);
         }
     }
 
     private VertexConsumer createCutoutVertexConsumer(boolean glint) {
-        if (glint && isGlintDynamicDisplay) {
-            return createDynamicDisplayGlintVertexConsumer(Sheets.cutoutBlockSheet());
+        if (glint && this.isGlintDynamicDisplay) {
+            return this.createDynamicDisplayGlintVertexConsumer(Sheets.cutoutBlockSheet());
         }
 
-        return ItemRenderer.getFoilBufferDirect(bufferSource, Sheets.cutoutBlockSheet(), true, glint);
+        return ItemRenderer.getFoilBufferDirect(this.bufferSource, Sheets.cutoutBlockSheet(), true, glint);
     }
 
     private VertexConsumer createDynamicDisplayGlintVertexConsumer(RenderType type) {
-        if (dynamicDisplayGlintEntry == null) {
-            dynamicDisplayGlintEntry = poseStack.last().copy();
+        if (this.dynamicDisplayGlintEntry == null) {
+            this.dynamicDisplayGlintEntry = this.poseStack.last().copy();
 
-            if (transformMode == ItemDisplayContext.GUI) {
-                MatrixUtil.mulComponentWise(dynamicDisplayGlintEntry.pose(), 0.5F);
-            } else if (transformMode.firstPerson()) {
-                MatrixUtil.mulComponentWise(dynamicDisplayGlintEntry.pose(), 0.75F);
+            if (this.transformMode == ItemDisplayContext.GUI) {
+                MatrixUtil.mulComponentWise(this.dynamicDisplayGlintEntry.pose(), 0.5F);
+            } else if (this.transformMode.firstPerson()) {
+                MatrixUtil.mulComponentWise(this.dynamicDisplayGlintEntry.pose(), 0.75F);
             }
         }
 
-        return ItemRenderer.getCompassFoilBuffer(bufferSource, type, dynamicDisplayGlintEntry);
+        return ItemRenderer.getCompassFoilBuffer(this.bufferSource, type, this.dynamicDisplayGlintEntry);
     }
 
     public void bufferDefaultModel(BakedModel model, @Nullable BlockState state) {
-        if (hasTransform() || vanillaBufferer == null) {
-            VanillaModelEncoder.emitItemQuads(model, state, randomSupplier, ItemRenderContext.this);
+        if (this.hasTransform() || this.vanillaBufferer == null) {
+            VanillaModelEncoder.emitItemQuads(model, state, this.randomSupplier, this);
         } else {
-            vanillaBufferer.accept(model, itemStack, lightmap, overlay, poseStack, defaultVertexConsumer);
+            this.vanillaBufferer.accept(model, this.itemStack, this.lightmap, this.overlay, this.poseStack, this.defaultVertexConsumer);
         }
     }
 
-    @SuppressWarnings("removal")
     @Deprecated
     private class BakedModelConsumerImpl implements BakedModelConsumer {
         @Override
         public void accept(BakedModel model) {
-            accept(model, null);
+            this.accept(model, null);
         }
 
         @Override
         public void accept(BakedModel model, @Nullable BlockState state) {
-            bufferDefaultModel(model, state);
+            ItemRenderContext.this.bufferDefaultModel(model, state);
         }
     }
 

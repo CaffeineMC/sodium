@@ -125,7 +125,7 @@ public class ModelQuad implements ModelQuadViewMutable {
 
     @Override
     public int getFaceNormal() {
-        return faceNormal;
+        return this.faceNormal;
     }
 
     @Override

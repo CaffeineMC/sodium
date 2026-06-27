@@ -55,7 +55,7 @@ public class GlVertexFormat {
     }
 
     public GlVertexAttributeBinding[] getShaderBindings() {
-        return bindings;
+        return this.bindings;
     }
 
     public static class Builder {

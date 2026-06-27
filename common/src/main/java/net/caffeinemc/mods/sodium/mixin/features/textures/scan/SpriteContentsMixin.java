@@ -35,7 +35,7 @@ public class SpriteContentsMixin implements SpriteContentsExtension {
      */
     @WrapOperation(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/texture/SpriteContents;originalImage:Lcom/mojang/blaze3d/platform/NativeImage;", opcode = Opcodes.PUTFIELD))
     private void sodium$beforeGenerateMipLevels(SpriteContents instance, NativeImage nativeImage, Operation<Void> original) {
-        scanSpriteContents(nativeImage);
+        this.scanSpriteContents(nativeImage);
 
         original.call(instance, nativeImage);
     }

@@ -89,7 +89,7 @@ public class MultiPartBakedModelMixin {
         for (BakedModel model : models) {
             random.setSeed(seed);
 
-            if (canSkipRenderTypeCheck || renderType == null || model.getRenderTypes(state, random, modelData).contains(renderType)) {
+            if (this.canSkipRenderTypeCheck || renderType == null || model.getRenderTypes(state, random, modelData).contains(renderType)) {
                 quads.addAll(model.getQuads(state, direction, random, MultipartModelData.resolve(modelData, model), renderType));
             }
         }
@@ -105,7 +105,7 @@ public class MultiPartBakedModelMixin {
     public ChunkRenderTypeSet getRenderTypes(@NotNull BlockState state, @NotNull RandomSource random, @NotNull ModelData data) {
         long seed = random.nextLong();
 
-        if (canSkipRenderTypeCheck) {
+        if (this.canSkipRenderTypeCheck) {
             return ItemBlockRenderTypes.getRenderLayers(state);
         }
 

@@ -54,10 +54,10 @@ class BSPSortState {
     void writeIndex(int index) {
         if (this.indexMap != null) {
             TranslucentData.writeQuadVertexIndexes(this.indexBuffer, this.indexMap[index]);
-            checkModificationCounter(1);
+            this.checkModificationCounter(1);
         } else if (this.fixedIndexOffset != NO_FIXED_OFFSET) {
             TranslucentData.writeQuadVertexIndexes(this.indexBuffer, this.fixedIndexOffset + index);
-            checkModificationCounter(1);
+            this.checkModificationCounter(1);
         } else {
             TranslucentData.writeQuadVertexIndexes(this.indexBuffer, index);
         }
@@ -312,7 +312,7 @@ class BSPSortState {
         // check if the index modification session is over. this is very important or
         // there's an exception
         if (useIndexMap || useFixedIndexOffset) {
-            checkModificationCounter(valueCount);
+            this.checkModificationCounter(valueCount);
         }
     }
 }

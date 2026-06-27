@@ -44,7 +44,7 @@ public abstract class CenteredFlatWidget extends AbstractWidget {
         this.hovered = this.isMouseOver(mouseX, mouseY);
 
         int backgroundColor = this.hovered ? this.theme.bgHighlight : (this.selected ? this.theme.bgDefault : this.theme.bgInactive);
-        int textColor = this.selected || !this.isSelectable ? this.theme.themeLighter : this.hovered ? this.theme.theme : theme.themeDarker;
+        int textColor = this.selected || !this.isSelectable ? this.theme.themeLighter : this.hovered ? this.theme.theme : this.theme.themeDarker;
 
         int x1 = this.getX();
         int y1 = this.getY();
@@ -98,7 +98,7 @@ public abstract class CenteredFlatWidget extends AbstractWidget {
         }
 
         if (button == 0 && this.isMouseOver(mouseX, mouseY)) {
-            doAction();
+            this.doAction();
 
             return true;
         }
@@ -112,7 +112,7 @@ public abstract class CenteredFlatWidget extends AbstractWidget {
             return false;
 
         if (CommonInputs.selected(keyCode)) {
-            doAction();
+            this.doAction();
             return true;
         }
 

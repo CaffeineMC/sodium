@@ -39,16 +39,16 @@ public class ShaderParser {
                 lineNumber++;
                 if (line.startsWith("#version")) {
                     this.lines.add(line);
-                    this.lines.add(lineDirectiveFor(name, lineNumber));
+                    this.lines.add(this.lineDirectiveFor(name, lineNumber));
                 } else if (line.startsWith("#import")) {
                     // add the original import statement as a comment for reference
                     this.lines.add("// START " + line);
 
-                    processImport(line);
+                    this.processImport(line);
 
                     // reset the line directive to the current file
                     this.lines.add("// END " + line);
-                    this.lines.add(lineDirectiveFor(name, lineNumber));
+                    this.lines.add(this.lineDirectiveFor(name, lineNumber));
                 } else {
                     this.lines.add(line);
                 }
@@ -70,13 +70,13 @@ public class ShaderParser {
     }
 
     private void processImport(String line) {
-        ResourceLocation name = parseImport(line);
+        ResourceLocation name = this.parseImport(line);
 
         // mark the start of the imported file
         var nameString = name.toString();
-        this.lines.add(lineDirectiveFor(nameString, 0));
+        this.lines.add(this.lineDirectiveFor(nameString, 0));
 
-        parseShader(nameString, ShaderLoader.getShaderSource(name));
+        this.parseShader(nameString, ShaderLoader.getShaderSource(name));
     }
 
     private static final Pattern IMPORT_PATTERN = Pattern.compile("#import <(?<namespace>.*):(?<path>.*)>");

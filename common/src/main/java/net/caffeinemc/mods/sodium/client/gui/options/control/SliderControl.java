@@ -158,7 +158,7 @@ public class SliderControl implements Control {
         public boolean mouseReleased(double mouseX, double mouseY, int button) {
             if (this.option.isEnabled() && button == 0 && this.sliderHeld) {
                 this.sliderHeld = false;
-                playClickSound();
+                this.playClickSound();
                 return true;
             }
 
@@ -190,7 +190,7 @@ public class SliderControl implements Control {
 
         @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            if (!isFocused()) return false;
+            if (!this.isFocused()) return false;
 
             var range = this.option.getSteppedValidator();
             var isLeft = keyCode == InputConstants.KEY_LEFT;

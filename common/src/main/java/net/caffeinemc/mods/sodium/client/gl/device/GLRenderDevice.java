@@ -25,7 +25,7 @@ public class GLRenderDevice implements RenderDevice {
 
     @Override
     public CommandList createCommandList() {
-        GLRenderDevice.this.checkDeviceActive();
+        this.checkDeviceActive();
 
         return this.commandList;
     }
@@ -224,7 +224,7 @@ public class GLRenderDevice implements RenderDevice {
 
         @Override
         public void unmap(GlBufferMapping map) {
-            checkMapDisposed(map);
+            this.checkMapDisposed(map);
 
             GlBuffer buffer = map.getBufferObject();
 
@@ -237,7 +237,7 @@ public class GLRenderDevice implements RenderDevice {
 
         @Override
         public void flushMappedRange(GlBufferMapping map, int offset, int length) {
-            checkMapDisposed(map);
+            this.checkMapDisposed(map);
 
             GlBuffer buffer = map.getBufferObject();
 

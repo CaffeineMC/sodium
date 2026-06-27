@@ -36,7 +36,7 @@ public class RenderMaterialImpl extends MaterialViewImpl implements RenderMateri
     }
 
     public int index() {
-        return bits;
+        return this.bits;
     }
 
     public static RenderMaterialImpl byIndex(int index) {

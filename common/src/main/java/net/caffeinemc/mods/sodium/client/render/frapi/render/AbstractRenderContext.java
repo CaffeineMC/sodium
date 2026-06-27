@@ -29,10 +29,10 @@ public abstract class AbstractRenderContext implements RenderContext {
     private QuadTransform activeTransform = NO_TRANSFORM;
     private final ObjectArrayList<QuadTransform> transformStack = new ObjectArrayList<>();
     private final QuadTransform stackTransform = q -> {
-        int i = transformStack.size() - 1;
+        int i = this.transformStack.size() - 1;
 
         while (i >= 0) {
-            if (!transformStack.get(i--).transform(q)) {
+            if (!this.transformStack.get(i--).transform(q)) {
                 return false;
             }
         }
@@ -44,12 +44,12 @@ public abstract class AbstractRenderContext implements RenderContext {
     private final Consumer<Mesh> meshConsumer = mesh -> mesh.outputTo(getEmitter());
 
     protected final boolean transform(MutableQuadView q) {
-        return activeTransform.transform(q);
+        return this.activeTransform.transform(q);
     }
 
     @Override
     public boolean hasTransform() {
-        return activeTransform != NO_TRANSFORM;
+        return this.activeTransform != NO_TRANSFORM;
     }
 
     @Override
@@ -58,23 +58,23 @@ public abstract class AbstractRenderContext implements RenderContext {
             throw new NullPointerException("Renderer received null QuadTransform.");
         }
 
-        transformStack.push(transform);
+        this.transformStack.push(transform);
 
-        if (transformStack.size() == 1) {
-            activeTransform = transform;
-        } else if (transformStack.size() == 2) {
-            activeTransform = stackTransform;
+        if (this.transformStack.size() == 1) {
+            this.activeTransform = transform;
+        } else if (this.transformStack.size() == 2) {
+            this.activeTransform = this.stackTransform;
         }
     }
 
     @Override
     public void popTransform() {
-        transformStack.pop();
+        this.transformStack.pop();
 
-        if (transformStack.isEmpty()) {
-            activeTransform = NO_TRANSFORM;
-        } else if (transformStack.size() == 1) {
-            activeTransform = transformStack.get(0);
+        if (this.transformStack.isEmpty()) {
+            this.activeTransform = NO_TRANSFORM;
+        } else if (this.transformStack.size() == 1) {
+            this.activeTransform = this.transformStack.get(0);
         }
     }
 
@@ -82,6 +82,6 @@ public abstract class AbstractRenderContext implements RenderContext {
     @Deprecated
     @Override
     public Consumer<Mesh> meshConsumer() {
-        return meshConsumer;
+        return this.meshConsumer;
     }
 }

@@ -41,7 +41,7 @@ public class Config implements ConfigState {
         for (var option : this.options.values()) {
             option.loadValueInitial();
         }
-        resetAllOptionsFromBindings();
+        this.resetAllOptionsFromBindings();
     }
 
     private void registerSearchIndex() {
@@ -120,7 +120,7 @@ public class Config implements ConfigState {
                         // apply override to option if it exists
                         if (override != null) {
                             var replacement = override.change();
-                            exchangeOption(options, i, replacement, option);
+                            this.exchangeOption(options, i, replacement, option);
                         }
                     }
                 }
@@ -141,7 +141,7 @@ public class Config implements ConfigState {
                             var change = overlay.change();
                             try {
                                 var overlaidOption = change.buildWithBaseOption(option);
-                                exchangeOption(options, i, overlaidOption, option);
+                                this.exchangeOption(options, i, overlaidOption, option);
                             } catch (Exception e) {
                                 throw new IllegalArgumentException("Failed to apply overlay from '" + overlay.source() + "' to option '" + option.id + "'", e);
                             }
@@ -291,7 +291,7 @@ public class Config implements ConfigState {
         if (flags == null) {
             return;
         }
-        processFlags(flags);
+        this.processFlags(flags);
     }
 
     public void applyOption(ResourceLocation id) {
@@ -307,7 +307,7 @@ public class Config implements ConfigState {
         if (flags == null) {
             return;
         }
-        processFlags(flags);
+        this.processFlags(flags);
     }
 
     public boolean anyOptionChanged() {

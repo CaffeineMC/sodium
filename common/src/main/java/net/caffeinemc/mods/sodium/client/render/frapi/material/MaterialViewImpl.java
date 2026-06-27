@@ -85,36 +85,36 @@ public class MaterialViewImpl implements MaterialView {
 
     @Override
     public BlendMode blendMode() {
-        return BLEND_MODES[(bits & BLEND_MODE_MASK) >>> BLEND_MODE_BIT_OFFSET];
+        return BLEND_MODES[(this.bits & BLEND_MODE_MASK) >>> BLEND_MODE_BIT_OFFSET];
     }
 
     @Override
     public boolean disableColorIndex() {
-        return (bits & COLOR_DISABLE_FLAG) != 0;
+        return (this.bits & COLOR_DISABLE_FLAG) != 0;
     }
 
     @Override
     public boolean emissive() {
-        return (bits & EMISSIVE_FLAG) != 0;
+        return (this.bits & EMISSIVE_FLAG) != 0;
     }
 
     @Override
     public boolean disableDiffuse() {
-        return (bits & DIFFUSE_FLAG) != 0;
+        return (this.bits & DIFFUSE_FLAG) != 0;
     }
 
     @Override
     public TriState ambientOcclusion() {
-        return TRI_STATES[(bits & AO_MASK) >>> AO_BIT_OFFSET];
+        return TRI_STATES[(this.bits & AO_MASK) >>> AO_BIT_OFFSET];
     }
 
     @Override
     public TriState glint() {
-        return TRI_STATES[(bits & GLINT_MASK) >>> GLINT_BIT_OFFSET];
+        return TRI_STATES[(this.bits & GLINT_MASK) >>> GLINT_BIT_OFFSET];
     }
 
     @Override
     public ShadeMode shadeMode() {
-        return SHADE_MODES[(bits & SHADE_MODE_MASK) >>> SHADE_MODE_BIT_OFFSET];
+        return SHADE_MODES[(this.bits & SHADE_MODE_MASK) >>> SHADE_MODE_BIT_OFFSET];
     }
 }

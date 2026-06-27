@@ -38,7 +38,7 @@ public class MeshImpl implements Mesh {
 
     @Override
     public void forEach(Consumer<QuadView> consumer) {
-        forEach(consumer, cursorPool.get());
+        this.forEach(consumer, this.cursorPool.get());
     }
 
     /**
@@ -47,7 +47,7 @@ public class MeshImpl implements Mesh {
      * Also means renderer can hold final references to quad buffers.
      */
     void forEach(Consumer<QuadView> consumer, QuadViewImpl cursor) {
-        final int limit = data.length;
+        final int limit = this.data.length;
         int index = 0;
         cursor.data = this.data;
 

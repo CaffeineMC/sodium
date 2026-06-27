@@ -41,7 +41,7 @@ public abstract class ControlElement extends AbstractWidget {
             name = name + " *";
         }
 
-        name = truncateLabelToFit(name);
+        name = this.truncateLabelToFit(name);
 
         String label;
         if (this.getOption().isEnabled()) {
@@ -71,7 +71,7 @@ public abstract class ControlElement extends AbstractWidget {
     }
 
     protected String truncateLabelToFit(String name) {
-        return truncateTextToFit(name, this.getWidth() - this.getContentWidth() - Layout.OPTION_LABEL_END_PADDING);
+        return this.truncateTextToFit(name, this.getWidth() - this.getContentWidth() - Layout.OPTION_LABEL_END_PADDING);
     }
 
     @Override

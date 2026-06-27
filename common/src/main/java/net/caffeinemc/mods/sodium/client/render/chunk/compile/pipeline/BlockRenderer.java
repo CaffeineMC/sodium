@@ -94,14 +94,14 @@ public class BlockRenderer extends AbstractBlockRenderContext {
 
         this.colorProvider = this.colorProviderRegistry.getColorProvider(state.getBlock());
 
-        type = ItemBlockRenderTypes.getChunkRenderType(state);
+        this.type = ItemBlockRenderTypes.getChunkRenderType(state);
 
         this.prepareCulling(true);
         this.prepareAoInfo(model.useAmbientOcclusion());
 
-        modelData = PlatformModelAccess.getInstance().getModelData(slice, model, state, pos, slice.getPlatformModelData(pos));
+        this.modelData = PlatformModelAccess.getInstance().getModelData(this.slice, model, state, pos, this.slice.getPlatformModelData(pos));
 
-        Iterable<RenderType> renderTypes = PlatformModelAccess.getInstance().getModelRenderTypes(level, model, state, pos, random, modelData);
+        Iterable<RenderType> renderTypes = PlatformModelAccess.getInstance().getModelRenderTypes(this.level, model, state, pos, this.random, this.modelData);
         this.allowDowngrade = true;
 
         Iterator<RenderType> it = renderTypes.iterator();
@@ -119,8 +119,8 @@ public class BlockRenderer extends AbstractBlockRenderContext {
             ((FabricBakedModel) model).emitBlockQuads(this.level, state, pos, this.randomSupplier, this);
         }
 
-        type = null;
-        modelData = SodiumModelData.EMPTY;
+        this.type = null;
+        this.modelData = SodiumModelData.EMPTY;
     }
 
     /**
@@ -144,9 +144,9 @@ public class BlockRenderer extends AbstractBlockRenderContext {
 
         final BlendMode blendMode = mat.blendMode();
         if (blendMode == BlendMode.DEFAULT) {
-            material = DefaultMaterials.forRenderLayer(type);
+            material = DefaultMaterials.forRenderLayer(this.type);
         } else {
-            material = DefaultMaterials.forRenderLayer(blendMode.blockRenderLayer == null ? type : blendMode.blockRenderLayer);
+            material = DefaultMaterials.forRenderLayer(blendMode.blockRenderLayer == null ? this.type : blendMode.blockRenderLayer);
         }
 
         this.colorizeQuad(quad, colorIndex);
@@ -160,7 +160,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
 
             if (colorProvider != null) {
                 int[] vertexColors = this.vertexColors;
-                colorProvider.getColors(this.slice, this.pos, this.scratchPos, this.state, quad, vertexColors, slice.hasBiomeBlend());
+                colorProvider.getColors(this.slice, this.pos, this.scratchPos, this.state, quad, vertexColors, this.slice.hasBiomeBlend());
 
                 for (int i = 0; i < 4; i++) {
                     quad.color(i, ColorMixer.mulComponentWise(vertexColors[i], quad.color(i)));
@@ -200,7 +200,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         // attempt render pass downgrade if possible
         var pass = material.pass;
 
-        var downgradedPass = attemptPassDowngrade(atlasSprite, pass);
+        var downgradedPass = this.attemptPassDowngrade(atlasSprite, pass);
         if (downgradedPass != null) {
             pass = downgradedPass;
         }
@@ -246,7 +246,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
     }
 
     private @Nullable TerrainRenderPass attemptPassDowngrade(TextureAtlasSprite sprite, TerrainRenderPass pass) {
-        if (!allowDowngrade || Workarounds.isWorkaroundEnabled(Workarounds.Reference.INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE)) {
+        if (!this.allowDowngrade || Workarounds.isWorkaroundEnabled(Workarounds.Reference.INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE)) {
             return null;
         }
 
@@ -263,7 +263,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         }
 
         if (attemptDowngrade) {
-            attemptDowngrade = validateQuadUVs(sprite);
+            attemptDowngrade = this.validateQuadUVs(sprite);
         }
 
         if (attemptDowngrade) {

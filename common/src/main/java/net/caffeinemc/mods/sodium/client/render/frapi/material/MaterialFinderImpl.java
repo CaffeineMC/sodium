@@ -44,25 +44,25 @@ public class MaterialFinderImpl extends MaterialViewImpl implements MaterialFind
     public MaterialFinder blendMode(BlendMode blendMode) {
         Objects.requireNonNull(blendMode, "BlendMode may not be null");
 
-        bits = (bits & ~BLEND_MODE_MASK) | (blendMode.ordinal() << BLEND_MODE_BIT_OFFSET);
+        this.bits = (this.bits & ~BLEND_MODE_MASK) | (blendMode.ordinal() << BLEND_MODE_BIT_OFFSET);
         return this;
     }
 
     @Override
     public MaterialFinder disableColorIndex(boolean disable) {
-        bits = disable ? (bits | COLOR_DISABLE_FLAG) : (bits & ~COLOR_DISABLE_FLAG);
+        this.bits = disable ? (this.bits | COLOR_DISABLE_FLAG) : (this.bits & ~COLOR_DISABLE_FLAG);
         return this;
     }
 
     @Override
     public MaterialFinder emissive(boolean isEmissive) {
-        bits = isEmissive ? (bits | EMISSIVE_FLAG) : (bits & ~EMISSIVE_FLAG);
+        this.bits = isEmissive ? (this.bits | EMISSIVE_FLAG) : (this.bits & ~EMISSIVE_FLAG);
         return this;
     }
 
     @Override
     public MaterialFinder disableDiffuse(boolean disable) {
-        bits = disable ? (bits | DIFFUSE_FLAG) : (bits & ~DIFFUSE_FLAG);
+        this.bits = disable ? (this.bits | DIFFUSE_FLAG) : (this.bits & ~DIFFUSE_FLAG);
         return this;
     }
 
@@ -70,7 +70,7 @@ public class MaterialFinderImpl extends MaterialViewImpl implements MaterialFind
     public MaterialFinder ambientOcclusion(TriState mode) {
         Objects.requireNonNull(mode, "ambient occlusion TriState may not be null");
 
-        bits = (bits & ~AO_MASK) | (mode.ordinal() << AO_BIT_OFFSET);
+        this.bits = (this.bits & ~AO_MASK) | (mode.ordinal() << AO_BIT_OFFSET);
         return this;
     }
 
@@ -78,7 +78,7 @@ public class MaterialFinderImpl extends MaterialViewImpl implements MaterialFind
     public MaterialFinder glint(TriState mode) {
         Objects.requireNonNull(mode, "glint TriState may not be null");
 
-        bits = (bits & ~GLINT_MASK) | (mode.ordinal() << GLINT_BIT_OFFSET);
+        this.bits = (this.bits & ~GLINT_MASK) | (mode.ordinal() << GLINT_BIT_OFFSET);
         return this;
     }
 
@@ -86,24 +86,24 @@ public class MaterialFinderImpl extends MaterialViewImpl implements MaterialFind
     public MaterialFinder shadeMode(ShadeMode mode) {
         Objects.requireNonNull(mode, "ShadeMode may not be null");
 
-        bits = (bits & ~SHADE_MODE_MASK) | (mode.ordinal() << SHADE_MODE_BIT_OFFSET);
+        this.bits = (this.bits & ~SHADE_MODE_MASK) | (mode.ordinal() << SHADE_MODE_BIT_OFFSET);
         return this;
     }
 
     @Override
     public MaterialFinder copyFrom(MaterialView material) {
-        bits = ((MaterialViewImpl) material).bits;
+        this.bits = ((MaterialViewImpl) material).bits;
         return this;
     }
 
     @Override
     public MaterialFinder clear() {
-        bits = defaultBits;
+        this.bits = defaultBits;
         return this;
     }
 
     @Override
     public RenderMaterial find() {
-        return RenderMaterialImpl.byIndex(bits);
+        return RenderMaterialImpl.byIndex(this.bits);
     }
 }

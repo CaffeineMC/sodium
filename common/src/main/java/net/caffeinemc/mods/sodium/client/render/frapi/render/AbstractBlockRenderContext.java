@@ -63,16 +63,16 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
 
     private final MutableQuadViewImpl editorQuad = new MutableQuadViewImpl() {
         {
-            data = new int[EncodingFormat.TOTAL_STRIDE];
-            clear();
+            this.data = new int[EncodingFormat.TOTAL_STRIDE];
+            this.clear();
         }
 
         @Override
         public void emitDirectly() {
-            if (type == null) {
+            if (AbstractBlockRenderContext.this.type == null) {
                 throw new IllegalStateException("No render type is set but an FRAPI object was asked to render!");
             }
-            renderQuad(this);
+            AbstractBlockRenderContext.this.renderQuad(this);
         }
     };
 
@@ -127,8 +127,8 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     protected RandomSource random;
     protected long randomSeed;
     protected final Supplier<RandomSource> randomSupplier = () -> {
-        random.setSeed(randomSeed);
-        return random;
+        this.random.setSeed(this.randomSeed);
+        return this.random;
     };
 
     /**
@@ -186,7 +186,6 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
         };
     }
 
-    @SuppressWarnings("removal")
     @Deprecated
     @Override
     public BakedModelConsumer bakedModelConsumer() {
@@ -223,7 +222,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     protected void prepareAoInfo(boolean modelAo) {
         this.useAmbientOcclusion = Minecraft.useAmbientOcclusion();
         // Ignore the incorrect IDEA warning here.
-        this.defaultLightMode = this.useAmbientOcclusion && modelAo && PlatformBlockAccess.getInstance().getLightEmission(state, level, pos) == 0 ? LightMode.SMOOTH : LightMode.FLAT;
+        this.defaultLightMode = this.useAmbientOcclusion && modelAo && PlatformBlockAccess.getInstance().getLightEmission(this.state, this.level, this.pos) == 0 ? LightMode.SMOOTH : LightMode.FLAT;
     }
 
     protected void shadeQuad(MutableQuadViewImpl quad, LightMode lightMode, boolean emissive, ShadeMode shadeMode) {
@@ -261,16 +260,16 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
 
             RandomSource random = this.randomSupplier.get();
             AmbientOcclusionMode ao = applyAOOverride(
-                    PlatformBlockAccess.getInstance().usesAmbientOcclusion(model, state, currentData, type, slice, pos),
+                    PlatformBlockAccess.getInstance().usesAmbientOcclusion(model, state, currentData, this.type, this.slice, this.pos),
                     aoOverride);
             if (noTransform) {
                 if (!this.isFaceCulled(cullFace)) {
-                    final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, model, state, cullFace, random, type, currentData);
+                    final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(this.level, this.pos, model, state, cullFace, random, this.type, currentData);
                     final int count = quads.size();
 
                     for (int j = 0; j < count; j++) {
                         final BakedQuad q = quads.get(j);
-                        editorQuad.fromVanilla(q, (type == RenderType.tripwire() || type == RenderType.translucent()) ? TRANSLUCENT_MATERIAL : STANDARD_MATERIALS[ao.ordinal()], cullFace);
+                        editorQuad.fromVanilla(q, (this.type == RenderType.tripwire() || this.type == RenderType.translucent()) ? TRANSLUCENT_MATERIAL : STANDARD_MATERIALS[ao.ordinal()], cullFace);
                         // Call processQuad instead of emit for efficiency
                         // (avoid unnecessarily clearing data, trying to apply transforms, and performing cull check again)
 
@@ -278,12 +277,12 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
                     }
                 }
             } else {
-                final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, model, state, cullFace, random, type, currentData);
+                final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(this.level, this.pos, model, state, cullFace, random, this.type, currentData);
                 final int count = quads.size();
 
                 for (int j = 0; j < count; j++) {
                     final BakedQuad q = quads.get(j);
-                    editorQuad.fromVanilla(q, (type == RenderType.tripwire() || type == RenderType.translucent()) ? TRANSLUCENT_MATERIAL : STANDARD_MATERIALS[ao.ordinal()], cullFace);
+                    editorQuad.fromVanilla(q, (this.type == RenderType.tripwire() || this.type == RenderType.translucent()) ? TRANSLUCENT_MATERIAL : STANDARD_MATERIALS[ao.ordinal()], cullFace);
                     // Call renderQuad instead of emit for efficiency
                     // (avoid unnecessarily clearing data)
                     this.renderQuad(editorQuad);
@@ -294,12 +293,11 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
         editorQuad.clear();
     }
 
-    @SuppressWarnings("removal")
     @Deprecated
     private class BakedModelConsumerImpl implements BakedModelConsumer {
         @Override
         public void accept(BakedModel model) {
-            accept(model, AbstractBlockRenderContext.this.state);
+            this.accept(model, AbstractBlockRenderContext.this.state);
         }
 
         @Override

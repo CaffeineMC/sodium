@@ -72,7 +72,7 @@ public class TraversableTree extends Tree {
 
         // everything is already inside the distance limit if the build distance is smaller
         var initialInside = this.distanceLimit >= buildDistance ? INSIDE_DISTANCE : 0;
-        this.traverse(getChildOrderModulator(0, 0, 0, 1 << 5), 0, 5, initialInside);
+        this.traverse(this.getChildOrderModulator(0, 0, 0, 1 << 5), 0, 5, initialInside);
 
         this.visitor = null;
         this.viewport = null;
@@ -104,7 +104,7 @@ public class TraversableTree extends Tree {
                         int y = deinterleave6(sectionOrigin >> 1) + this.offsetY;
                         int z = deinterleave6(sectionOrigin >> 2) + this.offsetZ;
 
-                        if (inside == FULLY_INSIDE || testLeafNode(x, y, z, inside)) {
+                        if (inside == FULLY_INSIDE || this.testLeafNode(x, y, z, inside)) {
                             this.visitor.visit(x, y, z);
                         }
                     }
@@ -170,7 +170,7 @@ public class TraversableTree extends Tree {
         // immediately traverse if fully inside
         if (inside == FULLY_INSIDE) {
             level--;
-            this.traverse(getChildOrderModulator(x, y, z, 1 << level), childOrigin, level, inside);
+            this.traverse(this.getChildOrderModulator(x, y, z, 1 << level), childOrigin, level, inside);
             return;
         }
 
@@ -218,7 +218,7 @@ public class TraversableTree extends Tree {
 
         if (visible) {
             level--;
-            this.traverse(getChildOrderModulator(x, y, z, 1 << level), childOrigin, level, inside);
+            this.traverse(this.getChildOrderModulator(x, y, z, 1 << level), childOrigin, level, inside);
         }
     }
 

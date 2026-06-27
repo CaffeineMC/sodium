@@ -38,53 +38,53 @@ public final class SimpleFrustum implements Frustum {
             throw new RuntimeException("Failed to access planes field in FrustumIntersection", e);
         }
 
-        nxX = planes[0].x;
-        nxY = planes[0].y;
-        nxZ = planes[0].z;
-        pxX = planes[1].x;
-        pxY = planes[1].y;
-        pxZ = planes[1].z;
-        nyX = planes[2].x;
-        nyY = planes[2].y;
-        nyZ = planes[2].z;
-        pyX = planes[3].x;
-        pyY = planes[3].y;
-        pyZ = planes[3].z;
-        nzX = planes[4].x;
-        nzY = planes[4].y;
-        nzZ = planes[4].z;
-        pzX = planes[5].x;
-        pzY = planes[5].y;
-        pzZ = planes[5].z;
+        this.nxX = planes[0].x;
+        this.nxY = planes[0].y;
+        this.nxZ = planes[0].z;
+        this.pxX = planes[1].x;
+        this.pxY = planes[1].y;
+        this.pxZ = planes[1].z;
+        this.nyX = planes[2].x;
+        this.nyY = planes[2].y;
+        this.nyZ = planes[2].z;
+        this.pyX = planes[3].x;
+        this.pyY = planes[3].y;
+        this.pyZ = planes[3].z;
+        this.nzX = planes[4].x;
+        this.nzY = planes[4].y;
+        this.nzZ = planes[4].z;
+        this.pzX = planes[5].x;
+        this.pzY = planes[5].y;
+        this.pzZ = planes[5].z;
 
         final float size = Viewport.CHUNK_SECTION_PADDED_RADIUS;
-        negNxW = -(planes[0].w + nxX * (nxX < 0 ? -size : size) +
-                nxY * (nxY < 0 ? -size : size) +
-                nxZ * (nxZ < 0 ? -size : size));
-        negPxW = -(planes[1].w + pxX * (pxX < 0 ? -size : size) +
-                pxY * (pxY < 0 ? -size : size) +
-                pxZ * (pxZ < 0 ? -size : size));
-        negNyW = -(planes[2].w + nyX * (nyX < 0 ? -size : size) +
-                nyY * (nyY < 0 ? -size : size) +
-                nyZ * (nyZ < 0 ? -size : size));
-        negPyW = -(planes[3].w + pyX * (pyX < 0 ? -size : size) +
-                pyY * (pyY < 0 ? -size : size) +
-                pyZ * (pyZ < 0 ? -size : size));
-        negNzW = -(planes[4].w + nzX * (nzX < 0 ? -size : size) +
-                nzY * (nzY < 0 ? -size : size) +
-                nzZ * (nzZ < 0 ? -size : size));
-        negPzW = -(planes[5].w + pzX * (pzX < 0 ? -size : size) +
-                pzY * (pzY < 0 ? -size : size) +
-                pzZ * (pzZ < 0 ? -size : size));
+        this.negNxW = -(planes[0].w + this.nxX * (this.nxX < 0 ? -size : size) +
+                this.nxY * (this.nxY < 0 ? -size : size) +
+                this.nxZ * (this.nxZ < 0 ? -size : size));
+        this.negPxW = -(planes[1].w + this.pxX * (this.pxX < 0 ? -size : size) +
+                this.pxY * (this.pxY < 0 ? -size : size) +
+                this.pxZ * (this.pxZ < 0 ? -size : size));
+        this.negNyW = -(planes[2].w + this.nyX * (this.nyX < 0 ? -size : size) +
+                this.nyY * (this.nyY < 0 ? -size : size) +
+                this.nyZ * (this.nyZ < 0 ? -size : size));
+        this.negPyW = -(planes[3].w + this.pyX * (this.pyX < 0 ? -size : size) +
+                this.pyY * (this.pyY < 0 ? -size : size) +
+                this.pyZ * (this.pyZ < 0 ? -size : size));
+        this.negNzW = -(planes[4].w + this.nzX * (this.nzX < 0 ? -size : size) +
+                this.nzY * (this.nzY < 0 ? -size : size) +
+                this.nzZ * (this.nzZ < 0 ? -size : size));
+        this.negPzW = -(planes[5].w + this.pzX * (this.pzX < 0 ? -size : size) +
+                this.pzY * (this.pzY < 0 ? -size : size) +
+                this.pzZ * (this.pzZ < 0 ? -size : size));
     }
 
     public boolean testSection(float x, float y, float z) {
         // Skip far plane checks because it has been ensured by searchDistance and isWithinRenderDistance check in OcclusionCuller
-        return nxX * x + nxY * y + nxZ * z >= negNxW &&
-                pxX * x + pxY * y + pxZ * z >= negPxW &&
-                nyX * x + nyY * y + nyZ * z >= negNyW &&
-                pyX * x + pyY * y + pyZ * z >= negPyW &&
-                nzX * x + nzY * y + nzZ * z >= negNzW;
+        return this.nxX * x + this.nxY * y + this.nxZ * z >= this.negNxW &&
+                this.pxX * x + this.pxY * y + this.pxZ * z >= this.negPxW &&
+                this.nyX * x + this.nyY * y + this.nyZ * z >= this.negNyW &&
+                this.pyX * x + this.pyY * y + this.pyZ * z >= this.negPyW &&
+                this.nzX * x + this.nzY * y + this.nzZ * z >= this.negNzW;
     }
 
     public boolean testSectionExpanded(float floatOriginX, float floatOriginY, float floatOriginZ, float extend) {
@@ -95,12 +95,12 @@ public final class SimpleFrustum implements Frustum {
         float minZ = floatOriginZ - extend;
         float maxZ = floatOriginZ + extend;
 
-        return nxX * (nxX < 0 ? minX : maxX) + nxY * (nxY < 0 ? minY : maxY) + nxZ * (nxZ < 0 ? minZ : maxZ) >= negNxW &&
-                pxX * (pxX < 0 ? minX : maxX) + pxY * (pxY < 0 ? minY : maxY) + pxZ * (pxZ < 0 ? minZ : maxZ) >= negPxW &&
-                nyX * (nyX < 0 ? minX : maxX) + nyY * (nyY < 0 ? minY : maxY) + nyZ * (nyZ < 0 ? minZ : maxZ) >= negNyW &&
-                pyX * (pyX < 0 ? minX : maxX) + pyY * (pyY < 0 ? minY : maxY) + pyZ * (pyZ < 0 ? minZ : maxZ) >= negPyW &&
-                nzX * (nzX < 0 ? minX : maxX) + nzY * (nzY < 0 ? minY : maxY) + nzZ * (nzZ < 0 ? minZ : maxZ) >= negNzW &&
-                pzX * (pzX < 0 ? minX : maxX) + pzY * (pzY < 0 ? minY : maxY) + pzZ * (pzZ < 0 ? minZ : maxZ) >= negPzW;
+        return this.nxX * (this.nxX < 0 ? minX : maxX) + this.nxY * (this.nxY < 0 ? minY : maxY) + this.nxZ * (this.nxZ < 0 ? minZ : maxZ) >= this.negNxW &&
+                this.pxX * (this.pxX < 0 ? minX : maxX) + this.pxY * (this.pxY < 0 ? minY : maxY) + this.pxZ * (this.pxZ < 0 ? minZ : maxZ) >= this.negPxW &&
+                this.nyX * (this.nyX < 0 ? minX : maxX) + this.nyY * (this.nyY < 0 ? minY : maxY) + this.nyZ * (this.nyZ < 0 ? minZ : maxZ) >= this.negNyW &&
+                this.pyX * (this.pyX < 0 ? minX : maxX) + this.pyY * (this.pyY < 0 ? minY : maxY) + this.pyZ * (this.pyZ < 0 ? minZ : maxZ) >= this.negPyW &&
+                this.nzX * (this.nzX < 0 ? minX : maxX) + this.nzY * (this.nzY < 0 ? minY : maxY) + this.nzZ * (this.nzZ < 0 ? minZ : maxZ) >= this.negNzW &&
+                this.pzX * (this.pzX < 0 ? minX : maxX) + this.pzY * (this.pzY < 0 ? minY : maxY) + this.pzZ * (this.pzZ < 0 ? minZ : maxZ) >= this.negPzW;
     }
 
     @Override

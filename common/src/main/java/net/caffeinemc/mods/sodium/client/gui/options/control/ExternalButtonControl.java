@@ -101,7 +101,7 @@ public class ExternalButtonControl implements Control {
 
         @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            if (!isFocused()) return false;
+            if (!this.isFocused()) return false;
 
             if (CommonInputs.selected(keyCode)) {
                 this.openScreen(this.screen);

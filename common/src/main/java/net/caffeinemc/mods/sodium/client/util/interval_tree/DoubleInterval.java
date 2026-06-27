@@ -92,14 +92,14 @@ public class DoubleInterval extends Interval<Double> {
      */
     @Override
     public boolean isEmpty() {
-        if (getStart() != null && getStart().isNaN())
+        if (this.getStart() != null && this.getStart().isNaN())
             return true;
-        if (getEnd() != null && getEnd().isNaN())
+        if (this.getEnd() != null && this.getEnd().isNaN())
             return true;
-        if (getStart() != null && getEnd() != null) {
-            if (getStart() == Double.POSITIVE_INFINITY && getEnd() == Double.POSITIVE_INFINITY)
+        if (this.getStart() != null && this.getEnd() != null) {
+            if (this.getStart() == Double.POSITIVE_INFINITY && this.getEnd() == Double.POSITIVE_INFINITY)
                 return true;
-            if (getStart() == Double.NEGATIVE_INFINITY && getEnd() == Double.NEGATIVE_INFINITY)
+            if (this.getStart() == Double.NEGATIVE_INFINITY && this.getEnd() == Double.NEGATIVE_INFINITY)
                 return true;
         }
         return super.isEmpty();
@@ -123,24 +123,24 @@ public class DoubleInterval extends Interval<Double> {
      */
     @Override
     public Double getMidpoint() {
-        if (isEmpty())
+        if (this.isEmpty())
             return null;
 
         // Handle null values
-        if (getStart() == null && getEnd() == null)
+        if (this.getStart() == null && this.getEnd() == null)
             return 0.0;
-        if (getStart() == null)
-            return getEnd() - OFFSET;
-        if (getEnd() == null)
-            return getStart() + OFFSET;
+        if (this.getStart() == null)
+            return this.getEnd() - OFFSET;
+        if (this.getEnd() == null)
+            return this.getStart() + OFFSET;
 
         // Now we are sure there are no more null values involved
-        if (getStart() == Double.NEGATIVE_INFINITY && getEnd() == Double.POSITIVE_INFINITY)
+        if (this.getStart() == Double.NEGATIVE_INFINITY && this.getEnd() == Double.POSITIVE_INFINITY)
             return 0.0;
-        if (getStart() == Double.NEGATIVE_INFINITY)
-            return getEnd() - OFFSET;
-        if (getEnd() == Double.POSITIVE_INFINITY)
-            return getStart() + OFFSET;
-        return getStart() + (getEnd() - getStart()) / 2;
+        if (this.getStart() == Double.NEGATIVE_INFINITY)
+            return this.getEnd() - OFFSET;
+        if (this.getEnd() == Double.POSITIVE_INFINITY)
+            return this.getStart() + OFFSET;
+        return this.getStart() + (this.getEnd() - this.getStart()) / 2;
     }
 }

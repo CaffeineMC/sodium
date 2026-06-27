@@ -1,6 +1,5 @@
 package net.caffeinemc.mods.sodium.mixin.features.render.world.sky;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
