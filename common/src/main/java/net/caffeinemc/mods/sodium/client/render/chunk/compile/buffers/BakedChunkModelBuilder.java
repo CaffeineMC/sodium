@@ -31,8 +31,8 @@ public class BakedChunkModelBuilder implements ChunkModelBuilder {
 
     @Override
     public VertexConsumer asFallbackVertexConsumer(Material material, TranslucentGeometryCollector collector) {
-        fallbackVertexConsumer.setData(material, collector);
-        return fallbackVertexConsumer;
+        this.fallbackVertexConsumer.setData(material, collector);
+        return this.fallbackVertexConsumer;
     }
 
     public void destroy() {

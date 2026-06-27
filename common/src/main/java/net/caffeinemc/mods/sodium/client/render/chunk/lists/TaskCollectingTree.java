@@ -46,7 +46,7 @@ public class TaskCollectingTree extends SectionTree {
 
     protected void addPendingSection(RenderSection section, int type, boolean inFrustum) {
         // start with a base priority value, lowest priority of task gets processed first
-        float priority = getSectionPriority(section, type, inFrustum);
+        float priority = this.getSectionPriority(section, type, inFrustum);
 
         // encode the absolute position of the section
         var localX = section.getChunkX() - this.baseOffsetX;

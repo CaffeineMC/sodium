@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import java.net.URL;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
-import java.util.Locale;
 
 /**
  * Performs OpenGL driver validation before the game creates an OpenGL context. This runs during the earliest possible

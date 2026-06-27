@@ -1,10 +1,8 @@
 package net.caffeinemc.mods.sodium.client.platform.windows.api.msgbox;
 
-import org.jspecify.annotations.NonNull;
 import org.lwjgl.system.Callback;
 import org.lwjgl.system.CallbackI;
 import org.lwjgl.system.NativeType;
-import org.lwjgl.system.libffi.FFICIF;
 
 import java.lang.invoke.MethodHandles;
 

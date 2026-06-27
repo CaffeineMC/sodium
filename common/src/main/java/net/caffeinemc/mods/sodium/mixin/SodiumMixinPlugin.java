@@ -30,7 +30,7 @@ public class SodiumMixinPlugin implements IMixinConfigPlugin {
 
         this.dependencyResolutionFailed = PlatformRuntimeInformation.getInstance().isModInLoadingList("embeddium");
 
-        if (dependencyResolutionFailed) {
+        if (this.dependencyResolutionFailed) {
             this.logger.error("Not applying any Sodium mixins; dependency resolution has failed.");
         }
 
@@ -45,7 +45,7 @@ public class SodiumMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (dependencyResolutionFailed) {
+        if (this.dependencyResolutionFailed) {
             return false;
         }
 

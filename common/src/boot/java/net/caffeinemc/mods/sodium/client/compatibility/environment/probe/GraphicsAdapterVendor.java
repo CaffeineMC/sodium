@@ -3,7 +3,6 @@ package net.caffeinemc.mods.sodium.client.compatibility.environment.probe;
 import net.caffeinemc.mods.sodium.client.compatibility.environment.GlContextInfo;
 import org.jspecify.annotations.NonNull;
 
-import java.util.Locale;
 import java.util.regex.Pattern;
 
 public enum GraphicsAdapterVendor {

@@ -39,6 +39,6 @@ public class GameRendererMixin implements GameRendererStorage {
 
     @Override
     public Matrix4fc sodium$getProjectionMatrix() {
-        return projection;
+        return this.projection;
     }
 }

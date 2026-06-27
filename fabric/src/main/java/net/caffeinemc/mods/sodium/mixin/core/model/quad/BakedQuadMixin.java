@@ -120,7 +120,7 @@ public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Override
     public int getMaxLightQuad(int idx) {
-        return LightCoordsUtil.lightCoordsWithEmission(getLight(idx), this.materialInfo.lightEmission());
+        return LightCoordsUtil.lightCoordsWithEmission(this.getLight(idx), this.materialInfo.lightEmission());
     }
 
     @Override

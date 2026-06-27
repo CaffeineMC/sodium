@@ -1,7 +1,5 @@
 package net.caffeinemc.mods.sodium.api.blockentity;
 
-import java.util.function.Predicate;
-
 import net.caffeinemc.mods.sodium.api.internal.DependencyInjection;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;

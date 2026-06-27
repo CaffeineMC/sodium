@@ -8,8 +8,6 @@ import org.lwjgl.system.Struct;
 
 import java.nio.ByteBuffer;
 
-import static org.lwjgl.system.MemoryUtil.*;
-
 // https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/d3dkmthk/ns-d3dkmthk-_d3dkmt_enumadapters
 // typedef struct _D3DKMT_ENUMADAPTERS {
 //  [in] ULONG              NumAdapters;

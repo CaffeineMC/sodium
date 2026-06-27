@@ -16,7 +16,6 @@
 
 package net.caffeinemc.mods.sodium.client.render.frapi;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableMeshImpl;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.NonTerrainBlockRenderContext;
 import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.ExtendedMutableQuadViewImpl;
@@ -47,8 +46,8 @@ public class SodiumRenderer implements Renderer {
 
         MutableQuadViewImpl impl = new MutableQuadViewImpl() {
             {
-                data = new int[EncodingFormat.TOTAL_STRIDE];
-                clear();
+                this.data = new int[EncodingFormat.TOTAL_STRIDE];
+                this.clear();
             }
 
             @Override

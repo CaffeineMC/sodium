@@ -51,9 +51,9 @@ public class SpriteContentsTickerMixin {
     private void preTick(CallbackInfoReturnable<Boolean> cir) {
         boolean onDemand = SodiumClientMod.options().performance.animateOnlyVisibleTextures;
 
-        if (!hasUploadedAllOnce) {
+        if (!this.hasUploadedAllOnce) {
             if (this.frame == this.animationInfo.frames.size() - 1) {
-                hasUploadedAllOnce = true;
+                this.hasUploadedAllOnce = true;
             } else {
                 return;
             }

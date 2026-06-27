@@ -16,12 +16,11 @@
 
 package net.caffeinemc.mods.sodium.client.render.helper;
 
-import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
 import net.caffeinemc.mods.sodium.client.render.model.QuadViewImpl;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
-import org.jspecify.annotations.NonNull;
 import org.joml.Vector3f;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Static routines of general utility for renderer implementations.

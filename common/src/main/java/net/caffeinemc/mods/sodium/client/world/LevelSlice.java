@@ -1,25 +1,24 @@
 package net.caffeinemc.mods.sodium.client.world;
 
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
-import net.caffeinemc.mods.sodium.client.services.*;
-import net.caffeinemc.mods.sodium.client.world.biome.LevelColorCache;
+import net.caffeinemc.mods.sodium.client.services.PlatformLevelRenderHooks;
+import net.caffeinemc.mods.sodium.client.services.SodiumModelData;
+import net.caffeinemc.mods.sodium.client.services.SodiumModelDataContainer;
 import net.caffeinemc.mods.sodium.client.world.biome.LevelBiomeSlice;
+import net.caffeinemc.mods.sodium.client.world.biome.LevelColorCache;
 import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSection;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.world.level.CardinalLighting;
 import net.minecraft.world.level.ColorResolver;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -350,7 +349,7 @@ public final class LevelSlice implements BlockAndTintGetter {
 
     @Override
     public CardinalLighting cardinalLighting() {
-        return level.cardinalLighting();
+        return this.level.cardinalLighting();
     }
 
     @Override
@@ -400,6 +399,6 @@ public final class LevelSlice implements BlockAndTintGetter {
     }
 
     public boolean useAmbientOcclusion() {
-        return ambientOcclusion;
+        return this.ambientOcclusion;
     }
 }

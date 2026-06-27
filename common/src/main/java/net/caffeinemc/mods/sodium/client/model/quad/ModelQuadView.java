@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.model.quad;
 
-import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFlags;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFlags;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 
@@ -79,21 +79,21 @@ public interface ModelQuadView {
     }
 
     default int calculateNormal() {
-        final float x0 = getX(0);
-        final float y0 = getY(0);
-        final float z0 = getZ(0);
+        final float x0 = this.getX(0);
+        final float y0 = this.getY(0);
+        final float z0 = this.getZ(0);
 
-        final float x1 = getX(1);
-        final float y1 = getY(1);
-        final float z1 = getZ(1);
+        final float x1 = this.getX(1);
+        final float y1 = this.getY(1);
+        final float z1 = this.getZ(1);
 
-        final float x2 = getX(2);
-        final float y2 = getY(2);
-        final float z2 = getZ(2);
+        final float x2 = this.getX(2);
+        final float y2 = this.getY(2);
+        final float z2 = this.getZ(2);
 
-        final float x3 = getX(3);
-        final float y3 = getY(3);
-        final float z3 = getZ(3);
+        final float x3 = this.getX(3);
+        final float y3 = this.getY(3);
+        final float z3 = this.getZ(3);
 
         final float dx0 = x2 - x0;
         final float dy0 = y2 - y0;
@@ -123,9 +123,9 @@ public interface ModelQuadView {
      * @return the per-vertex normal if it is set, otherwise the face normal.
      */
     default int getAccurateNormal(int i) {
-        int normal = getVertexNormal(i);
+        int normal = this.getVertexNormal(i);
 
-        return normal == 0 ? getFaceNormal() : normal;
+        return normal == 0 ? this.getFaceNormal() : normal;
     }
 
     /**

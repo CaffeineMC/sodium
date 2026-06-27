@@ -19,8 +19,8 @@ public abstract class Estimator<
         TInput,
         TOutput,
         TModel extends Estimator.Model<TInput, TOutput, TBatch>> {
-    protected final Map<TCategory, TModel> models = createMap();
-    protected final Map<TCategory, TBatch> batches = createMap();
+    protected final Map<TCategory, TModel> models = this.createMap();
+    protected final Map<TCategory, TBatch> batches = this.createMap();
 
     protected interface DataBatch<TBatchPoint> {
         void addDataPoint(TBatchPoint input);

@@ -232,7 +232,7 @@ public class DefaultFluidRenderer {
      * Calculates the combined visibility of a fluid face based on the neighboring block states and the fluid state.
      */
     private boolean isFullBlockFluidVisible(BlockAndTintGetter world, BlockPos pos, Direction dir, BlockState blockState, FluidState fluid) {
-        return isFullBlockFluidSelfVisible(blockState, dir) && this.isFullBlockFluidSideVisible(world, pos, dir, fluid);
+        return this.isFullBlockFluidSelfVisible(blockState, dir) && this.isFullBlockFluidSideVisible(world, pos, dir, fluid);
     }
 
     /**
@@ -305,13 +305,13 @@ public class DefaultFluidRenderer {
                 return 1.0f;
             }
 
-            cornerHeight = sampleFluidCornerSmart(world, origin, fluid, dirA, dirB, fluidHeightA, fluidHeightB, exposedA, exposedB, filteredHeightA, filteredHeightB);
+            cornerHeight = this.sampleFluidCornerSmart(world, origin, fluid, dirA, dirB, fluidHeightA, fluidHeightB, exposedA, exposedB, filteredHeightA, filteredHeightB);
         } else {
             if (fluidHeightA >= 1.0f || fluidHeightB >= 1.0f) {
                 return 1.0f;
             }
 
-            cornerHeight = sampleFluidCornerBasic(world, origin, fluid, dirA, dirB, fluidHeightA, fluidHeightB);
+            cornerHeight = this.sampleFluidCornerBasic(world, origin, fluid, dirA, dirB, fluidHeightA, fluidHeightB);
         }
         if (cornerHeight >= 1.0f) {
             return 1.0f;
@@ -463,7 +463,7 @@ public class DefaultFluidRenderer {
         // apply heuristic to not render up face it's in a flooded cave
         boolean inwardsUpFaceVisible = true;
         if (upVisible && fluidState.isSource()) {
-            var exposureResult = getUpFaceExposureByNeighbors(level, blockPos, fluidState);
+            var exposureResult = this.getUpFaceExposureByNeighbors(level, blockPos, fluidState);
             if (this.hiddenFluidCulling) {
                 upVisible = exposureResult != NO_EXPOSURE;
             }
@@ -699,7 +699,7 @@ public class DefaultFluidRenderer {
         this.stack.clear();
 
         var result = 0;
-        result |= visitExposureNeighbor(level, origin, fluidState, 0, 0);
+        result |= this.visitExposureNeighbor(level, origin, fluidState, 0, 0);
         if (result == BOTH_EXPOSED) {
             return result;
         }
@@ -711,25 +711,25 @@ public class DefaultFluidRenderer {
 
             // traverse into unvisited neighbors, return immediately if both faces are exposed (no further change possible)
             if (x < radius) {
-                result |= visitExposureNeighbor(level, origin, fluidState, x + 1, z);
+                result |= this.visitExposureNeighbor(level, origin, fluidState, x + 1, z);
                 if (result == BOTH_EXPOSED) {
                     return result;
                 }
             }
             if (x > -radius) {
-                result |= visitExposureNeighbor(level, origin, fluidState, x - 1, z);
+                result |= this.visitExposureNeighbor(level, origin, fluidState, x - 1, z);
                 if (result == BOTH_EXPOSED) {
                     return result;
                 }
             }
             if (z < radius) {
-                result |= visitExposureNeighbor(level, origin, fluidState, x, z + 1);
+                result |= this.visitExposureNeighbor(level, origin, fluidState, x, z + 1);
                 if (result == BOTH_EXPOSED) {
                     return result;
                 }
             }
             if (z > -radius) {
-                result |= visitExposureNeighbor(level, origin, fluidState, x, z - 1);
+                result |= this.visitExposureNeighbor(level, origin, fluidState, x, z - 1);
                 if (result == BOTH_EXPOSED) {
                     return result;
                 }
@@ -745,7 +745,7 @@ public class DefaultFluidRenderer {
 
     private int visitExposureNeighbor(BlockAndTintGetter level, BlockPos origin, FluidState fluidState, int xOffset, int zOffset) {
         // stop if position was already visited previously
-        var upNeighborMask = offsetToMask(xOffset, zOffset);
+        var upNeighborMask = this.offsetToMask(xOffset, zOffset);
         if ((this.visited & upNeighborMask) != 0) {
             return NO_EXPOSURE;
         }

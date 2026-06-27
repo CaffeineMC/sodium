@@ -5,7 +5,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.caffeinemc.mods.sodium.client.render.vertex.VertexFormatAttribute;
 
-import java.util.EnumMap;
 import java.util.Map;
 
 /**
@@ -56,7 +55,7 @@ public class GlVertexFormat {
     }
 
     public GlVertexAttributeBinding[] getShaderBindings() {
-        return bindings;
+        return this.bindings;
     }
 
     public static class Builder {

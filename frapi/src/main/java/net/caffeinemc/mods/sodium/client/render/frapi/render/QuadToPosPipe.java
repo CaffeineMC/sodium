@@ -16,14 +16,13 @@
 
 package net.caffeinemc.mods.sodium.client.render.frapi.render;
 
-import java.util.function.Consumer;
-
 import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
+import net.fabricmc.fabric.api.client.renderer.v1.mesh.QuadView;
 import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
-import net.fabricmc.fabric.api.client.renderer.v1.mesh.QuadView;
+import java.util.function.Consumer;
 
 public class QuadToPosPipe implements Consumer<QuadView> {
     private final Consumer<Vector3fc> posConsumer;
@@ -38,13 +37,13 @@ public class QuadToPosPipe implements Consumer<QuadView> {
     @Override
     public void accept(QuadView quad) {
         for (int i = 0; i < 4; i++) {
-            quad.copyPos(i, vec);
+            quad.copyPos(i, this.vec);
 
-            vec.x = MatrixHelper.transformPositionX(matrix, vec.x, vec.y, vec.z);
-            vec.y = MatrixHelper.transformPositionY(matrix, vec.x, vec.y, vec.z);
-            vec.z = MatrixHelper.transformPositionZ(matrix, vec.x, vec.y, vec.z);
+            this.vec.x = MatrixHelper.transformPositionX(this.matrix, this.vec.x, this.vec.y, this.vec.z);
+            this.vec.y = MatrixHelper.transformPositionY(this.matrix, this.vec.x, this.vec.y, this.vec.z);
+            this.vec.z = MatrixHelper.transformPositionZ(this.matrix, this.vec.x, this.vec.y, this.vec.z);
 
-            posConsumer.accept(vec);
+            this.posConsumer.accept(this.vec);
         }
     }
 }

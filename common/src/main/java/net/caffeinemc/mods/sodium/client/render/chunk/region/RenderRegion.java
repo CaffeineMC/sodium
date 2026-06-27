@@ -97,7 +97,7 @@ public class RenderRegion {
     }
 
     public long getCreationTime() {
-        return creationTime;
+        return this.creationTime;
     }
 
     public int getChunkX() {

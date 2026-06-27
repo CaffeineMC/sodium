@@ -17,18 +17,16 @@
 package net.caffeinemc.mods.sodium.mixin.frapi;
 
 import net.caffeinemc.mods.sodium.client.render.frapi.render.ItemRenderContext;
+import net.fabricmc.fabric.api.client.renderer.v1.render.FabricSubmitNodeCollection;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.OutlineBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollection;
+import net.minecraft.client.renderer.feature.ItemFeatureRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.OutlineBufferSource;
-import net.minecraft.client.renderer.SubmitNodeCollection;
-import net.minecraft.client.renderer.feature.ItemFeatureRenderer;
-
-import net.fabricmc.fabric.api.client.renderer.v1.render.FabricSubmitNodeCollection;
 
 @Mixin(ItemFeatureRenderer.class)
 abstract class ItemFeatureRendererMixin {
@@ -37,23 +35,23 @@ abstract class ItemFeatureRendererMixin {
 
     @Inject(method = "renderSolid", at = @At("RETURN"))
     private void onReturnRenderSolid(SubmitNodeCollection nodeCollection, MultiBufferSource.BufferSource bufferSource, OutlineBufferSource outlineBufferSource, CallbackInfo ci) {
-        itemRenderContext.prepare(bufferSource, outlineBufferSource, false);
+        this.itemRenderContext.prepare(bufferSource, outlineBufferSource, false);
 
         for (FabricSubmitNodeCollection.ExtendedItemSubmit submit : nodeCollection.getExtendedItemSubmits()) {
-            itemRenderContext.renderItem(submit);
+            this.itemRenderContext.renderItem(submit);
         }
 
-        itemRenderContext.clear();
+        this.itemRenderContext.clear();
     }
 
     @Inject(method = "renderTranslucent", at = @At("RETURN"))
     private void onReturnRenderTranslucent(SubmitNodeCollection nodeCollection, MultiBufferSource.BufferSource bufferSource, OutlineBufferSource outlineBufferSource, CallbackInfo ci) {
-        itemRenderContext.prepare(bufferSource, outlineBufferSource, true);
+        this.itemRenderContext.prepare(bufferSource, outlineBufferSource, true);
 
         for (FabricSubmitNodeCollection.ExtendedItemSubmit submit : nodeCollection.getExtendedItemSubmits()) {
-            itemRenderContext.renderItem(submit);
+            this.itemRenderContext.renderItem(submit);
         }
 
-        itemRenderContext.clear();
+        this.itemRenderContext.clear();
     }
 }

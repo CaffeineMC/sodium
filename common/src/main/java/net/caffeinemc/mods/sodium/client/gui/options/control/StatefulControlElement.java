@@ -40,6 +40,6 @@ public abstract class StatefulControlElement extends ControlElement {
     @Override
     protected String truncateLabelToFit(String name) {
         int rightReserve = this.isResetOverlayActive() ? this.resetButton.getWidth() : this.getContentWidth() + Layout.OPTION_LABEL_END_PADDING;
-        return truncateTextToFit(name, this.getWidth() - rightReserve);
+        return this.truncateTextToFit(name, this.getWidth() - rightReserve);
     }
 }

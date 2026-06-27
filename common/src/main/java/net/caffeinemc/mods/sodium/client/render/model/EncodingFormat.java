@@ -18,7 +18,6 @@ package net.caffeinemc.mods.sodium.client.render.model;
 
 import com.google.common.base.Preconditions;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.helper.GeometryHelper;
 import net.caffeinemc.mods.sodium.client.render.helper.ModelHelper;
