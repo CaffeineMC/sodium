@@ -41,10 +41,8 @@ import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
 import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -515,15 +513,15 @@ public class RenderSectionManager {
         }
     }
 
-    private boolean isSectionFrustumVisible(Viewport viewport, RenderSection section) {
-        // unloaded sections are considered visible as to not be an impossible requirement for immediate presentation
-        return section == null || this.renderTree == null || this.renderTree.isSectionVisible(viewport, section);
-    }
-
     private boolean isSectionImmediatePresentationCandidate(Viewport viewport, RenderSection section) {
         if (this.cameraPosition == null) {
             return false;
         }
+
+        if (this.renderTree == null) {
+            return true;
+        }
+
         var distanceSquared = section.getSquaredDistance(
                 (float) this.cameraPosition.x(),
                 (float) this.cameraPosition.y(),
@@ -533,16 +531,19 @@ public class RenderSectionManager {
         if (distanceSquared < NEARBY_REBUILD_DISTANCE) {
             return true;
         }
+        if (distanceSquared >= IMMEDIATE_PRESENT_DISTANCE) {
+            return false;
+        }
 
-        return distanceSquared < IMMEDIATE_PRESENT_DISTANCE &&
-                // check that visible or adjacent to a visible section
-                (this.isSectionFrustumVisible(viewport, section)
-                        || this.isSectionFrustumVisible(viewport, section.adjacentDown)
-                        || this.isSectionFrustumVisible(viewport, section.adjacentUp)
-                        || this.isSectionFrustumVisible(viewport, section.adjacentNorth)
-                        || this.isSectionFrustumVisible(viewport, section.adjacentSouth)
-                        || this.isSectionFrustumVisible(viewport, section.adjacentWest)
-                        || this.isSectionFrustumVisible(viewport, section.adjacentEast));
+        // unloaded sections are considered visible as to not be an impossible requirement for immediate presentation
+        return (section.getAdjacentMask() != GraphDirectionSet.ALL ||
+                this.renderTree.isSectionVisible(viewport, section) ||
+                this.renderTree.isSectionVisible(viewport, section.adjacentDown) ||
+                this.renderTree.isSectionVisible(viewport, section.adjacentUp) ||
+                this.renderTree.isSectionVisible(viewport, section.adjacentNorth) ||
+                this.renderTree.isSectionVisible(viewport, section.adjacentSouth) ||
+                this.renderTree.isSectionVisible(viewport, section.adjacentWest) ||
+                this.renderTree.isSectionVisible(viewport, section.adjacentEast));
     }
 
     private int processChunkBuildResults(ArrayList<BuilderTaskOutput> results, Viewport viewport, UniformBufferManager uniforms) {
