@@ -284,19 +284,6 @@ public abstract class TQuad {
         return result;
     }
 
-    public boolean extentsEqual(float[] other) {
-        return extentsEqual(this.extents, other);
-    }
-
-    public static boolean extentsEqual(float[] a, float[] b) {
-        for (int i = 0; i < 6; i++) {
-            if (a[i] != b[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     public static boolean extentsIntersect(float[] extentsA, float[] extentsB) {
         for (int axis = 0; axis < 3; axis++) {
             var opposite = axis + 3;

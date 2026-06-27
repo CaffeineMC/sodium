@@ -93,7 +93,7 @@ public class NormalList {
         // to the collection of groups it maps to
         var interval = new DoubleInterval(start, end, Bounded.CLOSED);
         for (Interval<Double> groupInterval : this.intervalTree.query(interval)) {
-            for (Group group : this.groupsByInterval.get(groupInterval)) {
+            for (Group group : this.groupsByInterval.get((DoubleInterval) groupInterval)) {
                 group.triggerRange(ts, start, end);
             }
         }

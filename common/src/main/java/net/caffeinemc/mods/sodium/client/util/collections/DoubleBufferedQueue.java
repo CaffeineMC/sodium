@@ -14,7 +14,7 @@ public final class DoubleBufferedQueue<E> {
     }
 
     public boolean flip() {
-        if (this.write.size() == 0) {
+        if (this.write.isEmpty()) {
             return false;
         }
 
@@ -88,10 +88,6 @@ public final class DoubleBufferedQueue<E> {
 
             this.readIndex = 0;
             this.writeIndex = 0;
-        }
-
-        public int size() {
-            return this.writeIndex - this.readIndex;
         }
 
         private void grow(int minimumSize) {

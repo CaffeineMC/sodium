@@ -35,11 +35,6 @@ public abstract class AbstractParentWidget extends AbstractWidget implements Con
         return element;
     }
 
-    protected void removeChild(GuiEventListener element) {
-        this.children.remove(element);
-        this.renderableChildren.remove(element);
-    }
-
     protected void clearChildren() {
         this.children.clear();
         this.renderableChildren.clear();

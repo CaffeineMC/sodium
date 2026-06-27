@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.client.platform.windows.api;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.*;
+
 import java.nio.ByteBuffer;
 
 public class Kernel32 {
@@ -82,12 +83,10 @@ public class Kernel32 {
             if (result == 0) {
                 var error = getLastError();
 
-                switch (error) {
-                    case 126 /* ERROR_MOD_NOT_FOUND */:
-                        return MemoryUtil.NULL;
-                    default:
-                        throw new RuntimeException("GetModuleHandleEx failed, error=" + error);
+                if (error == 126) { /* ERROR_MOD_NOT_FOUND */
+                    return MemoryUtil.NULL;
                 }
+                throw new RuntimeException("GetModuleHandleEx failed, error=" + error);
             }
 
             return phModule.get(0);

@@ -25,10 +25,6 @@ public abstract class DynamicSorter extends PresentSorter {
         this.writeSort(cameraPos);
     }
 
-    public int getQuadCount() {
-        return this.quadCount;
-    }
-
     public int getResultSize() {
         return TranslucentData.quadCountToIndexBytes(this.quadCount);
     }

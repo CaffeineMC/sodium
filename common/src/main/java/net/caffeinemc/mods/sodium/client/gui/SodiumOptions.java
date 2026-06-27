@@ -8,7 +8,6 @@ import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.client.util.FileUtil;
-import org.jspecify.annotations.NonNull;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -23,7 +22,7 @@ public class SodiumOptions {
     public final PerformanceSettings performance = new PerformanceSettings();
     public final AdvancedSettings advanced = new AdvancedSettings();
 
-    public @NonNull DebugSettings debug = new DebugSettings();
+    public final DebugSettings debug = new DebugSettings();
     public final NotificationSettings notifications = new NotificationSettings();
 
     private boolean readOnly;

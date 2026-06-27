@@ -13,7 +13,6 @@
     "core.model.quad.BakedQuadMixin",
     "features.render.model.ItemModelGeneratorMixin",
     "features.world.biome.BiomeMixin",
-    "platform.neoforge.AbstractBlockRenderContextMixin",
     "platform.neoforge.AuxiliaryLightManagerMixin",
     "platform.neoforge.ClientHooksMixin",
     "platform.neoforge.EntrypointMixin",

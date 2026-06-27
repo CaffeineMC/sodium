@@ -22,7 +22,6 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.util.ColorMixer;
-import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
 import net.caffeinemc.mods.sodium.client.model.light.LightMode;
 import net.caffeinemc.mods.sodium.client.model.light.LightPipelineProvider;
 import net.caffeinemc.mods.sodium.client.model.light.data.SingleBlockLightDataCache;
@@ -53,15 +52,11 @@ import java.util.List;
 
 public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext implements AltModelBlockRenderer, QuadTransform {
     private final boolean allowAO;
-    private BlockColors colorMap;
+    private final BlockColors colorMap;
     private final SingleBlockLightDataCache lightDataCache = new SingleBlockLightDataCache();
 
-    private QuadEmitter output;
     private boolean defaultAo;
-    private Vector3f offset = new Vector3f ();
-    private int[] vertexColors = new int[4];
-    private final BlockPos.MutableBlockPos scratchPos = new BlockPos.MutableBlockPos();
-    private ColorProvider<BlockState> colorProvider;
+    private final Vector3f offset = new Vector3f();
     private int tintCacheIndex = -1;
     private int tintCacheValue;
     private boolean tintSourcesInitialized;
@@ -149,7 +144,6 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext imp
         this.state = blockState;
         this.pos = pos;
 
-        this.output = output;
         Vec3 offset = blockState.getOffset(pos);
         this.offset.set(x + offset.x, y + offset.y, z + offset.z);
         this.defaultAo = this.allowAO && blockState.getLightEmission() == 0;
