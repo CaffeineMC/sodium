@@ -23,7 +23,7 @@ public abstract class BufferBuilderMixin implements VertexConsumer {
     @Override
     public void putBulkData(PoseStack.Pose matrices, BakedQuad bakedQuad, float r, float g, float b, float a, int light, int overlay) {
         if (!this.fastFormat) {
-            super.putBulkData(matrices, bakedQuad, r, g, b, a, light, overlay);
+            VertexConsumer.super.putBulkData(matrices, bakedQuad, r, g, b, a, light, overlay);
 
             if (bakedQuad.sprite() != null) {
                 SpriteUtil.INSTANCE.markSpriteActive(bakedQuad.sprite());
@@ -47,7 +47,7 @@ public abstract class BufferBuilderMixin implements VertexConsumer {
     @Override
     public void putBulkData(PoseStack.Pose matrices, BakedQuad bakedQuad, float[] brightnessTable, float r, float g, float b, float a, int[] light, int overlay) {
         if (!this.fastFormat) {
-            super.putBulkData(matrices, bakedQuad, brightnessTable, r, g, b, a, light, overlay);
+            VertexConsumer.super.putBulkData(matrices, bakedQuad, brightnessTable, r, g, b, a, light, overlay);
 
             if (bakedQuad.sprite() != null) {
                 SpriteUtil.INSTANCE.markSpriteActive(bakedQuad.sprite());
