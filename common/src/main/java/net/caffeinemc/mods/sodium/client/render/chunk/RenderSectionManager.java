@@ -495,7 +495,7 @@ public class RenderSectionManager {
             return true;
         }
 
-        return !section.needsRender();
+        return section.isInvisible();
     }
 
     // renderTree is not necessarily frustum-filtered but that is ok since the caller makes sure to eventually also perform a frustum test on the box being tested (see EntityRendererMixin)
@@ -661,7 +661,7 @@ public class RenderSectionManager {
     }
 
     private int updateSectionInfo(RenderSection render, BuiltSectionInfo info) {
-        if (info == null || !RenderSectionFlags.needsRender(info.flags)) {
+        if (info == null || RenderSectionFlags.isInvisible(info.flags)) {
             this.renderableSectionTree.remove(render);
         } else {
             this.renderableSectionTree.add(render);

@@ -43,7 +43,7 @@ public class SectionTree extends AbstractSectionVisitor {
     public void visit(RenderSection section, boolean inFrustum) {
         // discard invisible or sections that don't need to be rendered,
         // only perform this test if it hasn't already been done before
-        if (!section.needsRender()) {
+        if (section.isInvisible()) {
             return;
         }
 
@@ -107,7 +107,7 @@ public class SectionTree extends AbstractSectionVisitor {
 
     public boolean isSectionVisible(Viewport viewport, RenderSection section) {
         // empty sections are not tested against the tree because the tree is not aware of them
-        return (!section.needsRender() || this.tree.isSectionPresent(section.getChunkX(), section.getChunkY(), section.getChunkZ())) &&
+        return (section.isInvisible() || this.tree.isSectionPresent(section.getChunkX(), section.getChunkY(), section.getChunkZ())) &&
                 this.isWithinFrustum(viewport, section);
     }
 

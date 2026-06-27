@@ -236,8 +236,8 @@ public class RenderRegion {
         return this.sectionFlags[id];
     }
 
-    public boolean sectionNeedsRender(int id) {
-        return RenderSectionFlags.needsRender(this.sectionFlags[id]);
+    public boolean sectionIsInvisible(int id) {
+        return RenderSectionFlags.isInvisible(this.sectionFlags[id]);
     }
 
     /**
