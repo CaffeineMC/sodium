@@ -288,8 +288,8 @@ public class RenderSection {
         return this.region;
     }
 
-    public boolean needsRender() {
-        return this.region.sectionNeedsRender(this.sectionIndex);
+    public boolean isInvisible() {
+        return this.region.sectionIsInvisible(this.sectionIndex);
     }
 
     public void resetOnFirstVisit(int token) {
