@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.region;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
+import net.caffeinemc.mods.sodium.client.gpu.arena.ArenaAggregator;
 import net.caffeinemc.mods.sodium.client.gpu.arena.PendingUpload;
 import net.caffeinemc.mods.sodium.client.gpu.arena.staging.MojangStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gpu.arena.staging.StagingBuffer;
@@ -31,13 +32,17 @@ public class RenderRegionManager {
 
     private final StagingBuffer stagingBuffer;
     private final IntPool freeIds = new IntPool();
+    private final ArenaAggregator arenaAggregator;
 
     public RenderRegionManager() {
         this.stagingBuffer = createStagingBuffer();
+        this.arenaAggregator = new ArenaAggregator(this.stagingBuffer);
     }
 
     public void update(UniformBufferManager ubm) {
         this.stagingBuffer.flip();
+
+        this.arenaAggregator.update();
 
         Iterator<RenderRegion> it = this.regions.values()
                 .iterator();
@@ -67,6 +72,7 @@ public class RenderRegionManager {
     private void uploadResults(RenderRegion region, Collection<BuilderTaskOutput> results, UniformBufferManager uniforms) {
         var uploads = new ArrayList<PendingSectionMeshUpload>();
         var indexUploads = new ArrayList<PendingSectionIndexBufferUpload>();
+        var translucentPassIndex = DefaultTerrainRenderPasses.getPassIndex(DefaultTerrainRenderPasses.TRANSLUCENT);
 
         for (BuilderTaskOutput result : results) {
             int renderSectionIndex = result.section.getSectionIndex();
@@ -82,7 +88,8 @@ public class RenderRegionManager {
                     meshTime = Math.toIntExact(System.currentTimeMillis() - region.getCreationTime());
                 }
 
-                for (TerrainRenderPass pass : DefaultTerrainRenderPasses.ALL) {
+                for (int passIndex = 0; passIndex < DefaultTerrainRenderPasses.ALL.length; passIndex++) {
+                    TerrainRenderPass pass = DefaultTerrainRenderPasses.ALL[passIndex];
                     var storage = region.getStorage(pass);
 
                     if (storage != null) {
@@ -94,7 +101,7 @@ public class RenderRegionManager {
 
                     if (mesh != null) {
                         uploads.add(new PendingSectionMeshUpload(result.section, meshTime, mesh, pass,
-                                new PendingUpload(mesh.getVertexData())));
+                                new PendingUpload(mesh.getVertexData(), RenderRegion.packOwnerIndex(renderSectionIndex, passIndex))));
                     }
                 }
             }
@@ -129,7 +136,7 @@ public class RenderRegionManager {
                         continue;
                     }
 
-                    indexUploads.add(new PendingSectionIndexBufferUpload(result.section, new PendingUpload(buffer)));
+                    indexUploads.add(new PendingSectionIndexBufferUpload(result.section, new PendingUpload(buffer, RenderRegion.packOwnerIndex(renderSectionIndex, translucentPassIndex))));
                 }
             }
         }
@@ -146,20 +153,18 @@ public class RenderRegionManager {
         var cameraPosition = Minecraft.getInstance().gameRenderer.mainCamera().position();
 
         var resources = region.createResources();
-        var regionFillFractionInv = region.getFillFractionInv();
 
         profiler.push("upload_vertices");
 
         if (!uploads.isEmpty()) {
-            var arena = resources.getGeometryArena();
-            boolean bufferChanged = arena.upload(uploads.stream()
-                    .map(upload -> upload.vertexUpload), regionFillFractionInv);
+            var allocator = resources.getGeometryAllocator();
+            boolean bufferChanged = allocator.upload(uploads.stream()
+                    .map(upload -> upload.vertexUpload));
 
             // If any of the buffers changed, the tessellation will need to be updated
             // Once invalidated the tessellation will be re-created on the next attempted use
             if (bufferChanged) {
-                region.onBufferResized();
-                region.clearAllCachedBatches();
+                region.onGeometryBufferChange();
             }
 
             // Collect the upload results
@@ -185,9 +190,9 @@ public class RenderRegionManager {
         var indexBufferChanged = false;
 
         if (!indexUploads.isEmpty()) {
-            var arena = resources.getIndexArena();
-            indexBufferChanged = arena.upload(indexUploads.stream()
-                    .map(upload -> upload.indexBufferUpload), regionFillFractionInv);
+            var allocator = resources.getIndexAllocator();
+            indexBufferChanged = allocator.upload(indexUploads.stream()
+                    .map(upload -> upload.indexBufferUpload));
 
             for (PendingSectionIndexBufferUpload upload : indexUploads) {
                 var storage = region.createStorage(DefaultTerrainRenderPasses.TRANSLUCENT);
@@ -196,12 +201,11 @@ public class RenderRegionManager {
         }
 
         if (needsSharedIndexUpdate) {
-            indexBufferChanged |= translucentStorage.updateSharedIndexData(resources.getIndexArena(), regionFillFractionInv);
+            indexBufferChanged |= translucentStorage.updateSharedIndexData(resources.getIndexAllocator());
         }
 
         if (indexBufferChanged) {
-            region.onIndexBufferResized();
-            region.clearCachedBatchFor(DefaultTerrainRenderPasses.TRANSLUCENT);
+            region.onIndexBufferChange();
         }
 
         profiler.pop();
@@ -226,6 +230,8 @@ public class RenderRegionManager {
 
         this.regions.clear();
         this.stagingBuffer.delete();
+
+        this.arenaAggregator.delete();
     }
 
     public Collection<RenderRegion> getLoadedRegions() {
@@ -234,6 +240,10 @@ public class RenderRegionManager {
 
     public StagingBuffer getStagingBuffer() {
         return this.stagingBuffer;
+    }
+
+    public ArenaAggregator getArenaAggregator() {
+        return this.arenaAggregator;
     }
 
     public RenderRegion createForChunk(int chunkX, int chunkY, int chunkZ) {
@@ -254,13 +264,15 @@ public class RenderRegionManager {
         var instance = this.regions.get(key);
 
         if (instance == null) {
-            this.regions.put(key, instance = new RenderRegion(x, y, z, this.stagingBuffer));
+            this.regions.put(key, instance = new RenderRegion(x, y, z, this.arenaAggregator));
         }
 
         return instance;
     }
 
-    private record PendingSectionMeshUpload(RenderSection section, int relativeBuiltTime, BuiltSectionMeshParts meshData, TerrainRenderPass pass, PendingUpload vertexUpload) {
+    private record PendingSectionMeshUpload(RenderSection section, int relativeBuiltTime,
+                                            BuiltSectionMeshParts meshData, TerrainRenderPass pass,
+                                            PendingUpload vertexUpload) {
     }
 
     private record PendingSectionIndexBufferUpload(RenderSection section, PendingUpload indexBufferUpload) {

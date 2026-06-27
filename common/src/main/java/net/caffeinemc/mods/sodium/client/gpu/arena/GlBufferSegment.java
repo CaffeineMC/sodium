@@ -2,10 +2,11 @@ package net.caffeinemc.mods.sodium.client.gpu.arena;
 
 import net.caffeinemc.mods.sodium.client.util.UInt32;
 
-public class GlBufferSegment {
-    private final GlBufferArena arena;
-
-    private boolean free = false;
+// TODO: fine-grained segment update notification to avoid re-writing the entire render data on small changes
+public class GlBufferSegment implements SizedTreeMap.Sized {
+    private AllocatorBase allocator;
+    private RegionAllocatorHandle owner;
+    private int ownerIndex;
 
     private int offset; /* Uint32 */
     private int length; /* Uint32 */
@@ -13,10 +14,16 @@ public class GlBufferSegment {
     private GlBufferSegment next;
     private GlBufferSegment prev;
 
-    public GlBufferSegment(GlBufferArena arena, long offset, long length) {
-        this.arena = arena;
+    public GlBufferSegment(GlBufferArena allocator, RegionAllocatorHandle owner, int ownerIndex, long offset, long length) {
+        this.allocator = allocator;
+        this.owner = owner;
+        this.ownerIndex = ownerIndex;
         this.offset = UInt32.downcast(offset);
         this.length = UInt32.downcast(length);
+    }
+
+    public static GlBufferSegment createFreeSegment(GlBufferArena allocator, long offset, long length) {
+        return new GlBufferSegment(allocator, null, 0, offset, length);
     }
 
     /* Uint32 */
@@ -42,12 +49,21 @@ public class GlBufferSegment {
         this.length = UInt32.downcast(length);
     }
 
-    protected void setFree(boolean free) {
-        this.free = free;
+    protected void setOwner(RegionAllocatorHandle owner, int ownerIndex) {
+        this.owner = owner;
+        this.ownerIndex = ownerIndex;
+    }
+
+    protected void notifyOwnerSegmentChanged() {
+        this.owner.notifySegmentChanged(this.ownerIndex);
+    }
+
+    protected void setFree() {
+        this.owner = null;
     }
 
     protected boolean isFree() {
-        return this.free;
+        return this.owner == null;
     }
 
     protected void setNext(GlBufferSegment next) {
@@ -67,7 +83,15 @@ public class GlBufferSegment {
     }
 
     public void delete() {
-        this.arena.free(this);
+        this.allocator.free(this);
+    }
+
+    void setAllocator(AllocatorBase allocator) {
+        this.allocator = allocator;
+    }
+
+    protected RegionAllocatorHandle getOwner() {
+        return this.owner;
     }
 
     protected void mergeInto(GlBufferSegment entry) {
@@ -75,8 +99,17 @@ public class GlBufferSegment {
         this.setNext(entry.getNext());
 
         if (this.getNext() != null) {
-            this.getNext()
-                    .setPrev(this);
+            this.getNext().setPrev(this);
         }
+    }
+
+    @Override
+    public long getSize() {
+        return this.getLength();
+    }
+
+    @Override
+    public long getIdentifier() {
+        return this.getOffset();
     }
 }

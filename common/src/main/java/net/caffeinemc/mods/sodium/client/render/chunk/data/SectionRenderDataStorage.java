@@ -1,8 +1,8 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.data;
 
-import net.caffeinemc.mods.sodium.client.gpu.arena.GlBufferArena;
 import net.caffeinemc.mods.sodium.client.gpu.arena.GlBufferSegment;
 import net.caffeinemc.mods.sodium.client.gpu.arena.PendingUpload;
+import net.caffeinemc.mods.sodium.client.gpu.arena.RegionAllocatorHandle;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.SharedQuadIndexBuffer;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
@@ -144,7 +144,7 @@ public class SectionRenderDataStorage {
      * @param arena The buffer arena to allocate the new buffer from
      * @return true if the arena resized itself
      */
-    public boolean updateSharedIndexData(GlBufferArena arena, float regionFillFractionInv) {
+    public boolean updateSharedIndexData(RegionAllocatorHandle arena) {
         // assumes this.needsSharedIndexUpdate is true when this is called
         this.needsSharedIndexUpdate = false;
 
@@ -175,8 +175,8 @@ public class SectionRenderDataStorage {
 
         // create and upload a new shared index buffer
         var buffer = SharedQuadIndexBuffer.createIndexBuffer(SharedQuadIndexBuffer.IndexFormat.INTEGER, this.sharedIndexCapacity);
-        var pendingUpload = new PendingUpload(buffer);
-        var bufferChanged = arena.upload(Stream.of(pendingUpload), regionFillFractionInv);
+        var pendingUpload = new PendingUpload(buffer, RenderRegion.SHARED_INDEX_DATA_INDEX);
+        var bufferChanged = arena.upload(Stream.of(pendingUpload));
         this.sharedIndexAllocation = pendingUpload.getResult();
         buffer.free();
 
@@ -278,6 +278,46 @@ public class SectionRenderDataStorage {
                 }
             }
         }
+    }
+
+    public void onVertexSegmentChanged(int sectionIndex) {
+        // update the base vertex offset
+        var allocation = this.vertexAllocations[sectionIndex];
+
+        if (allocation == null) {
+            throw new IllegalStateException("Vertex allocation is null but it was modified");
+        }
+
+        long offset = allocation.getOffset();
+        SectionRenderDataUnsafe.setBaseVertex(this.getDataPointer(sectionIndex), offset);
+    }
+
+    public void onSharedIndexSegmentChanged() {
+        if (this.sharedIndexAllocation == null) {
+            throw new IllegalStateException("Shared index allocation is null but it was modified");
+        }
+
+        long sharedBaseElement = this.sharedIndexAllocation.getOffset();
+        for (int i = 0; i < RenderRegion.REGION_SIZE; i++) {
+            if (this.sharedIndexUsage[i] > 0) {
+                SectionRenderDataUnsafe.setSharedBaseElement(this.getDataPointer(i), sharedBaseElement);
+            }
+        }
+    }
+
+    public void onIndexSegmentChanged(int sectionIndex) {
+        if (this.elementAllocations == null) {
+            throw new IllegalStateException("Index allocation is null but it was modified");
+        }
+
+        var allocation = this.elementAllocations[sectionIndex];
+
+        if (allocation == null) {
+            throw new IllegalStateException("Index allocation is null but it was modified");
+        }
+
+        long offset = allocation.getOffset();
+        SectionRenderDataUnsafe.setLocalBaseElement(this.getDataPointer(sectionIndex), offset);
     }
 
     public long getDataPointer(int sectionIndex) {

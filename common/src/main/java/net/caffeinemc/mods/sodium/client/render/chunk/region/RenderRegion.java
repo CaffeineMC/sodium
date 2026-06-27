@@ -2,8 +2,8 @@ package net.caffeinemc.mods.sodium.client.render.chunk.region;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
-import net.caffeinemc.mods.sodium.client.gpu.arena.GlBufferArena;
-import net.caffeinemc.mods.sodium.client.gpu.arena.staging.StagingBuffer;
+import net.caffeinemc.mods.sodium.client.gpu.arena.ArenaAggregator;
+import net.caffeinemc.mods.sodium.client.gpu.arena.RegionAllocatorHandle;
 import net.caffeinemc.mods.sodium.client.gpu.device.batch.MultiDrawBatch;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.IntPool;
@@ -44,13 +44,15 @@ public class RenderRegion {
 
     public static final int REGION_SIZE = REGION_WIDTH * REGION_HEIGHT * REGION_LENGTH;
 
+    public static final int SHARED_INDEX_DATA_INDEX = -1;
+
     static {
         Validate.isTrue(MathUtil.isPowerOfTwo(REGION_WIDTH));
         Validate.isTrue(MathUtil.isPowerOfTwo(REGION_HEIGHT));
         Validate.isTrue(MathUtil.isPowerOfTwo(REGION_LENGTH));
     }
 
-    private final StagingBuffer stagingBuffer;
+    private final ArenaAggregator arenaAggregator;
     private final int x, y, z;
 
     private final ChunkRenderList renderList;
@@ -69,13 +71,13 @@ public class RenderRegion {
     private final Map<TerrainRenderPass, MultiDrawBatch> cachedBatches = new Reference2ReferenceOpenHashMap<>();
     private int uniqueId = -1;
 
-    public RenderRegion(int x, int y, int z, StagingBuffer stagingBuffer) {
+    public RenderRegion(int x, int y, int z, ArenaAggregator arenaAggregator) {
         this.x = x;
         this.y = y;
         this.z = z;
         this.creationTime = System.currentTimeMillis();
 
-        this.stagingBuffer = stagingBuffer;
+        this.arenaAggregator = arenaAggregator;
         this.renderList = new ChunkRenderList(this);
     }
 
@@ -186,14 +188,58 @@ public class RenderRegion {
         return storage;
     }
 
-    public void onBufferResized() {
+    public void onGeometryBufferChange() {
         for (var storage : this.sectionRenderData.values()) {
             storage.onBufferResized();
         }
+
+        // invalidate the cached batches
+        this.clearAllCachedBatches();
     }
 
-    public void onIndexBufferResized() {
-        this.sectionRenderData.get(DefaultTerrainRenderPasses.TRANSLUCENT).onIndexBufferResized();
+    public void onIndexBufferChange() {
+        var indexStorage = this.sectionRenderData.get(DefaultTerrainRenderPasses.TRANSLUCENT);
+        if (indexStorage != null) {
+            indexStorage.onIndexBufferResized();
+        }
+
+        // invalidate the cached batches
+        this.clearCachedBatchFor(DefaultTerrainRenderPasses.TRANSLUCENT);
+    }
+
+    public static int packOwnerIndex(int sectionIndex, int passIndex) {
+        return (passIndex << 16) | (sectionIndex & 0xFFFF);
+    }
+
+    public static int unpackSectionIndex(int ownerIndex) {
+        return ownerIndex & 0xFFFF;
+    }
+
+    public static int unpackPassIndex(int ownerIndex) {
+        return (ownerIndex >> 16) & 0xFF;
+    }
+
+    private void onGeometrySegmentChange(int ownerIndex) {
+        var sectionIndex = RenderRegion.unpackSectionIndex(ownerIndex);
+        var passIndex = RenderRegion.unpackPassIndex(ownerIndex);
+        var storage = this.sectionRenderData.get(DefaultTerrainRenderPasses.ALL[passIndex]);
+
+        storage.onVertexSegmentChanged(sectionIndex);
+
+        this.clearAllCachedBatches();
+    }
+
+    private void onIndexSegmentChange(int ownerIndex) {
+        var storage = this.sectionRenderData.get(DefaultTerrainRenderPasses.TRANSLUCENT);
+
+        if (ownerIndex == SHARED_INDEX_DATA_INDEX) {
+            storage.onSharedIndexSegmentChanged();
+        } else {
+            var sectionIndex = RenderRegion.unpackSectionIndex(ownerIndex);
+            storage.onIndexSegmentChanged(sectionIndex);
+        }
+
+        this.clearCachedBatchFor(DefaultTerrainRenderPasses.TRANSLUCENT);
     }
 
     public void addSection(RenderSection section) {
@@ -278,7 +324,7 @@ public class RenderRegion {
         this.sections[sectionIndex] = null;
         this.sectionCount--;
     }
-    
+
     public float getFillFractionInv() {
         return (float) RenderRegion.REGION_SIZE / (float) this.sectionCount;
     }
@@ -289,7 +335,7 @@ public class RenderRegion {
 
     public DeviceResources createResources() {
         if (this.resources == null) {
-            this.resources = new DeviceResources(this.stagingBuffer);
+            this.resources = new DeviceResources(this);
         }
 
         return this.resources;
@@ -318,9 +364,33 @@ public class RenderRegion {
         return this.uniqueId;
     }
 
+    private final RegionAllocatorHandle.AllocationChangeConsumer geometryChangeConsumer = new RegionAllocatorHandle.AllocationChangeConsumer() {
+        @Override
+        public void onBufferChanged() {
+            RenderRegion.this.onGeometryBufferChange();
+        }
+
+        @Override
+        public void onSegmentChanged(int ownerIndex) {
+            RenderRegion.this.onGeometrySegmentChange(ownerIndex);
+        }
+    };
+
+    private final RegionAllocatorHandle.AllocationChangeConsumer indexChangeConsumer = new RegionAllocatorHandle.AllocationChangeConsumer() {
+        @Override
+        public void onBufferChanged() {
+            RenderRegion.this.onIndexBufferChange();
+        }
+
+        @Override
+        public void onSegmentChanged(int ownerIndex) {
+            RenderRegion.this.onIndexSegmentChange(ownerIndex);
+        }
+    };
+
     public static class DeviceResources {
-        private final GlBufferArena geometryArena;
-        private final GlBufferArena indexArena;
+        private final RegionAllocatorHandle geometryArena;
+        private final RegionAllocatorHandle indexArena;
 
         /**
          * The buffer arenas return offsets in terms of how many stride units big things
@@ -330,11 +400,11 @@ public class RenderRegion {
          * two can't easily be combined because integers and vertices require different
          * amounts of data which makes the returned offsets incompatible.
          */
-        public DeviceResources(StagingBuffer stagingBuffer) {
+        public DeviceResources(RenderRegion region) {
             int stride = ChunkMeshFormats.getCurrent().getVertexFormat().getVertexSize();
 
-            this.geometryArena = new GlBufferArena(REGION_SIZE * SECTION_VERTEX_COUNT_ESTIMATE, stride, stagingBuffer);
-            this.indexArena = new GlBufferArena(REGION_SIZE * SECTION_INDEX_COUNT_ESTIMATE, Integer.BYTES, stagingBuffer);
+            this.geometryArena = region.arenaAggregator.getGeometryBufferAllocator(region, stride, region.geometryChangeConsumer);
+            this.indexArena = region.arenaAggregator.getIndexBufferAllocator(region, Integer.BYTES, region.indexChangeConsumer);
         }
 
         public GpuBuffer getGeometryBuffer() {
@@ -346,15 +416,15 @@ public class RenderRegion {
         }
 
         public void delete() {
-            this.geometryArena.delete();
-            this.indexArena.delete();
+            this.geometryArena.deleteSingleOwner();
+            this.indexArena.deleteSingleOwner();
         }
 
-        public GlBufferArena getGeometryArena() {
+        public RegionAllocatorHandle getGeometryAllocator() {
             return this.geometryArena;
         }
 
-        public GlBufferArena getIndexArena() {
+        public RegionAllocatorHandle getIndexAllocator() {
             return this.indexArena;
         }
 

@@ -24,6 +24,7 @@ import net.caffeinemc.mods.sodium.client.world.LevelRendererExtension;
 import net.caffeinemc.mods.sodium.mixin.core.render.world.EntityRendererAccessor;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -520,5 +521,11 @@ public class SodiumWorldRenderer {
 
     public boolean isSectionReady(int x, int y, int z) {
         return this.renderSectionManager.isSectionBuilt(x, y, z);
+    }
+
+    public void renderBufferDebug(GuiGraphicsExtractor guiGraphics) {
+        if (this.renderSectionManager != null) {
+            this.renderSectionManager.renderBufferDebug(guiGraphics);
+        }
     }
 }
