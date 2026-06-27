@@ -79,7 +79,7 @@ public class SliderControl implements Control {
             // render the label first and then the slider to prevent the highlight rect from darkening the slider
             super.extractRenderState(graphics, mouseX, mouseY, delta);
 
-            if (!this.option.showControl() || this.isResetOverlayActive()) {
+            if (this.option.shouldHideControl() || this.isResetOverlayActive()) {
                 return;
             }
 

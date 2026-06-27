@@ -178,14 +178,14 @@ public abstract class StatefulOption<V> extends Option {
         return this.controlHiddenWhenDisabled;
     }
 
-    public boolean showControl() {
+    public boolean shouldHideControl() {
         if (this.isEnabled()) {
-            return true;
-        }
-        if (this.controlHiddenWhenDisabled == null) {
             return false;
         }
-        return !this.controlHiddenWhenDisabled;
+        if (this.controlHiddenWhenDisabled == null) {
+            return true;
+        }
+        return this.controlHiddenWhenDisabled;
     }
 
     public OptionBinding<V> getBinding() {
