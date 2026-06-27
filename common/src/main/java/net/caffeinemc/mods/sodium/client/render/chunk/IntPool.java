@@ -8,23 +8,23 @@ public final class IntPool {
     private int next = 0;
 
     public int acquire() {
-        int id = used.nextClearBit(next);
-        used.set(id);
-        next = used.nextClearBit(id + 1);
+        int id = this.used.nextClearBit(this.next);
+        this.used.set(id);
+        this.next = this.used.nextClearBit(id + 1);
 
         return id;
     }
 
     public void release(int id) {
-        used.clear(id);
+        this.used.clear(id);
 
-        if (id < next) {
-            next = id;
+        if (id < this.next) {
+            this.next = id;
         }
     }
 
     public void clear() {
-        used.clear();
-        next = 0;
+        this.used.clear();
+        this.next = 0;
     }
 }

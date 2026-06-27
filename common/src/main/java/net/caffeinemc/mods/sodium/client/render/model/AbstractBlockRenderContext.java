@@ -11,18 +11,15 @@ import net.caffeinemc.mods.sodium.client.render.helper.ColorHelper;
 import net.caffeinemc.mods.sodium.client.render.helper.ModelHelper;
 import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
-import net.caffeinemc.mods.sodium.client.services.SodiumModelData;
 import net.caffeinemc.mods.sodium.client.util.DirectionUtil;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.util.RandomSource;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
@@ -40,13 +37,13 @@ import java.util.function.Supplier;
 public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     public class BlockEmitter extends MutableQuadViewImpl {
         {
-            data = new int[EncodingFormat.TOTAL_STRIDE];
-            clear();
+            this.data = new int[EncodingFormat.TOTAL_STRIDE];
+            this.clear();
         }
 
         @Override
         public void emitDirectly() {
-            renderQuad(this);
+            AbstractBlockRenderContext.this.renderQuad(this);
         }
 
         public void emitPart(BlockStateModelPart part, Predicate<@Nullable Direction> cullTest, Consumer<MutableQuadViewImpl> emitter) {
@@ -196,7 +193,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     protected void prepareAoInfo(boolean modelAo) {
         this.useAmbientOcclusion = this.slice.useAmbientOcclusion();
         // Ignore the incorrect IDEA warning here.
-        this.defaultLightMode = this.useAmbientOcclusion && modelAo && (state != null && PlatformBlockAccess.getInstance().getLightEmission(state, level, pos) == 0) ? LightMode.SMOOTH : LightMode.FLAT;
+        this.defaultLightMode = this.useAmbientOcclusion && modelAo && (this.state != null && PlatformBlockAccess.getInstance().getLightEmission(this.state, this.level, this.pos) == 0) ? LightMode.SMOOTH : LightMode.FLAT;
     }
 
     protected void shadeQuad(MutableQuadViewImpl quad, LightMode lightMode, boolean emissive, SodiumShadeMode shadeMode) {
@@ -232,9 +229,9 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
             }
 
             // TODO NeoForge 1.21.5
-            final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(level, pos, part, state, cullFace, random);
+            final List<BakedQuad> quads = PlatformModelAccess.getInstance().getQuads(this.level, this.pos, part, this.state, cullFace, this.random);
             final int count = quads.size();
-            AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, state, null, slice, pos);
+            AmbientOcclusionMode ao = PlatformBlockAccess.getInstance().usesAmbientOcclusion(part, this.state, null, this.slice, this.pos);
 
             for (int j = 0; j < count; j++) {
                 final BakedQuad q = quads.get(j);

@@ -96,7 +96,7 @@ public class RenderRegion {
     }
 
     public long getCreationTime() {
-        return creationTime;
+        return this.creationTime;
     }
 
     public int getChunkX() {
@@ -308,14 +308,14 @@ public class RenderRegion {
     }
 
     public int getOrAcquireId(IntPool pool) {
-        if (uniqueId == -1) {
-            uniqueId = pool.acquire();
+        if (this.uniqueId == -1) {
+            this.uniqueId = pool.acquire();
         }
-        return uniqueId;
+        return this.uniqueId;
     }
 
     public int getId() {
-        return uniqueId;
+        return this.uniqueId;
     }
 
     public static class DeviceResources {

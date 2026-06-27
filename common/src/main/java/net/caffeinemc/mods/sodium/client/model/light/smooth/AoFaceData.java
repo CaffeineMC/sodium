@@ -3,7 +3,6 @@ package net.caffeinemc.mods.sodium.client.model.light.smooth;
 import net.caffeinemc.mods.sodium.client.model.light.data.LightDataAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.util.LightCoordsUtil;
 
 import static net.caffeinemc.mods.sodium.client.model.light.data.ArrayLightDataCache.*;
 

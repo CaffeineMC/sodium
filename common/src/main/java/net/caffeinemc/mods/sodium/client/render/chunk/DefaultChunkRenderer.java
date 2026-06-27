@@ -3,14 +3,11 @@ package net.caffeinemc.mods.sodium.client.render.chunk;
 import com.mojang.blaze3d.IndexType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
-import com.mojang.blaze3d.vulkan.VulkanCommandEncoder;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.gpu.device.backend.DrawBackend;
 import net.caffeinemc.mods.sodium.client.gpu.device.batch.MultiDrawBatch;
 import net.caffeinemc.mods.sodium.client.gpu.device.context.DrawContext;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
@@ -25,17 +22,7 @@ import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.util.BitwiseMath;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.client.util.UInt32;
-import net.caffeinemc.mods.sodium.mixin.core.CommandEncoderAccessor;
-import net.caffeinemc.mods.sodium.mixin.core.GlRenderPassAccessor;
-import net.caffeinemc.mods.sodium.mixin.core.RenderPassAccessor;
-import net.caffeinemc.mods.sodium.mixin.core.VulkanRenderPassAccessor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MappableRingBuffer;
-import org.lwjgl.opengl.GL46C;
-import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.vulkan.VK13;
-import org.lwjgl.vulkan.VkCommandBuffer;
 
 import java.util.Iterator;
 import java.util.Optional;
@@ -102,7 +89,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
             // When the shared index buffer is being used, we must ensure the storage has been allocated *before*
             // the tessellation is prepared.
             if (!useIndexedTessellation) {
-                this.sharedIndexBuffer.ensureCapacity(batch.getIndexBufferSize());
+                this.sharedIndexBuffer.ensureCapacity(batch.getMaxElementCount());
             }
 
         }
@@ -121,9 +108,11 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                 renderPass.getTarget().getColorTextureView(), Optional.empty(),
                 renderPass.getTarget().getDepthTextureView(), OptionalDouble.empty())) {
             pass.setPipeline(this.activeProgram);
-            drawContext.setContext(pass, this.activeProgram);
+            this.drawContext.setContext(pass, this.activeProgram);
 
-            if (!useIndexedTessellation && sharedIndexBuffer.getBufferObject() != null) pass.setIndexBuffer(sharedIndexBuffer.getBufferObject(), IndexType.INT);
+            if (!useIndexedTessellation && this.sharedIndexBuffer.getBufferObject() != null) {
+                pass.setIndexBuffer(this.sharedIndexBuffer.getBufferObject(), IndexType.INT);
+            }
 
             pass.setUniform("u_Globals", uniformData);
             pass.setUniform("u_SectionTimeInfo", sectionTimeInfo);
@@ -157,20 +146,20 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
 
                 pass.setVertexBuffer(0, resources.getGeometryBuffer().slice());
 
-                drawContext.updateData(region, camera);
+                this.drawContext.updateData(region, camera);
 
-                batch.draw(drawContext);
+                batch.draw(this.drawContext);
             }
         }
 
-        drawContext.endDraw();
+        this.drawContext.endDraw();
 
         super.end(renderPass);
     }
 
     @Override
     public void rotate() {
-        drawContext.rotate();
+        this.drawContext.rotate();
     }
 
     private static void fillCommandBuffer(MultiDrawBatch batch,
@@ -239,7 +228,6 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
      * Generates the draw commands for a chunk's meshes, where each mesh has a separate index buffer. This is used
      * when rendering translucent geometry, as each geometry set needs a sorted index buffer.
      */
-    @SuppressWarnings("IntegerMultiplicationImplicitCastToLong")
     private static void addLocalIndexedDrawCommands(MultiDrawBatch batch, long pMeshData, int mask) {
         int size = batch.size;
 
@@ -265,7 +253,6 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
     /**
      * Generates the draw commands for a chunk's meshes using the shared index buffer.
      */
-    @SuppressWarnings("IntegerMultiplicationImplicitCastToLong")
     private static void addSharedIndexedDrawCommands(MultiDrawBatch batch, long pMeshData, int mask) {
         // this is either zero (global shared index buffer) or the offset to the location of the shared element buffer (region shared index buffer)
         final var elementOffsetBytes = SectionRenderDataUnsafe.getBaseElement(pMeshData);

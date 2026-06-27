@@ -224,17 +224,17 @@ public class TreeNode<T extends Comparable<? super T>> implements Iterable<Inter
             // The tree is right-heavy.
             if (height(this.right.left) > height(this.right.right)) {
                 this.right = this.right.rightRotate();
-                return leftRotate();
+                return this.leftRotate();
             } else {
-                return leftRotate();
+                return this.leftRotate();
             }
         } else if (balance > 1) {
             // The tree is left-heavy.
             if (height(this.left.right) > height(this.left.left)) {
                 this.left = this.left.leftRotate();
-                return rightRotate();
+                return this.rightRotate();
             } else
-                return rightRotate();
+                return this.rightRotate();
         } else {
             // The tree is already balanced.
             return this;

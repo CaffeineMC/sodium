@@ -28,7 +28,7 @@ public abstract class DrawContext {
     }
 
     public RenderPass getPass() {
-        return pass;
+        return this.pass;
     }
 
     public abstract void updateData(RenderRegion region, CameraTransform camera);

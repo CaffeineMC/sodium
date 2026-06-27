@@ -29,7 +29,7 @@ public abstract class VKDrawContext extends DrawContext {
             MemoryUtil.memPutInt(memory + 12, Math.toIntExact(System.currentTimeMillis() - region.getCreationTime()));
             MemoryUtil.memPutInt(memory + 16, region.getId());
 
-            VK13.nvkCmdPushConstants(cmdBuf, layout, VK13.VK_SHADER_STAGE_ALL, 0, PUSH_CONSTANT_RANGE, memory);
+            VK13.nvkCmdPushConstants(this.cmdBuf, this.layout, VK13.VK_SHADER_STAGE_ALL, 0, PUSH_CONSTANT_RANGE, memory);
         }
     }
 

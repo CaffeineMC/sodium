@@ -2,8 +2,6 @@ package net.caffeinemc.mods.sodium.client.compatibility.checks;
 
 import net.caffeinemc.mods.sodium.client.compatibility.environment.GlContextInfo;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds;
-import net.caffeinemc.mods.sodium.client.console.Console;
-import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
 import net.caffeinemc.mods.sodium.client.platform.NativeWindowHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

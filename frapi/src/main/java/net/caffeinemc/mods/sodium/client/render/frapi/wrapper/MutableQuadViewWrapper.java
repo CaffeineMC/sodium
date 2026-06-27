@@ -6,11 +6,10 @@ import net.caffeinemc.mods.sodium.client.render.model.SodiumQuadAtlas;
 import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
 import net.fabricmc.fabric.api.client.renderer.v1.mesh.*;
 import net.fabricmc.fabric.api.util.TriState;
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.core.Direction;
 import org.jspecify.annotations.Nullable;
 
@@ -26,10 +25,10 @@ public class MutableQuadViewWrapper extends QuadViewWrapper implements QuadEmitt
     protected QuadTransform activeTransform = NO_TRANSFORM;
     private final ObjectArrayList<QuadTransform> transformStack = new ObjectArrayList<>();
     private final QuadTransform stackTransform = q -> {
-        int i = transformStack.size() - 1;
+        int i = this.transformStack.size() - 1;
 
         while (i >= 0) {
-            if (!transformStack.get(i--).transform(q)) {
+            if (!this.transformStack.get(i--).transform(q)) {
                 return false;
             }
         }
@@ -44,133 +43,133 @@ public class MutableQuadViewWrapper extends QuadViewWrapper implements QuadEmitt
 
     @Override
     public QuadEmitter translate(float x, float y, float z) {
-        mutableQuad.translate(x, y, z);
+        this.mutableQuad.translate(x, y, z);
         return this;
     }
 
     @Override
     public QuadEmitter pos(int vertexIndex, float x, float y, float z) {
-        mutableQuad.setPos(vertexIndex, x, y, z);
+        this.mutableQuad.setPos(vertexIndex, x, y, z);
         return this;
     }
 
     @Override
     public QuadEmitter color(int vertexIndex, int color) {
-        mutableQuad.setColor(vertexIndex, color);
+        this.mutableQuad.setColor(vertexIndex, color);
         return this;
     }
 
     @Override
     public QuadEmitter uv(int vertexIndex, float u, float v) {
-        mutableQuad.setUV(vertexIndex, u, v);
+        this.mutableQuad.setUV(vertexIndex, u, v);
         return this;
     }
 
     @Override
     public QuadEmitter lightmap(int vertexIndex, int lightmap) {
-        mutableQuad.setLight(vertexIndex, lightmap);
+        this.mutableQuad.setLight(vertexIndex, lightmap);
         return this;
     }
 
     @Override
     public QuadEmitter normal(int vertexIndex, float x, float y, float z) {
-        mutableQuad.setNormal(vertexIndex, x, y, z);
+        this.mutableQuad.setNormal(vertexIndex, x, y, z);
         return this;
     }
 
     @Override
     public QuadEmitter nominalFace(@Nullable Direction face) {
-        mutableQuad.setNominalFace(face);
+        this.mutableQuad.setNominalFace(face);
         return this;
     }
 
     @Override
     public QuadEmitter cullFace(@Nullable Direction face) {
-        mutableQuad.setCullFace(face);
+        this.mutableQuad.setCullFace(face);
         return this;
     }
 
     @Override
     public QuadEmitter chunkLayer(@Nullable ChunkSectionLayer renderLayer) {
-        mutableQuad.setRenderType(renderLayer);
+        this.mutableQuad.setRenderType(renderLayer);
         return this;
     }
 
     @Override
     public QuadEmitter itemRenderType(RenderType renderType) {
-        mutableQuad.setItemRenderType(renderType);
+        this.mutableQuad.setItemRenderType(renderType);
         return this;
     }
 
     @Override
     public QuadEmitter emissive(boolean emissive) {
-        mutableQuad.setEmissive(emissive);
+        this.mutableQuad.setEmissive(emissive);
         return this;
     }
 
     @Override
     public QuadEmitter diffuseShade(boolean shade) {
-        mutableQuad.setDiffuseShade(shade);
+        this.mutableQuad.setDiffuseShade(shade);
         return this;
     }
 
     @Override
     public QuadEmitter ambientOcclusion(TriState ao) {
-        mutableQuad.setAmbientOcclusion(TO_SODIUM[ao.ordinal()]);
+        this.mutableQuad.setAmbientOcclusion(TO_SODIUM[ao.ordinal()]);
         return this;
     }
 
     @Override
     public QuadEmitter foilType(ItemStackRenderState.@Nullable FoilType glint) {
-        mutableQuad.setGlint(glint);
+        this.mutableQuad.setGlint(glint);
         return this;
     }
 
     @Override
     public QuadEmitter shadeMode(ShadeMode mode) {
-        mutableQuad.setShadeMode(mode == ShadeMode.ENHANCED ? SodiumShadeMode.ENHANCED : SodiumShadeMode.VANILLA);
+        this.mutableQuad.setShadeMode(mode == ShadeMode.ENHANCED ? SodiumShadeMode.ENHANCED : SodiumShadeMode.VANILLA);
         return this;
     }
 
     @Override
     public QuadEmitter animated(boolean b) {
-        mutableQuad.setAnimated(b);
+        this.mutableQuad.setAnimated(b);
         return this;
     }
 
     @Override
     public QuadEmitter atlas(QuadAtlas quadAtlas) {
-        mutableQuad.setQuadAtlas(quadAtlas == QuadAtlas.BLOCK ? SodiumQuadAtlas.BLOCK : SodiumQuadAtlas.ITEM);
+        this.mutableQuad.setQuadAtlas(quadAtlas == QuadAtlas.BLOCK ? SodiumQuadAtlas.BLOCK : SodiumQuadAtlas.ITEM);
         return this;
     }
 
     @Override
     public QuadEmitter tintIndex(int tintIndex) {
-        mutableQuad.setTintIndex(tintIndex);
+        this.mutableQuad.setTintIndex(tintIndex);
         return this;
     }
 
     @Override
     public QuadEmitter tag(int tag) {
-        mutableQuad.setTag(tag);
+        this.mutableQuad.setTag(tag);
         return this;
     }
 
     @Override
     public QuadEmitter copyFrom(QuadView quad) {
-        mutableQuad.copyFrom(((QuadViewWrapper) quad).getOriginal());
+        this.mutableQuad.copyFrom(((QuadViewWrapper) quad).getOriginal());
         return this;
     }
 
     @Override
     public QuadEmitter fromBakedQuad(BakedQuad quad) {
-        mutableQuad.fromBakedQuad(quad);
+        this.mutableQuad.fromBakedQuad(quad);
         return this;
     }
 
     @Override
     public QuadEmitter clear() {
-        mutableQuad.clear();
+        this.mutableQuad.clear();
         return this;
     }
 
@@ -180,23 +179,23 @@ public class MutableQuadViewWrapper extends QuadViewWrapper implements QuadEmitt
             throw new NullPointerException("QuadTransform cannot be null!");
         }
 
-        transformStack.push(transform);
+        this.transformStack.push(transform);
 
-        if (transformStack.size() == 1) {
-            activeTransform = transform;
-        } else if (transformStack.size() == 2) {
-            activeTransform = stackTransform;
+        if (this.transformStack.size() == 1) {
+            this.activeTransform = transform;
+        } else if (this.transformStack.size() == 2) {
+            this.activeTransform = this.stackTransform;
         }
     }
 
     @Override
     public void popTransform() {
-        transformStack.pop();
+        this.transformStack.pop();
 
-        if (transformStack.isEmpty()) {
-            activeTransform = NO_TRANSFORM;
-        } else if (transformStack.size() == 1) {
-            activeTransform = transformStack.getFirst();
+        if (this.transformStack.isEmpty()) {
+            this.activeTransform = NO_TRANSFORM;
+        } else if (this.transformStack.size() == 1) {
+            this.activeTransform = this.transformStack.getFirst();
         }
     }
 
@@ -205,25 +204,25 @@ public class MutableQuadViewWrapper extends QuadViewWrapper implements QuadEmitt
      * Apply transforms and then if transforms return true, emit the quad without clearing the underlying data.
      */
     public final void transformAndEmit() {
-        if (activeTransform.transform(this)) {
-            mutableQuad.emitDirectly();
+        if (this.activeTransform.transform(this)) {
+            this.mutableQuad.emitDirectly();
         }
     }
 
     @Override
     public final QuadEmitter emit() {
-        transformAndEmit();
-        mutableQuad.clear();
+        this.transformAndEmit();
+        this.mutableQuad.clear();
         return this;
     }
 
     public MutableQuadViewImpl getOriginal() {
-        return mutableQuad;
+        return this.mutableQuad;
     }
 
     @Override
     public QuadAtlas atlas() {
-        return mutableQuad.getQuadAtlas() == SodiumQuadAtlas.BLOCK ? QuadAtlas.BLOCK : QuadAtlas.ITEM;
+        return this.mutableQuad.getQuadAtlas() == SodiumQuadAtlas.BLOCK ? QuadAtlas.BLOCK : QuadAtlas.ITEM;
     }
 
     public void setDelegate(MutableQuadViewImpl impl) {

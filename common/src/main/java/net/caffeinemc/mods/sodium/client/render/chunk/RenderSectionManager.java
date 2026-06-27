@@ -36,10 +36,8 @@ import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
 import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -497,15 +495,15 @@ public class RenderSectionManager {
         }
     }
 
-    private boolean isSectionFrustumVisible(Viewport viewport, RenderSection section) {
-        // unloaded sections are considered visible as to not be an impossible requirement for immediate presentation
-        return section == null || this.renderTree == null || this.renderTree.isSectionVisible(viewport, section);
-    }
-
     private boolean isSectionImmediatePresentationCandidate(Viewport viewport, RenderSection section) {
         if (this.cameraPosition == null) {
             return false;
         }
+
+        if (this.renderTree == null) {
+            return true;
+        }
+
         var distanceSquared = section.getSquaredDistance(
                 (float) this.cameraPosition.x(),
                 (float) this.cameraPosition.y(),
@@ -515,20 +513,23 @@ public class RenderSectionManager {
         if (distanceSquared < NEARBY_REBUILD_DISTANCE) {
             return true;
         }
+        if (distanceSquared >= IMMEDIATE_PRESENT_DISTANCE) {
+            return false;
+        }
 
-        return distanceSquared < IMMEDIATE_PRESENT_DISTANCE &&
-                // check that visible or adjacent to a visible section
-                (this.isSectionFrustumVisible(viewport, section)
-                        || this.isSectionFrustumVisible(viewport, section.adjacentDown)
-                        || this.isSectionFrustumVisible(viewport, section.adjacentUp)
-                        || this.isSectionFrustumVisible(viewport, section.adjacentNorth)
-                        || this.isSectionFrustumVisible(viewport, section.adjacentSouth)
-                        || this.isSectionFrustumVisible(viewport, section.adjacentWest)
-                        || this.isSectionFrustumVisible(viewport, section.adjacentEast));
+        // unloaded sections are considered visible as to not be an impossible requirement for immediate presentation
+        return (section.getAdjacentMask() != GraphDirectionSet.ALL ||
+                this.renderTree.isSectionVisible(viewport, section) ||
+                this.renderTree.isSectionVisible(viewport, section.adjacentDown) ||
+                this.renderTree.isSectionVisible(viewport, section.adjacentUp) ||
+                this.renderTree.isSectionVisible(viewport, section.adjacentNorth) ||
+                this.renderTree.isSectionVisible(viewport, section.adjacentSouth) ||
+                this.renderTree.isSectionVisible(viewport, section.adjacentWest) ||
+                this.renderTree.isSectionVisible(viewport, section.adjacentEast));
     }
 
     private int processChunkBuildResults(ArrayList<BuilderTaskOutput> results, Viewport viewport, UniformBufferManager uniforms) {
-        var sectionsWithOutputs = applyBuildOutputs(results);
+        var sectionsWithOutputs = this.applyBuildOutputs(results);
         var outputs = new ArrayList<BuilderTaskOutput>();
 
         // prepare list of pending present patches if there are pending tasks that will need patches
@@ -545,7 +546,7 @@ public class RenderSectionManager {
                 var resultSize = buildOutput.getResultSize();
                 TranslucentData oldData = section.getTranslucentData();
 
-                changes |= updateWithResult(viewport, section, buildOutput, pendingPresentPatches);
+                changes |= this.updateWithResult(viewport, section, buildOutput, pendingPresentPatches);
 
                 section.setLastMeshResultSize(resultSize);
                 this.meshTaskSizeEstimator.addData(this.meshTaskSizeEstimator.resultForSection(section, resultSize));
@@ -745,11 +746,11 @@ public class RenderSectionManager {
 
     private void submitSectionTasks(
             ChunkJobCollector importantCollector, ChunkJobCollector semiImportantCollector, ChunkJobCollector deferredCollector, UploadResourceBudget uploadBudget, Viewport viewport) {
-        submitImportantSectionTasks(importantCollector, uploadBudget, DeferMode.ZERO_FRAMES, viewport);
-        submitImportantSectionTasks(semiImportantCollector, uploadBudget, DeferMode.ONE_FRAME, viewport);
-        submitImportantSectionTasks(deferredCollector, uploadBudget, DeferMode.ALWAYS, viewport);
+        this.submitImportantSectionTasks(importantCollector, uploadBudget, DeferMode.ZERO_FRAMES, viewport);
+        this.submitImportantSectionTasks(semiImportantCollector, uploadBudget, DeferMode.ONE_FRAME, viewport);
+        this.submitImportantSectionTasks(deferredCollector, uploadBudget, DeferMode.ALWAYS, viewport);
 
-        submitDeferredSectionTasks(deferredCollector, uploadBudget);
+        this.submitDeferredSectionTasks(deferredCollector, uploadBudget);
     }
 
     private void submitDeferredSectionTasks(ChunkJobCollector collector, UploadResourceBudget uploadBudget) {
@@ -760,7 +761,7 @@ public class RenderSectionManager {
         while (!this.taskLists.isEmpty() && collector.hasBudgetRemaining() && uploadBudget.isAvailable()) {
             var section = this.renderSections.getConsistent(this.taskLists.dequeueNextSectionPos());
             if (section != null) {
-                submitSectionTask(collector, section, uploadBudget);
+                this.submitSectionTask(collector, section, uploadBudget);
             }
         }
     }
@@ -779,7 +780,7 @@ public class RenderSectionManager {
             if (pendingUpdate != 0 && this.getDeferModeForPendingUpdate(pendingUpdate) == deferMode && this.shouldPrioritizeTask(section, NEARBY_SORT_DISTANCE)) {
                 // isSectionVisible includes a special case for not testing empty sections against the tree as they won't be in it
                 if (this.renderTree == null || this.renderTree.isSectionVisible(viewport, section)) {
-                    submitSectionTask(collector, section, pendingUpdate, uploadBudget, deferMode == DeferMode.ZERO_FRAMES);
+                    this.submitSectionTask(collector, section, pendingUpdate, uploadBudget, deferMode == DeferMode.ZERO_FRAMES);
                 } else {
                     // don't remove if simply not visible currently but still relevant
                     continue;
@@ -798,7 +799,7 @@ public class RenderSectionManager {
             return;
         }
 
-        submitSectionTask(collector, section, type, uploadBudget, false);
+        this.submitSectionTask(collector, section, type, uploadBudget, false);
     }
 
     private void submitSectionTask(ChunkJobCollector collector, @NonNull RenderSection section, int type, UploadResourceBudget uploadBudget, boolean blocking) {

@@ -6,11 +6,11 @@ import net.caffeinemc.mods.sodium.client.render.model.AmbientOcclusionMode;
 import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderingRegistry;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -28,26 +28,26 @@ public class FabricBlockAccess implements PlatformBlockAccess {
         float div = 0;
 
         if (normalX > 0) {
-            sum += normalX * getShade(blockView, Direction.EAST, hasShade);
+            sum += normalX * this.getShade(blockView, Direction.EAST, hasShade);
             div += normalX;
         } else if (normalX < 0) {
-            sum += -normalX * getShade(blockView, Direction.WEST, hasShade);
+            sum += -normalX * this.getShade(blockView, Direction.WEST, hasShade);
             div -= normalX;
         }
 
         if (normalY > 0) {
-            sum += normalY * getShade(blockView, Direction.UP, hasShade);
+            sum += normalY * this.getShade(blockView, Direction.UP, hasShade);
             div += normalY;
         } else if (normalY < 0) {
-            sum += -normalY * getShade(blockView, Direction.DOWN, hasShade);
+            sum += -normalY * this.getShade(blockView, Direction.DOWN, hasShade);
             div -= normalY;
         }
 
         if (normalZ > 0) {
-            sum += normalZ * getShade(blockView, Direction.SOUTH, hasShade);
+            sum += normalZ * this.getShade(blockView, Direction.SOUTH, hasShade);
             div += normalZ;
         } else if (normalZ < 0) {
-            sum += -normalZ * getShade(blockView, Direction.NORTH, hasShade);
+            sum += -normalZ * this.getShade(blockView, Direction.NORTH, hasShade);
             div -= normalZ;
         }
 
@@ -84,7 +84,7 @@ public class FabricBlockAccess implements PlatformBlockAccess {
 
     @Override
     public float getNormalVectorShade(ModelQuadView quad, BlockAndTintGetter level, boolean shade) {
-        return normalShade(level, NormI8.unpackX(quad.getFaceNormal()), NormI8.unpackY(quad.getFaceNormal()), NormI8.unpackZ(quad.getFaceNormal()), shade);
+        return this.normalShade(level, NormI8.unpackX(quad.getFaceNormal()), NormI8.unpackY(quad.getFaceNormal()), NormI8.unpackZ(quad.getFaceNormal()), shade);
     }
 
     @Override

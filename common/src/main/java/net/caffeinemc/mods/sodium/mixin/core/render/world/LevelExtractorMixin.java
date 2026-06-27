@@ -38,12 +38,12 @@ public class LevelExtractorMixin {
 
     @Inject(method = "extract", at = @At("HEAD"))
     private void sodium$setRenderer(DeltaTracker deltaTracker, Camera camera, float deltaPartialTick, CallbackInfo ci) {
-        checkRenderer();
+        this.checkRenderer();
     }
 
     @Inject(method = "setLevel", at = @At("RETURN"))
     private void sodium$setRenderer(ClientLevel level, CallbackInfo ci) {
-        checkRenderer();
+        this.checkRenderer();
 
         this.renderer.setLevel(level);
     }
@@ -76,7 +76,7 @@ public class LevelExtractorMixin {
      */
     @Overwrite
     public String sectionStatistics() {
-        checkRenderer();
+        this.checkRenderer();
         return this.renderer.getChunksDebugString();
     }
 
@@ -86,7 +86,7 @@ public class LevelExtractorMixin {
      */
     @Overwrite
     public void setBlocksDirty(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
-        checkRenderer();
+        this.checkRenderer();
         this.renderer.scheduleRebuildForBlockArea(minX, minY, minZ, maxX, maxY, maxZ, false);
     }
 
@@ -96,7 +96,7 @@ public class LevelExtractorMixin {
      */
     @Overwrite
     public void setSectionDirtyWithNeighbors(int x, int y, int z) {
-        checkRenderer();
+        this.checkRenderer();
         this.renderer.scheduleRebuildForChunks(x - 1, y - 1, z - 1, x + 1, y + 1, z + 1, false);
     }
 
@@ -106,7 +106,7 @@ public class LevelExtractorMixin {
      */
     @Overwrite
     private void setBlockDirty(BlockPos pos, boolean important) {
-        checkRenderer();
+        this.checkRenderer();
         this.renderer.scheduleRebuildForBlockArea(pos.getX() - 1, pos.getY() - 1, pos.getZ() - 1, pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1, important);
     }
 
@@ -116,7 +116,7 @@ public class LevelExtractorMixin {
      */
     @Overwrite
     private void setSectionDirty(int x, int y, int z, boolean important) {
-        checkRenderer();
+        this.checkRenderer();
         this.renderer.scheduleRebuildForChunk(x, y, z, important);
     }
     /**
@@ -141,7 +141,7 @@ public class LevelExtractorMixin {
      */
     @Overwrite
     public int countRenderedSections() {
-        checkRenderer();
+        this.checkRenderer();
         return this.renderer.getVisibleChunkCount();
     }
 

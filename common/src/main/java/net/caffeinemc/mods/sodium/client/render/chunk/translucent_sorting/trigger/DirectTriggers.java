@@ -87,9 +87,9 @@ class DirectTriggers implements SectionTriggers<DynamicTopoData> {
         Vector3dc getSectionCenter() {
             if (this.sectionCenter == null) {
                 this.sectionCenter = new Vector3d(
-                        sectionPos.minBlockX() + 8,
-                        sectionPos.minBlockY() + 8,
-                        sectionPos.minBlockZ() + 8);
+                        this.sectionPos.minBlockX() + 8,
+                        this.sectionPos.minBlockY() + 8,
+                        this.sectionPos.minBlockZ() + 8);
             }
             return this.sectionCenter;
         }
@@ -110,16 +110,16 @@ class DirectTriggers implements SectionTriggers<DynamicTopoData> {
          * section.
          */
         double getSectionCenterTriggerCameraDist() {
-            return Math.sqrt(getSectionCenterDistSquared(this.triggerCameraPos));
+            return Math.sqrt(this.getSectionCenterDistSquared(this.triggerCameraPos));
         }
 
         double getSectionCenterDistSquared(Vector3dc vector) {
-            Vector3dc sectionCenter = getSectionCenter();
+            Vector3dc sectionCenter = this.getSectionCenter();
             return sectionCenter.distanceSquared(vector);
         }
 
         boolean isAngleTriggering(Vector3dc vector) {
-            return getSectionCenterDistSquared(vector) > SECTION_CENTER_DIST_SQUARED;
+            return this.getSectionCenterDistSquared(vector) > SECTION_CENTER_DIST_SQUARED;
         }
     }
 

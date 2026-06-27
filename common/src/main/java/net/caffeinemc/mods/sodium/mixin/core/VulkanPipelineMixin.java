@@ -6,7 +6,6 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vulkan.VulkanRenderPipeline;
 import net.caffeinemc.mods.sodium.client.gpu.device.context.DrawContext;
-import net.caffeinemc.mods.sodium.client.render.chunk.DefaultChunkRenderer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.VK13;
 import org.lwjgl.vulkan.VkPipelineLayoutCreateInfo;

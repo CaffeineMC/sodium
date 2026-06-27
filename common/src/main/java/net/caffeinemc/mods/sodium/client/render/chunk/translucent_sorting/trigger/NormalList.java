@@ -11,7 +11,6 @@ import net.caffeinemc.mods.sodium.client.util.interval_tree.DoubleInterval;
 import net.caffeinemc.mods.sodium.client.util.interval_tree.Interval;
 import net.caffeinemc.mods.sodium.client.util.interval_tree.Interval.Bounded;
 import net.caffeinemc.mods.sodium.client.util.interval_tree.IntervalTree;
-import org.joml.Vector3dc;
 import org.joml.Vector3fc;
 
 import java.util.Collection;

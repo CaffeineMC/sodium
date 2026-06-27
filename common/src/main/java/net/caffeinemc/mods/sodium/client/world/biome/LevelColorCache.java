@@ -110,7 +110,7 @@ public class LevelColorCache {
     }
 
     public int getBlendRadius() {
-        return blendRadius;
+        return this.blendRadius;
     }
 
     private static class Slice {

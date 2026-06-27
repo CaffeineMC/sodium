@@ -16,8 +16,6 @@
 
 package net.caffeinemc.mods.sodium.client.render.frapi.render;
 
-import java.util.List;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.SheetedDecalTextureGenerator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -25,8 +23,8 @@ import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.ExtendedMutableQua
 import net.caffeinemc.mods.sodium.client.render.model.EncodingFormat;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.mixin.frapi.ItemFeatureRendererAccessor;
-import org.jspecify.annotations.Nullable;
-
+import net.fabricmc.fabric.api.client.renderer.v1.mesh.QuadEmitter;
+import net.fabricmc.fabric.api.client.renderer.v1.render.submit.ExtendedItemSubmit;
 import net.minecraft.client.renderer.feature.FeatureFrameContext;
 import net.minecraft.client.renderer.feature.RenderTypeFeatureRenderer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
@@ -34,23 +32,23 @@ import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.util.LightCoordsUtil;
+import org.jspecify.annotations.Nullable;
 
-import net.fabricmc.fabric.api.client.renderer.v1.mesh.QuadEmitter;
-import net.fabricmc.fabric.api.client.renderer.v1.render.submit.ExtendedItemSubmit;
+import java.util.List;
 
 public class ExtendedItemFeatureRenderer extends RenderTypeFeatureRenderer<ExtendedItemSubmit> {
 	private final MutableQuadViewImpl emitter = new MutableQuadViewImpl() {
 		{
-			data = new int[EncodingFormat.TOTAL_STRIDE];
-			clear();
+            this.data = new int[EncodingFormat.TOTAL_STRIDE];
+            this.clear();
 		}
 
 		@Override
         public void emitDirectly() {
-			switch (outputType) {
-				case MAIN -> bufferMain(this);
-				case OUTLINE -> bufferOutline(this);
-				case FOIL -> bufferFoil(this);
+			switch (ExtendedItemFeatureRenderer.this.outputType) {
+				case MAIN -> ExtendedItemFeatureRenderer.this.bufferMain(this);
+				case OUTLINE -> ExtendedItemFeatureRenderer.this.bufferOutline(this);
+				case FOIL -> ExtendedItemFeatureRenderer.this.bufferFoil(this);
 			}
 		}
 	};
@@ -62,27 +60,27 @@ public class ExtendedItemFeatureRenderer extends RenderTypeFeatureRenderer<Exten
 	@Override
 	protected void buildGroup(FeatureFrameContext context, List<ExtendedItemSubmit> submits) {
 		for (ExtendedItemSubmit submit : submits) {
-			prepareSubmit(submit, false);
+            this.prepareSubmit(submit, false);
 		}
 
 		for (ExtendedItemSubmit submit : submits) {
-			prepareSubmit(submit, true);
+            this.prepareSubmit(submit, true);
 		}
 
-		submit = null;
-		foilDecalPose = null;
+        this.submit = null;
+        this.foilDecalPose = null;
 	}
 
 	private void prepareSubmit(ExtendedItemSubmit submit, boolean foil) {
 		this.submit = submit;
 
 		if (foil) {
-			foilDecalPose = null;
-			outputType = OutputType.FOIL;
+            this.foilDecalPose = null;
+            this.outputType = OutputType.FOIL;
 		} else if (submit.outlineColor() != 0) {
-			outputType = OutputType.OUTLINE;
+            this.outputType = OutputType.OUTLINE;
 		} else {
-			outputType = OutputType.MAIN;
+            this.outputType = OutputType.MAIN;
 		}
 
 		QuadEmitter emitter = ((ExtendedMutableQuadViewImpl) this.emitter).getWrapper();
@@ -105,16 +103,16 @@ public class ExtendedItemFeatureRenderer extends RenderTypeFeatureRenderer<Exten
 		if (quad.emissive()) {
 			quad.lightmap(LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT);
 		} else {
-			quad.minLightmap(submit.lightCoords());
+			quad.minLightmap(this.submit.lightCoords());
 		}
 
 		int tintIndex = quad.tintIndex();
 
-		if (tintIndex >= 0 && tintIndex < submit.tintLayers().length) {
-			quad.multiplyColor(submit.tintLayers()[tintIndex]);
+		if (tintIndex >= 0 && tintIndex < this.submit.tintLayers().length) {
+			quad.multiplyColor(this.submit.tintLayers()[tintIndex]);
 		}
 
-		quad.buffer(submit.overlayCoords(), submit.pose(), getVertexBuilder(quad.itemRenderType()));
+		quad.buffer(this.submit.overlayCoords(), this.submit.pose(), this.getVertexBuilder(quad.itemRenderType()));
 	}
 
 	private void bufferOutline(MutableQuadViewImpl q) {
@@ -123,9 +121,9 @@ public class ExtendedItemFeatureRenderer extends RenderTypeFeatureRenderer<Exten
         RenderType renderType = quad.itemRenderType().outline().orElse(null);
 
 		if (renderType != null) {
-			int outlineColor = submit.outlineColor();
+			int outlineColor = this.submit.outlineColor();
 			quad.color(outlineColor, outlineColor, outlineColor, outlineColor);
-			quad.buffer(submit.overlayCoords(), submit.pose(), getVertexBuilder(renderType));
+			quad.buffer(this.submit.overlayCoords(), this.submit.pose(), this.getVertexBuilder(renderType));
 		}
 	}
 
@@ -133,7 +131,7 @@ public class ExtendedItemFeatureRenderer extends RenderTypeFeatureRenderer<Exten
         var quad = ((ExtendedMutableQuadViewImpl) q).getWrapper();
 
         ItemStackRenderState.FoilType quadFoilType = quad.foilType();
-		ItemStackRenderState.FoilType foilType = quadFoilType == null ? submit.foilType() : quadFoilType;
+		ItemStackRenderState.FoilType foilType = quadFoilType == null ? this.submit.foilType() : quadFoilType;
 
 		if (foilType == ItemStackRenderState.FoilType.NONE) {
 			return;
@@ -143,7 +141,7 @@ public class ExtendedItemFeatureRenderer extends RenderTypeFeatureRenderer<Exten
 
 		if (foilType == ItemStackRenderState.FoilType.SPECIAL) {
 			if (this.foilDecalPose == null) {
-				this.foilDecalPose = ItemFeatureRendererAccessor.fabric_computeFoilDecalPose(submit.displayContext(), submit.pose());
+				this.foilDecalPose = ItemFeatureRendererAccessor.fabric_computeFoilDecalPose(this.submit.displayContext(), this.submit.pose());
 			}
 
 			foilDecalPose = this.foilDecalPose;
@@ -151,13 +149,13 @@ public class ExtendedItemFeatureRenderer extends RenderTypeFeatureRenderer<Exten
 			foilDecalPose = null;
 		}
 
-		VertexConsumer foilBuffer = getFoilBuffer(quad.itemRenderType(), foilDecalPose);
-		quad.buffer(submit.overlayCoords(), submit.pose(), foilBuffer);
+		VertexConsumer foilBuffer = this.getFoilBuffer(quad.itemRenderType(), foilDecalPose);
+		quad.buffer(this.submit.overlayCoords(), this.submit.pose(), foilBuffer);
 	}
 
 	private VertexConsumer getFoilBuffer(RenderType renderType, PoseStack.@Nullable Pose foilDecalPose) {
 		RenderType foilRenderType = ItemFeatureRendererAccessor.fabric_useTransparentGlint(renderType) ? RenderTypes.glintTranslucent() : RenderTypes.glint();
-		VertexConsumer foilBuffer = getVertexBuilder(foilRenderType);
+		VertexConsumer foilBuffer = this.getVertexBuilder(foilRenderType);
 
 		if (foilDecalPose != null) {
 			foilBuffer = new SheetedDecalTextureGenerator(foilBuffer, foilDecalPose, 0.0078125F);

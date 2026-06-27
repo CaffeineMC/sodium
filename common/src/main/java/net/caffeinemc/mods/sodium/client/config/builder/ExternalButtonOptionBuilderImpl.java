@@ -38,7 +38,7 @@ class ExternalButtonOptionBuilderImpl extends StaticOptionBuilderImpl<ExternalBu
     }
 
     Consumer<Screen> getCurrentScreenConsumer() {
-        return getFirstNotNull(this.currentScreenConsumer, ExternalButtonOption::getCurrentScreenConsumer);
+        return this.getFirstNotNull(this.currentScreenConsumer, ExternalButtonOption::getCurrentScreenConsumer);
     }
 
     @Override

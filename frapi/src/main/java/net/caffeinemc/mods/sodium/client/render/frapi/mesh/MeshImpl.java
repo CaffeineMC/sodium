@@ -32,7 +32,7 @@ public class MeshImpl extends MeshViewImpl implements Mesh {
 
     MeshImpl(int[] data) {
         this.data = data;
-        limit = data.length;
+        this.limit = data.length;
     }
 
     MeshImpl() {}

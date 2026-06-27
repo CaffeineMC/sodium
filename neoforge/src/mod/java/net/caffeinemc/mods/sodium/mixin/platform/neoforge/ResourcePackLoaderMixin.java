@@ -3,7 +3,6 @@ package net.caffeinemc.mods.sodium.mixin.platform.neoforge;
 import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
 import net.minecraft.server.packs.repository.Pack;
 import net.neoforged.fml.loading.FMLLoader;
-import net.neoforged.fml.loading.LoadingModList;
 import net.neoforged.neoforge.resource.ResourcePackLoader;
 import net.neoforged.neoforgespi.locating.IModFile;
 import org.spongepowered.asm.mixin.Mixin;

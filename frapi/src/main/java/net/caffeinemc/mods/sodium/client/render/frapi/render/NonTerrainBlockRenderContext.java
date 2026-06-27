@@ -27,8 +27,8 @@ import net.caffeinemc.mods.sodium.client.model.light.LightMode;
 import net.caffeinemc.mods.sodium.client.model.light.LightPipelineProvider;
 import net.caffeinemc.mods.sodium.client.model.light.data.SingleBlockLightDataCache;
 import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.MutableQuadViewWrapper;
-import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
+import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
 import net.fabricmc.fabric.api.client.renderer.v1.mesh.MutableQuadView;
@@ -39,10 +39,10 @@ import net.fabricmc.fabric.api.client.rendering.v1.BlockColorRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockTintsFactory;
 import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.color.block.BlockTintSource;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.TriState;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import net.minecraft.world.phys.Vec3;
@@ -77,20 +77,20 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext imp
     }
 
     private void configureTintCache(final BlockState blockState, BlockAndTintGetter level, BlockPos pos) {
-        List<BlockTintSource> tintSources = colorMap.getTintSources(blockState);
+        List<BlockTintSource> tintSources = this.colorMap.getTintSources(blockState);
         int tintSourceCount = tintSources.size();
 
         if (tintSourceCount > 0) {
             this.tintSources.addAll(tintSources);
 
             for (int i = 0; i < tintSourceCount; ++i) {
-                computedTintValues.add(-1);
+                this.computedTintValues.add(-1);
             }
         } else {
             final BlockTintsFactory factory = BlockColorRegistry.getFactory(blockState);
 
             if (factory != null) {
-                factory.collect(blockState, level, pos, computedTintValues);
+                factory.collect(blockState, level, pos, this.computedTintValues);
             }
 
             if (!this.computedTintValues.isEmpty()) {
@@ -102,44 +102,44 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext imp
     }
 
     private int computeTintColor(final BlockAndTintGetter level, final BlockState state, final BlockPos pos, final int tintIndex) {
-        if (!tintSourcesInitialized) {
-            configureTintCache(state, level, pos);
-            tintSourcesInitialized = true;
+        if (!this.tintSourcesInitialized) {
+            this.configureTintCache(state, level, pos);
+            this.tintSourcesInitialized = true;
         }
 
-        if (tintIndex >= tintSources.size()) {
+        if (tintIndex >= this.tintSources.size()) {
             return -1;
         } else {
-            BlockTintSource tintSource = tintSources.set(tintIndex, null);
+            BlockTintSource tintSource = this.tintSources.set(tintIndex, null);
 
             if (tintSource != null) {
                 int computedTintValue = tintSource.colorInWorld(state, level, pos);
-                computedTintValues.set(tintIndex, computedTintValue);
+                this.computedTintValues.set(tintIndex, computedTintValue);
                 return computedTintValue;
             } else {
-                return computedTintValues.getInt(tintIndex);
+                return this.computedTintValues.getInt(tintIndex);
             }
         }
     }
 
     private int getTintColor(final BlockAndTintGetter level, final BlockState state, final BlockPos pos, final int tintIndex) {
-        if (tintCacheIndex == tintIndex) {
-            return tintCacheValue;
+        if (this.tintCacheIndex == tintIndex) {
+            return this.tintCacheValue;
         } else {
-            int tintColor = ColorARGB.toABGR(computeTintColor(level, state, pos, tintIndex));
-            tintCacheIndex = tintIndex;
-            tintCacheValue = tintColor;
+            int tintColor = ColorARGB.toABGR(this.computeTintColor(level, state, pos, tintIndex));
+            this.tintCacheIndex = tintIndex;
+            this.tintCacheValue = tintColor;
             return tintColor;
         }
     }
 
     private void resetTintCache() {
-        tintCacheIndex = -1;
+        this.tintCacheIndex = -1;
 
-        if (tintSourcesInitialized) {
-            tintSources.clear();
-            computedTintValues.clear();
-            tintSourcesInitialized = false;
+        if (this.tintSourcesInitialized) {
+            this.tintSources.clear();
+            this.computedTintValues.clear();
+            this.tintSourcesInitialized = false;
         }
     }
 
@@ -152,17 +152,17 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext imp
         this.output = output;
         Vec3 offset = blockState.getOffset(pos);
         this.offset.set(x + offset.x, y + offset.y, z + offset.z);
-        defaultAo = allowAO && blockState.getLightEmission() == 0;
+        this.defaultAo = this.allowAO && blockState.getLightEmission() == 0;
 
         this.lightDataCache.reset(pos, level);
-        this.prepareCulling(enableCulling);
+        this.prepareCulling(this.enableCulling);
 
-        random.setSeed(seed);
+        this.random.setSeed(seed);
 
         output.clear();
         output.pushTransform(this);
 
-        model.emitQuads(output, level, pos, state, this.random, this::isFaceCulled);
+        model.emitQuads(output, level, pos, this.state, this.random, this::isFaceCulled);
 
         this.level = null;
         output.popTransform();
@@ -178,13 +178,13 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext imp
         if (aoMode == TriState.DEFAULT) {
             lightMode = this.defaultLightMode;
         } else {
-            lightMode = this.useAmbientOcclusion && aoMode != TriState.FALSE && defaultAo ? LightMode.SMOOTH : LightMode.FLAT;
+            lightMode = this.useAmbientOcclusion && aoMode != TriState.FALSE && this.defaultAo ? LightMode.SMOOTH : LightMode.FLAT;
         }
         final boolean emissive = quad.emissive();
 
-        tintQuad(quad);
-        shadeQuad(quad, lightMode, emissive, shadeMode);
-        quad.translate(offset.x, offset.y, offset.z);
+        this.tintQuad(quad);
+        this.shadeQuad(quad, lightMode, emissive, shadeMode);
+        quad.translate(this.offset.x, this.offset.y, this.offset.z);
         var sprite = quad.sprite(SpriteFinderCache.forBlockAtlas());
         if (sprite != null) {
             SpriteUtil.INSTANCE.markSpriteActive(sprite);
@@ -195,7 +195,7 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext imp
         int tintIndex = quad.getTintIndex();
 
         if (tintIndex != -1) {
-            int tint = getTintColor(level, state, pos, tintIndex);
+            int tint = this.getTintColor(this.level, this.state, this.pos, tintIndex);
 
             for (int i = 0; i < 4; i++) {
                 quad.setColor(i, ColorMixer.mulComponentWise(tint, quad.baseColor(i)));
@@ -216,7 +216,7 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext imp
 
     @Override
     public boolean transform(MutableQuadView mutableQuadView) {
-        renderQuad(((MutableQuadViewWrapper) mutableQuadView).getOriginal());
+        this.renderQuad(((MutableQuadViewWrapper) mutableQuadView).getOriginal());
         return true;
     }
 }

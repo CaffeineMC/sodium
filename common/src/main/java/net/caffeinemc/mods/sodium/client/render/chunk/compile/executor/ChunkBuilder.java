@@ -186,7 +186,7 @@ public class ChunkBuilder {
 
                 ChunkBuilder.this.busyThreadCount.getAndIncrement();
 
-                Zone zone = TracyClient.beginZone(name, SharedConstants.IS_RUNNING_IN_IDE);
+                Zone zone = TracyClient.beginZone(this.name, SharedConstants.IS_RUNNING_IN_IDE);
 
                 try {
                     job.execute(this.context);

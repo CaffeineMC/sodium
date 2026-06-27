@@ -1,7 +1,5 @@
 package net.caffeinemc.mods.sodium.client.gpu.device.batch;
 
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.systems.RenderPass;
 import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import net.caffeinemc.mods.sodium.client.gpu.device.context.DrawContext;
 import net.caffeinemc.mods.sodium.client.util.UInt32;
@@ -18,26 +16,17 @@ public final class VKMultiDrawBatch extends MultiDrawBatch {
     }
 
     @Override
-    public int getIndexBufferSize() {
-        int elements = 0;
-
-        for (var index = 0; index < this.size; index++) {
-            elements = Math.max(elements, MemoryIntrinsics.getInt(this.pCommands + ((long) index * VkMultiDrawIndexedInfoEXT.SIZEOF) + VkMultiDrawIndexedInfoEXT.INDEXCOUNT));
-        }
-
-        return elements;
-    }
-
-    @Override
     public void put(int size, int elementCount, int baseVertex, long elementOffset) {
-        MemoryIntrinsics.putInt(pCommands + (size * VkMultiDrawIndexedInfoEXT.SIZEOF) + VkMultiDrawIndexedInfoEXT.INDEXCOUNT, elementCount);
-        MemoryIntrinsics.putInt(pCommands + (size * VkMultiDrawIndexedInfoEXT.SIZEOF) + VkMultiDrawIndexedInfoEXT.VERTEXOFFSET, UInt32.uncheckedDowncast(baseVertex));
-        MemoryIntrinsics.putInt(pCommands + (size * VkMultiDrawIndexedInfoEXT.SIZEOF) + VkMultiDrawIndexedInfoEXT.FIRSTINDEX, UInt32.uncheckedDowncast(elementOffset));
+        MemoryIntrinsics.putInt(this.pCommands + (size * VkMultiDrawIndexedInfoEXT.SIZEOF) + VkMultiDrawIndexedInfoEXT.INDEXCOUNT, elementCount);
+        MemoryIntrinsics.putInt(this.pCommands + (size * VkMultiDrawIndexedInfoEXT.SIZEOF) + VkMultiDrawIndexedInfoEXT.VERTEXOFFSET, UInt32.uncheckedDowncast(baseVertex));
+        MemoryIntrinsics.putInt(this.pCommands + (size * VkMultiDrawIndexedInfoEXT.SIZEOF) + VkMultiDrawIndexedInfoEXT.FIRSTINDEX, UInt32.uncheckedDowncast(elementOffset));
+
+        this.updateMaxElementCount(elementCount);
     }
 
     @Override
     public void draw(DrawContext context) {
-        context.getPass().multiDrawIndexed(MemoryUtil.memIntBuffer(pCommands, size * COMMAND_INT_STRIDE), 1, 0, size);
+        context.getPass().multiDrawIndexed(MemoryUtil.memIntBuffer(this.pCommands, this.size * COMMAND_INT_STRIDE), 1, 0, this.size);
     }
 
     @Override

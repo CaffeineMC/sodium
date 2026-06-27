@@ -20,9 +20,9 @@ public class GLDrawContext extends DrawContext {
         GlRenderPassAccessor passBackend = (GlRenderPassAccessor) ((RenderPassAccessor) pass).getBackend();
         int programId = passBackend.getPipeline().program().getProgramId();
         GlStateManager._glUseProgram(programId);
-        regionUniform = GL46C.glGetUniformLocation(programId, "u_RegionOffset");
-        timeUniform = GL46C.glGetUniformLocation(programId, "u_CurrentTime");
-        idUniform = GL46C.glGetUniformLocation(programId, "u_RegionID");
+        this.regionUniform = GL46C.glGetUniformLocation(programId, "u_RegionOffset");
+        this.timeUniform = GL46C.glGetUniformLocation(programId, "u_CurrentTime");
+        this.idUniform = GL46C.glGetUniformLocation(programId, "u_RegionID");
         GlStateManager._glUseProgram(programId);
     }
 
@@ -32,9 +32,9 @@ public class GLDrawContext extends DrawContext {
         float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
         float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
 
-        GL46C.glUniform3f(regionUniform, x, y, z);
-        GL46C.glUniform1i(timeUniform, Math.toIntExact(System.currentTimeMillis() - region.getCreationTime()));
-        GL46C.glUniform1ui(idUniform, region.getId());
+        GL46C.glUniform3f(this.regionUniform, x, y, z);
+        GL46C.glUniform1i(this.timeUniform, Math.toIntExact(System.currentTimeMillis() - region.getCreationTime()));
+        GL46C.glUniform1ui(this.idUniform, region.getId());
     }
 
     @Override

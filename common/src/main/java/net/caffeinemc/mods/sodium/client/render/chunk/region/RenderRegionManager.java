@@ -51,7 +51,7 @@ public class RenderRegionManager {
 
             if (region.isEmpty()) {
                 region.delete();
-                if (region.getId() != -1) freeIds.release(region.getId());
+                if (region.getId() != -1) this.freeIds.release(region.getId());
 
                 it.remove();
             }
@@ -221,7 +221,7 @@ public class RenderRegionManager {
     public void delete() {
         for (RenderRegion region : this.regions.values()) {
             region.delete();
-            if (region.getId() != -1) freeIds.release(region.getId());
+            if (region.getId() != -1) this.freeIds.release(region.getId());
         }
 
         this.regions.clear();

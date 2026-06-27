@@ -36,13 +36,13 @@ public class FluidRendererImpl extends FluidRenderer {
 
     public FluidRendererImpl(ColorProviderRegistry colorProviderRegistry, LightPipelineProvider lighters) {
         this.colorProviderRegistry = colorProviderRegistry;
-        defaultRenderer = new DefaultFluidRenderer(lighters);
+        this.defaultRenderer = new DefaultFluidRenderer(lighters);
         this.fluidStates = Minecraft.getInstance().getModelManager().getFluidStateModelSet();
-        this.fluidRenderer = new net.minecraft.client.renderer.block.FluidRenderer(fluidStates);
+        this.fluidRenderer = new net.minecraft.client.renderer.block.FluidRenderer(this.fluidStates);
     }
 
     public void render(LevelSlice level, BlockState blockState, FluidState fluidState, BlockPos blockPos, BlockPos offset, TranslucentGeometryCollector collector, ChunkBuildBuffers buffers) {
-        var material = DefaultMaterials.forChunkLayer(fluidStates.get(fluidState).layer());
+        var material = DefaultMaterials.forChunkLayer(this.fluidStates.get(fluidState).layer());
         var meshBuilder = buffers.get(material);
 
         IClientFluidTypeExtensions handler = IClientFluidTypeExtensions.of(fluidState);
@@ -69,11 +69,11 @@ public class FluidRendererImpl extends FluidRenderer {
         // parameters are bundled into a DefaultRenderContext which is stored in a ThreadLocal.
 
         DefaultRenderContext defaultContext = CURRENT_DEFAULT_CONTEXT.get();
-        var model = fluidStates.get(fluidState);
+        var model = this.fluidStates.get(fluidState);
         defaultContext.setUp(this.colorProviderRegistry, this.defaultRenderer, level, blockState, fluidState, blockPos, offset, collector, meshBuilder, material, handler, model);
 
         try {
-            if (model.customRenderer() == null || !model.customRenderer().renderFluid(fluidRenderer, fluidState, level, blockPos, i -> meshBuilder.asFallbackVertexConsumer(DefaultMaterials.forChunkLayer(i), collector), blockState)) {
+            if (model.customRenderer() == null || !model.customRenderer().renderFluid(this.fluidRenderer, fluidState, level, blockPos, i -> meshBuilder.asFallbackVertexConsumer(DefaultMaterials.forChunkLayer(i), collector), blockState)) {
                 defaultContext.render();
             }
         } finally {
@@ -131,12 +131,12 @@ public class FluidRendererImpl extends FluidRenderer {
                 return override;
             }
 
-            return ForgeColorProviders.adapt(model.fluidTintSource());
+            return ForgeColorProviders.adapt(this.model.fluidTintSource());
         }
 
         public void render() {
             this.renderer.render(this.level, this.blockState, this.fluidState, this.blockPos, this.offset, this.collector, this.meshBuilder, this.material,
-                    getColorProvider(fluidState.getType()), model);
+                    this.getColorProvider(this.fluidState.getType()), this.model);
         }
     }
 

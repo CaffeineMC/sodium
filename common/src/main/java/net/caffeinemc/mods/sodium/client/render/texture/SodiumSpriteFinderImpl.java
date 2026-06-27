@@ -16,8 +16,6 @@
 
 package net.caffeinemc.mods.sodium.client.render.texture;
 
-import java.util.Map;
-
 import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
 import net.caffeinemc.mods.sodium.client.render.model.SodiumQuadAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -25,6 +23,8 @@ import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 /**
  * Indexes an atlas sprite to allow fast lookup of Sprites from
@@ -44,10 +44,10 @@ public class SodiumSpriteFinderImpl implements SodiumSpriteFinder {
     private int badSpriteCount = 0;
 
     public SodiumSpriteFinderImpl(Map<Identifier, TextureAtlasSprite> sprites, TextureAtlasSprite missingSprite, SodiumQuadAtlas atlas) {
-        root = new Node(0.5f, 0.5f, 0.25f);
+        this.root = new Node(0.5f, 0.5f, 0.25f);
         this.missingSprite = missingSprite;
         this.atlas = atlas;
-        sprites.values().forEach(root::add);
+        sprites.values().forEach(this.root::add);
     }
 
     @Override
@@ -60,17 +60,17 @@ public class SodiumSpriteFinderImpl implements SodiumSpriteFinder {
             v += quad.getTexV(i);
         }
 
-        return find(u * 0.25f, v * 0.25f);
+        return this.find(u * 0.25f, v * 0.25f);
     }
 
     @Override
     public TextureAtlasSprite find(float u, float v) {
-        return root.find(u, v);
+        return this.root.find(u, v);
     }
 
     @Override
     public SodiumQuadAtlas getAtlas() {
-        return atlas;
+        return this.atlas;
     }
 
     private class Node {
@@ -90,7 +90,7 @@ public class SodiumSpriteFinderImpl implements SodiumSpriteFinder {
         Node(float midU, float midV, float radius) {
             this.midU = midU;
             this.midV = midV;
-            cellRadius = radius;
+            this.cellRadius = radius;
         }
 
         static final float EPS = 0.00001f;
@@ -99,7 +99,7 @@ public class SodiumSpriteFinderImpl implements SodiumSpriteFinder {
             if (sprite.getU0() < 0 - EPS || sprite.getU1() > 1 + EPS || sprite.getV0() < 0 - EPS || sprite.getV1() > 1 + EPS) {
                 // Sprite has broken bounds. This SHOULD NOT happen, but in the past some mods have broken this.
                 // Prefer failing with a log warning rather than risking a stack overflow.
-                if (badSpriteCount++ < 5) {
+                if (SodiumSpriteFinderImpl.this.badSpriteCount++ < 5) {
                     String errorMessage = "SpriteFinderImpl: Skipping sprite {} with broken bounds [{}, {}]x[{}, {}]. Sprite bounds should be between 0 and 1.";
                     LOGGER.error(errorMessage, sprite.contents().name(), sprite.getU0(), sprite.getU1(), sprite.getV0(), sprite.getV1());
                 }
@@ -107,25 +107,25 @@ public class SodiumSpriteFinderImpl implements SodiumSpriteFinder {
                 return;
             }
 
-            final boolean lowU = sprite.getU0() < midU - EPS;
-            final boolean highU = sprite.getU1() > midU + EPS;
-            final boolean lowV = sprite.getV0() < midV - EPS;
-            final boolean highV = sprite.getV1() > midV + EPS;
+            final boolean lowU = sprite.getU0() < this.midU - EPS;
+            final boolean highU = sprite.getU1() > this.midU + EPS;
+            final boolean lowV = sprite.getV0() < this.midV - EPS;
+            final boolean highV = sprite.getV1() > this.midV + EPS;
 
             if (lowU && lowV) {
-                lowLow = addInner(sprite, lowLow, -1, -1);
+                this.lowLow = this.addInner(sprite, this.lowLow, -1, -1);
             }
 
             if (lowU && highV) {
-                lowHigh = addInner(sprite, lowHigh, -1, 1);
+                this.lowHigh = this.addInner(sprite, this.lowHigh, -1, 1);
             }
 
             if (highU && lowV) {
-                highLow = addInner(sprite, highLow, 1, -1);
+                this.highLow = this.addInner(sprite, this.highLow, 1, -1);
             }
 
             if (highU && highV) {
-                highHigh = addInner(sprite, highHigh, 1, 1);
+                this.highHigh = this.addInner(sprite, this.highHigh, 1, 1);
             }
         }
 
@@ -136,7 +136,7 @@ public class SodiumSpriteFinderImpl implements SodiumSpriteFinder {
                 node.add(sprite);
                 return quadrant;
             } else {
-                Node n = new Node(midU + cellRadius * uStep, midV + cellRadius * vStep, cellRadius * 0.5f);
+                Node n = new Node(this.midU + this.cellRadius * uStep, this.midV + this.cellRadius * vStep, this.cellRadius * 0.5f);
 
                 if (quadrant instanceof TextureAtlasSprite prevSprite) {
                     n.add(prevSprite);
@@ -148,10 +148,10 @@ public class SodiumSpriteFinderImpl implements SodiumSpriteFinder {
         }
 
         private TextureAtlasSprite find(float u, float v) {
-            if (u < midU) {
-                return v < midV ? findInner(lowLow, u, v) : findInner(lowHigh, u, v);
+            if (u < this.midU) {
+                return v < this.midV ? this.findInner(this.lowLow, u, v) : this.findInner(this.lowHigh, u, v);
             } else {
-                return v < midV ? findInner(highLow, u, v) : findInner(highHigh, u, v);
+                return v < this.midV ? this.findInner(this.highLow, u, v) : this.findInner(this.highHigh, u, v);
             }
         }
 
@@ -161,7 +161,7 @@ public class SodiumSpriteFinderImpl implements SodiumSpriteFinder {
             } else if (quadrant instanceof TextureAtlasSprite sprite) {
                 return sprite;
             } else {
-                return missingSprite;
+                return SodiumSpriteFinderImpl.this.missingSprite;
             }
         }
     }

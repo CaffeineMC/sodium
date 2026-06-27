@@ -125,7 +125,7 @@ public class ModelQuad implements ModelQuadViewMutable {
 
     @Override
     public int getFaceNormal() {
-        return faceNormal;
+        return this.faceNormal;
     }
 
     @Override
@@ -150,6 +150,6 @@ public class ModelQuad implements ModelQuadViewMutable {
 
     @Override
     public int getMaxLightQuad(int idx) {
-        return getLight(idx);
+        return this.getLight(idx);
     }
 }

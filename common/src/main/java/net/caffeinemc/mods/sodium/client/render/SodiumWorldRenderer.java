@@ -358,7 +358,7 @@ public class SodiumWorldRenderer {
                 }
 
                 for (BlockEntity blockEntity : blockEntities) {
-                    extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState, false);
+                    this.extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState, false);
                 }
             }
         }
@@ -371,7 +371,7 @@ public class SodiumWorldRenderer {
             }
 
             for (var blockEntity : blockEntities) {
-                extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState, true);
+                this.extractBlockEntity(blockEntity, stack, camera, tickDelta, progression, levelRenderState, true);
             }
         }
     }

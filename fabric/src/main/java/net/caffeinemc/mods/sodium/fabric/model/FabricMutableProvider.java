@@ -33,15 +33,15 @@ public class FabricMutableProvider implements ColorProvider<BlockState> {
             this.slice = slice;
             this.state = state;
 
-            list.clear();
-            factory.collect(state, slice, pos, list);
+            this.list.clear();
+            factory.collect(state, slice, pos, this.list);
         }
 
-        if (tintIndex < 0 || tintIndex >= list.size()) {
+        if (tintIndex < 0 || tintIndex >= this.list.size()) {
             Arrays.fill(output, 0xFFFFFFFF);
             return;
         }
 
-        Arrays.fill(output, list.getInt(tintIndex));
+        Arrays.fill(output, this.list.getInt(tintIndex));
     }
 }

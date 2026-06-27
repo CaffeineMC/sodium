@@ -56,7 +56,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
                 .withFragmentShader(Identifier.fromNamespaceAndPath("sodium", "blocks/block_layer_opaque"))
                 .withDepthStencilState(DepthStencilState.DEFAULT)
                 .withPrimitiveTopology(PrimitiveTopology.QUADS)
-                .withVertexBinding(0, vertexFormat);
+                .withVertexBinding(0, this.vertexFormat);
 
         if (pass.isTranslucent()) {
             builder.withColorTargetState(new ColorTargetState(Optional.of(BlendFunction.TRANSLUCENT), GpuFormat.RGBA8_UNORM, 0xFFFFFFFF));
