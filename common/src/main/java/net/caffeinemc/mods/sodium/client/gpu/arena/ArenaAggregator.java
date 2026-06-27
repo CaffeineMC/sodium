@@ -148,7 +148,7 @@ public class ArenaAggregator {
     private abstract class DataType {
         final String name;
         final int stride;
-        final ArrayList<SharedGlBufferArena> arenas;
+        final ArrayList<SharedBufferArena> arenas;
         long totalUsedLastCheckpoint;
         boolean pauseDeallocation = true;
 
@@ -169,14 +169,14 @@ public class ArenaAggregator {
             return capacitySize;
         }
 
-        SharedGlBufferArena createSharedArena(long requiredSize) {
+        SharedBufferArena createSharedArena(long requiredSize) {
             GpuBuffer buffer = ArenaAggregator.this.getBufferOfSizeAtLeast(requiredSize);
             long actualCapacity = buffer.size() / this.stride;
-            return new SharedGlBufferArena(ArenaAggregator.this, buffer, actualCapacity, this.stride);
+            return new SharedBufferArena(ArenaAggregator.this, buffer, actualCapacity, this.stride);
         }
 
-        SharedGlBufferArena ensureSharedArena(long requiredCapacity, int newAllocationMode) {
-            SharedGlBufferArena bestArena = null;
+        SharedBufferArena ensureSharedArena(long requiredCapacity, int newAllocationMode) {
+            SharedBufferArena bestArena = null;
             if (newAllocationMode != REQUIRE_NEW_ALLOCATION) {
                 long biggestFreeSegmentSize = requiredCapacity;
                 for (var arena : this.arenas) {
@@ -224,7 +224,7 @@ public class ArenaAggregator {
             long totalUsed = 0;
             long totalCapacity = 0;
             long totalUnfragmentedFree = 0;
-            SharedGlBufferArena emptyingArena = null;
+            SharedBufferArena emptyingArena = null;
             var canDeleteArena = this.arenas.size() > 1;
             var it = this.arenas.iterator();
             while (it.hasNext()) {
@@ -273,9 +273,9 @@ public class ArenaAggregator {
             }
 
             // run defragmentation and identify candidates for types of emptying
-            SharedGlBufferArena leastUsedArena = null;
-            SharedGlBufferArena smallestArena = null;
-            SharedGlBufferArena compactionCandidate = null;
+            SharedBufferArena leastUsedArena = null;
+            SharedBufferArena smallestArena = null;
+            SharedBufferArena compactionCandidate = null;
             for (int i = 0; i < this.arenas.size(); i++) {
                 int arenaIndex = (ArenaAggregator.this.arenaDefragOffset + i) % this.arenas.size();
                 var arena = this.arenas.get(arenaIndex);
@@ -340,7 +340,7 @@ public class ArenaAggregator {
     }
 
     private RegionAllocatorHandle createAllocator(RenderRegion region, int stride, RegionAllocatorHandle.AllocationChangeConsumer onChange) {
-        GlBufferArena backingArena = getArenaFittingFor(0, stride, true);
+        BufferArena backingArena = getArenaFittingFor(0, stride, true);
         return new RegionAllocatorHandle(region, onChange, backingArena);
     }
 
@@ -354,15 +354,15 @@ public class ArenaAggregator {
         }
     }
 
-    GlBufferArena getArenaFittingFor(long requiredCapacity, int stride, boolean allowNewAllocation) {
+    BufferArena getArenaFittingFor(long requiredCapacity, int stride, boolean allowNewAllocation) {
         // TODO: create arena size based on top k region sizes, and scale up if all regions are big
         return getDataTypeForStride(stride).ensureSharedArena(requiredCapacity, allowNewAllocation ? ALLOW_NEW_ALLOCATION : DISALLOW_NEW_ALLOCATION);
     }
 
-    GlBufferArena createDedicatedArena(long requiredCapacity, int stride) {
+    BufferArena createDedicatedArena(long requiredCapacity, int stride) {
         GpuBuffer buffer = getBufferOfSizeAtLeast(requiredCapacity * stride);
         long actualCapacity = buffer.size() / stride;
-        return new SingleOwnerGlBufferArena(this, buffer, actualCapacity, stride);
+        return new SingleOwnerBufferArena(this, buffer, actualCapacity, stride);
     }
 
     GpuBuffer getBufferOfSizeAtLeast(long bytes) {

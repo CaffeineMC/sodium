@@ -8,7 +8,7 @@ import net.minecraft.util.Mth;
 
 import java.util.Collection;
 
-public abstract class DefragmentingGlBufferArena extends GlBufferArena {
+public abstract class DefragmentingBufferArena extends BufferArena {
     private static final float DEFRAG_STOP_AFTER_FREE_SEEN_FRACTION = 0.95f;
     private static final float DEFRAG_MIN_FREE_FRACTION = 0.03f;
     private static final int MAX_DEFRAG_STEPS = 5;
@@ -16,17 +16,17 @@ public abstract class DefragmentingGlBufferArena extends GlBufferArena {
     private static final int BEST_TARGET_SEARCH_COUNT = 5;
 
     // profiling has shown that Long2ReferenceRBTreeMap is 58% slower than TreeMap here
-    private final SizedTreeMap<GlBufferSegment> freeSegmentsByLength = new SizedTreeMap<>();
+    private final SizedTreeMap<BufferSegment> freeSegmentsByLength = new SizedTreeMap<>();
 
     // direction to move the biggest free segment in during defragmentation
     private boolean defragmentRight = true;
 
-    protected DefragmentingGlBufferArena(ArenaAggregator parent, GpuBuffer initialBuffer, long capacity, int stride) {
+    protected DefragmentingBufferArena(ArenaAggregator parent, GpuBuffer initialBuffer, long capacity, int stride) {
         super(parent, initialBuffer, capacity, stride);
         this.addFreeSegment(this.head);
     }
 
-    protected void addFreeSegment(GlBufferSegment segment) {
+    protected void addFreeSegment(BufferSegment segment) {
         if (this.freeSegmentsByLength.addSized(segment) != null) {
             CHECK_ASSERTIONS = true;
             this.checkAssertions();
@@ -35,7 +35,7 @@ public abstract class DefragmentingGlBufferArena extends GlBufferArena {
         this.checkSegmentAssertions(segment);
     }
 
-    protected void removeFreeSegment(GlBufferSegment segment) {
+    protected void removeFreeSegment(BufferSegment segment) {
         if (this.freeSegmentsByLength.removeSized(segment) == null) {
             CHECK_ASSERTIONS = true;
             this.checkAssertions();
@@ -49,7 +49,7 @@ public abstract class DefragmentingGlBufferArena extends GlBufferArena {
         return this.freeSegmentsByLength.getLargestSize();
     }
 
-    private float calculateFragmentationDegree(Collection<GlBufferSegment> givenSegments) {
+    private float calculateFragmentationDegree(Collection<BufferSegment> givenSegments) {
         // take a few of the biggest free segments and sum their sizes
         long biggestFreeTotalSize = 0;
         int count = 0;
@@ -101,10 +101,10 @@ public abstract class DefragmentingGlBufferArena extends GlBufferArena {
         return Mth.lerpInt(fragmentationDegree, 1, MAX_DEFRAG_STEPS + 1);
     }
 
-    private void defragmentationStep(Collection<GlBufferSegment> descendingFreeSegments, long requiredSeenFreeSize, ArenaAggregator.DefragBudget budget) {
+    private void defragmentationStep(Collection<BufferSegment> descendingFreeSegments, long requiredSeenFreeSize, ArenaAggregator.DefragBudget budget) {
         // find the biggest free segment that can receive defragmentation
         long seenFreeSize = 0;
-        for (GlBufferSegment segmentToMove : descendingFreeSegments) {
+        for (BufferSegment segmentToMove : descendingFreeSegments) {
             seenFreeSize += segmentToMove.getLength();
 
             // stop if we've already seen enough free and thus the degree of fragmentation is low
@@ -121,7 +121,7 @@ public abstract class DefragmentingGlBufferArena extends GlBufferArena {
         this.defragmentRight = !this.defragmentRight;
     }
 
-    private boolean defragmentDirectional(ArenaAggregator.DefragBudget budget, GlBufferSegment biggestFree, Collection<GlBufferSegment> biggestSegments) {
+    private boolean defragmentDirectional(ArenaAggregator.DefragBudget budget, BufferSegment biggestFree, Collection<BufferSegment> biggestSegments) {
         // determine the direction we want to move it
         var next = biggestFree.getNext();
         var prev = biggestFree.getPrev();
@@ -170,7 +170,7 @@ public abstract class DefragmentingGlBufferArena extends GlBufferArena {
         return false;
     }
 
-    private boolean defragmentRightwards(GlBufferSegment biggestFree, ArenaAggregator.DefragBudget budget) {
+    private boolean defragmentRightwards(BufferSegment biggestFree, ArenaAggregator.DefragBudget budget) {
         long freeLength = biggestFree.getLength();
         long freeEnd = biggestFree.getEnd();
         long freeOffset = biggestFree.getOffset();
@@ -246,7 +246,7 @@ public abstract class DefragmentingGlBufferArena extends GlBufferArena {
     }
 
     // note that there is no this.tail
-    private boolean defragmentLeftwards(GlBufferSegment biggestFree, ArenaAggregator.DefragBudget budget) {
+    private boolean defragmentLeftwards(BufferSegment biggestFree, ArenaAggregator.DefragBudget budget) {
         long freeLength = biggestFree.getLength();
         long freeEnd = biggestFree.getEnd();
         long freeOffset = biggestFree.getOffset();
@@ -332,21 +332,21 @@ public abstract class DefragmentingGlBufferArena extends GlBufferArena {
     }
 
     @Override
-    GlBufferSegment takeFree(long size) {
+    BufferSegment takeFree(long size) {
         return this.freeSegmentsByLength.removeFirstOfSizeAtLeast(size);
     }
 
     @Override
-    GlBufferSegment alloc(long size, RegionAllocatorHandle owner, int ownerIndex) {
+    BufferSegment alloc(long size, RegionAllocatorHandle owner, int ownerIndex) {
         this.checkAssertions();
 
-        GlBufferSegment free = this.takeFree(size);
+        BufferSegment free = this.takeFree(size);
 
         if (free == null) {
             return null;
         }
 
-        GlBufferSegment result;
+        BufferSegment result;
 
         // exact fit
         if (free.getLength() == size) {
@@ -361,7 +361,7 @@ public abstract class DefragmentingGlBufferArena extends GlBufferArena {
                 this.checkAssertions();
                 throw new IllegalStateException("Free segment is smaller than requested size");
             }
-            result = new GlBufferSegment(this, owner, ownerIndex, free.getEnd() - size, size);
+            result = new BufferSegment(this, owner, ownerIndex, free.getEnd() - size, size);
             result.setNext(free.getNext());
             result.setPrev(free);
 
@@ -382,7 +382,7 @@ public abstract class DefragmentingGlBufferArena extends GlBufferArena {
     }
 
     @Override
-    public void free(GlBufferSegment entry) {
+    public void free(BufferSegment entry) {
         if (entry.isFree()) {
             throw new IllegalStateException("Already freed");
         }
@@ -392,9 +392,9 @@ public abstract class DefragmentingGlBufferArena extends GlBufferArena {
 
         this.updateUsed(-entry.getLength(), owner);
 
-        GlBufferSegment next = entry.getNext();
+        BufferSegment next = entry.getNext();
         boolean nextFree = next != null && next.isFree();
-        GlBufferSegment prev = entry.getPrev();
+        BufferSegment prev = entry.getPrev();
         boolean prevFree = prev != null && prev.isFree();
 
         // both free, merge with both

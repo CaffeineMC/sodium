@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class SingleOwnerGlBufferArena extends GlBufferArena {
-    protected SingleOwnerGlBufferArena(ArenaAggregator parent, GpuBuffer initialBuffer, long capacity, int stride) {
+public class SingleOwnerBufferArena extends BufferArena {
+    protected SingleOwnerBufferArena(ArenaAggregator parent, GpuBuffer initialBuffer, long capacity, int stride) {
         super(parent, initialBuffer, capacity, stride);
     }
 
@@ -26,7 +26,7 @@ public class SingleOwnerGlBufferArena extends GlBufferArena {
     }
 
     @Override
-    protected int receiveSegmentsFrom(List<GlBufferSegment> segments, GpuBuffer srcBufferObj, RegionAllocatorHandle owner) {
+    protected int receiveSegmentsFrom(List<BufferSegment> segments, GpuBuffer srcBufferObj, RegionAllocatorHandle owner) {
         this.used = owner.used;
         this.usedSegments = segments.size();
         if (this.used > this.capacity) {
@@ -57,7 +57,7 @@ public class SingleOwnerGlBufferArena extends GlBufferArena {
 
         long endOfFreeHead = newCapacity - this.used;
 
-        List<GlBufferSegment> usedSegments = this.getUsedSegments();
+        List<BufferSegment> usedSegments = this.getUsedSegments();
         List<PendingBufferCopyCommand> pendingCopies = this.buildTransferList(usedSegments, endOfFreeHead);
 
         this.transferSegments(pendingCopies, newCapacity);
@@ -65,12 +65,12 @@ public class SingleOwnerGlBufferArena extends GlBufferArena {
         this.finalizeCompactedSegments(endOfFreeHead, usedSegments);
     }
 
-    private ArrayList<GlBufferSegment> getUsedSegments() {
-        ArrayList<GlBufferSegment> used = new ArrayList<>();
-        GlBufferSegment seg = this.head;
+    private ArrayList<BufferSegment> getUsedSegments() {
+        ArrayList<BufferSegment> used = new ArrayList<>();
+        BufferSegment seg = this.head;
 
         while (seg != null) {
-            GlBufferSegment next = seg.getNext();
+            BufferSegment next = seg.getNext();
 
             if (!seg.isFree()) {
                 used.add(seg);
@@ -101,8 +101,8 @@ public class SingleOwnerGlBufferArena extends GlBufferArena {
         this.capacity = this.arenaBuffer.size() / this.stride;
     }
 
-    private void finalizeCompactedSegments(long tail, List<GlBufferSegment> usedSegments) {
-        this.head = GlBufferSegment.createFreeSegment(this, 0, tail);
+    private void finalizeCompactedSegments(long tail, List<BufferSegment> usedSegments) {
+        this.head = BufferSegment.createFreeSegment(this, 0, tail);
 
         if (usedSegments.isEmpty()) {
             // this.head.setNext(null);

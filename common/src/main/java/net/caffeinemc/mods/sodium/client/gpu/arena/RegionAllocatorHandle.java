@@ -8,13 +8,13 @@ import java.util.stream.Stream;
 public class RegionAllocatorHandle implements AllocatorBase, SizedTreeMap.Sized {
     private final RenderRegion region;
     private final AllocationChangeConsumer onChange;
-    private GlBufferArena backingArena;
+    private BufferArena backingArena;
     long used;
     int usedSegments;
     int identifier;
     private static int nextIdentifier = 1;
 
-    public RegionAllocatorHandle(RenderRegion region, AllocationChangeConsumer onChange, GlBufferArena backingArena) {
+    public RegionAllocatorHandle(RenderRegion region, AllocationChangeConsumer onChange, BufferArena backingArena) {
         this.region = region;
         this.onChange = onChange;
         this.backingArena = backingArena;
@@ -33,7 +33,7 @@ public class RegionAllocatorHandle implements AllocatorBase, SizedTreeMap.Sized 
         return this.region.getFillFractionInv();
     }
 
-    void setBackingArena(GlBufferArena arena) {
+    void setBackingArena(BufferArena arena) {
         this.backingArena = arena;
     }
 
@@ -48,7 +48,7 @@ public class RegionAllocatorHandle implements AllocatorBase, SizedTreeMap.Sized 
     }
 
     @Override
-    public void free(GlBufferSegment entry) {
+    public void free(BufferSegment entry) {
         this.backingArena.free(entry);
     }
 
@@ -73,12 +73,12 @@ public class RegionAllocatorHandle implements AllocatorBase, SizedTreeMap.Sized 
         return bufferChanged || this.backingArena != prevBackingArena;
     }
 
-    public GlBufferArena getBackingArena() {
+    public BufferArena getBackingArena() {
         return this.backingArena;
     }
 
     public boolean isSingleOwner() {
-        return !(this.backingArena instanceof SharedGlBufferArena);
+        return !(this.backingArena instanceof SharedBufferArena);
     }
 
     public void notifyBufferChanged() {

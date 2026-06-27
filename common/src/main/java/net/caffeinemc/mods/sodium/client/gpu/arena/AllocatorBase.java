@@ -7,7 +7,7 @@ public interface AllocatorBase {
 
     long getDeviceAllocatedMemory();
 
-    void free(GlBufferSegment entry);
+    void free(BufferSegment entry);
 
     boolean isEmpty();
 

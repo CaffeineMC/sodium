@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.data;
 
-import net.caffeinemc.mods.sodium.client.gpu.arena.GlBufferSegment;
+import net.caffeinemc.mods.sodium.client.gpu.arena.BufferSegment;
 import net.caffeinemc.mods.sodium.client.gpu.arena.PendingUpload;
 import net.caffeinemc.mods.sodium.client.gpu.arena.RegionAllocatorHandle;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
@@ -33,9 +33,9 @@ import java.util.stream.Stream;
  * updated independently of each other (in both directions).
  */
 public class SectionRenderDataStorage {
-    private final @Nullable GlBufferSegment[] vertexAllocations;
-    private final @Nullable GlBufferSegment @Nullable [] elementAllocations;
-    private @Nullable GlBufferSegment sharedIndexAllocation;
+    private final @Nullable BufferSegment[] vertexAllocations;
+    private final @Nullable BufferSegment @Nullable [] elementAllocations;
+    private @Nullable BufferSegment sharedIndexAllocation;
     private int sharedIndexCapacity = 0;
     private boolean needsSharedIndexUpdate = false;
     private final int[] sharedIndexUsage = new int[RenderRegion.REGION_SIZE];
@@ -43,10 +43,10 @@ public class SectionRenderDataStorage {
     private final long pMeshDataArray;
 
     public SectionRenderDataStorage(boolean storesIndices) {
-        this.vertexAllocations = new GlBufferSegment[RenderRegion.REGION_SIZE];
+        this.vertexAllocations = new BufferSegment[RenderRegion.REGION_SIZE];
 
         if (storesIndices) {
-            this.elementAllocations = new GlBufferSegment[RenderRegion.REGION_SIZE];
+            this.elementAllocations = new BufferSegment[RenderRegion.REGION_SIZE];
         } else {
             this.elementAllocations = null;
         }
@@ -54,8 +54,8 @@ public class SectionRenderDataStorage {
         this.pMeshDataArray = SectionRenderDataUnsafe.allocateHeap(RenderRegion.REGION_SIZE);
     }
 
-    public void setVertexData(int localSectionIndex, GlBufferSegment allocation, int[] vertexSegments) {
-        GlBufferSegment prev = this.vertexAllocations[localSectionIndex];
+    public void setVertexData(int localSectionIndex, BufferSegment allocation, int[] vertexSegments) {
+        BufferSegment prev = this.vertexAllocations[localSectionIndex];
 
         if (prev != null) {
             prev.delete();
@@ -87,12 +87,12 @@ public class SectionRenderDataStorage {
         SectionRenderDataUnsafe.setFacingList(pMeshData, facingList);
     }
 
-    public void setIndexData(int localSectionIndex, GlBufferSegment allocation) {
+    public void setIndexData(int localSectionIndex, BufferSegment allocation) {
         if (this.elementAllocations == null) {
             throw new IllegalStateException("Cannot set index data on a render data storage that does not store indices");
         }
 
-        GlBufferSegment prev = this.elementAllocations[localSectionIndex];
+        BufferSegment prev = this.elementAllocations[localSectionIndex];
 
         if (prev != null) {
             prev.delete();
@@ -214,14 +214,14 @@ public class SectionRenderDataStorage {
 
     private void removeData(int localSectionIndex, boolean removeVertexData, boolean removeIndexData) {
         if (removeVertexData) {
-            GlBufferSegment prev = this.vertexAllocations[localSectionIndex];
+            BufferSegment prev = this.vertexAllocations[localSectionIndex];
             if (prev != null) {
                 prev.delete();
                 this.vertexAllocations[localSectionIndex] = null;
             }
         }
         if (removeIndexData && this.storesIndexData()) {
-            GlBufferSegment prev = this.elementAllocations[localSectionIndex];
+            BufferSegment prev = this.elementAllocations[localSectionIndex];
 
             if (prev != null) {
                 prev.delete();
@@ -338,7 +338,7 @@ public class SectionRenderDataStorage {
         SectionRenderDataUnsafe.freeHeap(this.pMeshDataArray);
     }
 
-    private static void deleteAllocations(GlBufferSegment @NonNull [] allocations) {
+    private static void deleteAllocations(BufferSegment @NonNull [] allocations) {
         for (var allocation : allocations) {
             if (allocation != null) {
                 allocation.delete();

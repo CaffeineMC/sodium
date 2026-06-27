@@ -3,7 +3,7 @@ package net.caffeinemc.mods.sodium.client.gpu.arena;
 import net.caffeinemc.mods.sodium.client.util.UInt32;
 
 // TODO: fine-grained segment update notification to avoid re-writing the entire render data on small changes
-public class GlBufferSegment implements SizedTreeMap.Sized {
+public class BufferSegment implements SizedTreeMap.Sized {
     private AllocatorBase allocator;
     private RegionAllocatorHandle owner;
     private int ownerIndex;
@@ -11,10 +11,10 @@ public class GlBufferSegment implements SizedTreeMap.Sized {
     private int offset; /* Uint32 */
     private int length; /* Uint32 */
 
-    private GlBufferSegment next;
-    private GlBufferSegment prev;
+    private BufferSegment next;
+    private BufferSegment prev;
 
-    public GlBufferSegment(GlBufferArena allocator, RegionAllocatorHandle owner, int ownerIndex, long offset, long length) {
+    public BufferSegment(BufferArena allocator, RegionAllocatorHandle owner, int ownerIndex, long offset, long length) {
         this.allocator = allocator;
         this.owner = owner;
         this.ownerIndex = ownerIndex;
@@ -22,8 +22,8 @@ public class GlBufferSegment implements SizedTreeMap.Sized {
         this.length = UInt32.downcast(length);
     }
 
-    public static GlBufferSegment createFreeSegment(GlBufferArena allocator, long offset, long length) {
-        return new GlBufferSegment(allocator, null, 0, offset, length);
+    public static BufferSegment createFreeSegment(BufferArena allocator, long offset, long length) {
+        return new BufferSegment(allocator, null, 0, offset, length);
     }
 
     /* Uint32 */
@@ -66,19 +66,19 @@ public class GlBufferSegment implements SizedTreeMap.Sized {
         return this.owner == null;
     }
 
-    protected void setNext(GlBufferSegment next) {
+    protected void setNext(BufferSegment next) {
         this.next = next;
     }
 
-    protected GlBufferSegment getNext() {
+    protected BufferSegment getNext() {
         return this.next;
     }
 
-    protected GlBufferSegment getPrev() {
+    protected BufferSegment getPrev() {
         return this.prev;
     }
 
-    protected void setPrev(GlBufferSegment prev) {
+    protected void setPrev(BufferSegment prev) {
         this.prev = prev;
     }
 
@@ -94,7 +94,7 @@ public class GlBufferSegment implements SizedTreeMap.Sized {
         return this.owner;
     }
 
-    protected void mergeInto(GlBufferSegment entry) {
+    protected void mergeInto(BufferSegment entry) {
         this.setLength(this.getLength() + entry.getLength());
         this.setNext(entry.getNext());
 
