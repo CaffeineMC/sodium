@@ -10,7 +10,9 @@ import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.arena.staging.StagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
+import net.caffeinemc.mods.sodium.client.render.chunk.IntPool;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
+import net.caffeinemc.mods.sodium.client.render.chunk.UniformBufferManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkSortOutput;
@@ -32,12 +34,13 @@ public class RenderRegionManager {
     private final Long2ReferenceOpenHashMap<RenderRegion> regions = new Long2ReferenceOpenHashMap<>();
 
     private final StagingBuffer stagingBuffer;
+    private final IntPool freeIds = new IntPool();
 
     public RenderRegionManager(CommandList commandList) {
         this.stagingBuffer = createStagingBuffer(commandList);
     }
 
-    public void update() {
+    public void update(UniformBufferManager ubm) {
         this.stagingBuffer.flip();
 
         try (CommandList commandList = RenderDevice.INSTANCE.createCommandList()) {
@@ -50,6 +53,10 @@ public class RenderRegionManager {
 
                 if (region.isEmpty()) {
                     region.delete(commandList);
+                    if (region.getId() != -1) {
+                        this.freeIds.release(region.getId());
+                        ubm.clearRegionTimes(region.getId());
+                    }
 
                     it.remove();
                 }
@@ -57,13 +64,13 @@ public class RenderRegionManager {
         }
     }
 
-    public void uploadResults(CommandList commandList, Collection<BuilderTaskOutput> results) {
+    public void uploadResults(CommandList commandList, Collection<BuilderTaskOutput> results, UniformBufferManager uniforms) {
         for (var entry : this.createMeshUploadQueues(results)) {
-            this.uploadResults(commandList, entry.getKey(), entry.getValue());
+            this.uploadResults(commandList, entry.getKey(), entry.getValue(), uniforms);
         }
     }
 
-    private void uploadResults(CommandList commandList, RenderRegion region, Collection<BuilderTaskOutput> results) {
+    private void uploadResults(CommandList commandList, RenderRegion region, Collection<BuilderTaskOutput> results, UniformBufferManager uniforms) {
         var uploads = new ArrayList<PendingSectionMeshUpload>();
         var indexUploads = new ArrayList<PendingSectionIndexBufferUpload>();
 
@@ -171,7 +178,9 @@ public class RenderRegionManager {
                     double distanceToPlayer = dx * dx + dy * dy + dz * dz;
 
                     int relativeBuiltTime = distanceToPlayer < 768.0 ? -1 : upload.relativeBuiltTime;
-                    resources.writeMeshTimes(upload.section.getSectionIndex(), relativeBuiltTime);
+
+                    // TODO: improve the plumbing of this to be less cumbersome
+                    uniforms.writeMeshTimes(region.getOrAcquireId(this.freeIds), upload.section.getSectionIndex(), relativeBuiltTime);
                 }
                 storage.setVertexData(upload.section.getSectionIndex(),
                         upload.vertexUpload.getResult(), upload.meshData.getVertexSegments());
@@ -218,6 +227,7 @@ public class RenderRegionManager {
     public void delete(CommandList commandList) {
         for (RenderRegion region : this.regions.values()) {
             region.delete(commandList);
+            if (region.getId() != -1) this.freeIds.release(region.getId());
         }
 
         this.regions.clear();
