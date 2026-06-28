@@ -1,9 +1,9 @@
 package net.caffeinemc.mods.sodium.client.gl.device;
 
 import org.lwjgl.PointerBuffer;
-import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.Pointer;
+
 import java.nio.IntBuffer;
 
 /**
@@ -17,6 +17,7 @@ public final class MultiDrawBatch {
 
     public int size;
     public boolean isFilled;
+    public long maxElementCount;
 
     public MultiDrawBatch(int capacity) {
         this.pElementPointer = MemoryUtil.nmemAlignedAlloc(32, (long) capacity * Pointer.POINTER_SIZE);
@@ -29,6 +30,7 @@ public final class MultiDrawBatch {
     public void clear() {
         this.size = 0;
         this.isFilled = false;
+        this.maxElementCount = 0;
     }
 
     public void delete() {
@@ -39,15 +41,5 @@ public final class MultiDrawBatch {
 
     public boolean isEmpty() {
         return this.size <= 0;
-    }
-
-    public int getIndexBufferSize() {
-        int elements = 0;
-
-        for (var index = 0; index < this.size; index++) {
-            elements = Math.max(elements, MemoryIntrinsics.getInt(this.pElementCount + ((long) index * Integer.BYTES)));
-        }
-
-        return elements;
     }
 }

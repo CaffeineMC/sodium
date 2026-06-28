@@ -91,7 +91,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
             // When the shared index buffer is being used, we must ensure the storage has been allocated *before*
             // the tessellation is prepared.
             if (!useIndexedTessellation) {
-                this.sharedIndexBuffer.ensureCapacity(commandList, batch.getIndexBufferSize());
+                this.sharedIndexBuffer.ensureCapacity(commandList, UInt32.downcast(batch.maxElementCount));
             }
 
             GlTessellation tessellation;
@@ -182,6 +182,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         final var pElementCount = batch.pElementCount;
 
         int size = batch.size;
+        long maxElementCount = batch.maxElementCount;
 
         long elementOffset = SectionRenderDataUnsafe.getBaseElement(pMeshData);
         long baseVertex = SectionRenderDataUnsafe.getBaseVertex(pMeshData);
@@ -190,6 +191,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
             final long vertexCount = SectionRenderDataUnsafe.getVertexCount(pMeshData, facing);
             final long elementCount = (vertexCount >> 2) * 6;
 
+            maxElementCount = Math.max(maxElementCount, elementCount);
             MemoryIntrinsics.putInt(pElementCount + (size << 2), UInt32.uncheckedDowncast(elementCount));
             MemoryIntrinsics.putInt(pBaseVertex + (size << 2), UInt32.uncheckedDowncast(baseVertex));
 
@@ -203,6 +205,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         }
 
         batch.size = size;
+        batch.maxElementCount = maxElementCount;
     }
 
     /**
@@ -219,6 +222,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         final var facingList = SectionRenderDataUnsafe.getFacingList(pMeshData);
 
         int size = batch.size;
+        long maxElementCount = batch.maxElementCount;
         long groupVertexCount = 0;
         long baseVertex = SectionRenderDataUnsafe.getBaseVertex(pMeshData);
         int lastMaskBit = 0;
@@ -243,7 +247,9 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                         continue;
                     }
 
-                    MemoryIntrinsics.putInt(pElementCount + (size << 2), UInt32.uncheckedDowncast((groupVertexCount >> 2) * 6));
+                    var elementCount = (groupVertexCount >> 2) * 6;
+                    maxElementCount = Math.max(maxElementCount, elementCount);
+                    MemoryIntrinsics.putInt(pElementCount + (size << 2), UInt32.uncheckedDowncast(elementCount));
                     MemoryIntrinsics.putInt(pBaseVertex + (size << 2), UInt32.uncheckedDowncast(baseVertex));
                     MemoryIntrinsics.putAddress(pElementPointer + (size << Pointer.POINTER_SHIFT), elementOffsetBytes);
                     size++;
@@ -260,6 +266,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         }
 
         batch.size = size;
+        batch.maxElementCount = maxElementCount;
     }
 
     private static final int MODEL_UNASSIGNED = ModelQuadFacing.UNASSIGNED.ordinal();
@@ -355,7 +362,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         });
     }
 
-    private static void executeDrawBatch(CommandList commandList, GlTessellation tessellation, MultiDrawBatch batch) {
+    private static void executeDrawBatch(CommandList commandList, GlTessellation tessellation, net.caffeinemc.mods.sodium.client.gl.device.MultiDrawBatch batch) {
         try (DrawCommandList drawCommandList = commandList.beginTessellating(tessellation)) {
             drawCommandList.multiDrawElementsBaseVertex(batch, GlIndexType.UNSIGNED_INT);
         }
