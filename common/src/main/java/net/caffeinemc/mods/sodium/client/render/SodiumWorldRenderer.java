@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
+import net.caffeinemc.mods.sodium.client.render.chunk.DefaultChunkRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.UniformBufferManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.ChunkRenderList;
@@ -48,16 +49,37 @@ import org.joml.Vector3d;
 import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.SortedSet;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.RecursiveAction;
 import java.util.function.Consumer;
 
 /**
  * Provides an extension to vanilla's {@link LevelRenderer}.
  */
 public class SodiumWorldRenderer {
+    private static final ForkJoinPool BATCH_FILL_POOL = createBatchFillPool();
+
+    private static ForkJoinPool createBatchFillPool() {
+        int cores = Runtime.getRuntime().availableProcessors();
+        int chunkBuilderThreads = Mth.clamp(Math.max(cores / 3, cores - 6), 1, 10);
+        int poolSize = Mth.clamp(cores - chunkBuilderThreads - 1, 1, 4);
+        return new ForkJoinPool(poolSize,
+                pool -> {
+                    var t = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
+                    t.setName("Sodium-BatchFill-" + t.getId());
+                    t.setDaemon(true);
+                    return t;
+                },
+                null, false);
+    }
+
     private final Minecraft client;
 
     private ClientLevel level;
@@ -77,6 +99,9 @@ public class SodiumWorldRenderer {
 
     private RenderSectionManager renderSectionManager;
     private UniformBufferManager uniformBufferManager;
+
+    private CompletableFuture<Void> batchFillFuture = CompletableFuture.completedFuture(null);
+    private CameraTransform batchXf;
 
     /**
      * @return The SodiumWorldRenderer based on the current dimension
@@ -274,6 +299,35 @@ public class SodiumWorldRenderer {
         profiler.pop();
 
         Entity.setViewScale(Mth.clamp((double) this.client.options.getEffectiveRenderDistance() / 8.0D, 1.0D, 2.5D) * this.client.options.entityDistanceScaling().get());
+
+        var cameraPos = camera.position();
+        this.batchXf = new CameraTransform(cameraPos.x(), cameraPos.y(), cameraPos.z());
+        this.batchFillFuture = CompletableFuture.runAsync(() -> {
+            var lists = this.renderSectionManager.getRenderLists();
+            var blockFaceCulling = SodiumClientMod.options().performance.useBlockFaceCulling;
+            var tasks = new ArrayList<RecursiveAction>();
+            var it = lists.iterator(false);
+            while (it.hasNext()) {
+                var list = it.next();
+                var region = list.getRegion();
+                for (var pass : DefaultTerrainRenderPasses.ALL) {
+                    var storage = region.getStorage(pass);
+                    if (storage == null) continue;
+                    if (region.getResources() == null) continue;
+                    var batch = region.getCachedBatch(pass);
+                    var indexed = pass.isTranslucent() && this.useTranslucencySorting;
+                    tasks.add(new RecursiveAction() {
+                        protected void compute() {
+                            DefaultChunkRenderer.fillCommandBuffer(batch, region, storage, list,
+                                    batchXf, pass, blockFaceCulling, indexed);
+                        }
+                    });
+                }
+            }
+            if (!tasks.isEmpty()) {
+                ForkJoinTask.invokeAll(tasks);
+            }
+        }, BATCH_FILL_POOL);
     }
 
     private void processChunkEvents() {
@@ -295,6 +349,9 @@ public class SodiumWorldRenderer {
     }
 
     public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters, GpuSampler terrainSampler) {
+        this.batchFillFuture.join();
+        this.batchFillFuture = CompletableFuture.completedFuture(null);
+
         this.uniformBufferManager.update(matrices, fogParameters);
 
         this.renderSectionManager.getChunkRenderer().render(matrices, this.renderSectionManager.getRenderLists(), pass,

@@ -162,29 +162,33 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         this.drawContext.rotate();
     }
 
-    private static void fillCommandBuffer(MultiDrawBatch batch,
-                                          RenderRegion renderRegion,
-                                          SectionRenderDataStorage renderDataStorage,
-                                          ChunkRenderList renderList,
-                                          CameraTransform camera,
-                                          TerrainRenderPass pass,
-                                          boolean useBlockFaceCulling,
-                                          boolean useIndexedTessellation) {
+    public static void fillCommandBuffer(MultiDrawBatch batch,
+                                         RenderRegion renderRegion,
+                                         SectionRenderDataStorage renderDataStorage,
+                                         ChunkRenderList renderList,
+                                         CameraTransform camera,
+                                         TerrainRenderPass pass,
+                                         boolean useBlockFaceCulling,
+                                         boolean useIndexedTessellation) {
         batch.isFilled = true;
+        batch.size = 0;
 
-        var iterator = renderList.sectionsWithGeometryIterator(pass.isTranslucent());
+        byte[] sections = renderList.getSectionsWithGeometryArray();
+        int count = renderList.getSectionsWithGeometryCount();
 
-        if (iterator == null) {
+        if (count == 0) {
             return;
         }
 
-        // The origin of the chunk in world space
         int originX = renderRegion.getChunkX();
         int originY = renderRegion.getChunkY();
         int originZ = renderRegion.getChunkZ();
 
-        while (iterator.hasNext()) {
-            int sectionIndex = iterator.nextByteAsInt();
+        int step = pass.isTranslucent() ? -1 : 1;
+        int start = pass.isTranslucent() ? count - 1 : 0;
+
+        for (int i = start; i >= 0 && i < count; i += step) {
+            int sectionIndex = sections[i] & 0xFF;
 
             var pMeshData = renderDataStorage.getDataPointer(sectionIndex);
 

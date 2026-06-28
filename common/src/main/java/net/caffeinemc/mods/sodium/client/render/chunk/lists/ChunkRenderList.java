@@ -108,6 +108,10 @@ public class ChunkRenderList {
         return new ReversibleByteArrayIterator(this.sectionsWithGeometry, this.sectionsWithGeometryCount, reverse);
     }
 
+    public byte[] getSectionsWithGeometryArray() {
+        return this.sectionsWithGeometry;
+    }
+
     public @Nullable ByteIterator sectionsWithSpritesIterator() {
         if (this.sectionsWithSpritesCount == 0) {
             return null;

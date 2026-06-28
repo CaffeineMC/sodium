@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class RenderRegion {
     public static final int SECTION_VERTEX_COUNT_ESTIMATE = 756;
@@ -66,7 +67,7 @@ public class RenderRegion {
     private final Map<TerrainRenderPass, SectionRenderDataStorage> sectionRenderData = new Reference2ReferenceOpenHashMap<>();
     private DeviceResources resources;
 
-    private final Map<TerrainRenderPass, MultiDrawBatch> cachedBatches = new Reference2ReferenceOpenHashMap<>();
+    private final Map<TerrainRenderPass, MultiDrawBatch> cachedBatches = new ConcurrentHashMap<>();
     private int uniqueId = -1;
 
     public RenderRegion(int x, int y, int z, StagingBuffer stagingBuffer) {
