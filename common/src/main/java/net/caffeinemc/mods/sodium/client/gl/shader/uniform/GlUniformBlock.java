@@ -2,7 +2,6 @@ package net.caffeinemc.mods.sodium.client.gl.shader.uniform;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlBufferSlice;
 import net.caffeinemc.mods.sodium.mixin.core.GlBufferAccessor;
 import org.lwjgl.opengl.GL32C;
 
