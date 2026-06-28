@@ -11,6 +11,10 @@ public class SpriteUtilImpl implements SpriteUtil {
     public void markSpriteActive(@NonNull TextureAtlasSprite sprite) {
         Objects.requireNonNull(sprite);
 
+        if (!hasAnimation(sprite)) {
+            return;
+        }
+
         ((SpriteContentsExtension) sprite.contents()).sodium$setActive(true);
     }
 
