@@ -46,6 +46,12 @@ public class UniformBufferManager {
 
         this.sectionTimeInfo = RenderSystem.getDevice().createBuffer(() -> "Section time info", GpuBuffer.USAGE_UNIFORM_TEXEL_BUFFER | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_WRITE,
                 (long) maxRegions * 256L * Integer.BYTES);
+
+        ByteBuffer copy = MemoryUtil.memAlloc(maxRegions * 256 * Integer.BYTES);
+        MemoryUtil.memSet(copy, 0xFFFFFFFF);
+        RenderSystem.getDevice().createCommandEncoder().writeToBuffer(sectionTimeInfo.slice(), copy);
+        MemoryUtil.memFree(copy);
+
         if (RenderSystem.getDevice().getDeviceInfo().features().persistentMapping()) {
             this.sectionTimeInfoMap = this.sectionTimeInfo.map(false, true);
         } else {
@@ -99,6 +105,21 @@ public class UniformBufferManager {
 
     public GpuBuffer getSectionTimeInfo() {
         return this.sectionTimeInfo;
+    }
+
+    private static final ByteBuffer INVALID = MemoryUtil.memAlloc(1024);
+
+    static {
+        MemoryUtil.memSet(INVALID, 0xFFFFFFFF);
+    }
+
+    public void clearRegionTimes(int id) {
+        if (this.sectionTimeInfoMap != null) {
+            // 256 * 4 bytes = 1024
+            MemoryUtil.memSet(MemoryUtil.memAddress(this.sectionTimeInfoMap.data()) + (id * 1024L), 0xFFFFFFFF, 1024L);
+        } else {
+            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(this.sectionTimeInfo.slice(id * 1024L, 1024L), INVALID);
+        }
     }
 
     public void writeMeshTimes(int id, int sectionIndex, int relativeBuiltTime) {
