@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 public class UniformBufferManager {
     private static final int GLOBAL_UNIFORM_SIZE = 256;
     private static final int INITIAL_GLOBAL_UNIFORM_CAPACITY = 8;
+    private static final int TIME_BUFFER_SIZE_PER_REGION = RenderRegion.REGION_SIZE * Integer.BYTES;
 
     private final DynamicUniformStorage<GlobalUniforms> uniformStorage;
     private GpuBufferSlice uniformData;
@@ -44,8 +45,15 @@ public class UniformBufferManager {
 
         this.uniformStorage = new DynamicUniformStorage<>("Sodium terrain uniforms", GLOBAL_UNIFORM_SIZE, INITIAL_GLOBAL_UNIFORM_CAPACITY);
 
-        this.sectionTimeInfo = RenderSystem.getDevice().createBuffer(() -> "Section time info", GpuBuffer.USAGE_UNIFORM_TEXEL_BUFFER | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_WRITE,
-                (long) maxRegions * 256L * Integer.BYTES);
+        this.sectionTimeInfo = RenderSystem.getDevice().createBuffer(() -> "Section time info",
+                GpuBuffer.USAGE_UNIFORM_TEXEL_BUFFER | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_WRITE,
+                (long) maxRegions * TIME_BUFFER_SIZE_PER_REGION);
+
+        ByteBuffer copy = MemoryUtil.memAlloc(maxRegions * TIME_BUFFER_SIZE_PER_REGION);
+        MemoryUtil.memSet(copy, 0xFFFFFFFF);
+        RenderSystem.getDevice().createCommandEncoder().writeToBuffer(this.sectionTimeInfo.slice(), copy);
+        MemoryUtil.memFree(copy);
+
         if (RenderSystem.getDevice().getDeviceInfo().features().persistentMapping()) {
             this.sectionTimeInfoMap = this.sectionTimeInfo.map(false, true);
         } else {
@@ -101,16 +109,41 @@ public class UniformBufferManager {
         return this.sectionTimeInfo;
     }
 
-    public void writeMeshTimes(int id, int sectionIndex, int relativeBuiltTime) {
-        if ((((id * 256L) + sectionIndex) * 4L) >= this.sectionTimeInfo.size()) throw new IllegalStateException("Overflowed the mesh time buffer at " + id + "x" + sectionIndex);
+    private static final ByteBuffer INVALID = MemoryUtil.memAlloc(1024);
+
+    static {
+        MemoryUtil.memSet(INVALID, 0xFFFFFFFF);
+    }
+
+    public void clearRegionTimes(int id) {
+        long regionTimesOffset = (long) id * TIME_BUFFER_SIZE_PER_REGION;
+
         if (this.sectionTimeInfoMap != null) {
-            MemoryUtil.memPutInt(MemoryUtil.memAddress(this.sectionTimeInfoMap.data()) + (((id * 256L) + sectionIndex) * 4L), relativeBuiltTime);
+            long pRegionTimes = MemoryUtil.memAddress(this.sectionTimeInfoMap.data()) + regionTimesOffset;
+            MemoryUtil.memSet(pRegionTimes, 0xFFFFFFFF, TIME_BUFFER_SIZE_PER_REGION);
+        } else {
+            GpuBufferSlice slice = this.sectionTimeInfo.slice(regionTimesOffset, TIME_BUFFER_SIZE_PER_REGION);
+            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(slice, INVALID);
+        }
+    }
+
+    public void writeMeshTimes(int id, int sectionIndex, int relativeBuiltTime) {
+        long sectionTimeOffset = ((long) id * RenderRegion.REGION_SIZE + sectionIndex) * Integer.BYTES;
+
+        if (sectionTimeOffset >= this.sectionTimeInfo.size()) {
+            throw new IllegalStateException("Overflowed the mesh time buffer at " + id + "x" + sectionIndex);
+        }
+
+        if (this.sectionTimeInfoMap != null) {
+            long pSectionTime = MemoryUtil.memAddress(this.sectionTimeInfoMap.data()) + sectionTimeOffset;
+            MemoryUtil.memPutInt(pSectionTime, relativeBuiltTime);
         } else {
             try (MemoryStack stack = MemoryStack.stackPush()) {
-                ByteBuffer data = stack.malloc(4);
+                ByteBuffer data = stack.malloc(Integer.BYTES);
                 data.putInt(relativeBuiltTime);
                 data.flip();
-                RenderSystem.getDevice().createCommandEncoder().writeToBuffer(this.sectionTimeInfo.slice((((id * 256L) + sectionIndex) * 4L), 4), data);
+                GpuBufferSlice slice = this.sectionTimeInfo.slice(sectionTimeOffset, Integer.BYTES);
+                RenderSystem.getDevice().createCommandEncoder().writeToBuffer(slice, data);
             }
         }
     }

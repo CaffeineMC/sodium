@@ -694,9 +694,9 @@ public class RenderSectionManager {
         return results;
     }
 
-    public void cleanupAndFlip() {
+    public void cleanupAndFlip(UniformBufferManager ubm) {
         this.sectionCache.cleanup();
-        this.regions.update();
+        this.regions.update(ubm);
     }
 
     public void updateChunks(Viewport viewport, boolean updateImmediately) {

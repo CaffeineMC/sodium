@@ -36,7 +36,7 @@ public class RenderRegionManager {
         this.stagingBuffer = createStagingBuffer();
     }
 
-    public void update() {
+    public void update(UniformBufferManager ubm) {
         this.stagingBuffer.flip();
 
         Iterator<RenderRegion> it = this.regions.values()
@@ -48,7 +48,10 @@ public class RenderRegionManager {
 
             if (region.isEmpty()) {
                 region.delete();
-                if (region.getId() != -1) this.freeIds.release(region.getId());
+                if (region.getId() != -1) {
+                    this.freeIds.release(region.getId());
+                    ubm.clearRegionTimes(region.getId());
+                }
 
                 it.remove();
             }
