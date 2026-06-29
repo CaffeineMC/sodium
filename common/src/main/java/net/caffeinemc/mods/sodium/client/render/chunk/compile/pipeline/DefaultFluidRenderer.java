@@ -168,22 +168,15 @@ public class DefaultFluidRenderer {
         return true;
     }
 
-    private boolean isFullBlockFluidSelfVisible(BlockState blockState, Direction dir, float fluidHeight) {
-        // Compute a more accurate Voxel Shape for the fluid from the actual fluid height given
-        VoxelShape fluidShape;
-        if (fluidHeight >= 1.0F) {
-            fluidShape = Shapes.block();
-        } else {
-            fluidShape = Shapes.box(0.0D, 0.0D, 0.0D, 1.0D, fluidHeight, 1.0D);
-        }
-
+    private boolean isFullBlockFluidSelfVisible(BlockState blockState, Direction dir, VoxelShape fluidShape) {
         return this.isFluidSelfVisible(blockState, dir, fluidShape);
     }
 
     private boolean isFullBlockFluidSelfVisible(BlockState blockState, Direction dir) {
-        // Assume when not given the fluid height is 1.0f for default behavior
+        // Assume that is the fluid block is a full sized block
         return this.isFluidSelfVisible(blockState, dir, Shapes.block());
     }
+
     private boolean isFluidSideExposed(BlockAndTintGetter world, BlockState ownBlockState, BlockPos neighborPos, Direction facing, float height) {
         return this.isFluidSideExposed(ownBlockState, world.getBlockState(neighborPos), facing, height);
     }
@@ -244,11 +237,8 @@ public class DefaultFluidRenderer {
      * Calculates the combined visibility of a fluid face based on the neighboring block states and the fluid state.
      */
     private boolean isFullBlockFluidVisible(BlockAndTintGetter world, BlockPos pos, Direction dir, BlockState blockState, FluidState fluid) {
-        float fluidHeight = sampleFluidHeight(world, fluid.getType(), pos);
-        // DISCARD_SAMPLE returned is treated as 1.0f for default behavior
-        fluidHeight = (fluidHeight == DISCARD_SAMPLE) ? 1.0f : fluidHeight;
-
-        return isFullBlockFluidSelfVisible(blockState, dir, fluidHeight) && this.isFullBlockFluidSideVisible(world, pos, dir, fluid);
+        VoxelShape fluidShape = fluid.getShape(world, pos);
+        return isFullBlockFluidSelfVisible(blockState, dir, fluidShape) && this.isFullBlockFluidSideVisible(world, pos, dir, fluid);
     }
 
     /**
