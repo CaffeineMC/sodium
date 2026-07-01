@@ -12,3 +12,10 @@ Sodium [SodiumVersion]() for Minecraft [MCVersion]() improves stability by fixin
 - Fix crash "centroid is null," "allQuads is null," and "geometryPlanes is null" ([#3757](https://github.com/CaffeineMC/sodium/pull/3757))
 - Fix crashes resulting from unsafe concurrency in async culling "ArrayIndexOutOfBoundsException" ([#3756](https://github.com/CaffeineMC/sodium/pull/3756))
 - Fix incorrect GlyphVertex
+- Improved mod compatibility by using occlusion culling from camera render state ([#3764](https://github.com/CaffeineMC/sodium/pull/3764))
+- Optimize checks for immediate presentation in RSM ([#3768](https://github.com/CaffeineMC/sodium/pull/3768))
+- Cache max draw size in MultiDrawBatch instead of scanning every frame ([#3773](https://github.com/CaffeineMC/sodium/pull/3773))
+- Reimplement enhanced entity sorting. The option was ineffective as of 26.2, but should now work again.
+- Fix sections getting stuck fully "faded" as the color of the sky, often after explosions ([#3785](https://github.com/CaffeineMC/sodium/pull/3785))
+- Fix crash "sorter is null" ([#3787](https://github.com/CaffeineMC/sodium/pull/3787))
+- Internal code quality improvements and cleanup

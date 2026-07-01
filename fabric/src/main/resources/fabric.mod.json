@@ -97,7 +97,7 @@
     "movingelevators" : "<=1.4.7",
     "notenoughcrashes" : "<4.4.8",
     "noxesium" : "<2.3.3",
-    "reeses-sodium-options" : "<2.0.2",
+    "reeses-sodium-options" : "<=2.2.0",
     "fabric-api": "<0.145.1",
     "sodium-extra" : "<0.8.0",
     "audio_engine_tweaks" : "<1.2.12",
