@@ -146,7 +146,9 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext imp
 
         Vec3 offset = blockState.getOffset(pos);
         this.offset.set(x + offset.x, y + offset.y, z + offset.z);
+        this.useAmbientOcclusion = this.allowAO;
         this.defaultAo = this.allowAO && blockState.getLightEmission() == 0;
+        this.defaultLightMode = this.defaultAo ? LightMode.SMOOTH : LightMode.FLAT;
 
         this.lightDataCache.reset(pos, level);
         this.prepareCulling(this.enableCulling);
