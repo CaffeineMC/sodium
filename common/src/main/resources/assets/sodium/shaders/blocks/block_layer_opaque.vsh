@@ -17,17 +17,9 @@ uniform sampler2D u_LightTex; // The light map texture sampler
 
 uniform isamplerBuffer u_SectionTimeInfo;
 
-#ifdef VULKAN
-layout(push_constant) uniform PC {
-    vec3 u_RegionOffset;
-    int u_CurrentTime;
-    uint u_RegionID;
-};
-#else
 uniform vec3 u_RegionOffset;
 uniform int u_CurrentTime;
 uniform uint u_RegionID;
-#endif
 
 uvec3 _get_relative_chunk_coord(uint pos) {
     // Packing scheme is defined by LocalSectionIndex
