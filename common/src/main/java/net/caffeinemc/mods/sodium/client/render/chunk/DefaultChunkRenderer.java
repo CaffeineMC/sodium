@@ -1,9 +1,11 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.textures.GpuSampler;
 import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer;
+import net.caffeinemc.mods.sodium.client.gl.buffer.GlTexelBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.DrawCommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.MultiDrawBatch;
@@ -51,15 +53,13 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                        CameraTransform camera,
                        FogParameters parameters,
                        boolean indexedRenderingEnabled,
-                       GpuSampler terrainSampler) {
-        super.begin(renderPass, parameters, terrainSampler);
+                       GpuSampler terrainSampler, GpuBufferSlice uniformBuffer, GlTexelBuffer sectionTimeInfoTexture) {
+        super.begin(renderPass, parameters, terrainSampler, uniformBuffer, sectionTimeInfoTexture);
 
         final boolean useBlockFaceCulling = SodiumClientMod.options().performance.useBlockFaceCulling;
         final boolean useIndexedTessellation = renderPass.isTranslucent() && indexedRenderingEnabled;
 
         ChunkShaderInterface shader = this.activeProgram.getInterface();
-        shader.setProjectionMatrix(matrices.projection());
-        shader.setModelViewMatrix(matrices.modelView());
 
         Iterator<ChunkRenderList> iterator = renderLists.iterator(renderPass.isTranslucent());
 
@@ -102,7 +102,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                 tessellation = this.prepareTessellation(commandList, resources);
             }
 
-            setModelMatrixUniforms(shader, region, camera, resources.prepareChunkData(commandList));
+            setModelMatrixUniforms(shader, region, camera);
             executeDrawBatch(commandList, tessellation, batch);
         }
 
@@ -320,17 +320,8 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         return planes;
     }
 
-    private static void setModelMatrixUniforms(ChunkShaderInterface shader, RenderRegion region, CameraTransform camera, GlBuffer chunKData) {
-        float x = getCameraTranslation(region.getOriginX(), camera.intX, camera.fracX);
-        float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
-        float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
-
-        shader.setRegionOffset(x, y, z);
-        shader.setChunkData(chunKData, Math.toIntExact(System.currentTimeMillis() - region.getCreationTime()));
-    }
-
-    private static float getCameraTranslation(int chunkBlockPos, int cameraBlockPos, float cameraPos) {
-        return (chunkBlockPos - cameraBlockPos) - cameraPos;
+    private static void setModelMatrixUniforms(ChunkShaderInterface shader, RenderRegion region, CameraTransform camera) {
+        shader.setRegionData(camera, region);
     }
 
     private GlTessellation prepareTessellation(CommandList commandList, RenderRegion.DeviceResources resources) {

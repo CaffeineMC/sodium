@@ -1,8 +1,8 @@
 #version 330 core
 
 #import <sodium:include/fog.glsl>
+#import <sodium:include/globals.glsl>
 #import <sodium:include/chunk_vertex.glsl>
-#import <sodium:include/chunk_matrices.glsl>
 
 out vec4 v_Color;
 out vec2 v_TexCoord;
@@ -13,18 +13,13 @@ flat out uint v_Material;
 out vec2 v_FragDistance;
 out float fadeFactor;
 #endif
-
-uniform vec3 u_RegionOffset;
-uniform vec2 u_TexCoordShrink;
-
 uniform sampler2D u_LightTex; // The light map texture sampler
 
-uniform int u_CurrentTime;
-uniform float u_FadePeriodInv;
+uniform isamplerBuffer u_SectionTimeInfo;
 
-layout(std140) uniform ChunkData {
-    ivec4 u_chunkFades[64]; // Packing into ivec4 is needed to avoid wasting 3KB...
-};
+uniform vec3 u_RegionOffset;
+uniform int u_CurrentTime;
+uniform uint u_RegionID;
 
 uvec3 _get_relative_chunk_coord(uint pos) {
     // Packing scheme is defined by LocalSectionIndex
@@ -46,7 +41,7 @@ void main() {
     v_FragDistance = getFragDistance(position);
 
     int chunkId = int(_draw_id);
-    int chunkFade = u_chunkFades[chunkId >> 2][chunkId & 3];
+    int chunkFade = texelFetch(u_SectionTimeInfo, int((u_RegionID * 256u) + uint(chunkId))).r;
     int fadeTime = u_CurrentTime - chunkFade;
     float elapsed = float(fadeTime);
     float fade = clamp(float(u_CurrentTime - chunkFade) * u_FadePeriodInv, 0.0, 1.0);

@@ -12,6 +12,7 @@
   },
   "client": [
     "core.CommandEncoderAccessor",
+    "core.GlBufferAccessor",
     "core.GlCommandEncoderAccessor",
     "core.GpuDeviceAccessor",
     "core.MinecraftMixin",

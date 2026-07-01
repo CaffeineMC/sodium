@@ -452,15 +452,6 @@ public class RenderSectionManager {
         this.markGraphDirty();
     }
 
-    public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters, GpuSampler terrainSampler) {
-        RenderDevice device = RenderDevice.INSTANCE;
-        CommandList commandList = device.createCommandList();
-
-        this.chunkRenderer.render(matrices, commandList, this.renderLists, pass, new CameraTransform(x, y, z), fogParameters, this.sortBehavior != SortBehavior.OFF, terrainSampler);
-
-        commandList.flush();
-    }
-
     public void tickVisibleRenders() {
         Iterator<ChunkRenderList> it = this.renderLists.iterator();
 
@@ -503,7 +494,7 @@ public class RenderSectionManager {
         return this.renderTree == null || this.renderTree.isBoxVisible(x1, y1, z1, x2, y2, z2, this::isSectionEmpty);
     }
 
-    public void processChunkBuilds(Viewport viewport) {
+    public void processChunkBuilds(Viewport viewport, UniformBufferManager uniforms) {
         var results = this.collectChunkBuildResults();
 
         if (results.isEmpty()) {
@@ -511,7 +502,7 @@ public class RenderSectionManager {
         }
 
         // processing build results can cause invalidation of the render lists or change the connectivity of the graph. They don't necessarily imply each other, so they're tracked separately.
-        int changes = this.processChunkBuildResults(results, viewport);
+        int changes = this.processChunkBuildResults(results, viewport, uniforms);
         if ((changes & SectionInfoChange.GRAPH) != 0) {
             this.markGraphDirty();
         }
@@ -554,7 +545,7 @@ public class RenderSectionManager {
                         || this.isSectionFrustumVisible(viewport, section.adjacentEast));
     }
 
-    private int processChunkBuildResults(ArrayList<BuilderTaskOutput> results, Viewport viewport) {
+    private int processChunkBuildResults(ArrayList<BuilderTaskOutput> results, Viewport viewport, UniformBufferManager uniforms) {
         var sectionsWithOutputs = this.applyBuildOutputs(results);
         var outputs = new ArrayList<BuilderTaskOutput>();
 
@@ -615,7 +606,7 @@ public class RenderSectionManager {
         }
 
         var uploadStart = System.nanoTime();
-        this.regions.uploadResults(RenderDevice.INSTANCE.createCommandList(), outputs);
+        this.regions.uploadResults(RenderDevice.INSTANCE.createCommandList(), outputs, uniforms);
         var uploadDuration = System.nanoTime() - uploadStart;
 
         // insert and update the upload duration estimator with the total upload size,
@@ -720,9 +711,9 @@ public class RenderSectionManager {
         return results;
     }
 
-    public void cleanupAndFlip() {
+    public void cleanupAndFlip(UniformBufferManager ubm) {
         this.sectionCache.cleanup();
-        this.regions.update();
+        this.regions.update(ubm);
     }
 
     public void updateChunks(Viewport viewport, boolean updateImmediately) {
@@ -1184,6 +1175,15 @@ public class RenderSectionManager {
     public @NonNull SortedRenderLists getRenderLists() {
         return this.renderLists;
     }
+
+    public ChunkRenderer getChunkRenderer() {
+        return this.chunkRenderer;
+    }
+
+    public int getFrame() {
+        return this.frame;
+    }
+
 
     public boolean isSectionBuilt(int x, int y, int z) {
         var section = this.getRenderSection(x, y, z);
