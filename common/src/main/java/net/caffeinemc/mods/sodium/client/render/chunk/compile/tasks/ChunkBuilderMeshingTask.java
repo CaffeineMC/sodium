@@ -234,12 +234,19 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
 
         if (sortEnabled) {
             if (reuseUploadedData) {
-                output.markAsNotContainingNewIndexData();
+                // TODO: problem: when reusing index data, we may be doing so based on uploaded indexes that are not corresponding to the translucent data that ends up getting set on the section.
+                output.setContainsNewIndexData(false);
+
+                // set a sorter so that it retains a copy of the geometry planes for potential re-integration into the triggering system
+                if (translucentData instanceof DynamicData dynamicData) {
+                    output.setSorter(dynamicData.getSorter(false));
+                }
             } else if (translucentData instanceof PresentTranslucentData present) {
                 try {
                     var sorter = present.getSorter(true);
                     sorter.writeIndexBuffer(this);
                     output.setSorter(sorter);
+                    output.setContainsNewIndexData(true);
                 } catch (Exception ex) {
                     // Create a new crash report for exceptions thrown during sorting
                     throw this.fillCrashInfo(CrashReport.forThrowable(ex, "Encountered exception while writing index buffer for translucent geometry"), slice, null);

@@ -14,19 +14,19 @@ public class ChunkSortOutput extends BuilderTaskOutput {
     public ChunkSortOutput(RenderSection render, int buildTime, Sorter data) {
         this(render, buildTime);
         this.setSorter(data);
+        this.setContainsNewIndexData(true);
     }
 
     public void setSorter(Sorter sorter) {
         this.sorter = sorter;
-        this.containsNewIndexData = true;
+    }
+
+    public void setContainsNewIndexData(boolean containsNewIndexData) {
+        this.containsNewIndexData = containsNewIndexData;
     }
 
     public Sorter getSorter() {
         return this.sorter;
-    }
-
-    public void markAsNotContainingNewIndexData() {
-        this.containsNewIndexData = false;
     }
 
     public boolean containsNewIndexData() {
