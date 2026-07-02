@@ -121,7 +121,7 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext imp
         if (this.tintCacheIndex == tintIndex) {
             return this.tintCacheValue;
         } else {
-            int tintColor = ColorARGB.toABGR(this.computeTintColor(level, state, pos, tintIndex));
+            int tintColor = this.computeTintColor(level, state, pos, tintIndex);
             this.tintCacheIndex = tintIndex;
             this.tintCacheValue = tintColor;
             return tintColor;
