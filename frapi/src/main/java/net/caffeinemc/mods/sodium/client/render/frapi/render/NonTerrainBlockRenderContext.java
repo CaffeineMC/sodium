@@ -41,7 +41,6 @@ import net.minecraft.client.color.block.BlockTintSource;
 import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.TriState;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import net.minecraft.world.phys.Vec3;
@@ -166,14 +165,10 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext imp
 
     @Override
     protected void processQuad(MutableQuadViewImpl quad) {
-        final TriState aoMode = quad.ambientOcclusion();
+        // The quad's ambientOcclusion TriState overrides the model default and TRUE only has an effect if AO is enabled globally, per the FRAPI MutableQuadView#ambientOcclusion contract.
+        final boolean useAo = this.allowAO && quad.ambientOcclusion().toBoolean(this.defaultAo);
+        final LightMode lightMode = useAo ? LightMode.SMOOTH : LightMode.FLAT;
         final SodiumShadeMode shadeMode = quad.getShadeMode();
-        final LightMode lightMode;
-        if (aoMode == TriState.DEFAULT) {
-            lightMode = this.defaultLightMode;
-        } else {
-            lightMode = this.useAmbientOcclusion && aoMode != TriState.FALSE && this.defaultAo ? LightMode.SMOOTH : LightMode.FLAT;
-        }
         final boolean emissive = quad.emissive();
 
         this.tintQuad(quad);
