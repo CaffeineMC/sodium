@@ -20,6 +20,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBe
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicData;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.DynamicSorter;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.PresentTranslucentData;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.TranslucentData;
 import net.caffeinemc.mods.sodium.client.services.PlatformLevelRenderHooks;
@@ -179,14 +180,24 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
         profiler.popPush("translucency sorting");
 
         boolean reuseUploadedData = false;
+        boolean reuseTSData = false;
         TranslucentData translucentData = null;
+        DynamicSorter reusedSorter = null;
         if (sortEnabled) {
             TranslucentData oldData = this.section.getTranslucentData();
 
-            // Reusing non-dynamic data leads to attempting to sort with it again,
-            // which throws an exception since it can only generate a sorter once.
-            // To prevent this, reusing data is prevented when forceSort is enabled and the data is not dynamic.
-            if (this.forceSort && !(oldData instanceof DynamicData)) {
+            if (oldData instanceof DynamicData dynamicData) {
+                // if the geometry planes have already been cleared from the dynamic sorter,
+                // we cannot reuse this TS data as it cannot be re-integrated into the triggering system
+                reusedSorter = dynamicData.getSorter(false);
+                if (reusedSorter.getGeometryPlanes() == null) {
+                    reusedSorter = null;
+                    oldData = null;
+                }
+            } else if (this.forceSort) {
+                // Reusing non-dynamic data leads to attempting to sort with it again,
+                // which throws an exception since it can only generate a sorter once.
+                // To prevent this, reusing data is prevented when forceSort is enabled and the data is not dynamic.
                 oldData = null;
             }
 
@@ -196,7 +207,8 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
                 // Create a new crash report for exceptions thrown during sort preparation
                 throw this.fillCrashInfo(CrashReport.forThrowable(ex, "Encountered exception while preparing for translucency sorting"), slice, null);
             }
-            reuseUploadedData = !this.forceSort && translucentData == oldData;
+            reuseTSData = translucentData == oldData;
+            reuseUploadedData = !this.forceSort && reuseTSData;
         }
 
         profiler.popPush("meshing");
@@ -233,14 +245,16 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
         var output = new ChunkBuildOutput(this.section, this.submitTime, translucentData, renderData.build(), meshes, this.blockingTask);
 
         if (sortEnabled) {
+            // we need to set the reused sorter on reused dynamic data regardless of whether the uploaded index data is being reused
+            if (reuseTSData) {
+                // set a sorter so that it retains a copy of the geometry planes for potential re-integration into the triggering system
+                // assumption: reusedSorter is only set when we're using dynamic data
+                output.setSorter(reusedSorter);
+            }
+
             if (reuseUploadedData) {
                 // TODO: problem: when reusing index data, we may be doing so based on uploaded indexes that are not corresponding to the translucent data that ends up getting set on the section.
                 output.setContainsNewIndexData(false);
-
-                // set a sorter so that it retains a copy of the geometry planes for potential re-integration into the triggering system
-                if (translucentData instanceof DynamicData dynamicData) {
-                    output.setSorter(dynamicData.getSorter(false));
-                }
             } else if (translucentData instanceof PresentTranslucentData present) {
                 try {
                     var sorter = present.getSorter(true);
