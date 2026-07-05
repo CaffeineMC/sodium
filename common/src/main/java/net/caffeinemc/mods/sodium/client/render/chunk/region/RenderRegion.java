@@ -389,8 +389,8 @@ public class RenderRegion {
     };
 
     public static class DeviceResources {
-        private final RegionAllocatorHandle geometryArena;
-        private final RegionAllocatorHandle indexArena;
+        private final RegionAllocatorHandle geometryHandle;
+        private final RegionAllocatorHandle indexHandle;
 
         /**
          * The buffer arenas return offsets in terms of how many stride units big things
@@ -403,33 +403,33 @@ public class RenderRegion {
         public DeviceResources(RenderRegion region) {
             int stride = ChunkMeshFormats.getCurrent().getVertexFormat().getVertexSize();
 
-            this.geometryArena = region.arenaAggregator.getGeometryBufferAllocator(region, stride, region.geometryChangeConsumer);
-            this.indexArena = region.arenaAggregator.getIndexBufferAllocator(region, Integer.BYTES, region.indexChangeConsumer);
+            this.geometryHandle = region.arenaAggregator.getGeometryBufferAllocator(region, stride, region.geometryChangeConsumer);
+            this.indexHandle = region.arenaAggregator.getIndexBufferAllocator(region, Integer.BYTES, region.indexChangeConsumer);
         }
 
         public GpuBuffer getGeometryBuffer() {
-            return this.geometryArena.getBufferObject();
+            return this.geometryHandle.getBufferObject();
         }
 
         public GpuBuffer getIndexBuffer() {
-            return this.indexArena.getBufferObject();
+            return this.indexHandle.getBufferObject();
         }
 
         public void delete() {
-            this.geometryArena.deleteSingleOwner();
-            this.indexArena.deleteSingleOwner();
+            this.geometryHandle.deleteSingleOwner();
+            this.indexHandle.deleteSingleOwner();
         }
 
         public RegionAllocatorHandle getGeometryAllocator() {
-            return this.geometryArena;
+            return this.geometryHandle;
         }
 
         public RegionAllocatorHandle getIndexAllocator() {
-            return this.indexArena;
+            return this.indexHandle;
         }
 
         public boolean shouldDelete() {
-            return this.geometryArena.isEmpty() && this.indexArena.isEmpty();
+            return this.geometryHandle.isEmpty() && this.indexHandle.isEmpty();
         }
     }
 }

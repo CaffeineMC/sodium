@@ -59,7 +59,7 @@ public class RegionAllocatorHandle implements AllocatorBase, SizedTreeMap.Sized 
 
     @Override
     public boolean isEmpty() {
-        return this.backingArena.isEmpty();
+        return this.backingArena.isOwnerEmpty(this);
     }
 
     @Override

@@ -31,12 +31,13 @@ public class SharedBufferArena extends DefragmentingBufferArena implements Sized
 
     @Override
     public void deleteSingleOwner(RegionAllocatorHandle owner) {
-        // don't delete on single-owner deletion
+        // don't delete the buffer when a single owner is deleted
         this.removeOwner(owner);
     }
 
     public void deleteShared() {
-        super.deleteSingleOwner(null);
+        this.arenaBuffer.close();
+
         if (this.compactionPair != null) {
             this.compactionPair.compactionPair = null;
             this.compactionPair = null;
@@ -58,6 +59,12 @@ public class SharedBufferArena extends DefragmentingBufferArena implements Sized
     public boolean isEmpty() {
         // NOTE: the arena is only empty when there are no owners, they may currently have no data allocated
         return this.ownersByUsed.isEmpty();
+    }
+
+    @Override
+    boolean isOwnerEmpty(RegionAllocatorHandle owner) {
+        // an individual owner is empty when it holds no segments
+        return owner.used <= 0;
     }
 
     public boolean isEmptying() {

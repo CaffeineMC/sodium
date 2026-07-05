@@ -12,6 +12,17 @@ public class SingleOwnerBufferArena extends BufferArena {
     }
 
     @Override
+    public void deleteSingleOwner(RegionAllocatorHandle owner) {
+        this.arenaBuffer.close();
+    }
+
+    @Override
+    boolean isOwnerEmpty(RegionAllocatorHandle owner) {
+        // the sole owner is empty exactly when the arena is empty
+        return this.isEmpty();
+    }
+
+    @Override
     protected void handleResizeUploads(RegionAllocatorHandle owner, List<PendingUpload> queue, long totalUploadBytes) {
         // resize to the new estimated capacity
         this.resize(estimateNewCapacityAfterUpload(owner.getFillFractionInv(), queue));

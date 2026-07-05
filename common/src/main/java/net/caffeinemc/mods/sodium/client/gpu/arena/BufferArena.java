@@ -209,14 +209,20 @@ public abstract class BufferArena implements AllocatorBase {
         this.checkAssertions();
     }
 
-    public void deleteSingleOwner(RegionAllocatorHandle owner) {
-        this.arenaBuffer.close();
-    }
+    public abstract void deleteSingleOwner(RegionAllocatorHandle owner);
 
     @Override
     public boolean isEmpty() {
         return this.used <= 0;
     }
+
+    /**
+     * Whether the given owner holds no allocations, which is distinct from the whole arena being empty when the arena is shared.
+     *
+     * @param owner the owner to check
+     * @return true if the owner has no allocations, false otherwise
+     */
+    abstract boolean isOwnerEmpty(RegionAllocatorHandle owner);
 
     @Override
     public GpuBuffer getBufferObject() {
