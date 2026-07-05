@@ -32,12 +32,15 @@ public final class VKIndirectDrawBatch extends MultiDrawBatch {
     @Override
     public void draw(DrawContext dc) {
         VKIndirectContext context = (VKIndirectContext) dc;
-        MemoryUtil.memCopy(this.pCommands,
-                MemoryUtil.memAddress(context.mappedView.data()) + ((long) context.currentOffset * VkDrawIndexedIndirectCommand.SIZEOF),
-                (long) this.size * VkDrawIndexedIndirectCommand.SIZEOF);
-        GpuBufferSlice commands = context.mappedView.slice().slice(((long) context.currentOffset * VkDrawIndexedIndirectCommand.SIZEOF), (long) this.size * VkDrawIndexedIndirectCommand.SIZEOF);
+        var byteSize = this.size * VkDrawIndexedIndirectCommand.SIZEOF;
+
+        var offset = context.addCommand(byteSize);
+
+        MemoryUtil.memCopy(this.pCommands, MemoryUtil.memAddress(context.mappedView.data()) + ((long) offset), byteSize);
+
+        GpuBufferSlice commands = context.mappedView.slice().slice(offset, byteSize);
+
         context.getPass().drawIndexedIndirect(commands, this.size);
-        context.currentOffset += this.size;
     }
 
     @Override
