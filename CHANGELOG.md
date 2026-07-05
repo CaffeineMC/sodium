@@ -17,10 +17,13 @@ This generally improves performance and avoids the frame rate dropping when the 
 - Fix broken block tinting by not incorrectly converting to the wrong color format
 - Fix fluid color overrides not being applied ([#3729](https://github.com/CaffeineMC/sodium/pull/3729))
 - Fix crash "getResources is null" ([#3752](https://github.com/CaffeineMC/sodium/pull/3752))
-- Fix crash "centroid is null," "allQuads is null," and "geometryPlanes is null" ([#3757](https://github.com/CaffeineMC/sodium/pull/3757))
+- Fix crash "centroid is null," "allQuads is null," and "geometryPlanes is null" ([#3757](https://github.com/CaffeineMC/sodium/pull/3757), [#3805](https://github.com/CaffeineMC/sodium/pull/3805))
 - Fix crashes resulting from unsafe concurrency in async culling "ArrayIndexOutOfBoundsException" ([#3756](https://github.com/CaffeineMC/sodium/pull/3756))
 - Improved mod compatibility by using occlusion culling from camera render state ([#3764](https://github.com/CaffeineMC/sodium/pull/3764))
 - Optimize checks for immediate presentation in RSM ([#3768](https://github.com/CaffeineMC/sodium/pull/3768))
 - Cache max draw size in MultiDrawBatch instead of scanning every frame ([#3773](https://github.com/CaffeineMC/sodium/pull/3773))
 - Fix crash "sorter is null" ([#3787](https://github.com/CaffeineMC/sodium/pull/3787))
 - Internal code quality improvements and cleanup
+- Remove extra ABGR conversion to fix incorrect falling block coloration ([#3798](https://github.com/CaffeineMC/sodium/pull/3798))
+- Fix non-terrain block lighting ([#3800](https://github.com/CaffeineMC/sodium/pull/3800))
+- Fix command line not being restored after NeoForge early window init ([#3803](https://github.com/CaffeineMC/sodium/pull/3803))
