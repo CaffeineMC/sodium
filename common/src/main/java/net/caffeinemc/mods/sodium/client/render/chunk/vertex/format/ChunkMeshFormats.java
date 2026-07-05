@@ -4,4 +4,8 @@ import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl.Compact
 
 public class ChunkMeshFormats {
     public static final ChunkVertexType COMPACT = new CompactChunkVertex();
+
+    public static ChunkVertexType getCurrent() {
+        return COMPACT;
+    }
 }

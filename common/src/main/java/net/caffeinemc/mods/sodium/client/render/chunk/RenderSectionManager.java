@@ -124,10 +124,10 @@ public class RenderSectionManager {
     public RenderSectionManager(ClientLevel level, int renderDistance, SortBehavior sortBehavior) {
         this.meshTaskSizeEstimator = new MeshTaskSizeEstimator(level);
 
-        this.chunkRenderer = new DefaultChunkRenderer(ChunkMeshFormats.COMPACT);
+        this.chunkRenderer = new DefaultChunkRenderer(ChunkMeshFormats.getCurrent());
 
         this.level = level;
-        this.builder = new ChunkBuilder(level, ChunkMeshFormats.COMPACT);
+        this.builder = new ChunkBuilder(level, ChunkMeshFormats.getCurrent());
 
         this.renderDistance = renderDistance;
         this.sortBehavior = sortBehavior;

@@ -331,7 +331,7 @@ public class RenderRegion {
          * amounts of data which makes the returned offsets incompatible.
          */
         public DeviceResources(StagingBuffer stagingBuffer) {
-            int stride = ChunkMeshFormats.COMPACT.getVertexFormat().getVertexSize();
+            int stride = ChunkMeshFormats.getCurrent().getVertexFormat().getVertexSize();
 
             this.geometryArena = new GlBufferArena(REGION_SIZE * SECTION_VERTEX_COUNT_ESTIMATE, stride, stagingBuffer);
             this.indexArena = new GlBufferArena(REGION_SIZE * SECTION_INDEX_COUNT_ESTIMATE, Integer.BYTES, stagingBuffer);
