@@ -10,7 +10,7 @@ object BuildConfig {
     val PARCHMENT_VERSION: String? = "2024.11.17"
 
     // https://semver.org/
-    val MOD_VERSION: String = "0.8.12-beta.2"
+    val MOD_VERSION: String = "0.8.12"
 
     val MINECRAFT_VERSION_SHORT: String = MINECRAFT_VERSION
             .replace("-snapshot-", "s")
