@@ -38,6 +38,8 @@ import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWVidMode;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -141,24 +143,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                 .addPage(this.buildPerformancePage(builder));
     }
 
-private OptionPageBuilder buildGeneralPage(ConfigBuilder builder) {
-        int monitorRefreshRate = 60;
-        try {
-            long windowHandle = Minecraft.getInstance().getWindow().handle();
-            long monitorHandle = org.lwjgl.glfw.GLFW.glfwGetWindowMonitor(windowHandle);
-            if (monitorHandle == 0L) {
-                monitorHandle = org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor();
-            }
-            org.lwjgl.glfw.GLFWVidMode vidMode = org.lwjgl.glfw.GLFW.glfwGetVideoMode(monitorHandle);
-            if (vidMode != null) {
-                monitorRefreshRate = vidMode.refreshRate();
-            }
-        } catch (Exception e) {
-            // fallback if window context is uninitialized during early config building
-        }
-        int dynamicMaxFps = Math.max(260, ((monitorRefreshRate + 9) / 10) * 10 + 10);
-        final int finalMaxFps = dynamicMaxFps;
-        
+    private OptionPageBuilder buildGeneralPage(ConfigBuilder builder) {
         var generalPage = builder.createOptionPage().setName(Component.translatable("sodium.options.pages.general"));
         generalPage.addOptionGroup(builder.createOptionGroup()
                 .addOption(
@@ -320,8 +305,10 @@ private OptionPageBuilder buildGeneralPage(ConfigBuilder builder) {
                                 .setStorageHandler(this.vanillaStorage)
                                 .setName(Component.translatable("options.framerateLimit"))
                                 .setTooltip(Component.translatable("sodium.options.fps_limit.tooltip"))
-                                .setValueFormatter(value -> value >= finalMaxFps ? Component.translatable("options.framerateLimit.max") : Component.literal(value + " FPS"))
-                                .setRange(10, finalMaxFps, 10)
+                                .setValueFormatter(ControlValueFormatterImpls.fpsLimit())
+                                .setValidatorProvider(
+                                        (state) -> new Range(10, this.getMaxFramerateLimit(), 10),
+                                        ConfigState.UPDATE_ON_REBUILD, ConfigState.UPDATE_ON_APPLY)
                                 .setDefaultValue(60)
                                 .setBinding(this.vanillaOpts.framerateLimit()::set, this.vanillaOpts.framerateLimit()::get)
                 )
@@ -345,8 +332,50 @@ private OptionPageBuilder buildGeneralPage(ConfigBuilder builder) {
                                 .setBinding(this.vanillaOpts.showAutosaveIndicator()::set, this.vanillaOpts.showAutosaveIndicator()::get)
                 )
         );
+        generalPage.addOptionGroup(builder.createOptionGroup().addOption(builder.createEnumOption(Identifier.fromNamespaceAndPath("sodium", "general.graphics_api"),
+                        PreferredGraphicsApi.class)
+                .setStorageHandler(this.vanillaStorage)
+                .setName(Component.translatable("options.graphicsApi"))
+                .setTooltip(i -> {
+                    if (i == PreferredGraphicsApi.VULKAN) {
+                        return Component.translatable("options.graphicsApi.tooltip.vulkan");
+                    } else {
+                        return Component.translatable("options.graphicsApi.tooltip");
+                    }
+                })
+                .setElementNameProvider(EnumOptionBuilder.nameProviderFrom(
+                        Component.translatable("options.graphicsApi.default"),
+                        Component.translatable("options.graphicsApi.opengl"),
+                        Component.literal("Prefer Vulkan")))
+                .setDefaultValue(PreferredGraphicsApi.DEFAULT)
+                .setFlags(OptionFlag.REQUIRES_GAME_RESTART)
+                .setBinding((value) -> this.vanillaOpts.preferredGraphicsBackend().set(value), () -> this.vanillaOpts.preferredGraphicsBackend().get())));
 
         return generalPage;
+    }
+
+    /**
+     * this computes an appropriate maximum for the framerate limit slider based on the current
+     * monitor's refresh rate, so users on high-refresh-rate displays aren't capped at 260
+     * + falls back to the vanilla default max if the window/monitor context isn't available yet
+     * (e.g. during early config building).
+     */
+    private int getMaxFramerateLimit() {
+        int monitorRefreshRate = 60;
+        try {
+            long windowHandle = Minecraft.getInstance().getWindow().handle();
+            long monitorHandle = GLFW.glfwGetWindowMonitor(windowHandle);
+            if (monitorHandle == 0L) {
+                monitorHandle = GLFW.glfwGetPrimaryMonitor();
+            }
+            GLFWVidMode vidMode = GLFW.glfwGetVideoMode(monitorHandle);
+            if (vidMode != null) {
+                monitorRefreshRate = vidMode.refreshRate();
+            }
+        } catch (Exception e) {
+            // fallback if window/monitor context is unavailable
+        }
+        return Math.max(260, ((monitorRefreshRate + 9) / 10) * 10 + 10);
     }
 
     private OptionPageBuilder buildQualityPage(ConfigBuilder builder) {
