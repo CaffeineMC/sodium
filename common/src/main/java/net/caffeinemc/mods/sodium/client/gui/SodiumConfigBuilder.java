@@ -141,7 +141,24 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                 .addPage(this.buildPerformancePage(builder));
     }
 
-    private OptionPageBuilder buildGeneralPage(ConfigBuilder builder) {
+private OptionPageBuilder buildGeneralPage(ConfigBuilder builder) {
+        int monitorRefreshRate = 60;
+        try {
+            long windowHandle = Minecraft.getInstance().getWindow().handle();
+            long monitorHandle = org.lwjgl.glfw.GLFW.glfwGetWindowMonitor(windowHandle);
+            if (monitorHandle == 0L) {
+                monitorHandle = org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor();
+            }
+            org.lwjgl.glfw.GLFWVidMode vidMode = org.lwjgl.glfw.GLFW.glfwGetVideoMode(monitorHandle);
+            if (vidMode != null) {
+                monitorRefreshRate = vidMode.refreshRate();
+            }
+        } catch (Exception e) {
+            // fallback if window context is uninitialized during early config building
+        }
+        int dynamicMaxFps = Math.max(260, ((monitorRefreshRate + 9) / 10) * 10 + 10);
+        final int finalMaxFps = dynamicMaxFps;
+        
         var generalPage = builder.createOptionPage().setName(Component.translatable("sodium.options.pages.general"));
         generalPage.addOptionGroup(builder.createOptionGroup()
                 .addOption(
@@ -303,8 +320,8 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setStorageHandler(this.vanillaStorage)
                                 .setName(Component.translatable("options.framerateLimit"))
                                 .setTooltip(Component.translatable("sodium.options.fps_limit.tooltip"))
-                                .setValueFormatter(ControlValueFormatterImpls.fpsLimit())
-                                .setRange(10, 260, 10)
+                                .setValueFormatter(value -> value >= finalMaxFps ? Component.translatable("options.framerateLimit.max") : Component.literal(value + " FPS"))
+                                .setRange(10, finalMaxFps, 10)
                                 .setDefaultValue(60)
                                 .setBinding(this.vanillaOpts.framerateLimit()::set, this.vanillaOpts.framerateLimit()::get)
                 )
@@ -328,24 +345,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setBinding(this.vanillaOpts.showAutosaveIndicator()::set, this.vanillaOpts.showAutosaveIndicator()::get)
                 )
         );
-        generalPage.addOptionGroup(builder.createOptionGroup().addOption(builder.createEnumOption(Identifier.fromNamespaceAndPath("sodium", "general.graphics_api"),
-                PreferredGraphicsApi.class)
-                .setStorageHandler(this.vanillaStorage)
-                .setName(Component.translatable("options.graphicsApi"))
-                .setTooltip(i -> {
-                    if (i == PreferredGraphicsApi.VULKAN) {
-                        return Component.translatable("options.graphicsApi.tooltip.vulkan");
-                    } else {
-                        return Component.translatable("options.graphicsApi.tooltip");
-                    }
-                })
-                .setElementNameProvider(EnumOptionBuilder.nameProviderFrom(
-                        Component.translatable("options.graphicsApi.default"),
-                        Component.translatable("options.graphicsApi.opengl"),
-                        Component.literal("Prefer Vulkan")))
-                .setDefaultValue(PreferredGraphicsApi.DEFAULT)
-                .setFlags(OptionFlag.REQUIRES_GAME_RESTART)
-                .setBinding((value) -> this.vanillaOpts.preferredGraphicsBackend().set(value), () -> this.vanillaOpts.preferredGraphicsBackend().get())));
+
         return generalPage;
     }
 
