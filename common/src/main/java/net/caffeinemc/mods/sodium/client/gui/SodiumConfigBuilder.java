@@ -333,7 +333,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                 )
         );
         generalPage.addOptionGroup(builder.createOptionGroup().addOption(builder.createEnumOption(Identifier.fromNamespaceAndPath("sodium", "general.graphics_api"),
-                        PreferredGraphicsApi.class)
+                PreferredGraphicsApi.class)
                 .setStorageHandler(this.vanillaStorage)
                 .setName(Component.translatable("options.graphicsApi"))
                 .setTooltip(i -> {
@@ -363,7 +363,8 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
     private int getMaxFramerateLimit() {
         int monitorRefreshRate = 60;
         try {
-            long windowHandle = Minecraft.getInstance().getWindow().handle();
+        if (this.window != null){
+            long windowHandle = this.window.handle();
             long monitorHandle = GLFW.glfwGetWindowMonitor(windowHandle);
             if (monitorHandle == 0L) {
                 monitorHandle = GLFW.glfwGetPrimaryMonitor();
@@ -372,6 +373,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
             if (vidMode != null) {
                 monitorRefreshRate = vidMode.refreshRate();
             }
+        }
         } catch (Exception e) {
             // fallback if window/monitor context is unavailable
         }
