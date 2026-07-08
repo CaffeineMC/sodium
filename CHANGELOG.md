@@ -23,3 +23,5 @@ Sodium [SodiumVersion]() for Minecraft [MCVersion]() improves stability by fixin
 - Remove extra ABGR conversion to fix incorrect falling block coloration ([#3798](https://github.com/CaffeineMC/sodium/pull/3798))
 - Fix crash when rendering very many sections on Vulkan by making the indirect context ring buffer dynamically sized
 - Fix command line not being restored after NeoForge early window init ([#3803](https://github.com/CaffeineMC/sodium/pull/3803))
+
+Iris 1.11.1 is not compatible, and you will need to download an appropriate version from Modrinth, or if no such version is available there, from the Iris Discord server.
