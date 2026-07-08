@@ -27,3 +27,5 @@ This generally improves performance and avoids the frame rate dropping when the 
 - Remove extra ABGR conversion to fix incorrect falling block coloration ([#3798](https://github.com/CaffeineMC/sodium/pull/3798))
 - Fix non-terrain block lighting ([#3800](https://github.com/CaffeineMC/sodium/pull/3800))
 - Fix command line not being restored after NeoForge early window init ([#3803](https://github.com/CaffeineMC/sodium/pull/3803))
+
+Iris versions 1.11.1 and older are not compatible, and you will need to download an appropriate version from Modrinth, or if no such version is available there, from the Iris Discord server.
