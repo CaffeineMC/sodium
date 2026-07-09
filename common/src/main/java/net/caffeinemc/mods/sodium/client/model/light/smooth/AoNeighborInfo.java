@@ -8,7 +8,7 @@ import net.minecraft.util.Mth;
  * the occlusion of each corner.
  */
 enum AoNeighborInfo {
-    DOWN(new Direction[] { Direction.WEST, Direction.EAST, Direction.NORTH, Direction.SOUTH }, 0.5F) {
+    DOWN(new Direction[] { Direction.WEST, Direction.EAST, Direction.NORTH, Direction.SOUTH }) {
         @Override
         public void calculateCornerWeights(float x, float y, float z, float[] out) {
             final float u = Mth.clamp(z, 0.0f, 1.0f);
@@ -38,7 +38,7 @@ enum AoNeighborInfo {
             return Mth.clamp(y, 0.0F, 1.0F);
         }
     },
-    UP(new Direction[] { Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH }, 1.0F) {
+    UP(new Direction[] { Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH }) {
         @Override
         public void calculateCornerWeights(float x, float y, float z, float[] out) {
             final float u = Mth.clamp(z, 0.0f, 1.0f);
@@ -68,7 +68,7 @@ enum AoNeighborInfo {
             return 1.0f - Mth.clamp(y, 0.0F, 1.0F);
         }
     },
-    NORTH(new Direction[] { Direction.UP, Direction.DOWN, Direction.EAST, Direction.WEST }, 0.8F) {
+    NORTH(new Direction[] { Direction.UP, Direction.DOWN, Direction.EAST, Direction.WEST }) {
         @Override
         public void calculateCornerWeights(float x, float y, float z, float[] out) {
             final float u = Mth.clamp(1.0f - x, 0.0f, 1.0f);
@@ -98,7 +98,7 @@ enum AoNeighborInfo {
             return Mth.clamp(z, 0.0F, 1.0F);
         }
     },
-    SOUTH(new Direction[] { Direction.WEST, Direction.EAST, Direction.DOWN, Direction.UP }, 0.8F) {
+    SOUTH(new Direction[] { Direction.WEST, Direction.EAST, Direction.DOWN, Direction.UP }) {
         @Override
         public void calculateCornerWeights(float x, float y, float z, float[] out) {
             final float u = Mth.clamp(y, 0.0f, 1.0f);
@@ -128,7 +128,7 @@ enum AoNeighborInfo {
             return 1.0f - Mth.clamp(z, 0.0F, 1.0F);
         }
     },
-    WEST(new Direction[] { Direction.UP, Direction.DOWN, Direction.NORTH, Direction.SOUTH }, 0.6F) {
+    WEST(new Direction[] { Direction.UP, Direction.DOWN, Direction.NORTH, Direction.SOUTH }) {
         @Override
         public void calculateCornerWeights(float x, float y, float z, float[] out) {
             final float u = Mth.clamp(z, 0.0f, 1.0f);
@@ -158,7 +158,7 @@ enum AoNeighborInfo {
             return Mth.clamp(x, 0.0F, 1.0F);
         }
     },
-    EAST(new Direction[] { Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH }, 0.6F) {
+    EAST(new Direction[] { Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH }) {
         @Override
         public void calculateCornerWeights(float x, float y, float z, float[] out) {
             final float u = Mth.clamp(z, 0.0f, 1.0f);
@@ -195,15 +195,8 @@ enum AoNeighborInfo {
      */
     public final Direction[] faces;
 
-    /**
-     * The constant brightness modifier for this face. This data exists to emulate the results of the OpenGL lighting
-     * model which gives a faux directional light appearance to blocks in the game. Not currently used.
-     */
-    public final float strength;
-
-    AoNeighborInfo(Direction[] directions, float strength) {
+    AoNeighborInfo(Direction[] directions) {
         this.faces = directions;
-        this.strength = strength;
     }
 
     /**

@@ -287,7 +287,7 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
         this.setNominalFace(quad.direction());
         this.setDiffuseShade(quad.materialInfo().shade());
         this.setTintIndex(quad.materialInfo().tintIndex());
-        this.setAmbientOcclusion(((BakedQuadView) (Object) quad).hasAO() ? TriState.DEFAULT : TriState.FALSE); // TODO: TRUE, or DEFAULT?
+        this.setAmbientOcclusion(((BakedQuadView) (Object) quad).hasAO() ? TriState.DEFAULT : TriState.FALSE);
         this.setItemRenderType(quad.materialInfo().itemRenderType());
         this.setRenderType(quad.materialInfo().layer());
         this.setAnimated(quad.materialInfo().sprite().contents().isAnimated());

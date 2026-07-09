@@ -191,8 +191,12 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
 
     protected void prepareAoInfo(boolean modelAo) {
         this.useAmbientOcclusion = this.slice.useAmbientOcclusion();
-        // Ignore the incorrect IDEA warning here.
-        this.defaultLightMode = this.useAmbientOcclusion && modelAo && (this.state != null && PlatformBlockAccess.getInstance().getLightEmission(this.state, this.level, this.pos) == 0) ? LightMode.SMOOTH : LightMode.FLAT;
+
+        boolean shouldUseSmoothLighting = this.useAmbientOcclusion && modelAo &&
+                this.state != null &&
+                PlatformBlockAccess.getInstance().getLightEmission(this.state, this.level, this.pos) == 0;
+
+        this.defaultLightMode = shouldUseSmoothLighting ? LightMode.SMOOTH : LightMode.FLAT;
     }
 
     protected void shadeQuad(MutableQuadViewImpl quad, LightMode lightMode, boolean emissive, SodiumShadeMode shadeMode) {
