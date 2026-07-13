@@ -1,5 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.immediate.model;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
@@ -84,15 +86,14 @@ public class ImprovedItemModelBuilderBase {
     The coordinate of the end point of the quad (B) is (anchor, max).
     Side quad AB is on the plane of anchor x.*/
 
-    // Stores the side faces using BitSet maps. Each direction has its own map to avoid performance overhead of
-    // enumerating all faces from different directions together.
-    // Each map contains bit sets that represent "planes" of anchors in the same direction.
-    // The bits in the bit set indicate which parts of the plane have per-pixel side quads.
+    // Stores the side faces using maps split by direction. Each direction has its own map to avoid performance overhead
+    // of enumerating all faces from different directions together. Each map contains planes of anchors in the same
+    // direction, and each plane tracks which parts have per-pixel side quads.
     public record FaceStorage(
-            Int2ObjectMap<BitSet> up,
-            Int2ObjectMap<BitSet> down,
-            Int2ObjectMap<BitSet> left,
-            Int2ObjectMap<BitSet> right
+            Int2ObjectMap<FacePlane> up,
+            Int2ObjectMap<FacePlane> down,
+            Int2ObjectMap<FacePlane> left,
+            Int2ObjectMap<FacePlane> right
     ) {
         public FaceStorage() {
             this(
@@ -144,7 +145,7 @@ public class ImprovedItemModelBuilderBase {
         }
 
         private static void tryInsertFace(
-                Int2ObjectMap<BitSet> storage,
+                Int2ObjectMap<FacePlane> storage,
                 SideDirection faceFacing,
                 SpriteContents sprite,
                 int frame,
@@ -165,64 +166,96 @@ public class ImprovedItemModelBuilderBase {
 
             // Only insert a per-pixel side quad if the side face is exposed (not blocked by opaque neighbors).
             if (neighborTransparent) {
-                // Calculate the anchor and the pixel-level offset on the plane of the anchor,
+                // Calculate the anchor and the pixel-level offset on the plane of the anchor.
                 var anchor = faceFacing.isHorizontal() ? pixelY : pixelX;
                 var offset = faceFacing.isHorizontal() ? pixelX : pixelY;
 
                 // Mark the corresponding part of the plane of given anchor as occupied.
-                storage.computeIfAbsent(anchor, _ -> new BitSet()).set(offset);
+                storage.computeIfAbsent(anchor, _ -> new FacePlane()).set(
+                        offset,
+                        frame,
+                        getPixelColor(sprite, frame, pixelX, pixelY)
+                );
             }
         }
 
-        /*
-          <--merged-->    <-----merged----->
-        001111111111110000111111111111111111
-          ^           ^
-          |           |
-        min = ?     max = index - 1 = 14 - 1 = 13
-        accum = 0   accum = 12
-                    min = index - accum = 14 - 12 = 2
-        SideFace(facing, anchor, min=2, max=13)
-         */
+        private static int getPixelColor(SpriteContents sprite, int frame, int pixelX, int pixelY) {
+            var animatedTexture = sprite.animatedTexture;
+
+            if (animatedTexture == null) {
+                return sprite.originalImage.getPixel(pixelX, pixelY);
+            }
+
+            return sprite.originalImage.getPixel(
+                    pixelX + animatedTexture.getFrameX(frame) * sprite.width(),
+                    pixelY + animatedTexture.getFrameY(frame) * sprite.height()
+            );
+        }
+
         private static void buildMergedFaces(
                 Collection<SideFace> faceOutput,
-                Int2ObjectMap<BitSet> storage,
+                Int2ObjectMap<FacePlane> storage,
                 SideDirection faceFacing
         ) {
             // Merge all planes (anchors) in the map.
             for (int anchor : storage.keySet()) {
-                var faces = storage.get(anchor); // Get the plane bit set.
-                var accum = 0; // Initialize the merge accumulation counter.
+                var plane = storage.get(anchor); // Get the plane.
+                var faces = plane.faces();
+                var min = -1;
+                var previous = -1;
 
-                // For all bits in the plane, scan the occupied bits (per-pixel side quads) and merge consecutive bits
-                // into segments as SideFace.
-                // The scan starts from the position (index) of the first per-pixel side quad (first set bit) to the
-                // last per-pixel side quad (highest set bit).
-                // The scan runs to faces.length() + 1 is to ensure that the final accumulated segment is also emitted,
-                // since the bit immediately after the highest set bit is always clear.
-                for (var index = faces.nextSetBit(0); index < faces.length() + 1; index ++) {
-                    if (faces.get(index)) {
-                        // The bit is set, accumulate the length of the segment.
-                        accum ++;
-                    } else {
-                        // The bit is clear, meaning that the previous consecutive segment has ended, or a new segment
-                        // has not started yet.
-                        // If we do have a previously accumulated segment,
-                        if (accum > 0) {
-                            // Pop the segment out to the faceOutput as a merged SideFace.
-                            faceOutput.add(new SideFace(
-                                    faceFacing,
-                                    index - accum,
-                                    index - 1,
-                                    anchor
-                            ));
-                        }
-
-                        // Reset the accumulation counter for new segments.
-                        accum = 0;
+                for (var index = faces.nextSetBit(0); index >= 0; index = faces.nextSetBit(index + 1)) {
+                    if (min < 0) {
+                        min = index;
+                    } else if (index != previous + 1 || !plane.hasSameColors(previous, index)) {
+                        faceOutput.add(new SideFace(faceFacing, min, previous, anchor));
+                        min = index;
                     }
+
+                    previous = index;
+                }
+
+                if (min >= 0) {
+                    faceOutput.add(new SideFace(faceFacing, min, previous, anchor));
                 }
             }
+        }
+    }
+
+    private static class FacePlane {
+        private final BitSet faces = new BitSet();
+        private final Int2ObjectMap<Int2IntMap> colorsByIndex = new Int2ObjectOpenHashMap<>();
+
+        public BitSet faces() {
+            return this.faces;
+        }
+
+        public void set(int index, int frame, int color) {
+            this.faces.set(index);
+            this.colorsByIndex
+                    .computeIfAbsent(index, _ -> new Int2IntOpenHashMap())
+                    .put(frame, color);
+        }
+
+        public boolean hasSameColors(int firstIndex, int secondIndex) {
+            var firstColors = this.colorsByIndex.get(firstIndex);
+            var secondColors = this.colorsByIndex.get(secondIndex);
+
+            if (firstColors == null || secondColors == null || firstColors.size() != secondColors.size()) {
+                return false;
+            }
+
+            for (Int2IntMap.Entry entry : firstColors.int2IntEntrySet()) {
+                if (!secondColors.containsKey(entry.getIntKey())) {
+                    return false;
+                }
+
+                if (secondColors.get(entry.getIntKey()) != entry.getIntValue()) {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 

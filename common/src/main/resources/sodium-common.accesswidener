@@ -24,3 +24,7 @@ accessible field net/minecraft/client/resources/model/cuboid/ItemModelGenerator 
 accessible method net/minecraft/client/resources/model/cuboid/ItemModelGenerator isTransparent (Lnet/minecraft/client/renderer/texture/SpriteContents;IIIII)Z
 accessible class net/minecraft/client/resources/model/cuboid/ItemModelGenerator$SideDirection
 accessible method net/minecraft/client/resources/model/cuboid/ItemModelGenerator$SideDirection isHorizontal ()Z
+accessible field net/minecraft/client/renderer/texture/SpriteContents originalImage Lcom/mojang/blaze3d/platform/NativeImage;
+accessible field net/minecraft/client/renderer/texture/SpriteContents animatedTexture Lnet/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture;
+accessible method net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture getFrameX (I)I
+accessible method net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture getFrameY (I)I
