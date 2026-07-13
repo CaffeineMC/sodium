@@ -333,10 +333,10 @@ public abstract class ImprovedItemModelBuilderBase<D> {
 
             // Expand side quads along their normals to cover the layer below without gaps
             switch (faceFacing) {
-                case UP -> {
-                    fromX -= layerBias;
-                    toX += layerBias;
-                    fromY = toY = fromY + layerBias;
+                case RIGHT -> {
+                    fromY += layerBias;
+                    toY -= layerBias;
+                    fromX = toX = toX + layerBias;
                 }
                 case DOWN -> {
                     fromX -= layerBias;
@@ -348,10 +348,10 @@ public abstract class ImprovedItemModelBuilderBase<D> {
                     toY -= layerBias;
                     fromX = toX = fromX - layerBias;
                 }
-                case RIGHT -> {
-                    fromY += layerBias;
-                    toY -= layerBias;
-                    fromX = toX = toX + layerBias;
+                case UP -> {
+                    fromX -= layerBias;
+                    toX += layerBias;
+                    fromY = toY = fromY + layerBias;
                 }
             }
 
