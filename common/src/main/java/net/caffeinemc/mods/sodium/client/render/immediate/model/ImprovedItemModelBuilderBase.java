@@ -3,16 +3,25 @@ package net.caffeinemc.mods.sodium.client.render.immediate.model;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
+import net.minecraft.client.renderer.block.dispatch.ModelState;
 import net.minecraft.client.renderer.texture.SpriteContents;
+import net.minecraft.client.resources.model.ModelBaker;
+import net.minecraft.client.resources.model.cuboid.CuboidFace;
+import net.minecraft.client.resources.model.geometry.BakedQuad;
+import net.minecraft.client.resources.model.geometry.QuadCollection;
+import net.minecraft.core.Direction;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.SideDirection;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.isTransparent;
+import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.*;
 
-public class ImprovedItemModelBuilderBase {
+public abstract class ImprovedItemModelBuilderBase<D> {
+    // Offset to apply to the side-quads of item models per overlay layer to prevent z-fighting
+    public static final float LAYER_XY_BIAS = 0.005F;
 
     public static Collection<SideFace> buildSideFaces(SpriteContents sprite) {
         var width = sprite.width();
@@ -22,8 +31,8 @@ public class ImprovedItemModelBuilderBase {
         // For each pixel in each frame, attempts to insert side faces of the pixel into the face storage.
         // All frames are included to avoid missing sides on animated textures with inconsistent shapes.
         sprite.getUniqueFrames().forEach(frame -> {
-            for (var pixelY = 0; pixelY < height; pixelY ++) {
-                for (var pixelX = 0; pixelX < width; pixelX ++) {
+            for (var pixelY = 0; pixelY < height; pixelY++) {
+                for (var pixelX = 0; pixelX < width; pixelX++) {
                     storage.tryInsertPixel(
                             sprite,
                             frame,
@@ -200,10 +209,10 @@ public class ImprovedItemModelBuilderBase {
                 // last per-pixel side quad (highest set bit).
                 // The scan runs to faces.length() + 1 is to ensure that the final accumulated segment is also emitted,
                 // since the bit immediately after the highest set bit is always clear.
-                for (var index = faces.nextSetBit(0); index < faces.length() + 1; index ++) {
+                for (var index = faces.nextSetBit(0); index < faces.length() + 1; index++) {
                     if (faces.get(index)) {
                         // The bit is set, accumulate the length of the segment.
-                        accum ++;
+                        accum++;
                     } else {
                         // The bit is clear, meaning that the previous consecutive segment has ended, or a new segment
                         // has not started yet.
@@ -233,5 +242,137 @@ public class ImprovedItemModelBuilderBase {
             int anchor
     ) {
 
+    }
+
+    public abstract BakedQuad bakeQuad(
+            ModelBaker.Interner interner,
+            Vector3fc from,
+            Vector3fc to,
+            CuboidFace.UVs uvs,
+            BakedQuad.MaterialInfo materialInfo,
+            Direction normal,
+            ModelState modelState,
+            D extraFaceData
+    );
+
+    public void bakeSideQuads(
+            QuadCollection.Builder builder,
+            ModelBaker.Interner interner,
+            BakedQuad.MaterialInfo materialInfo,
+            ModelState modelState,
+            D extraFaceData
+    ) {
+        var sprite = materialInfo.sprite().contents();
+
+        var xScale = 16.0F / sprite.width();
+        var yScale = 16.0F / sprite.height();
+
+        var layerBias = materialInfo.tintIndex() * ImprovedItemModelBuilderBase.LAYER_XY_BIAS;
+
+        for (ImprovedItemModelBuilderBase.SideFace sideFace : ImprovedItemModelBuilderBase.buildSideFaces(sprite)) {
+            var faceFacing = sideFace.facing();
+            var faceAnchor = sideFace.anchor();
+            var faceMin = sideFace.min();
+            var faceMax = sideFace.max();
+
+            // Calculate the start coordinate and length of the side quad using the side face properties, as described
+            // in the diagram in FaceStorage.
+            float minX = faceFacing.isHorizontal() ? faceMin : faceAnchor;
+            float minY = faceFacing.isHorizontal() ? faceAnchor : faceMin;
+            float length = faceMax - faceMin + 1.0F;
+
+            var u0 = 0.0F;
+            var v0 = 0.0F;
+
+            var u1 = 0.0F;
+            var v1 = 0.0F;
+
+            if (faceFacing.isHorizontal()) {
+                u0 = minX;
+                v0 = minY + UV_SHRINK;
+                u1 = minX + length;
+                v1 = minY + 1.0F - UV_SHRINK;
+            } else {
+                u0 = minX + UV_SHRINK;
+                v0 = minY + length;
+                u1 = minX + 1.0F - UV_SHRINK;
+                v1 = minY;
+            }
+
+            var fromX = minX;
+            var fromY = minY;
+            var toX = minX;
+            var toY = minY;
+
+            switch (faceFacing) {
+                case UP -> {
+                    toX = minX + length;
+                }
+                case LEFT -> {
+                    toY = minY + length;
+                }
+                case DOWN -> {
+                    fromY = minY + 1.0F;
+                    toY = minY + 1.0F;
+                    toX = minX + length;
+                }
+                case RIGHT -> {
+                    fromX = minX + 1.0F;
+                    toX = minX + 1.0F;
+                    toY = minY + length;
+                }
+            }
+
+            fromX *= xScale;
+            fromY *= yScale;
+            toX *= xScale;
+            toY *= yScale;
+
+            fromY = 16.0F - fromY;
+            toY = 16.0F - toY;
+
+            // Offset side quads along their normals to prevent z-fighting
+            // and expand them to cover the geometry without gaps.
+            switch (faceFacing) {
+                case RIGHT -> {
+                    fromY += layerBias;
+                    toY -= layerBias;
+                    fromX = toX = toX + layerBias;
+                }
+                case DOWN -> {
+                    fromX -= layerBias;
+                    toX += layerBias;
+                    fromY = toY = toY - layerBias;
+                }
+                case LEFT -> {
+                    fromY += layerBias;
+                    toY -= layerBias;
+                    fromX = toX = fromX - layerBias;
+                }
+                case UP -> {
+                    fromX -= layerBias;
+                    toX += layerBias;
+                    fromY = toY = fromY + layerBias;
+                }
+            }
+
+            builder.addUnculledFace(
+                    this.bakeQuad(
+                            interner,
+                            new Vector3f(fromX, fromY, MIN_Z),
+                            new Vector3f(toX, toY, MAX_Z),
+                            new CuboidFace.UVs(
+                                    u0 * xScale,
+                                    v0 * yScale,
+                                    u1 * xScale,
+                                    v1 * yScale
+                            ),
+                            materialInfo,
+                            faceFacing.getDirection(),
+                            modelState,
+                            extraFaceData
+                    )
+            );
+        }
     }
 }
