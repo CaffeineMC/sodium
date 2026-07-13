@@ -134,11 +134,11 @@ public class ImprovedItemModelBuilderBase {
         public List<SideFace> buildSideFaces() {
             var output = new ReferenceArrayList<SideFace>();
 
-            // Merges and collects all faces from different directions.
-            buildMergedFaces(output, this.up, SideDirection.UP);
-            buildMergedFaces(output, this.down, SideDirection.DOWN);
-            buildMergedFaces(output, this.left, SideDirection.LEFT);
-            buildMergedFaces(output, this.right, SideDirection.RIGHT);
+            // Collects all faces from different directions.
+            buildFaces(output, this.up, SideDirection.UP);
+            buildFaces(output, this.down, SideDirection.DOWN);
+            buildFaces(output, this.left, SideDirection.LEFT);
+            buildFaces(output, this.right, SideDirection.RIGHT);
 
             return output;
         }
@@ -174,53 +174,18 @@ public class ImprovedItemModelBuilderBase {
             }
         }
 
-        /*
-          <--merged-->    <-----merged----->
-        001111111111110000111111111111111111
-          ^           ^
-          |           |
-        min = ?     max = index - 1 = 14 - 1 = 13
-        accum = 0   accum = 12
-                    min = index - accum = 14 - 12 = 2
-        SideFace(facing, anchor, min=2, max=13)
-         */
-        private static void buildMergedFaces(
+        private static void buildFaces(
                 Collection<SideFace> faceOutput,
                 Int2ObjectMap<BitSet> storage,
                 SideDirection faceFacing
         ) {
-            // Merge all planes (anchors) in the map.
+            // Collect all planes (anchors) in the map.
             for (int anchor : storage.keySet()) {
                 var faces = storage.get(anchor); // Get the plane bit set.
-                var accum = 0; // Initialize the merge accumulation counter.
 
-                // For all bits in the plane, scan the occupied bits (per-pixel side quads) and merge consecutive bits
-                // into segments as SideFace.
-                // The scan starts from the position (index) of the first per-pixel side quad (first set bit) to the
-                // last per-pixel side quad (highest set bit).
-                // The scan runs to faces.length() + 1 is to ensure that the final accumulated segment is also emitted,
-                // since the bit immediately after the highest set bit is always clear.
-                for (var index = faces.nextSetBit(0); index < faces.length() + 1; index ++) {
-                    if (faces.get(index)) {
-                        // The bit is set, accumulate the length of the segment.
-                        accum ++;
-                    } else {
-                        // The bit is clear, meaning that the previous consecutive segment has ended, or a new segment
-                        // has not started yet.
-                        // If we do have a previously accumulated segment,
-                        if (accum > 0) {
-                            // Pop the segment out to the faceOutput as a merged SideFace.
-                            faceOutput.add(new SideFace(
-                                    faceFacing,
-                                    index - accum,
-                                    index - 1,
-                                    anchor
-                            ));
-                        }
-
-                        // Reset the accumulation counter for new segments.
-                        accum = 0;
-                    }
+                // Collect each occupied bit as a per-pixel SideFace.
+                for (var index = faces.nextSetBit(0); index >= 0; index = faces.nextSetBit(index + 1)) {
+                    faceOutput.add(new SideFace(faceFacing, index, index, anchor));
                 }
             }
         }
