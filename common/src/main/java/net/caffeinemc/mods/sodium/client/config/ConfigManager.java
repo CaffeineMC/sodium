@@ -116,7 +116,7 @@ public class ConfigManager {
         modConfigs.sort(Comparator.comparing(ModOptions::name));
 
         if (sodiumModOptions == null) {
-            throw new RuntimeException("Sodium mod config not found");
+            throw new RuntimeException("Sodium's config could not be found; the game is in a broken state most likely caused by an earlier error. Please check the game log (latest.log) for errors first instead of reporting this as a Sodium-related crash.");
         }
         modConfigs.add(0, sodiumModOptions);
 
