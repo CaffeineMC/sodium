@@ -21,7 +21,7 @@ import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.*;
 
 public abstract class ImprovedItemModelBuilderBase<D> {
     // Offset to apply to the side-quads of item models per overlay layer to prevent z-fighting
-    public static final float LAYER_XY_BIAS = 0.0001F;
+    public static final float LAYER_XY_BIAS = 0.005F;
 
     public static Collection<SideFace> buildSideFaces(SpriteContents sprite) {
         var width = sprite.width();
