@@ -13,6 +13,8 @@ import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.Sid
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.isTransparent;
 
 public class ImprovedItemModelBuilderBase {
+    // Offset to apply to the side-quads of item models per overlay layer to prevent z-fighting
+    public static final float LAYER_XY_BIAS = 0.0001F;
 
     public static Collection<SideFace> buildSideFaces(SpriteContents sprite) {
         var width = sprite.width();

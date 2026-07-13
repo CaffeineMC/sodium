@@ -11,9 +11,7 @@ import net.minecraft.client.resources.model.geometry.QuadCollection;
 import net.neoforged.neoforge.client.model.ExtraFaceData;
 import org.joml.Vector3f;
 
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.MIN_Z;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.MAX_Z;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.UV_SHRINK;
+import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.*;
 
 public class ImprovedItemModelBuilder {
 
@@ -28,6 +26,8 @@ public class ImprovedItemModelBuilder {
 
 		var xScale = 16.0F / sprite.width();
 		var yScale = 16.0F / sprite.height();
+
+		var layerBias = materialInfo.tintIndex() * ImprovedItemModelBuilderBase.LAYER_XY_BIAS;
 
 		for (ImprovedItemModelBuilderBase.SideFace sideFace : ImprovedItemModelBuilderBase.buildSideFaces(sprite)) {
 			var faceFacing = sideFace.facing();
@@ -91,12 +91,29 @@ public class ImprovedItemModelBuilder {
 			fromY = 16.0F - fromY;
 			toY = 16.0F - toY;
 
-			switch (faceFacing) {
-				case RIGHT -> fromX = toX;
-				case DOWN -> fromY = toY;
-				case LEFT -> toX = fromX;
-				case UP -> toY = fromY;
-			}
+            // Expand side quads along their normals to cover the layer below without gaps
+            switch (faceFacing) {
+                case UP -> {
+                    fromX -= layerBias;
+                    toX += layerBias;
+                    fromY = toY = fromY + layerBias;
+                }
+                case DOWN -> {
+                    fromX -= layerBias;
+                    toX += layerBias;
+                    fromY = toY = toY - layerBias;
+                }
+                case LEFT -> {
+                    fromY += layerBias;
+                    toY -= layerBias;
+                    fromX = toX = fromX - layerBias;
+                }
+                case RIGHT -> {
+                    fromY += layerBias;
+                    toY -= layerBias;
+                    fromX = toX = toX + layerBias;
+                }
+            }
 
 			builder.addUnculledFace(
 					FaceBakery.bakeQuad(
