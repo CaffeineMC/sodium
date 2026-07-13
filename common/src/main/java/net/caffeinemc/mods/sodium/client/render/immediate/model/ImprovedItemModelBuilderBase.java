@@ -331,7 +331,8 @@ public abstract class ImprovedItemModelBuilderBase<D> {
             fromY = 16.0F - fromY;
             toY = 16.0F - toY;
 
-            // Expand side quads along their normals to cover the layer below without gaps
+            // Offset side quads along their normals to prevent z-fighting
+            // and expand them to cover the geometry without gaps.
             switch (faceFacing) {
                 case RIGHT -> {
                     fromY += layerBias;
