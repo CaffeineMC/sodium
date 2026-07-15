@@ -12,7 +12,6 @@ import org.joml.Vector3f;
 
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.MIN_Z;
 import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.MAX_Z;
-import static net.minecraft.client.resources.model.cuboid.ItemModelGenerator.UV_SHRINK;
 
 public class ImprovedItemModelBuilder {
 
@@ -46,15 +45,15 @@ public class ImprovedItemModelBuilder {
 			var v1 = 0.0F;
 
 			if (faceFacing.isHorizontal()) {
-				u0 = minX + UV_SHRINK;
-				v0 = minY + UV_SHRINK;
-				u1 = minX + length - UV_SHRINK;
-				v1 = minY + 1.0F - UV_SHRINK;
+				u0 = minX;
+				v0 = minY;
+				u1 = minX + length;
+				v1 = minY + 1.0F;
 			} else {
-				u0 = minX + UV_SHRINK;
-				v0 = minY + length - UV_SHRINK;
-				u1 = minX + 1.0F - UV_SHRINK;
-				v1 = minY + UV_SHRINK;
+				u0 = minX;
+				v0 = minY + length;
+				u1 = minX + 1.0F;
+				v1 = minY;
 			}
 
 			var fromX = minX;
