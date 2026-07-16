@@ -40,7 +40,7 @@ public interface PlatformRuntimeInformation {
     boolean platformUsesRefmap();
 
     /**
-     * Returns if a mod is in the mods folder during loading.
+     * Returns if a mod is in the mods folder during loading. Separate multi-word mod IDs with dashes. On neoforge, they will be replaced with underscores.
      */
     boolean isModInLoadingList(String modId);
 
