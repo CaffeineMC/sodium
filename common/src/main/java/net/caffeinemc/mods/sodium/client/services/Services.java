@@ -27,4 +27,15 @@ public class Services {
         LOGGER.debug("Loaded {} for service {}", loadedService, clazz);
         return loadedService;
     }
+
+    public static <T extends ServiceProvider<U>, U> U loadConditionalOr(Class<T> clazz, Supplier<U> supplier) {
+        final U loadedService = ServiceLoader.load(clazz).stream()
+                .map(ServiceLoader.Provider::get)
+                .filter(ServiceProvider::isEnabled)
+                .map(ServiceProvider::get)
+                .findFirst()
+                .orElseGet(supplier);
+        LOGGER.debug("Loaded {} for service {}", loadedService, clazz);
+        return loadedService;
+    }
 }

@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public interface PlatformModelEmitter {
-    PlatformModelEmitter INSTANCE = Services.loadOr(PlatformModelEmitter.class, DefaultModelEmitter::new);
+    PlatformModelEmitter INSTANCE = Services.loadConditionalOr(PlatformModelEmitterProvider.class, DefaultModelEmitter::new);
 
     static PlatformModelEmitter getInstance() {
         return INSTANCE;
