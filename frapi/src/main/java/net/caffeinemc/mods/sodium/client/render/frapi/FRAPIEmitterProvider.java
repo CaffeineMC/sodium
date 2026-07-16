@@ -7,8 +7,7 @@ import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 public class FRAPIEmitterProvider implements PlatformModelEmitterProvider {
     @Override
     public boolean isEnabled() {
-        return PlatformRuntimeInformation.getInstance().isModInLoadingList("fabric-renderer-api-v1") 
-            || PlatformRuntimeInformation.getInstance().isModInLoadingList("fabric_renderer_api_v1");
+        return PlatformRuntimeInformation.getInstance().isModInLoadingList("fabric-renderer-api-v1");
     }
 
     @Override
