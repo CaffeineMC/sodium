@@ -47,17 +47,17 @@ public class ImprovedItemModelBuilder {
 			var u1 = 0.0F;
 			var v1 = 0.0F;
 
-			if (faceFacing.isHorizontal()) {
-				u0 = minX + UV_SHRINK;
-				v0 = minY + UV_SHRINK;
-				u1 = minX + length - UV_SHRINK;
-				v1 = minY + 1.0F - UV_SHRINK;
-			} else {
-				u0 = minX + UV_SHRINK;
-				v0 = minY + length - UV_SHRINK;
-				u1 = minX + 1.0F - UV_SHRINK;
-				v1 = minY + UV_SHRINK;
-			}
+            if (faceFacing.isHorizontal()) {
+                u0 = minX;
+                v0 = minY + UV_SHRINK;
+                u1 = minX + length;
+                v1 = minY + 1.0F - UV_SHRINK;
+            } else {
+                u0 = minX + UV_SHRINK;
+                v0 = minY + length;
+                u1 = minX + 1.0F - UV_SHRINK;
+                v1 = minY;
+            }
 
 			var fromX = minX;
 			var fromY = minY;
