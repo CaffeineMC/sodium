@@ -5,6 +5,7 @@ import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
+import net.caffeinemc.mods.sodium.client.gl.buffer.GlBufferTarget;
 import net.caffeinemc.mods.sodium.client.gl.buffer.GlTexelBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
@@ -59,6 +60,7 @@ public class UniformBufferManager {
         ByteBuffer copy = MemoryUtil.memAlloc(maxRegions * TIME_BUFFER_SIZE_PER_REGION);
         MemoryUtil.memSet(copy, 0xFFFFFFFF);
         RenderSystem.getDevice().createCommandEncoder().writeToBuffer(this.sectionTimeInfo.slice(), copy);
+        onSectionTimeInfoWritten();
         MemoryUtil.memFree(copy);
 
         if (MappedStagingBuffer.isSupported(RenderDevice.INSTANCE)) {
@@ -66,6 +68,11 @@ public class UniformBufferManager {
         } else {
             this.sectionTimeInfoMap = null;
         }
+    }
+
+    // When we bind a buffer to this target because we're writing without using a mapped buffer, then we're modifying the state without GlStateTracker being part of the process. This method notifies it so it doesn't skip re-binding the buffer later after the state has become invalid.
+    private static void onSectionTimeInfoWritten() {
+        RenderDevice.INSTANCE.invalidateBufferBinding(GlBufferTarget.COPY_WRITE_BUFFER);
     }
 
     public void prepareFrame() {
@@ -135,6 +142,7 @@ public class UniformBufferManager {
         } else {
             GpuBufferSlice slice = this.sectionTimeInfo.slice(regionTimesOffset, TIME_BUFFER_SIZE_PER_REGION);
             RenderSystem.getDevice().createCommandEncoder().writeToBuffer(slice, INVALID);
+            onSectionTimeInfoWritten();
         }
     }
 
@@ -156,6 +164,7 @@ public class UniformBufferManager {
                 GpuBufferSlice slice = this.sectionTimeInfo.slice(sectionTimeOffset, Integer.BYTES);
                 RenderSystem.getDevice().createCommandEncoder().writeToBuffer(slice, data);
             }
+            onSectionTimeInfoWritten();
         }
     }
 

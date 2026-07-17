@@ -50,6 +50,11 @@ public class GLRenderDevice implements RenderDevice {
     }
 
     @Override
+    public void invalidateBufferBinding(GlBufferTarget target) {
+        this.stateTracker.invalidateBufferBinding(target);
+    }
+
+    @Override
     public GLCapabilities getCapabilities() {
         return GL.getCapabilities();
     }

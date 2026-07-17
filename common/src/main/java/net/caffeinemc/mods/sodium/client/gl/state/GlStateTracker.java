@@ -57,4 +57,8 @@ public class GlStateTracker {
         Arrays.fill(this.bufferState, -1);
         this.vertexArrayState = -1;
     }
+
+    public void invalidateBufferBinding(GlBufferTarget target) {
+        this.bufferState[target.ordinal()] = UNASSIGNED_HANDLE;
+    }
 }
