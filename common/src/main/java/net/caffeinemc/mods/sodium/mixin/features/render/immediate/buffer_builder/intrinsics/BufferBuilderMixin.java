@@ -49,7 +49,7 @@ public abstract class BufferBuilderMixin implements VertexConsumer {
 
     @Override
     public void putBakedQuad(PoseStack.Pose pose, BakedQuad quad, QuadInstance instance) {
-        if (!this.blockFormat) { // check for ENTITY.
+        if (!this.blockFormat && !this.entityFormat) {
             VertexConsumer.super.putBakedQuad(pose, quad, instance);
 
             if (quad.materialInfo().sprite() != null) {
