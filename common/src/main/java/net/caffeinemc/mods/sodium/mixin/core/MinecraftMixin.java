@@ -8,7 +8,7 @@ import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.gui.SodiumConfigBuilder;
 import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;
-import net.caffeinemc.mods.sodium.client.platform.windows.api.Imm32;
+import net.caffeinemc.mods.sodium.client.platform.PlatformHelper;
 import net.minecraft.client.GameLoadCookie;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
@@ -67,7 +67,7 @@ public class MinecraftMixin {
                 return; // Do not get stuck in a loop of setting exclusive fullscreen! That'd be very annoying.
             }
 
-            var hasIME = OsUtils.getOs() == OsUtils.OperatingSystem.WIN && Imm32.CheckIMEStatus();
+            var hasIME = PlatformHelper.isUsingIME();
             Minecraft.getInstance().options.exclusiveFullscreen().set(!hasIME);
 
             if (hasIME) {
