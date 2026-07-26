@@ -96,10 +96,10 @@ public class Kernel32 {
     }
 
     public static String getModuleFileName(long phModule) {
-        ByteBuffer lpFileName = MemoryUtil.memAlignedAlloc(16, MAX_PATH);
+        ByteBuffer lpFileName = MemoryUtil.memAlignedAlloc(16, MAX_PATH * Character.BYTES);
 
         try {
-            int length = JNI.callPPI(phModule, MemoryUtil.memAddress(lpFileName), lpFileName.capacity(), PFN_GetModuleFileNameW);
+            int length = JNI.callPPI(phModule, MemoryUtil.memAddress(lpFileName), lpFileName.capacity() / Character.BYTES, PFN_GetModuleFileNameW);
 
             if (length == 0) {
                 throw new RuntimeException("GetModuleFileNameW failed, error=" + getLastError());
