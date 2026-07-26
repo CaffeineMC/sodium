@@ -93,6 +93,7 @@
     "workarounds.context_creation.GlSurfaceMixin",
     "workarounds.context_creation.WindowMixin",
     "workarounds.event_loop.RenderSystemMixin",
+    "workarounds.vertex_buffer_manage.StagedVertexGpuBufferPoolMixin",
     "workarounds.window_minimized_state.GameRendererMixin"
   ]
 }
