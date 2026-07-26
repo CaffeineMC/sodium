@@ -24,7 +24,7 @@ public class VKIndirectContext extends VKDrawContext {
         this.currentOffset += size;
 
         if (this.currentOffset >= currentSize) {
-            recreateRingBuffer(this.currentSize * 2);
+            recreateRingBuffer(Math.max(this.currentOffset, this.currentSize * 2));
         }
 
         return oldOffset;
