@@ -13,6 +13,7 @@ import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class NativeBuffer {
@@ -22,7 +23,7 @@ public class NativeBuffer {
     private static final Reference2ReferenceMap<Reference<NativeBuffer>, BufferReference> ACTIVE_BUFFERS =
             Reference2ReferenceMaps.synchronize(new Reference2ReferenceOpenHashMap<>());
 
-    private static long ALLOCATED = 0L;
+    private static final AtomicLong ALLOCATED = new AtomicLong(0L);
 
     private final BufferReference ref;
 
@@ -82,7 +83,7 @@ public class NativeBuffer {
     }
 
     public static long getTotalAllocated() {
-        return ALLOCATED;
+        return ALLOCATED.get();
     }
 
     private static StackTraceElement[] getStackTrace() {
@@ -117,7 +118,7 @@ public class NativeBuffer {
         StackTraceElement[] stackTrace = getStackTrace();
 
         BufferReference ref = new BufferReference(address, bytes, stackTrace);
-        ALLOCATED += ref.length;
+        ALLOCATED.getAndAdd(ref.length);
 
         return ref;
     }
@@ -128,7 +129,7 @@ public class NativeBuffer {
 
         MemoryUtil.nmemFree(ref.address);
 
-        ALLOCATED -= ref.length;
+        ALLOCATED.getAndAdd(-ref.length);
     }
 
     private static class BufferReference {
