@@ -22,8 +22,9 @@ public class StagedVertexGpuBufferPoolMixin {
     @Final
     private List<StagedVertexBuffer.GpuBufferPool.PendingRecycle> pendingRecycle;
 
+    // Never destroy available buffers to avoid unstable glFence sync time make the game create new buffers in every few frames
     @WrapMethod(method = "endFrame")
-    private void iris$endFrame(GpuDevice device, Operation<Void> original) {
+    private void sodium$endFrame(GpuDevice device, Operation<Void> original) {
         if (!this.usedThisFrame.isEmpty()) {
             GpuFence fence = device.createCommandEncoder().createFence();
             this.pendingRecycle.add(new StagedVertexBuffer.GpuBufferPool.PendingRecycle(List.copyOf(this.usedThisFrame), fence));
