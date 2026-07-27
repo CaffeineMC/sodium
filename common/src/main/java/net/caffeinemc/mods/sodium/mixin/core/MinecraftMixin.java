@@ -101,13 +101,20 @@ public class MinecraftMixin {
         ResourcePackScanner.checkIfCoreShaderLoaded(this.resourceManager);
     }
 
-    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LoadingOverlay;registerTextures(Lnet/minecraft/client/renderer/texture/TextureManager;)V"))
+    @WrapOperation(
+            method = "<init>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/screens/LoadingOverlay;registerTextures(Lnet/minecraft/client/renderer/texture/TextureManager;)V"))
     private void registerSodiumIcon(TextureManager textureManager, Operation<Void> original) {
         SodiumConfigBuilder.registerIcon(textureManager);
         original.call(textureManager);
     }
 
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/debug/DebugScreenEntryList;<init>(Ljava/io/File;Lcom/mojang/datafixers/DataFixer;)V"))
+    @Inject(method = "<init>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/components/debug/DebugScreenEntryList;<init>(Ljava/io/File;Lcom/mojang/datafixers/DataFixer;)V"))
     private void setFullscreen(GameConfig gameConfig, CallbackInfo ci) {
         if (!SodiumClientMod.options().notifications.hasEditedFullscreenOption) {
             SodiumClientMod.options().notifications.hasEditedFullscreenOption = true;

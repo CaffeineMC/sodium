@@ -23,9 +23,11 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(GameRenderer.class)
 public class GameRendererMixin {
     @Unique
-    private final boolean sodium$redirectWindowMinimizedState = Workarounds.isWorkaroundEnabled(Workarounds.Reference.INTEL_FRAMEBUFFER_BLIT_CRASH_WHEN_UNFOCUSED);
+    private final boolean sodium$redirectWindowMinimizedState =
+            Workarounds.isWorkaroundEnabled(Workarounds.Reference.INTEL_FRAMEBUFFER_BLIT_CRASH_WHEN_UNFOCUSED);
 
-    @Redirect(method = "extractWindow", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;isMinimized()Z"))
+    @Redirect(method = "extractWindow",
+            at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;isMinimized()Z"))
     private boolean redirectWindowMinimized(Window window) {
         if (!this.sodium$redirectWindowMinimizedState) {
             return window.isMinimized();

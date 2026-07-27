@@ -31,14 +31,14 @@ public class ChunkSectionsToRenderMixin implements SodiumChunkSection {
     private double z;
 
     @Inject(method = "renderGroup", at = @At("HEAD"), cancellable = true)
-    private void sodium$renderGroup(ChunkSectionLayerGroup chunkSectionLayerGroup, GpuSampler gpuSampler, CallbackInfo ci) {
+    private void sodium$renderGroup(ChunkSectionLayerGroup group, GpuSampler sampler, CallbackInfo ci) {
         if (this.renderer != null) {
             ci.cancel();
 
             RenderDevice.enterManagedCode();
 
             try {
-                this.renderer.drawChunkLayer(chunkSectionLayerGroup, this.matrices, this.x, this.y, this.z, gpuSampler);
+                this.renderer.drawChunkLayer(group, this.matrices, this.x, this.y, this.z, sampler);
             } finally {
                 RenderDevice.exitManagedCode();
             }
@@ -46,7 +46,11 @@ public class ChunkSectionsToRenderMixin implements SodiumChunkSection {
     }
 
     @Override
-    public void sodium$setRendering(SodiumWorldRenderer renderer, ChunkRenderMatrices matrices, double x, double y, double z) {
+    public void sodium$setRendering(SodiumWorldRenderer renderer,
+                                    ChunkRenderMatrices matrices,
+                                    double x,
+                                    double y,
+                                    double z) {
         this.renderer = renderer;
         this.matrices = matrices;
         this.x = x;

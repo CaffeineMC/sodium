@@ -43,7 +43,7 @@ public class ShadowFeatureRendererMixin {
      * @reason Reduce vertex assembly overhead for shadow rendering
      */
     @Inject(method = "renderTranslucent", at = @At("HEAD"), cancellable = true)
-    private static void renderShadowPartFast(SubmitNodeCollection submitNodeCollection, MultiBufferSource.BufferSource bufferSource, CallbackInfo ci) {
+    private static void renderShadowPartFast(SubmitNodeCollection nodeCollection, MultiBufferSource.BufferSource bufferSource, CallbackInfo ci) {
         VertexConsumer vertices = bufferSource.getBuffer(SHADOW_RENDER_TYPE);
 
         var writer = VertexConsumerUtils.convertOrLog(vertices);
@@ -54,7 +54,7 @@ public class ShadowFeatureRendererMixin {
 
         ci.cancel();
 
-        for (SubmitNodeStorage.ShadowSubmit shadows : submitNodeCollection.getShadowSubmits()) {
+        for (SubmitNodeStorage.ShadowSubmit shadows : nodeCollection.getShadowSubmits()) {
             Matrix4fc matrices = shadows.pose();
 
             for (int i = 0; i < shadows.pieces().size(); i++) {
@@ -82,7 +82,15 @@ public class ShadowFeatureRendererMixin {
     }
 
     @Unique
-    private static void renderShadowPart(Matrix4fc matPosition, VertexBufferWriter writer, float radius, float alpha, float minX, float maxX, float minY, float minZ, float maxZ) {
+    private static void renderShadowPart(Matrix4fc matPosition,
+                                         VertexBufferWriter writer,
+                                         float radius,
+                                         float alpha,
+                                         float minX,
+                                         float maxX,
+                                         float minY,
+                                         float minZ,
+                                         float maxZ) {
         float size = 0.5F * (1.0F / radius);
 
         float u1 = (-minX * size) + 0.5F;
@@ -116,7 +124,15 @@ public class ShadowFeatureRendererMixin {
     }
 
     @Unique
-    private static void writeShadowVertex(long ptr, Matrix4fc matPosition, float x, float y, float z, float u, float v, int color, int normal) {
+    private static void writeShadowVertex(long ptr,
+                                          Matrix4fc matPosition,
+                                          float x,
+                                          float y,
+                                          float z,
+                                          float u,
+                                          float v,
+                                          int color,
+                                          int normal) {
         // The transformed position vector
         float xt = MatrixHelper.transformPositionX(matPosition, x, y, z);
         float yt = MatrixHelper.transformPositionY(matPosition, x, y, z);

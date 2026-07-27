@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.mixin.features.textures.animations.tracking;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteContentsExtension;
@@ -35,11 +36,17 @@ public class SpriteContentsTickerMixin {
      * @reason Replace fragile Shadow
      */
     @Inject(method = "<init>", at = @At("RETURN"))
-    public void assignParent(SpriteContents spriteContents, SpriteContents.AnimatedTexture animatedTexture, Int2ObjectMap int2ObjectMap, GpuBufferSlice[] gpuBufferSlices, CallbackInfo ci) {
-        this.parent = spriteContents;
+    public void assignParent(SpriteContents this$0,
+                             SpriteContents.AnimatedTexture animationInfo,
+                             Int2ObjectMap<GpuTextureView> frameTexturesByIndex,
+                             GpuBufferSlice[] spriteUbosByMip,
+                             CallbackInfo ci) {
+        this.parent = this$0;
     }
 
-    // We need to copy the value from the parent to retain it for the whole tick, since if we reset it at the end of needsToDraw it would be reset after the first animation frame is finished, but before processing the rest of the frames.
+    // We need to copy the value from the parent to retain it for the whole tick, since if we reset it at the end of
+    // needsToDraw it would be reset after the first animation frame is finished, but before processing the rest of the
+    // frames.
     @Inject(method = "tick", at = @At("HEAD"))
     private void captureActiveState(CallbackInfo ci) {
         SpriteContentsExtension parent = (SpriteContentsExtension) this.parent;

@@ -6,7 +6,6 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.state.GameRenderState;
 import net.minecraft.util.profiling.Profiler;
 import org.lwjgl.glfw.GLFW;
@@ -22,11 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class GameRendererMixin {
     @Shadow
     @Final
-    Minecraft minecraft;
-
-    @Shadow
-    @Final
-    private RenderBuffers renderBuffers;
+    private Minecraft minecraft;
 
     @Shadow
     @Final
@@ -35,8 +30,9 @@ public class GameRendererMixin {
     @Unique
     private static boolean HAS_RENDERED_OVERLAY_ONCE = false;
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/render/GuiRenderer;render(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;)V"))
-    private void onRender(DeltaTracker deltaTracker, boolean bl, CallbackInfo ci) {
+    @Inject(method = "render",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/render/GuiRenderer;render(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;)V"))
+    private void onRender(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
         // Do not start updating the console overlay until the font renderer is ready
         // This prevents the console from using tofu boxes for everything during early startup
         if (Minecraft.getInstance().getOverlay() != null) {

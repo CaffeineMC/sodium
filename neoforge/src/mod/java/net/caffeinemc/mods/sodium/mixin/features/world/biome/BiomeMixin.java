@@ -19,51 +19,51 @@ public abstract class BiomeMixin {
     private Biome.ClimateSettings climateSettings;
 
     @Unique
-    private boolean hasCustomGrassColor;
+    private boolean sodium$hasCustomGrassColor;
 
     @Unique
-    private int customGrassColor;
+    private int sodium$customGrassColor;
 
     @Unique
-    private boolean hasCustomFoliageColor;
+    private boolean sodium$hasCustomFoliageColor;
 
     @Unique
-    private int customFoliageColor;
+    private int sodium$customFoliageColor;
 
     @Unique
-    private int defaultColorIndex;
+    private int sodium$defaultColorIndex;
 
     @Unique
-    private BiomeSpecialEffects cachedSpecialEffects;
+    private BiomeSpecialEffects sodium$cachedSpecialEffects;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
-        this.setupColors();
+        this.sodium$setupColors();
     }
 
     @Unique
-    private void setupColors() {
-        this.cachedSpecialEffects = this.getModifiedSpecialEffects();
+    private void sodium$setupColors() {
+        this.sodium$cachedSpecialEffects = this.getModifiedSpecialEffects();
 
-        var grassColor = this.cachedSpecialEffects.grassColorOverride();
+        var grassColor = this.sodium$cachedSpecialEffects.grassColorOverride();
 
         if (grassColor.isPresent()) {
-            this.hasCustomGrassColor = true;
-            this.customGrassColor = grassColor.get();
+            this.sodium$hasCustomGrassColor = true;
+            this.sodium$customGrassColor = grassColor.get();
         } else {
-            this.hasCustomGrassColor = false;
+            this.sodium$hasCustomGrassColor = false;
         }
 
-        var foliageColor = this.cachedSpecialEffects.foliageColorOverride();
+        var foliageColor = this.sodium$cachedSpecialEffects.foliageColorOverride();
 
         if (foliageColor.isPresent()) {
-            this.hasCustomFoliageColor = true;
-            this.customFoliageColor = foliageColor.get();
+            this.sodium$hasCustomFoliageColor = true;
+            this.sodium$customFoliageColor = foliageColor.get();
         } else {
-            this.hasCustomFoliageColor = false;
+            this.sodium$hasCustomFoliageColor = false;
         }
 
-        this.defaultColorIndex = this.getDefaultColorIndex();
+        this.sodium$defaultColorIndex = this.sodium$getDefaultColorIndex();
     }
 
     /**
@@ -72,19 +72,19 @@ public abstract class BiomeMixin {
      */
     @Overwrite
     public int getGrassColor(double x, double z) {
-        if (this.getModifiedSpecialEffects() != this.cachedSpecialEffects) {
-            this.setupColors();
+        if (this.getModifiedSpecialEffects() != this.sodium$cachedSpecialEffects) {
+            this.sodium$setupColors();
         }
 
         int color;
 
-        if (this.hasCustomGrassColor) {
-            color = this.customGrassColor;
+        if (this.sodium$hasCustomGrassColor) {
+            color = this.sodium$customGrassColor;
         } else {
-            color = BiomeColorMaps.getGrassColor(this.defaultColorIndex);
+            color = BiomeColorMaps.getGrassColor(this.sodium$defaultColorIndex);
         }
 
-        var modifier = this.cachedSpecialEffects.grassColorModifier();
+        var modifier = this.sodium$cachedSpecialEffects.grassColorModifier();
 
         if (modifier != BiomeSpecialEffects.GrassColorModifier.NONE) {
             color = modifier.modifyColor(x, z, color);
@@ -99,23 +99,23 @@ public abstract class BiomeMixin {
      */
     @Overwrite
     public int getFoliageColor() {
-        if (this.getModifiedSpecialEffects() != this.cachedSpecialEffects) {
-            this.setupColors();
+        if (this.getModifiedSpecialEffects() != this.sodium$cachedSpecialEffects) {
+            this.sodium$setupColors();
         }
 
         int color;
 
-        if (this.hasCustomFoliageColor) {
-            color = this.customFoliageColor;
+        if (this.sodium$hasCustomFoliageColor) {
+            color = this.sodium$customFoliageColor;
         } else {
-            color = BiomeColorMaps.getFoliageColor(this.defaultColorIndex);
+            color = BiomeColorMaps.getFoliageColor(this.sodium$defaultColorIndex);
         }
 
         return color;
     }
 
     @Unique
-    private int getDefaultColorIndex() {
+    private int sodium$getDefaultColorIndex() {
         double temperature = Mth.clamp(this.climateSettings.temperature(), 0.0F, 1.0F);
         double humidity = Mth.clamp(this.climateSettings.downfall(), 0.0F, 1.0F);
 

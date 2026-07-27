@@ -56,7 +56,8 @@ public abstract class LevelSliceMixin implements FabricBlockGetter {
         int relBlockY = pos.getY() - this.originBlockY;
         int relBlockZ = pos.getZ() - this.originBlockZ;
 
-        var blockEntityRenderDataMap = this.blockEntityRenderDataArrays[getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4)];
+        var localSectionIndex = getLocalSectionIndex(relBlockX >> 4, relBlockY >> 4, relBlockZ >> 4);
+        var blockEntityRenderDataMap = this.blockEntityRenderDataArrays[localSectionIndex];
 
         if (blockEntityRenderDataMap == null) {
             return null;

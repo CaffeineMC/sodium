@@ -21,7 +21,11 @@ public class ClientPacketListenerMixin {
             method = "applyLightData",
             at = @At("RETURN")
     )
-    private void onLightDataReceived(int x, int z, ClientboundLightUpdatePacketData clientboundLightUpdatePacketData, boolean bl, CallbackInfo ci) {
+    private void onLightDataReceived(int x,
+                                     int z,
+                                     ClientboundLightUpdatePacketData lightData,
+                                     boolean scheduleRebuild,
+                                     CallbackInfo ci) {
         ChunkTrackerHolder.get(this.level)
                 .onChunkStatusAdded(x, z, ChunkStatus.FLAG_HAS_LIGHT_DATA);
     }

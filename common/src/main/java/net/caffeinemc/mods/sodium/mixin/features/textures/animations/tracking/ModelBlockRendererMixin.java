@@ -20,7 +20,15 @@ public class ModelBlockRendererMixin {
      * @author embeddedt
      */
     @Inject(method = "putQuadWithTint", at = @At("HEAD"))
-    private void preRenderQuad(BlockQuadOutput output, float x, float y, float z, BlockAndTintGetter level, BlockState state, BlockPos pos, BakedQuad quad, CallbackInfo ci) {
+    private void preRenderQuad(BlockQuadOutput output,
+                               float x,
+                               float y,
+                               float z,
+                               BlockAndTintGetter level,
+                               BlockState state,
+                               BlockPos pos,
+                               BakedQuad quad,
+                               CallbackInfo ci) {
         if (quad.materialInfo().sprite() != null) {
             SpriteUtil.INSTANCE.markSpriteActive(quad.materialInfo().sprite());
         }

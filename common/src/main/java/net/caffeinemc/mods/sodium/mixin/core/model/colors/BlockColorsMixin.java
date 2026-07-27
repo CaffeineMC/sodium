@@ -19,7 +19,8 @@ import java.util.List;
 public class BlockColorsMixin implements BlockColorsExtension {
     // We're keeping a copy as we need to be able to iterate over the entry pairs, rather than just the values.
     @Unique
-    private final Reference2ReferenceMap<Block, BlockTintSource[]> blocksToColor = new Reference2ReferenceOpenHashMap<>();
+    private final Reference2ReferenceMap<Block, BlockTintSource[]> blocksToColor =
+            new Reference2ReferenceOpenHashMap<>();
 
     @Unique
     private final ReferenceSet<Block> overridenBlocks = new ReferenceOpenHashSet<>();

@@ -23,12 +23,18 @@ public class LevelRendererMixin {
     @Final
     private Long2ObjectMap<SortedSet<BlockDestructionProgress>> destructionProgress;
 
-    @Inject(method = "extractVisibleBlockEntities(Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/client/renderer/culling/Frustum;)V", at = @At("HEAD"), cancellable = true)
-    private void extractVisibleBlockEntities$neoForge(Camera camera, float f, LevelRenderState levelRenderState, Frustum frustum, CallbackInfo ci) {
+    @Inject(method = "extractVisibleBlockEntities(Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/client/renderer/culling/Frustum;)V",
+            at = @At("HEAD"),
+            cancellable = true)
+    private void extractVisibleBlockEntities$neoForge(Camera camera,
+                                                      float deltaPartialTick,
+                                                      LevelRenderState levelRenderState,
+                                                      Frustum frustum,
+                                                      CallbackInfo ci) {
         ci.cancel();
 
         SodiumWorldRenderer renderer = ((LevelRendererExtension) this).sodium$getWorldRenderer();
 
-        renderer.extractBlockEntities(camera, f, this.destructionProgress, levelRenderState);
+        renderer.extractBlockEntities(camera, deltaPartialTick, this.destructionProgress, levelRenderState);
     }
 }

@@ -57,7 +57,8 @@ import java.util.function.Consumer;
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin implements LevelRendererExtension {
     @Unique
-    private static final EnumMap<ChunkSectionLayer,Int2ObjectOpenHashMap<List<RenderPass.Draw<GpuBufferSlice[]>>>> STATIC_MAP = new EnumMap<>(ChunkSectionLayer.class);
+    private static final EnumMap<ChunkSectionLayer,Int2ObjectOpenHashMap<List<RenderPass.Draw<GpuBufferSlice[]>>>> STATIC_MAP =
+            new EnumMap<>(ChunkSectionLayer.class);
 
     @Shadow
     @Final
@@ -108,14 +109,20 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         return this.renderer;
     }
 
-    @Redirect(method = "allChanged()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Options;getEffectiveRenderDistance()I", ordinal = 1))
+    @Redirect(
+            method = "allChanged()V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/Options;getEffectiveRenderDistance()I",
+                    ordinal = 1))
     private int nullifyBuiltChunkStorage(Options options) {
         // Do not allow any resources to be allocated
         return 0;
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void init(Minecraft minecraft, EntityRenderDispatcher entityRenderDispatcher, BlockEntityRenderDispatcher blockEntityRenderDispatcher, RenderBuffers renderBuffers, GameRenderState gameRenderState, FeatureRenderDispatcher featureRenderDispatcher, CallbackInfo ci) {
+    private void init(Minecraft minecraft, EntityRenderDispatcher entityRenderDispatcher, BlockEntityRenderDispatcher blockEntityRenderDispatcher, RenderBuffers renderBuffers, GameRenderState gameRenderState, FeatureRenderDispatcher featureRenderDispatcher,
+                      CallbackInfo ci) {
         this.renderer = new SodiumWorldRenderer(minecraft);
     }
 
@@ -262,7 +269,8 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     }
 
     @Inject(method = "extractVisibleBlockEntities", at = @At("HEAD"), cancellable = true, require = 1)
-    private void extractVisibleBlockEntities(Camera camera, float f, LevelRenderState levelRenderState, CallbackInfo ci) {
+    private void extractVisibleBlockEntities(Camera camera, float f, LevelRenderState levelRenderState,
+                                CallbackInfo ci) {
         ci.cancel();
 
         this.renderer.extractBlockEntities(camera, f, this.destructionProgress, levelRenderState);
@@ -281,7 +289,12 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
      * @reason Allow control of the texture filtering mode
      * @author pajic
      */
-    @Redirect(method = "lambda$addMainPass$0", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/textures/FilterMode;LINEAR:Lcom/mojang/blaze3d/textures/FilterMode;", opcode = Opcodes.GETSTATIC))
+    @Redirect(
+            method = "lambda$addMainPass$0",
+            at = @At(
+                    value = "FIELD",
+                    target = "Lcom/mojang/blaze3d/textures/FilterMode;LINEAR:Lcom/mojang/blaze3d/textures/FilterMode;",
+                    opcode = Opcodes.GETSTATIC))
     private FilterMode setFilterMode() {
         return SodiumClientMod.options().quality.pixelFilteringMode;
     }

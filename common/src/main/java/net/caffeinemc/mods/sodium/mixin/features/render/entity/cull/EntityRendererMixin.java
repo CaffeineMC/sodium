@@ -13,14 +13,18 @@ import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(EntityRenderer.class)
 public abstract class EntityRendererMixin<T extends Entity, S extends EntityRenderState> {
-    @WrapOperation(method = "shouldRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/culling/Frustum;isVisible(Lnet/minecraft/world/phys/AABB;)Z", ordinal = 0))
-    private boolean preShouldRender(Frustum instance, AABB aABB, Operation<Boolean> original, T entity) {
+    @WrapOperation(
+            method = "shouldRender",
+            at = @At(value = "INVOKE",
+                    target = "Lnet/minecraft/client/renderer/culling/Frustum;isVisible(Lnet/minecraft/world/phys/AABB;)Z",
+                    ordinal = 0))
+    private boolean preShouldRender(Frustum instance, AABB bb, Operation<Boolean> original, T entity) {
         var renderer = SodiumWorldRenderer.instanceNullable();
 
         if (renderer == null) {
-            return original.call(instance, aABB);
+            return original.call(instance, bb);
         }
 
-        return renderer.isEntityVisible((EntityRenderer<T, S>) (Object) this, entity) && original.call(instance, aABB);
+        return renderer.isEntityVisible((EntityRenderer<T, S>) (Object) this, entity) && original.call(instance, bb);
     }
 }

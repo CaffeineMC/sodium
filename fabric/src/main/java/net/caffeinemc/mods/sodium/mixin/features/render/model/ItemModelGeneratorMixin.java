@@ -17,7 +17,11 @@ public class ItemModelGeneratorMixin {
     private static final ImprovedItemModelBuilder sodium$INSTANCE = new ImprovedItemModelBuilder();
 
     @WrapMethod(method = "bakeSideFaces")
-    private static void improvedBakeSideFaces(QuadCollection.Builder builder, ModelBaker.Interner interner, ModelState modelState, BakedQuad.MaterialInfo materialInfo, Operation<Void> original) {
+    private static void improvedBakeSideFaces(QuadCollection.Builder builder,
+                                              ModelBaker.Interner interner,
+                                              ModelState modelState,
+                                              BakedQuad.MaterialInfo materialInfo,
+                                              Operation<Void> original) {
         sodium$INSTANCE.bakeSideQuads(builder, interner, materialInfo, modelState, null);
     }
 }
