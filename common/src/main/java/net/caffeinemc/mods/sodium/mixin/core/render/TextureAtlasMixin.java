@@ -49,6 +49,7 @@ public class TextureAtlasMixin implements ExtendedTextureAtlas {
 
     @Override
     public SodiumSpriteFinder sodium$getSpriteFinder() {
-        return new SodiumSpriteFinderImpl(this.texturesByName, this.missingSprite, this.isBlocks ? SodiumQuadAtlas.BLOCK : SodiumQuadAtlas.ITEM);
+        var atlas = this.isBlocks ? SodiumQuadAtlas.BLOCK : SodiumQuadAtlas.ITEM;
+        return new SodiumSpriteFinderImpl(this.texturesByName, this.missingSprite, atlas);
     }
 }

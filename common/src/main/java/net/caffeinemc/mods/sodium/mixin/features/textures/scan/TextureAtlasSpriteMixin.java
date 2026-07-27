@@ -15,9 +15,16 @@ public class TextureAtlasSpriteMixin implements TextureAtlasSpriteExtension {
     @Unique
     private boolean hasUnknownImageContents;
 
-    @WrapOperation(method = "createAnimationState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/SpriteContents;createAnimationState(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;I)Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;"))
-    private SpriteContents.AnimationState hookTickerInstantiation(SpriteContents instance, GpuBufferSlice gpuBufferSlice, int i, Operation<SpriteContents.AnimationState> original) {
-        var ticker = original.call(instance, gpuBufferSlice, i);
+    @WrapOperation(
+            method = "createAnimationState",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/renderer/texture/SpriteContents;createAnimationState(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;I)Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;"))
+    private SpriteContents.AnimationState hookTickerInstantiation(SpriteContents instance,
+                                                                  GpuBufferSlice uboSlice,
+                                                                  int spriteUboSize,
+                                                                  Operation<SpriteContents.AnimationState> original) {
+        var ticker = original.call(instance, uboSlice, spriteUboSize);
 
         if (ticker != null && !(SpriteContents.AnimationState.class.equals(ticker.getClass()))) {
             this.hasUnknownImageContents = true;

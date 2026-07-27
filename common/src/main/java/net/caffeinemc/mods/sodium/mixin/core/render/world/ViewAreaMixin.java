@@ -10,7 +10,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ViewArea.class)
 public class ViewAreaMixin {
     @Inject(method = "lambda$new$0", at = @At("HEAD"), cancellable = true)
-    private static void sodium$safelyReturn(SectionRenderDispatcher sectionRenderDispatcher, int index, long sectionNode, CallbackInfoReturnable<SectionRenderDispatcher.RenderSection> cir) {
+    private static void sodium$safelyReturn(SectionRenderDispatcher sectionRenderDispatcher,
+                                            int index,
+                                            long sectionNode,
+                                            CallbackInfoReturnable<SectionRenderDispatcher.RenderSection> cir) {
         if (sectionRenderDispatcher == null) cir.setReturnValue(null);
     }
 }

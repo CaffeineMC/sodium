@@ -18,9 +18,16 @@ import java.nio.LongBuffer;
 @Mixin(VulkanRenderPipeline.class)
 public class VulkanPipelineMixin {
     @WrapOperation(method = "compile", at = @At(value = "INVOKE", target = "Lorg/lwjgl/vulkan/VkPipelineLayoutCreateInfo;pSetLayouts(Ljava/nio/LongBuffer;)Lorg/lwjgl/vulkan/VkPipelineLayoutCreateInfo;"))
-    private static VkPipelineLayoutCreateInfo sodium$fixPipelineLayout(VkPipelineLayoutCreateInfo instance, LongBuffer value, Operation<VkPipelineLayoutCreateInfo> original, @Local RenderPipeline pipeline, @Local MemoryStack stack) {
+    private static VkPipelineLayoutCreateInfo sodium$fixPipelineLayout(VkPipelineLayoutCreateInfo instance,
+                                                                       LongBuffer value,
+                                                                       Operation<VkPipelineLayoutCreateInfo> original,
+                                                                       @Local RenderPipeline pipeline,
+                                                                       @Local MemoryStack stack) {
         if (pipeline.getLocation().getNamespace().contains("sodium")) {
-            instance.pPushConstantRanges(VkPushConstantRange.calloc(1, stack).offset(0).size(DrawContext.PUSH_CONSTANT_RANGE).stageFlags(VK13.VK_SHADER_STAGE_ALL));
+            instance.pPushConstantRanges(VkPushConstantRange.calloc(1, stack)
+                    .offset(0)
+                    .size(DrawContext.PUSH_CONSTANT_RANGE)
+                    .stageFlags(VK13.VK_SHADER_STAGE_ALL));
         }
         return original.call(instance, value);
     }

@@ -34,6 +34,7 @@ import net.minecraft.client.resources.model.sprite.AtlasManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Util;
 import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4fc;
 import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
@@ -50,20 +51,13 @@ import java.util.List;
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin implements LevelRendererExtension {
     @Unique
-    private static final EnumMap<ChunkSectionLayer,Int2ObjectOpenHashMap<List<RenderPass.Draw<GpuBufferSlice[]>>>> STATIC_MAP = new EnumMap<>(ChunkSectionLayer.class);
+    private static final EnumMap<ChunkSectionLayer,Int2ObjectOpenHashMap<List<RenderPass.Draw<GpuBufferSlice[]>>>> STATIC_MAP =
+            new EnumMap<>(ChunkSectionLayer.class);
 
     @Shadow
     @Final
     private RenderBuffers renderBuffers;
 
-
-    @Shadow
-    @Final
-    private WorldBorderRenderer worldBorderRenderer;
-
-    @Shadow
-    @Final
-    private SubmitNodeStorage submitNodeStorage;
     @Shadow
     @Final
     private LevelRenderState levelRenderState;
@@ -92,14 +86,28 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         return this.renderer;
     }
 
-    @Redirect(method = "invalidateCompiledGeometry", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Options;getEffectiveRenderDistance()I", ordinal = 0))
+    @Redirect(
+            method = "invalidateCompiledGeometry",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/Options;getEffectiveRenderDistance()I",
+                    ordinal = 0))
     private int nullifyBuiltChunkStorage(Options options) {
         // Do not allow any resources to be allocated
         return 0;
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void init(EntityRenderDispatcher entityRenderDispatcher, BlockEntityRenderDispatcher blockEntityRenderDispatcher, ModelManager modelManager, TextureManager textureManager, AtlasManager atlasManager, ShaderManager shaderManager, GameRenderer gameRenderer, int width, int height, CallbackInfo ci) {
+    private void init(EntityRenderDispatcher entityRenderDispatcher,
+                      BlockEntityRenderDispatcher blockEntityRenderDispatcher,
+                      ModelManager modelManager,
+                      TextureManager textureManager,
+                      AtlasManager atlasManager,
+                      ShaderManager shaderManager,
+                      GameRenderer gameRenderer,
+                      int width,
+                      int height,
+                      CallbackInfo ci) {
         this.renderer = new SodiumWorldRenderer(Minecraft.getInstance());
     }
 
@@ -128,17 +136,36 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
      */
     @Overwrite
     public ChunkSectionsToRender prepareChunkRenders(Matrix4fc matrix4fc) {
-        return new ChunkSectionsToRender(Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView(), STATIC_MAP, -1, new GpuBufferSlice[0]);
+        var texture = Minecraft.getInstance()
+                .getTextureManager()
+                .getTexture(TextureAtlas.LOCATION_BLOCKS)
+                .getTextureView();
+
+        return new ChunkSectionsToRender(texture, STATIC_MAP, -1, new GpuBufferSlice[0]);
     }
 
     @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;prepareChunkRenders(Lorg/joml/Matrix4fc;)Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;"))
-    private ChunkSectionsToRender getRenderState(LevelRenderer instance, Matrix4fc modelViewMatrix, Operation<ChunkSectionsToRender> original, @Local Vector4f fogColor) {
+    private ChunkSectionsToRender getRenderState(LevelRenderer instance,
+                                                 Matrix4fc modelViewMatrix,
+                                                 Operation<ChunkSectionsToRender> original,
+                                                 @Local Vector4f fogColor) {
+
+        var projectionMatrix = ((GameRendererStorage) Minecraft.getInstance().gameRenderer)
+                .sodium$getProjectionMatrix();
+
+        this.matrices = new ChunkRenderMatrices(projectionMatrix, modelViewMatrix);
+        var pos = this.levelRenderState.cameraRenderState.pos;
+
         var chunkSectionsToRender = original.call(instance, modelViewMatrix);
+        ((SodiumChunkSection) (Object) chunkSectionsToRender)
+                .sodium$setRendering(this.renderer,
+                        this.matrices,
+                        pos.x,
+                        pos.y,
+                        pos.z);
 
-        this.matrices = new ChunkRenderMatrices(((GameRendererStorage) Minecraft.getInstance().gameRenderer).sodium$getProjectionMatrix(), modelViewMatrix);
-        ((SodiumChunkSection) (Object) chunkSectionsToRender).sodium$setRendering(this.renderer, this.matrices, this.levelRenderState.cameraRenderState.pos.x, this.levelRenderState.cameraRenderState.pos.y, this.levelRenderState.cameraRenderState.pos.z);
-
-        // update the fog color here with the actual fog color being used to render the sky, since the fog color that SodiumWorldRenderer still has stored from FogRendererMixin is outdated.
+        // update the fog color here with the actual fog color being used to render the sky, since the fog color that
+        // SodiumWorldRenderer still has stored from FogRendererMixin is outdated.
         this.renderer.updateFogColor(fogColor);
         return chunkSectionsToRender;
     }
@@ -153,7 +180,11 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     }
 
     @Inject(method = "invalidateCompiledGeometry", at = @At("HEAD"), cancellable = true)
-    private void sodium$replace(ClientLevel level, Options options, Camera camera, BlockColors blockColors, CallbackInfo ci) {
+    private void sodium$replace(ClientLevel level,
+                                Options options,
+                                Camera camera,
+                                BlockColors blockColors,
+                                CallbackInfo ci) {
         ci.cancel();
 
         this.cloudRenderer.markForRebuild();
@@ -161,7 +192,10 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
 
         this.renderer.reload();
 
-        this.sectionRenderDispatcher = new IgnoringSectionRenderDispatcher(Util.backgroundExecutor(), this.renderBuffers, null, this.sectionOcclusionGraph::schedulePropagationFrom);
+        this.sectionRenderDispatcher = new IgnoringSectionRenderDispatcher(Util.backgroundExecutor(),
+                this.renderBuffers,
+                null,
+                this.sectionOcclusionGraph::schedulePropagationFrom);
         this.viewArea = new IgnoringViewArea(this.sectionRenderDispatcher);
         this.sectionOcclusionGraph .waitAndReset(this.viewArea);
 
@@ -172,7 +206,12 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
      * @reason Allow control of the texture filtering mode
      * @author pajic
      */
-    @Redirect(method = "lambda$addMainPass$0", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/textures/FilterMode;LINEAR:Lcom/mojang/blaze3d/textures/FilterMode;", opcode = Opcodes.GETSTATIC))
+    @Redirect(
+            method = "lambda$addMainPass$0",
+            at = @At(
+                    value = "FIELD",
+                    target = "Lcom/mojang/blaze3d/textures/FilterMode;LINEAR:Lcom/mojang/blaze3d/textures/FilterMode;",
+                    opcode = Opcodes.GETSTATIC))
     private FilterMode setFilterMode() {
         return SodiumClientMod.options().quality.pixelFilteringMode;
     }

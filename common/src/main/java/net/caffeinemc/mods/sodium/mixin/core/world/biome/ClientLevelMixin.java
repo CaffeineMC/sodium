@@ -6,6 +6,8 @@ import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.renderer.extract.LevelExtractor;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,7 +20,17 @@ public class ClientLevelMixin implements BiomeSeedProvider {
     private long biomeZoomSeed;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void captureSeed(ClientPacketListener connection, ClientLevel.ClientLevelData levelData, ResourceKey dimension, Holder dimensionType, int serverChunkRadius, int serverSimulationDistance, LevelExtractor levelExtractor, boolean isDebug, long biomeZoomSeed, int seaLevel, CallbackInfo ci) {
+    private void captureSeed(ClientPacketListener connection,
+                             ClientLevel.ClientLevelData levelData,
+                             ResourceKey<Level> dimension,
+                             Holder<DimensionType> dimensionType,
+                             int serverChunkRadius,
+                             int serverSimulationDistance,
+                             LevelExtractor levelExtractor,
+                             boolean isDebug,
+                             long biomeZoomSeed,
+                             int seaLevel,
+                             CallbackInfo ci) {
         this.biomeZoomSeed = biomeZoomSeed;
     }
 

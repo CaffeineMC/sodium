@@ -24,7 +24,13 @@ public class StagedVertexBufferMixin {
             at = @At(
                     value = "INVOKE",
                     target = "Lcom/mojang/blaze3d/vertex/MeshData;decodeQuadCentroids(Ljava/nio/ByteBuffer;ILcom/mojang/blaze3d/vertex/VertexFormat;Lcom/mojang/blaze3d/vertex/CompactVectorArray;I)V"))
-    private static void sodium$selectClosestSortingPoints(ByteBuffer vertexBuffer, int vertexCount, VertexFormat format, CompactVectorArray output, int outputIndex, Operation<Void> original, @Local(argsOnly = true) StagedVertexBuffer.Draw draw) {
+    private static void sodium$selectClosestSortingPoints(ByteBuffer vertexBuffer,
+                                                          int vertexCount,
+                                                          VertexFormat format,
+                                                          CompactVectorArray output,
+                                                          int outputIndex,
+                                                          Operation<Void> original,
+                                                          @Local StagedVertexBuffer.Draw draw) {
         if (SodiumClientMod.options().quality.useClosestPointEntitySort &&
                 ((DrawAccessor) draw).getQuadSorting() == VertexSorting.DISTANCE_TO_ORIGIN) {
             VertexFormatElement positionElement = format.getElement("Position");

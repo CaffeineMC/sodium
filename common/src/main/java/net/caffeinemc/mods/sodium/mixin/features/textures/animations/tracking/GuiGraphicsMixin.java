@@ -12,13 +12,33 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GuiGraphicsExtractor.class)
 public class GuiGraphicsMixin {
 
-    @Inject(method = "blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;IIIII)V", at = @At("HEAD"))
-    private void preDrawSprite(RenderPipeline renderPipeline, TextureAtlasSprite sprite, int x, int y, int width, int height, int blitOffset, CallbackInfo ci) {
+    @Inject(method = "blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;IIIII)V",
+            at = @At("HEAD"))
+    private void preDrawSprite(RenderPipeline renderPipeline,
+                               TextureAtlasSprite sprite,
+                               int x,
+                               int y,
+                               int width,
+                               int height,
+                               int color,
+                               CallbackInfo ci) {
         SpriteUtil.INSTANCE.markSpriteActive(sprite);
     }
 
-    @Inject(method = "blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;IIIIIIIII)V", at = @At("HEAD"))
-    private void preDrawSprite(RenderPipeline renderPipeline, TextureAtlasSprite sprite, int textureWidth, int textureHeight, int uPosition, int vPosition, int x, int y, int uWidth, int vHeight, int blitOffset, CallbackInfo ci) {
+    @Inject(method = "blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;IIIIIIIII)V",
+            at = @At("HEAD"))
+    private void preDrawSprite(RenderPipeline renderPipeline,
+                               TextureAtlasSprite sprite,
+                               int spriteWidth,
+                               int spriteHeight,
+                               int textureX,
+                               int textureY,
+                               int x,
+                               int y,
+                               int width,
+                               int height,
+                               int color,
+                               CallbackInfo ci) {
         SpriteUtil.INSTANCE.markSpriteActive(sprite);
     }
 }

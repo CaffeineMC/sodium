@@ -26,7 +26,20 @@ public class FogRendererMixin implements FogStorage {
     }
 
     @Inject(method = "setupFog", at = @At(value = "RETURN"))
-    private void sodium$storeFogParameters(Camera camera, int renderDistanceInChunks, DeltaTracker deltaTracker, float f, ClientLevel level, CallbackInfoReturnable<Vector4f> cir, @Local(name = "fog") FogData fog) {
-        this.parameters = new FogParameters(fog.color.x, fog.color.y, fog.color.z, fog.color.w, fog.environmentalStart, fog.environmentalEnd, fog.renderDistanceStart, fog.renderDistanceEnd);
+    private void sodium$storeFogParameters(Camera camera,
+                                           int renderDistanceInChunks,
+                                           DeltaTracker deltaTracker,
+                                           float darkenWorldAmount,
+                                           ClientLevel level,
+                                           CallbackInfoReturnable<Vector4f> cir,
+                                           @Local FogData fog) {
+        this.parameters = new FogParameters(fog.color.x,
+                fog.color.y,
+                fog.color.z,
+                fog.color.w,
+                fog.environmentalStart,
+                fog.environmentalEnd,
+                fog.renderDistanceStart,
+                fog.renderDistanceEnd);
     }
 }

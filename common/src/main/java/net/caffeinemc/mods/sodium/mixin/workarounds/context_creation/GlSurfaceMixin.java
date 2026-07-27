@@ -36,11 +36,15 @@ public class GlSurfaceMixin {
             return;
         }
 
-        // note the position of this assignment is here to prevent checkModules from running twice when the game renders the last frame before shutting down after checkModules throws an exception and aborts control flow
+        // note the position of this assignment is here to prevent checkModules from running twice when the game renders
+        // the last frame before shutting down after checkModules throws an exception and aborts control flow
         hasDonePostLaunchChecks = true;
 
         LOGGER.info(String.valueOf(Thread.currentThread()));
-        NativeWindowHandle handle = () -> GLFWNativeWin32.glfwGetWin32Window(Minecraft.getInstance().getWindow().handle());
+        NativeWindowHandle handle = () -> {
+            var window = Minecraft.getInstance().getWindow();
+            return GLFWNativeWin32.glfwGetWin32Window(window.handle());
+        };
 
         if (RenderSystem.getDevice().getDeviceInfo().backendName().contains("OpenGL")) {
             GlContextInfo context = GlContextInfo.create();
@@ -59,7 +63,9 @@ public class GlSurfaceMixin {
         doChecksOnce();
 
         // wglGetCurrentContext is only applicable on Windows
-        if (Util.getPlatform() != Util.OS.WINDOWS || !RenderSystem.getDevice().getDeviceInfo().backendName().contains("OpenGL")) return;
+        if (Util.getPlatform() != Util.OS.WINDOWS || !RenderSystem.getDevice().getDeviceInfo().backendName().contains("OpenGL")) {
+            return;
+        }
 
         if (wglPrevContext == MemoryUtil.NULL) {
             // There is no prior recorded context. Record it.
@@ -76,7 +82,8 @@ public class GlSurfaceMixin {
         }
 
         // record the current context for the next check,
-        // we do this here to prevent a duplicate call to checkModules when the game renders on last frame before shutting down after checkModules throws an exception
+        // we do this here to prevent a duplicate call to checkModules when the game renders on last frame before
+        // shutting down after checkModules throws an exception
         wglPrevContext = currentWglContext;
 
         // Something has decided to replace the OpenGL context, which is not a good sign

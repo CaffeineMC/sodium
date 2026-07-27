@@ -29,16 +29,44 @@ public class CubeMixin {
     private ModelCuboid sodium$cuboid;
 
     // Inject at the start of the function, so we don't capture modified locals
-    @Redirect(method = "<init>", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/client/model/geom/ModelPart$Cube;minX:F", ordinal = 0))
-    private void onInit(ModelPart.Cube instance, float value, int u, int v, float x, float y, float z, float sizeX, float sizeY, float sizeZ, float extraX, float extraY, float extraZ, boolean mirror, float textureWidth, float textureHeight, Set<Direction> renderDirections) {
-        this.sodium$cuboid = new ModelCuboid(u, v, x, y, z, sizeX, sizeY, sizeZ, extraX, extraY, extraZ, mirror, textureWidth, textureHeight, renderDirections);
+    @Redirect(method = "<init>",
+            at = @At(value = "FIELD",
+                    opcode = Opcodes.PUTFIELD,
+                    target = "Lnet/minecraft/client/model/geom/ModelPart$Cube;minX:F",
+                    ordinal = 0))
+    private void onInit(ModelPart.Cube instance,
+                        float value,
+                        int xTexOffs,
+                        int yTexOffs,
+                        float minX,
+                        float minY,
+                        float minZ,
+                        float width,
+                        float height,
+                        float depth,
+                        float growX,
+                        float growY,
+                        float growZ,
+                        boolean mirror,
+                        float xTexSize,
+                        float yTexSize,
+                        Set<Direction> visibleFaces) {
+        this.sodium$cuboid = new ModelCuboid(xTexOffs, yTexOffs, minX, minY, minZ, width, height, depth,
+                growX, growY, growZ, mirror, xTexSize, yTexSize, visibleFaces);
 
         this.minX = value;
     }
 
-    @Inject(method = "compile", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack$Pose;pose()Lorg/joml/Matrix4f;"), cancellable = true)
-    private void onCompile(PoseStack.Pose pose, VertexConsumer buffer, int light, int overlay, int color, CallbackInfo ci) {
-        VertexBufferWriter writer = VertexConsumerUtils.convertOrLog(buffer);
+    @Inject(method = "compile",
+            at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack$Pose;pose()Lorg/joml/Matrix4f;"),
+            cancellable = true)
+    private void onCompile(PoseStack.Pose pose,
+                           VertexConsumer builder,
+                           int lightCoords,
+                           int overlayCoords,
+                           int color,
+                           CallbackInfo ci) {
+        VertexBufferWriter writer = VertexConsumerUtils.convertOrLog(builder);
 
         if (writer == null) {
             return;
@@ -46,6 +74,7 @@ public class CubeMixin {
 
         ci.cancel();
 
-        EntityRenderer.renderCuboid(pose, writer, this.sodium$cuboid, light, overlay, ColorARGB.toABGR(color));
+        color = ColorARGB.toABGR(color);
+        EntityRenderer.renderCuboid(pose, writer, this.sodium$cuboid, lightCoords, overlayCoords, color);
     }
 }

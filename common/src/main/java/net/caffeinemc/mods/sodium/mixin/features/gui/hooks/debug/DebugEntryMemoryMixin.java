@@ -34,7 +34,11 @@ public class DebugEntryMemoryMixin {
     }
 
     @Inject(method = "display", at = @At(value = "RETURN"))
-    private void sodium$addOffHeap(DebugScreenDisplayer debugScreenDisplayer, Level level, LevelChunk levelChunk, LevelChunk levelChunk2, CallbackInfo ci) {
-        debugScreenDisplayer.addToGroup(GROUP, getNativeMemoryString());
+    private void sodium$addOffHeap(DebugScreenDisplayer displayer,
+                                   Level serverOrClientLevel,
+                                   LevelChunk clientChunk,
+                                   LevelChunk serverChunk,
+                                   CallbackInfo ci) {
+        displayer.addToGroup(GROUP, getNativeMemoryString());
     }
 }

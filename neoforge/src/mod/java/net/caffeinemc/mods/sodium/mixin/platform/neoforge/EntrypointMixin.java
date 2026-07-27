@@ -17,9 +17,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(Minecraft.class)
 public class EntrypointMixin {
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Options;<init>(Lnet/minecraft/client/Minecraft;Ljava/io/File;)V", shift = At.Shift.AFTER))
+    @Inject(
+            method = "<init>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/Options;<init>(Lnet/minecraft/client/Minecraft;Ljava/io/File;)V",
+                    shift = At.Shift.AFTER))
     private void sodium$loadConfig(GameConfig gameConfig, CallbackInfo ci) {
-        SodiumClientMod.onInitialization(ModList.get().getModContainerById("sodium").map(t -> t.getModInfo().getVersion().toString()).orElse("UNKNOWN"));
+        String version = ModList.get()
+                .getModContainerById("sodium")
+                .map(container -> container.getModInfo().getVersion().toString())
+                .orElse("UNKNOWN");
+
+        SodiumClientMod.onInitialization(version);
 
         // If any of these return false, FML is in a bad state. We can't continue like this.
         if (FMLLoader.getCurrent().getLoadingModList().hasErrors() || !ModList.get().isLoaded("sodium")) {

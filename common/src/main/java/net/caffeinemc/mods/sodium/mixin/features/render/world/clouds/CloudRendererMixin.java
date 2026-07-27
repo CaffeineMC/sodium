@@ -1,14 +1,11 @@
 package net.caffeinemc.mods.sodium.mixin.features.render.world.clouds;
 
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import net.minecraft.client.renderer.CloudRenderer;
 import net.minecraft.core.Direction;
 import org.jspecify.annotations.Nullable;
-import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import org.lwjgl.system.MemoryUtil;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 
 import java.nio.ByteBuffer;
 
@@ -27,22 +24,22 @@ public abstract class CloudRendererMixin {
     private CloudRenderer.@Nullable TextureData texture;
 
     @Shadow
-    private static boolean isNorthEmpty(long l) {
+    private static boolean isNorthEmpty(long cellData) {
         throw new AssertionError();
     }
 
     @Shadow
-    private static boolean isSouthEmpty(long l) {
+    private static boolean isSouthEmpty(long cellData) {
         throw new AssertionError();
     }
 
     @Shadow
-    private static boolean isWestEmpty(long l) {
+    private static boolean isWestEmpty(long cellData) {
         throw new AssertionError();
     }
 
     @Shadow
-    private static boolean isEastEmpty(long l) {
+    private static boolean isEastEmpty(long cellData) {
         throw new AssertionError();
     }
 
@@ -51,41 +48,58 @@ public abstract class CloudRendererMixin {
      * @reason Optimize cloud meshing
      */
     @Overwrite
-    private void buildMesh(CloudRenderer.RelativeCameraPos relativeCameraPos, ByteBuffer byteBuffer, int cellX, int cellZ, boolean fancy, int radius) {
-        if (this.texture != null) {
-            long[] cells = this.texture.cells();
-            int width = this.texture.width();
-            int height = this.texture.height();
+    private void buildMesh(CloudRenderer.RelativeCameraPos relativeCameraPos,
+                           ByteBuffer byteBuffer,
+                           int cellX,
+                           int cellZ,
+                           boolean fancy,
+                           int radius) {
+        if (this.texture == null) {
+            return;
+        }
 
-            long ptr = MemoryUtil.memAddress(byteBuffer);
-            int cellIndex = byteBuffer.position() / 3;
+        long[] cells = this.texture.cells();
+        int width = this.texture.width();
+        int height = this.texture.height();
 
-            for (int ring = 0; ring <= 2 * radius; ++ring) {
-                for (int dx = -ring; dx <= ring; ++dx) {
-                    int dz = ring - Math.abs(dx);
-                    if (dz >= 0 && dz <= radius && dx * dx + dz * dz <= radius * radius) {
-                        if (dz != 0) {
-                            cellIndex = sodium$addCellGeometryToBuffer(ptr, cellIndex, dx, -dz, relativeCameraPos, fancy, cellX, cellZ, cells, width, height);
-                        }
+        long ptr = MemoryUtil.memAddress(byteBuffer);
+        int cellIndex = byteBuffer.position() / 3;
 
-                        cellIndex = sodium$addCellGeometryToBuffer(ptr, cellIndex, dx, dz, relativeCameraPos, fancy, cellX, cellZ, cells, width, height);
+        for (int ring = 0; ring <= 2 * radius; ++ring) {
+            for (int dx = -ring; dx <= ring; ++dx) {
+                int dz = ring - Math.abs(dx);
+                if (dz >= 0 && dz <= radius && dx * dx + dz * dz <= radius * radius) {
+                    if (dz != 0) {
+                        cellIndex = sodium$addCellGeometryToBuffer(ptr, cellIndex, dx, -dz, relativeCameraPos,
+                                fancy, cellX, cellZ, cells, width, height);
                     }
+
+                    cellIndex = sodium$addCellGeometryToBuffer(ptr, cellIndex, dx, dz, relativeCameraPos,
+                            fancy, cellX, cellZ, cells, width, height);
                 }
             }
-
-            byteBuffer.position(cellIndex * 3);
         }
+
+        byteBuffer.position(cellIndex * 3);
     }
 
+    @Unique
     private static int sodium$calculateTaxicabDistance(int x, int z) {
         return Math.abs(x) + Math.abs(z);
     }
 
-    private static int sodium$addCellGeometryToBuffer(long ptr, int index,
+    @Unique
+    private static int sodium$addCellGeometryToBuffer(long ptr,
+                                                      int index,
                                                       int x,
                                                       int z,
                                                       CloudRenderer.@Nullable RelativeCameraPos orientation,
-                                                      boolean fancy, int camX, int camZ, long[] cells, int texWidth, int texHeight) {
+                                                      boolean fancy,
+                                                      int camX,
+                                                      int camZ,
+                                                      long[] cells,
+                                                      int texWidth,
+                                                      int texHeight) {
         int o = Math.floorMod(camX + x, texWidth);
         int p = Math.floorMod(camZ + z, texHeight);
         long faces = cells[o + p * texWidth];
@@ -110,6 +124,7 @@ public abstract class CloudRendererMixin {
         return newIndex;
     }
 
+    @Unique
     private static int sodium$emitCellGeometryInterior(long ptr, int index, int x, int z) {
         sodium$encodeCellFace(ptr, index, x, z, Direction.DOWN, FLAG_INSIDE_FACE);
         sodium$encodeCellFace(ptr, index + 1, x, z, Direction.UP, FLAG_INSIDE_FACE);
@@ -121,6 +136,7 @@ public abstract class CloudRendererMixin {
         return index + 6;
     }
 
+    @Unique
     private static void sodium$encodeCellFace(long ptr, long index, int x, int z, Direction direction, int extraData) {
         int flags = direction.get3DDataValue() | extraData;
         flags |= (x & 1) << 7;
@@ -133,7 +149,13 @@ public abstract class CloudRendererMixin {
         MemoryIntrinsics.putByte(ptrIndex + 2, (byte) flags);
     }
 
-    private static int sodium$emitCellGeometryExterior(long ptr, int index, long faces, CloudRenderer.@Nullable RelativeCameraPos orientation, int x, int z) {
+    @Unique
+    private static int sodium$emitCellGeometryExterior(long ptr,
+                                                       int index,
+                                                       long faces,
+                                                       CloudRenderer.@Nullable RelativeCameraPos orientation,
+                                                       int x,
+                                                       int z) {
         int faceCount = index;
 
         if (orientation != CloudRenderer.RelativeCameraPos.BELOW_CLOUDS) {
