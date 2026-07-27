@@ -23,10 +23,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Shadow
-    public abstract Vector3fc position(int i);
+    public abstract Vector3fc position(int vertex);
 
     @Shadow
-    public abstract long packedUV(int i);
+    public abstract long packedUV(int vertex);
 
     @Shadow
     @Final
@@ -40,21 +40,33 @@ public abstract class BakedQuadMixin implements BakedQuadView {
     @Shadow
     @Final
     private BakedQuad.MaterialInfo materialInfo;
-    @Unique
-    private int flags;
 
     @Unique
-    private int normal;
-
+    private int sodium$flags;
     @Unique
-    private ModelQuadFacing normalFace = null;
+    private int sodium$normal;
+    @Unique
+    private ModelQuadFacing sodium$normalFace = null;
 
-    @Inject(method = "<init>(Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;JJJJLnet/minecraft/core/Direction;Lnet/minecraft/client/resources/model/geometry/BakedQuad$MaterialInfo;Lnet/neoforged/neoforge/client/model/quad/BakedNormals;Lnet/neoforged/neoforge/client/model/quad/BakedColors;)V", at = @At("RETURN"))
-    private void init(Vector3fc position0, Vector3fc position1, Vector3fc position2, Vector3fc position3, long packedUV0, long packedUV1, long packedUV2, long packedUV3, Direction direction, BakedQuad.MaterialInfo materialInfo, BakedNormals bakedNormals, BakedColors bakedColors, CallbackInfo ci) {
-        this.normal = this.calculateNormal();
-        this.normalFace = ModelQuadFacing.fromPackedNormal(this.normal);
+    @Inject(method = "<init>(Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;Lorg/joml/Vector3fc;JJJJLnet/minecraft/core/Direction;Lnet/minecraft/client/resources/model/geometry/BakedQuad$MaterialInfo;Lnet/neoforged/neoforge/client/model/quad/BakedNormals;Lnet/neoforged/neoforge/client/model/quad/BakedColors;)V",
+            at = @At("RETURN"))
+    private void init(Vector3fc position0,
+                      Vector3fc position1,
+                      Vector3fc position2,
+                      Vector3fc position3,
+                      long packedUV0,
+                      long packedUV1,
+                      long packedUV2,
+                      long packedUV3,
+                      Direction direction,
+                      BakedQuad.MaterialInfo materialInfo,
+                      BakedNormals bakedNormals,
+                      BakedColors bakedColors,
+                      CallbackInfo ci) {
+        this.sodium$normal = this.calculateNormal();
+        this.sodium$normalFace = ModelQuadFacing.fromPackedNormal(this.sodium$normal);
 
-        this.flags = ModelQuadFlags.getQuadFlags(this, direction);
+        this.sodium$flags = ModelQuadFlags.getQuadFlags(this, direction);
     }
 
     @Override
@@ -79,7 +91,8 @@ public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Override
     public int getVertexNormal(int idx) {
-        return this.bakedNormals == BakedNormals.UNSPECIFIED ? -1 : this.bakedNormals.normal(idx);//this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.NORMAL_INDEX];
+        //this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.NORMAL_INDEX];
+        return this.bakedNormals == BakedNormals.UNSPECIFIED ? -1 : this.bakedNormals.normal(idx);
     }
 
     @Override
@@ -104,7 +117,7 @@ public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Override
     public int getFlags() {
-        return this.flags;
+        return this.sodium$flags;
     }
 
     @Override
@@ -114,12 +127,12 @@ public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Override
     public ModelQuadFacing getNormalFace() {
-        return this.normalFace;
+        return this.sodium$normalFace;
     }
 
     @Override
     public int getFaceNormal() {
-        return this.normal;
+        return this.sodium$normal;
     }
 
     @Override

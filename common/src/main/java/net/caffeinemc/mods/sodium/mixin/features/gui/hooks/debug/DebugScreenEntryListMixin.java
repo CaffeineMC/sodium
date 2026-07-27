@@ -41,7 +41,8 @@ public class DebugScreenEntryListMixin {
 
     @Inject(method = "resetToProfile", at = @At("HEAD"))
     private void injectLoadProfile(DebugScreenProfile profile, CallbackInfo ci) {
-        if (profile == DebugScreenProfile.PERFORMANCE && !PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
+        if (profile == DebugScreenProfile.PERFORMANCE &&
+                !PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
             this.setReducedDebugStatuses();
         } else {
             this.setFullDebugStatuses();
@@ -50,7 +51,14 @@ public class DebugScreenEntryListMixin {
 
     @Inject(method = "rebuildCurrentList", at = @At("HEAD"))
     private void injectSodiumSettings(CallbackInfo ci) {
-        Identifier setting = PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment() ? SodiumClientMod.SODIUM_DEBUG_ENTRY_FULL : SodiumClientMod.SODIUM_DEBUG_ENTRY_REDUCED;
+        Identifier setting;
+
+        if (PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
+            setting = SodiumClientMod.SODIUM_DEBUG_ENTRY_FULL;
+        } else {
+            setting = SodiumClientMod.SODIUM_DEBUG_ENTRY_REDUCED;
+        }
+
         if (!this.allStatuses.containsKey(setting)) {
             this.allStatuses.put(setting, DebugScreenEntryStatus.IN_OVERLAY);
         }

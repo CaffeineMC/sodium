@@ -8,7 +8,7 @@ import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.gui.SodiumConfigBuilder;
 import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;
-import net.caffeinemc.mods.sodium.client.platform.windows.api.Imm32;
+import net.caffeinemc.mods.sodium.client.platform.PlatformHelper;
 import net.minecraft.client.GameLoadCookie;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
@@ -49,13 +49,20 @@ public class MinecraftMixin {
         ResourcePackScanner.checkIfCoreShaderLoaded(this.resourceManager);
     }
 
-    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LoadingOverlay;registerTextures(Lnet/minecraft/client/renderer/texture/TextureManager;)V"))
+    @WrapOperation(
+            method = "<init>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/screens/LoadingOverlay;registerTextures(Lnet/minecraft/client/renderer/texture/TextureManager;)V"))
     private void registerSodiumIcon(TextureManager textureManager, Operation<Void> original) {
         SodiumConfigBuilder.registerIcon(textureManager);
         original.call(textureManager);
     }
 
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/debug/DebugScreenEntryList;<init>(Ljava/io/File;Lcom/mojang/datafixers/DataFixer;)V"))
+    @Inject(method = "<init>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/components/debug/DebugScreenEntryList;<init>(Ljava/io/File;Lcom/mojang/datafixers/DataFixer;)V"))
     private void setFullscreen(GameConfig gameConfig, CallbackInfo ci) {
         if (!SodiumClientMod.options().notifications.hasEditedFullscreenOption) {
             SodiumClientMod.options().notifications.hasEditedFullscreenOption = true;
@@ -67,7 +74,7 @@ public class MinecraftMixin {
                 return; // Do not get stuck in a loop of setting exclusive fullscreen! That'd be very annoying.
             }
 
-            var hasIME = OsUtils.getOs() == OsUtils.OperatingSystem.WIN && Imm32.CheckIMEStatus();
+            var hasIME = PlatformHelper.isUsingIME();
             Minecraft.getInstance().options.exclusiveFullscreen().set(!hasIME);
 
             if (hasIME) {

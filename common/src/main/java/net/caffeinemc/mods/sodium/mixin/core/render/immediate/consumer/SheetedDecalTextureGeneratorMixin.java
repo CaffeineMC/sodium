@@ -103,7 +103,10 @@ public class SheetedDecalTextureGeneratorMixin implements VertexBufferWriter {
             normal.z = NormI8.unpackZ(packedNormal);
 
             Vector3f transformedNormal = inverseNormalMatrix.transform(normal);
-            Direction direction = Direction.getApproximateNearest(transformedNormal.x(), transformedNormal.y(), transformedNormal.z());
+            Direction direction = Direction.getApproximateNearest(
+                    transformedNormal.x(),
+                    transformedNormal.y(),
+                    transformedNormal.z());
 
             Vector4f transformedTexture = inverseTextureMatrix.transform(position);
             transformedTexture.rotateY(3.1415927F);

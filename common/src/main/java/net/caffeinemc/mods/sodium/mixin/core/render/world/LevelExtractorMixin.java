@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.extract.LevelExtractor;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.VisibleForDebug;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.*;
@@ -54,10 +55,13 @@ public class LevelExtractorMixin {
     }
 
     @Inject(method = "extractVisibleBlockEntities", at = @At("HEAD"), cancellable = true, require = 1)
-    private void extractVisibleBlockEntities(Camera camera, float f, LevelRenderState levelRenderState, CallbackInfo ci) {
+    private void extractVisibleBlockEntities(Camera camera,
+                                             float deltaPartialTick,
+                                             LevelRenderState levelRenderState,
+                                             CallbackInfo ci) {
         ci.cancel();
 
-        this.renderer.extractBlockEntities(camera, f, this.level.destructionProgress(), levelRenderState);
+        this.renderer.extractBlockEntities(camera, deltaPartialTick, this.level.destructionProgress(), levelRenderState);
     }
 
     // Exclusive to NeoForge, allow to fail.
@@ -74,6 +78,7 @@ public class LevelExtractorMixin {
      * @reason Replace the debug string
      * @author JellySquid
      */
+    @VisibleForDebug
     @Overwrite
     public String sectionStatistics() {
         this.checkRenderer();
@@ -107,7 +112,13 @@ public class LevelExtractorMixin {
     @Overwrite
     private void setBlockDirty(BlockPos pos, boolean important) {
         this.checkRenderer();
-        this.renderer.scheduleRebuildForBlockArea(pos.getX() - 1, pos.getY() - 1, pos.getZ() - 1, pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1, important);
+        this.renderer.scheduleRebuildForBlockArea(pos.getX() - 1,
+                pos.getY() - 1,
+                pos.getZ() - 1,
+                pos.getX() + 1,
+                pos.getY() + 1,
+                pos.getZ() + 1,
+                important);
     }
 
     /**
@@ -124,16 +135,31 @@ public class LevelExtractorMixin {
      * @author JellySquid
      */
     @Inject(method = "extract", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SectionOcclusionGraph;consumeFrustumUpdate()Z"))
-    private void cullTerrain(DeltaTracker deltaTracker, Camera camera, float deltaPartialTick, CallbackInfo ci, @Local Frustum frustum) {
-        var viewport = ((ViewportProvider) frustum).sodium$createViewport();
+    private void cullTerrain(DeltaTracker deltaTracker,
+                             Camera camera,
+                             float deltaPartialTick,
+                             CallbackInfo ci,
+                             @Local Frustum cullFrustum) {
+        var viewport = ((ViewportProvider) cullFrustum).sodium$createViewport();
         var updateChunksImmediately = FlawlessFrames.isActive();
 
         boolean useOcclusionCulling = this.levelRenderState.cameraRenderState.smartCull;
-        this.renderer.setupTerrain(camera, viewport, ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters(), useOcclusionCulling, updateChunksImmediately, ((FrustumAccessor) frustum).sodium$getMatrix());
+        this.renderer.setupTerrain(camera,
+                viewport,
+                ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters(),
+                useOcclusionCulling,
+                updateChunksImmediately,
+                ((FrustumAccessor) cullFrustum).sodium$getMatrix());
     }
 
-    @Redirect(method = "extract", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/extract/LevelExtractor;applyFrustum(Lnet/minecraft/client/renderer/culling/Frustum;)V"))
-    private void sodium$cancel(LevelExtractor instance, Frustum frustum) {}
+    @Redirect(
+            method = "extract",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/renderer/extract/LevelExtractor;applyFrustum(Lnet/minecraft/client/renderer/culling/Frustum;)V"))
+    private void sodium$cancel(LevelExtractor instance, Frustum frustum) {
+        // NO-OP
+    }
 
     /**
      * @reason Redirect to our renderer

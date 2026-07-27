@@ -13,7 +13,11 @@ public class MinecraftRenderFrameMixin {
     // hook the vanilla fps update to update our fps display only when it does too, once a second
     @Inject(
             method = "renderFrame",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;fps:I", opcode = Opcodes.PUTSTATIC, shift = At.Shift.AFTER)
+            at = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/client/Minecraft;fps:I",
+                    opcode = Opcodes.PUTSTATIC,
+                    shift = At.Shift.AFTER)
     )
     private void sodium$updatePercentileCache(boolean advanceGameTime, CallbackInfo ci) {
         FrameTimeStatistics.INSTANCE.invalidate();

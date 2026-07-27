@@ -18,7 +18,13 @@ import java.util.function.Supplier;
 
 @Mixin(Window.class)
 public class WindowMixin {
-    @Redirect(method = "createGlfwWindow", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwCreateWindow(IILjava/lang/CharSequence;JJ)J"), expect = 0, require = 0)
+    @Redirect(
+            method = "createGlfwWindow",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lorg/lwjgl/glfw/GLFW;glfwCreateWindow(IILjava/lang/CharSequence;JJ)J"),
+            expect = 0,
+            require = 0)
     private static long wrapGlfwCreateWindow(int width, int height, CharSequence title, long monitor, long share) {
         NvidiaWorkarounds.applyEnvironmentChanges();
         AmdWorkarounds.applyEnvironmentChanges();

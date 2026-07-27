@@ -20,10 +20,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(BakedQuad.class)
 public abstract class BakedQuadMixin implements BakedQuadView {
     @Shadow
-    public abstract Vector3fc position(int i);
+    public abstract Vector3fc position(int vertex);
 
     @Shadow
-    public abstract long packedUV(int i);
+    public abstract long packedUV(int vertex);
 
     @Shadow
     @Final
@@ -41,7 +41,17 @@ public abstract class BakedQuadMixin implements BakedQuadView {
     private ModelQuadFacing normalFace = null;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void init(Vector3fc position0, Vector3fc position1, Vector3fc position2, Vector3fc position3, long packedUV0, long packedUV1, long packedUV2, long packedUV3, Direction direction, BakedQuad.MaterialInfo materialInfo, CallbackInfo ci) {
+    private void init(Vector3fc position0,
+                      Vector3fc position1,
+                      Vector3fc position2,
+                      Vector3fc position3,
+                      long packedUV0,
+                      long packedUV1,
+                      long packedUV2,
+                      long packedUV3,
+                      Direction direction,
+                      BakedQuad.MaterialInfo materialInfo,
+                      CallbackInfo ci) {
         this.normal = this.calculateNormal();
         this.normalFace = ModelQuadFacing.fromPackedNormal(this.normal);
 

@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.mixin.core.render;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatExtensions;
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,10 +14,11 @@ import java.util.List;
 
 @Mixin(VertexFormat.class)
 public class VertexFormatMixin implements VertexFormatExtensions {
+    @Unique
     private int sodium$globalId;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void afterInit(List elements, int vertexSize, int stepRate, CallbackInfo ci) {
+    private void afterInit(List<VertexFormatElement> elements, int vertexSize, int stepRate, CallbackInfo ci) {
         this.sodium$globalId = VertexFormatRegistry.instance()
                 .allocateGlobalId((VertexFormat) (Object) this);
     }

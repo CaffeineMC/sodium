@@ -9,8 +9,12 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(RenderBuffers.class)
 public class RenderBuffersMixin {
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SectionBufferBuilderPool;allocate(I)Lnet/minecraft/client/renderer/SectionBufferBuilderPool;"))
-    private SectionBufferBuilderPool sodium$doNotAllocateChunks(int i) {
+    @Redirect(
+            method = "<init>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/renderer/SectionBufferBuilderPool;allocate(I)Lnet/minecraft/client/renderer/SectionBufferBuilderPool;"))
+    private SectionBufferBuilderPool sodium$doNotAllocateChunks(int maxWorkers) {
         return new NonStoringBuilderPool();
     }
 }

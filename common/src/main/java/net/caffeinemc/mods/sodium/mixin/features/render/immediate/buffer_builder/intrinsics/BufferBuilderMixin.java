@@ -10,6 +10,7 @@ import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.client.model.quad.BakedQuadView;
 import net.caffeinemc.mods.sodium.client.render.immediate.model.BakedModelEncoder;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
+import org.jspecify.annotations.NonNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -48,7 +49,7 @@ public abstract class BufferBuilderMixin implements VertexConsumer {
     }
 
     @Override
-    public void putBakedQuad(PoseStack.Pose pose, BakedQuad quad, QuadInstance instance) {
+    public void putBakedQuad(PoseStack.@NonNull Pose pose, @NonNull BakedQuad quad, @NonNull QuadInstance instance) {
         if (!this.blockFormat && !this.entityFormat) {
             VertexConsumer.super.putBakedQuad(pose, quad, instance);
 

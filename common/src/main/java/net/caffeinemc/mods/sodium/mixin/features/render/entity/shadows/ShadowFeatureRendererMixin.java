@@ -9,15 +9,12 @@ import net.caffeinemc.mods.sodium.api.vertex.format.common.EntityVertex;
 import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.feature.ShadowFeatureRenderer;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.world.phys.AABB;
 import org.joml.Matrix4fc;
 import org.lwjgl.system.MemoryStack;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -28,10 +25,6 @@ public class ShadowFeatureRendererMixin {
     @Unique
     private static final int DEFAULT_NORMAL = NormI8.pack(0.0f, 1.0f, 0.0f);
 
-    @Shadow
-    @Final
-    private static RenderType SHADOW_RENDER_TYPE;
-
     @Unique
     private static final int SHADOW_COLOR = ColorABGR.pack(1.0f, 1.0f, 1.0f);
 
@@ -40,7 +33,9 @@ public class ShadowFeatureRendererMixin {
      * @reason Reduce vertex assembly overhead for shadow rendering
      */
     @Inject(method = "prepare", at = @At("HEAD"), cancellable = true)
-    private static void renderShadowPartFast(ShadowFeatureRenderer.Submit shadows, VertexConsumer builder, CallbackInfo ci) {
+    private static void renderShadowPartFast(ShadowFeatureRenderer.Submit submit,
+                                             VertexConsumer builder,
+                                             CallbackInfo ci) {
         var writer = VertexConsumerUtils.convertOrLog(builder);
 
         if (writer == null) {
@@ -49,10 +44,10 @@ public class ShadowFeatureRendererMixin {
 
         ci.cancel();
 
-        Matrix4fc matrices = shadows.pose();
+        Matrix4fc matrices = submit.pose();
 
-        for (int i = 0; i < shadows.pieces().size(); i++) {
-            EntityRenderState.ShadowPiece shadowPiece = shadows.pieces().get(i);
+        for (int i = 0; i < submit.pieces().size(); i++) {
+            EntityRenderState.ShadowPiece shadowPiece = submit.pieces().get(i);
 
             float alpha = shadowPiece.alpha();
 
@@ -69,13 +64,21 @@ public class ShadowFeatureRendererMixin {
                 float minZ = (float) (shadowPiece.relativeZ() + box.minZ);
                 float maxZ = (float) (shadowPiece.relativeZ() + box.maxZ);
 
-                renderShadowPart(matrices, writer, shadows.radius(), alpha, minX, maxX, minY, minZ, maxZ);
+                renderShadowPart(matrices, writer, submit.radius(), alpha, minX, maxX, minY, minZ, maxZ);
             }
         }
     }
 
     @Unique
-    private static void renderShadowPart(Matrix4fc matPosition, VertexBufferWriter writer, float radius, float alpha, float minX, float maxX, float minY, float minZ, float maxZ) {
+    private static void renderShadowPart(Matrix4fc matPosition,
+                                         VertexBufferWriter writer,
+                                         float radius,
+                                         float alpha,
+                                         float minX,
+                                         float maxX,
+                                         float minY,
+                                         float minZ,
+                                         float maxZ) {
         float size = 0.5F * (1.0F / radius);
 
         float u1 = (-minX * size) + 0.5F;
@@ -109,7 +112,15 @@ public class ShadowFeatureRendererMixin {
     }
 
     @Unique
-    private static void writeShadowVertex(long ptr, Matrix4fc matPosition, float x, float y, float z, float u, float v, int color, int normal) {
+    private static void writeShadowVertex(long ptr,
+                                          Matrix4fc matPosition,
+                                          float x,
+                                          float y,
+                                          float z,
+                                          float u,
+                                          float v,
+                                          int color,
+                                          int normal) {
         // The transformed position vector
         float xt = MatrixHelper.transformPositionX(matPosition, x, y, z);
         float yt = MatrixHelper.transformPositionY(matPosition, x, y, z);

@@ -18,7 +18,12 @@ public class ItemModelGeneratorMixin {
     private static final ImprovedItemModelBuilder sodium$INSTANCE = new ImprovedItemModelBuilder();
 
     @WrapMethod(method = "bakeSideFaces(Lnet/minecraft/client/resources/model/geometry/QuadCollection$Builder;Lnet/minecraft/client/resources/model/ModelBaker$Interner;Lnet/minecraft/client/renderer/block/dispatch/ModelState;Lnet/minecraft/client/resources/model/geometry/BakedQuad$MaterialInfo;Lnet/neoforged/neoforge/client/model/ExtraFaceData;)V")
-    private static void improvedBakeSideFaces(QuadCollection.Builder builder, ModelBaker.Interner interner, ModelState modelState, BakedQuad.MaterialInfo materialInfo, ExtraFaceData faceData, Operation<Void> original) {
+    private static void improvedBakeSideFaces(QuadCollection.Builder builder,
+                                              ModelBaker.Interner interner,
+                                              ModelState modelState,
+                                              BakedQuad.MaterialInfo materialInfo,
+                                              ExtraFaceData faceData,
+                                              Operation<Void> original) {
         sodium$INSTANCE.bakeSideQuads(builder, interner, materialInfo, modelState, faceData);
     }
 }

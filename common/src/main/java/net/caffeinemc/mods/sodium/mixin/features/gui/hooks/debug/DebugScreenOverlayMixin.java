@@ -15,7 +15,8 @@ public class DebugScreenOverlayMixin {
     @Inject(method = "extractRenderState", at = @At(value = "RETURN"))
     private void sodium$renderBufferArenaOverlay(GuiGraphicsExtractor graphics, CallbackInfo ci) {
         var debugEntries = Minecraft.getInstance().debugEntries;
-        if (debugEntries.isOverlayVisible() && debugEntries.isCurrentlyEnabled(SodiumClientMod.SODIUM_DEBUG_ENTRY_BUFFER_ARENA)) {
+        if (debugEntries.isOverlayVisible() &&
+                debugEntries.isCurrentlyEnabled(SodiumClientMod.SODIUM_DEBUG_ENTRY_BUFFER_ARENA)) {
             SodiumWorldRenderer.instance().renderBufferDebug(graphics);
         }
     }

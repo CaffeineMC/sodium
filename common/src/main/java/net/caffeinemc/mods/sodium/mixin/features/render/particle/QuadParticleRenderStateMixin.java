@@ -28,13 +28,13 @@ public abstract class QuadParticleRenderStateMixin {
      * @author MoePus
      */
     @Inject(method = "renderRotatedQuad", at = @At("HEAD"), cancellable = true)
-    protected void render(VertexConsumer vertexConsumer,
+    protected void render(VertexConsumer builder,
                           float x, float y, float z,
-                          float quatX, float quatY, float quatZ, float quatW, // what? why?
-                          float size,
+                          float xRot, float yRot, float zRot, float wRot, // what? why?
+                          float scale,
                           float u0, float u1, float v0, float v1,
-                          int color, int light, CallbackInfo ci) {
-        final var writer = VertexConsumerUtils.convertOrLog(vertexConsumer);
+                          int color, int lightCoords, CallbackInfo ci) {
+        final var writer = VertexConsumerUtils.convertOrLog(builder);
 
         if (writer == null) {
             return;
@@ -42,13 +42,25 @@ public abstract class QuadParticleRenderStateMixin {
 
         ci.cancel();
 
-        TEMP_QUAT.set(quatX, quatY, quatZ, quatW);
+        TEMP_QUAT.set(xRot, yRot, zRot, wRot);
 
-        this.sodium$emitVertices(writer, x, y, z, size, u0, u1, v0, v1, ColorARGB.toABGR(color), light, TEMP_QUAT);
+        color = ColorARGB.toABGR(color);
+        this.sodium$emitVertices(writer, x, y, z, scale, u0, u1, v0, v1, color, lightCoords, TEMP_QUAT);
     }
 
     @Unique
-    private void sodium$emitVertices(VertexBufferWriter writer, float x, float y, float z, float size, float u0, float u1, float v0, float v1, int color, int light, Quaternionf quaternion) {
+    private void sodium$emitVertices(VertexBufferWriter writer,
+                                     float x,
+                                     float y,
+                                     float z,
+                                     float size,
+                                     float u0,
+                                     float u1,
+                                     float v0,
+                                     float v1,
+                                     int color,
+                                     int light,
+                                     Quaternionf quaternion) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             long buffer = stack.nmalloc(4 * ParticleVertex.STRIDE);
             long ptr = buffer;

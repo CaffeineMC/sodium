@@ -1,5 +1,7 @@
 package net.caffeinemc.mods.sodium.client.platform;
 
+import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
+import net.caffeinemc.mods.sodium.client.platform.windows.api.Imm32;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -25,5 +27,14 @@ public class PlatformHelper {
         // Try to show a graphical message box (if the platform supports it) and shut down the game.
         MessageBox.showMessageBox(window, MessageBox.IconType.ERROR, messageTitle, messageBody, helpUrl);
         System.exit(1 /* failure code */);
+    }
+
+    public static boolean isUsingIME() {
+        if (OsUtils.getOs() == OsUtils.OperatingSystem.WIN) {
+            return Imm32.checkIMEStatus();
+        }
+
+        // Not handled on other platforms, so just assume we are not using an IME.
+        return false;
     }
 }

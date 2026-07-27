@@ -19,9 +19,13 @@ import java.util.List;
 public class DebugScreenOverlayInsertMixin {
     @Inject(
             method = "extractRenderState",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;extractLines(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Ljava/util/List;Z)V", ordinal = 0)
+            at = @At(value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;extractLines(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Ljava/util/List;Z)V",
+                    ordinal = 0)
     )
-    private void sodium$insertFpsPercentiles(GuiGraphicsExtractor graphics, CallbackInfo ci, @Local(ordinal = 0) List<String> leftLines) {
+    private void sodium$insertFpsPercentiles(GuiGraphicsExtractor graphics,
+                                             CallbackInfo ci,
+                                             @Local(ordinal = 0) List<String> leftLines) {
         Minecraft minecraft = Minecraft.getInstance();
         if (!minecraft.debugEntries.isCurrentlyEnabled(SodiumClientMod.SODIUM_FPS_PERCENTILES)) {
             return;
