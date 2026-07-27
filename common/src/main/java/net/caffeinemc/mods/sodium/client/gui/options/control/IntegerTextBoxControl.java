@@ -79,7 +79,7 @@ public class IntegerTextBoxControl implements Control {
         public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
             super.extractRenderState(graphics, mouseX, mouseY, delta);
 
-            if (!this.option.showControl() || (this.isResetOverlayActive() && this.getFocused() != this.textBox)) {
+            if (this.option.shouldHideControl() || (this.isResetOverlayActive() && this.getFocused() != this.textBox)) {
                 return;
             }
 
@@ -119,7 +119,7 @@ public class IntegerTextBoxControl implements Control {
                 return true;
             }
 
-            if (this.isResetOverlayActive() || !this.option.isEnabled() || !this.option.showControl()) {
+            if (this.isResetOverlayActive() || !this.option.isEnabled() || this.option.shouldHideControl()) {
                 return false;
             }
 
