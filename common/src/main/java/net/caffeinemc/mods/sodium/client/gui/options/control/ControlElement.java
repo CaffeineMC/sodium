@@ -85,7 +85,7 @@ public abstract class ControlElement extends AbstractParentWidget {
         }
 
         if (this.children().isEmpty()) {
-            return ComponentPath.leaf(this);
+            return !this.isFocused() ? ComponentPath.leaf(this) : null;
         }
 
         return super.nextFocusPath(event);
