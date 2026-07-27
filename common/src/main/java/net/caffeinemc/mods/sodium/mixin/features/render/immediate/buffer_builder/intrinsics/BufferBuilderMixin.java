@@ -24,6 +24,10 @@ public abstract class BufferBuilderMixin implements VertexConsumer {
     @Final
     private boolean blockFormat;
 
+    @Shadow
+    @Final
+    private boolean entityFormat;
+
     @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lorg/lwjgl/system/MemoryUtil;memPutInt(JI)V"))
     private static void redirectInt(long address, int value) {
         MemoryIntrinsics.putInt(address, value);
@@ -46,7 +50,7 @@ public abstract class BufferBuilderMixin implements VertexConsumer {
 
     @Override
     public void putBakedQuad(PoseStack.@NonNull Pose pose, @NonNull BakedQuad quad, @NonNull QuadInstance instance) {
-        if (!this.blockFormat) { // check for ENTITY.
+        if (!this.blockFormat && !this.entityFormat) {
             VertexConsumer.super.putBakedQuad(pose, quad, instance);
 
             if (quad.materialInfo().sprite() != null) {
