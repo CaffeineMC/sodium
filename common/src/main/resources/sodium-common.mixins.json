@@ -18,6 +18,7 @@
     "core.GpuDeviceAccessor",
     "core.MinecraftMixin",
     "core.RenderPassAccessor",
+    "core.StagedVertexBufferMixin",
     "core.VulkanPipelineMixin",
     "core.VulkanRenderPassAccessor",
     "core.WindowMixin",
