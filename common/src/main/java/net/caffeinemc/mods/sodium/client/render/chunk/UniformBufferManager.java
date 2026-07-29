@@ -4,6 +4,7 @@ import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gpu.GPULimits;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl.CompactChunkVertex;
@@ -29,8 +30,8 @@ public class UniformBufferManager {
     private final DynamicUniformStorage<GlobalUniforms> uniformStorage;
     private GpuBufferSlice uniformData;
 
-    private final GpuBuffer sectionTimeInfo;
-    private final GpuBufferSlice.MappedView sectionTimeInfoMap;
+    private GpuBuffer sectionTimeInfo;
+    private GpuBufferSlice.MappedView sectionTimeInfoMap;
 
     private boolean hasUpdatedThisFrame = false;
 
@@ -46,19 +47,43 @@ public class UniformBufferManager {
         this.uniformStorage = new DynamicUniformStorage<>("Sodium terrain uniforms", GLOBAL_UNIFORM_SIZE, INITIAL_GLOBAL_UNIFORM_CAPACITY);
 
         this.sectionTimeInfo = RenderSystem.getDevice().createBuffer(() -> "Section time info",
-                GpuBuffer.USAGE_UNIFORM_TEXEL_BUFFER | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_WRITE,
+                GpuBuffer.USAGE_UNIFORM_TEXEL_BUFFER | GpuBuffer.USAGE_COPY_SRC | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_WRITE,
                 (long) maxRegions * TIME_BUFFER_SIZE_PER_REGION);
-
-        ByteBuffer copy = MemoryUtil.memAlloc(maxRegions * TIME_BUFFER_SIZE_PER_REGION);
-        MemoryUtil.memSet(copy, 0xFFFFFFFF);
-        RenderSystem.getDevice().createCommandEncoder().writeToBuffer(this.sectionTimeInfo.slice(), copy);
-        MemoryUtil.memFree(copy);
 
         if (RenderSystem.getDevice().getDeviceInfo().features().persistentMapping()) {
             this.sectionTimeInfoMap = this.sectionTimeInfo.map(false, true);
+            MemoryUtil.memSet(sectionTimeInfoMap.data(), 0xFFFFFFFF);
         } else {
             this.sectionTimeInfoMap = null;
+            try (var mapping = sectionTimeInfo.map(false, true)) {
+                MemoryUtil.memSet(mapping.data(), 0xFFFFFFFF);
+            }
         }
+    }
+
+    // Somehow, some mods cause more regions to be loaded than are mathematically possible. This fixes that case, while logging it happened.
+    public void resizeIfNeeded(int newRequiredIndex) {
+        var newSize = Math.max(this.sectionTimeInfo.size() * 2, (long) newRequiredIndex * TIME_BUFFER_SIZE_PER_REGION);
+
+        // Note that either something has gone wrong, or a mod is interfering weirdly
+        SodiumClientMod.logger().warn("Had to resize the section time buffer to be bigger ({} bytes), this should never be possible in Vanilla.", newSize);
+
+        if (sectionTimeInfoMap != null) sectionTimeInfoMap.close();
+        var oldBuffer = sectionTimeInfo;
+        sectionTimeInfo = RenderSystem.getDevice().createBuffer(() -> "Section time info", GpuBuffer.USAGE_UNIFORM_TEXEL_BUFFER | GpuBuffer.USAGE_COPY_SRC | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_WRITE, newSize);
+
+        RenderSystem.getDevice().createCommandEncoder().copyToBuffer(oldBuffer.slice(), sectionTimeInfo.slice(0, oldBuffer.size()));
+
+        if (RenderSystem.getDevice().getDeviceInfo().features().persistentMapping()) {
+            this.sectionTimeInfoMap = this.sectionTimeInfo.map(false, true);
+            MemoryUtil.memSet(MemoryUtil.memAddress(sectionTimeInfoMap.data()) + oldBuffer.size(), 0xFFFFFFFF, sectionTimeInfo.size() - oldBuffer.size());
+        } else {
+            try (var mapping = sectionTimeInfo.map(false, true)) {
+                MemoryUtil.memSet(MemoryUtil.memAddress(mapping.data()) + oldBuffer.size(), 0xFFFFFFFF, sectionTimeInfo.size() - oldBuffer.size());
+            }
+        }
+
+        oldBuffer.close(); // defers
     }
 
     public void prepareFrame() {
@@ -131,7 +156,7 @@ public class UniformBufferManager {
         long sectionTimeOffset = ((long) id * RenderRegion.REGION_SIZE + sectionIndex) * Integer.BYTES;
 
         if (sectionTimeOffset >= this.sectionTimeInfo.size()) {
-            throw new IllegalStateException("Overflowed the mesh time buffer at " + id + "x" + sectionIndex);
+            resizeIfNeeded(id);
         }
 
         if (this.sectionTimeInfoMap != null) {
