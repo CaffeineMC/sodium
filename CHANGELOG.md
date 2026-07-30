@@ -4,24 +4,22 @@
 Everything above the line is ignored and not included in the changelog. Everything below will be in the
 changelog on GitHub, Modrinth and CurseForge.
 ----------
-Sodium [SodiumVersion]() for Minecraft [MCVersion]() improves stability by fixing a number of crashes and other bugs.
+Sodium [SodiumVersion]() includes a new terrain buffer allocation system designed to reduce the number of buffers that get allocated and resized as chunks are loaded and unloaded. Please help us by testing this version in various scenarios, comparing frame rate stability, and reporting any issues that may arise. Feedback and testing results are welcome in the testing channel on [our discord server](https://caffeinemc.net/discord).
 
-- Fix hand rendering glitches that happened in specific cases ([#3751](https://github.com/CaffeineMC/sodium/pull/3751))
-- Fix crash "getResources is null" ([#3752](https://github.com/CaffeineMC/sodium/pull/3752))
-- Fix panorama screenshots crashing ([#3761](https://github.com/CaffeineMC/sodium/pull/3761))
-- Fix crash "centroid is null," "allQuads is null," and "geometryPlanes is null" ([#3757](https://github.com/CaffeineMC/sodium/pull/3757), [#3805](https://github.com/CaffeineMC/sodium/pull/3805))
-- Fix crashes resulting from unsafe concurrency in async culling "ArrayIndexOutOfBoundsException" ([#3756](https://github.com/CaffeineMC/sodium/pull/3756))
-- Fix incorrect GlyphVertex
-- Improved mod compatibility by using occlusion culling from camera render state ([#3764](https://github.com/CaffeineMC/sodium/pull/3764))
-- Optimize checks for immediate presentation in RSM ([#3768](https://github.com/CaffeineMC/sodium/pull/3768))
-- Cache max draw size in MultiDrawBatch instead of scanning every frame ([#3773](https://github.com/CaffeineMC/sodium/pull/3773))
-- Reimplement enhanced entity sorting. The option was ineffective as of 26.2, but should now work again.
-- Fix sections getting stuck fully "faded" as the color of the sky, often after explosions ([#3785](https://github.com/CaffeineMC/sodium/pull/3785))
-- Fix crash "sorter is null" ([#3787](https://github.com/CaffeineMC/sodium/pull/3787))
-- Internal code quality improvements and cleanup
-- Fix non-terrain block lighting ([#3800](https://github.com/CaffeineMC/sodium/pull/3800), [#3795](https://github.com/CaffeineMC/sodium/pull/3795))
-- Remove extra ABGR conversion to fix incorrect falling block coloration ([#3798](https://github.com/CaffeineMC/sodium/pull/3798))
-- Fix crash when rendering very many sections on Vulkan by making the indirect context ring buffer dynamically sized
-- Fix command line not being restored after NeoForge early window init ([#3803](https://github.com/CaffeineMC/sodium/pull/3803))
+Other changes include improvements to our item meshing, optimizations for item rendering, and numerous bug fixes. This release also adds support for FRAPI on NeoForge.
 
-Iris 1.11.1 is not compatible, and you will need to download an appropriate version from Modrinth, or if no such version is available there, from the Iris Discord server.
+- Prevent misalignedment in item models by removing UV_SHRINK where necessary ([#3831](https://github.com/CaffeineMC/sodium/pull/3831))
+- Offset overlay layers of optimized item models to prevent z-fighting
+- Optimize the dried ghast model ([#3815](https://github.com/CaffeineMC/sodium/pull/3815))
+- Implementation of a Incrementally Defragmenting Auto-Sizing Multi-Arena Allocator ([#3634](https://github.com/CaffeineMC/sodium/pull/3634))
+- Support FRAPI on NeoForge ([#3818](https://github.com/CaffeineMC/sodium/pull/3818))
+- Fix buffer overflow in Kernel32.getModuleFileName
+- Use the correct atomic operations on NativeBuffer.ALLOCATED
+- Ensure that VKIndirectContext.addCommand allocates enough memory
+- Use clearenv() to delete environment variables
+- Cleanup code around checking the IME status on Windows
+- Restore the fast quad encoder for entity-format buffers ([#3848](https://github.com/CaffeineMC/sodium/pull/3848))
+- Handle resizing the section time buffer to fix [#3809](https://github.com/CaffeineMC/sodium/issues/3809)
+- Backport fix from 26.3 Snapshot 6 for buffer recycling to restore inventory item rendering performance
+
+Thank you to all the contributors who added to this release!
