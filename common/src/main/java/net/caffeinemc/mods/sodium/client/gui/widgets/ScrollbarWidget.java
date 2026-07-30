@@ -45,7 +45,7 @@ public class ScrollbarWidget extends AbstractWidget {
     public void setScrollbarContext(int visible, int total) {
         this.visible = visible;
         this.total = total;
-        this.setScrollAndNotify(Math.clamp(this.scrollAmount, 0, total - visible));
+        this.setScrollAndNotify(Math.max(0, Math.min(total - visible, this.scrollAmount)));
     }
 
     public void setScrollbarContext(int total) {
@@ -61,7 +61,7 @@ public class ScrollbarWidget extends AbstractWidget {
     }
 
     public void scrollTo(int target) {
-        if (this.setScrollAndNotify(Math.clamp(target, 0, this.total - this.visible))) {
+        if (this.setScrollAndNotify(Math.max(0, Math.min(this.total - this.visible, target)))) {
             this.lastScrollTime = System.currentTimeMillis();
         }
     }
