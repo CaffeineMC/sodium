@@ -252,7 +252,7 @@ public class SodiumWorldRenderer {
 
             profiler.popPush("chunk_update");
 
-            this.renderSectionManager.cleanupAndFlip(uniformBufferManager);
+            this.renderSectionManager.cleanupAndFlip(this.uniformBufferManager);
             this.renderSectionManager.updateChunks(viewport, updateChunksImmediately);
 
             profiler.popPush("chunk_upload");

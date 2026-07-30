@@ -52,10 +52,10 @@ public class UniformBufferManager {
 
         if (RenderSystem.getDevice().getDeviceInfo().features().persistentMapping()) {
             this.sectionTimeInfoMap = this.sectionTimeInfo.map(false, true);
-            MemoryUtil.memSet(sectionTimeInfoMap.data(), 0xFFFFFFFF);
+            MemoryUtil.memSet(this.sectionTimeInfoMap.data(), 0xFFFFFFFF);
         } else {
             this.sectionTimeInfoMap = null;
-            try (var mapping = sectionTimeInfo.map(false, true)) {
+            try (var mapping = this.sectionTimeInfo.map(false, true)) {
                 MemoryUtil.memSet(mapping.data(), 0xFFFFFFFF);
             }
         }
@@ -68,18 +68,18 @@ public class UniformBufferManager {
         // Note that either something has gone wrong, or a mod is interfering weirdly
         SodiumClientMod.logger().warn("Had to resize the section time buffer to be bigger ({} bytes), this should never be possible in Vanilla.", newSize);
 
-        if (sectionTimeInfoMap != null) sectionTimeInfoMap.close();
-        var oldBuffer = sectionTimeInfo;
-        sectionTimeInfo = RenderSystem.getDevice().createBuffer(() -> "Section time info", GpuBuffer.USAGE_UNIFORM_TEXEL_BUFFER | GpuBuffer.USAGE_COPY_SRC | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_WRITE, newSize);
+        if (this.sectionTimeInfoMap != null) this.sectionTimeInfoMap.close();
+        var oldBuffer = this.sectionTimeInfo;
+        this.sectionTimeInfo = RenderSystem.getDevice().createBuffer(() -> "Section time info", GpuBuffer.USAGE_UNIFORM_TEXEL_BUFFER | GpuBuffer.USAGE_COPY_SRC | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_WRITE, newSize);
 
-        RenderSystem.getDevice().createCommandEncoder().copyToBuffer(oldBuffer.slice(), sectionTimeInfo.slice(0, oldBuffer.size()));
+        RenderSystem.getDevice().createCommandEncoder().copyToBuffer(oldBuffer.slice(), this.sectionTimeInfo.slice(0, oldBuffer.size()));
 
         if (RenderSystem.getDevice().getDeviceInfo().features().persistentMapping()) {
             this.sectionTimeInfoMap = this.sectionTimeInfo.map(false, true);
-            MemoryUtil.memSet(MemoryUtil.memAddress(sectionTimeInfoMap.data()) + oldBuffer.size(), 0xFFFFFFFF, sectionTimeInfo.size() - oldBuffer.size());
+            MemoryUtil.memSet(MemoryUtil.memAddress(this.sectionTimeInfoMap.data()) + oldBuffer.size(), 0xFFFFFFFF, this.sectionTimeInfo.size() - oldBuffer.size());
         } else {
-            try (var mapping = sectionTimeInfo.map(false, true)) {
-                MemoryUtil.memSet(MemoryUtil.memAddress(mapping.data()) + oldBuffer.size(), 0xFFFFFFFF, sectionTimeInfo.size() - oldBuffer.size());
+            try (var mapping = this.sectionTimeInfo.map(false, true)) {
+                MemoryUtil.memSet(MemoryUtil.memAddress(mapping.data()) + oldBuffer.size(), 0xFFFFFFFF, this.sectionTimeInfo.size() - oldBuffer.size());
             }
         }
 
@@ -156,7 +156,7 @@ public class UniformBufferManager {
         long sectionTimeOffset = ((long) id * RenderRegion.REGION_SIZE + sectionIndex) * Integer.BYTES;
 
         if (sectionTimeOffset >= this.sectionTimeInfo.size()) {
-            resizeIfNeeded(id);
+            this.resizeIfNeeded(id);
         }
 
         if (this.sectionTimeInfoMap != null) {

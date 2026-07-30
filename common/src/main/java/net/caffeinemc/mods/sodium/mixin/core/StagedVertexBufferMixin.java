@@ -1,7 +1,6 @@
 package net.caffeinemc.mods.sodium.mixin.core;
 
 import com.mojang.blaze3d.systems.GpuDevice;
-import net.minecraft.client.renderer.StagedVertexBuffer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;

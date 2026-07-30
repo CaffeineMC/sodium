@@ -193,7 +193,7 @@ public class ArenaAggregator {
                 if (allocationSize <= 0) {
                     throw new IllegalStateException("Cannot allocate arena of with " + requiredCapacity + " bytes");
                 }
-                bestArena = createSharedArena(allocationSize);
+                bestArena = this.createSharedArena(allocationSize);
                 this.arenas.add(bestArena);
             }
 
@@ -332,15 +332,15 @@ public class ArenaAggregator {
     }
 
     public RegionAllocatorHandle getGeometryBufferAllocator(RenderRegion region, int stride, RegionAllocatorHandle.AllocationChangeConsumer onChange) {
-        return createAllocator(region, stride, onChange);
+        return this.createAllocator(region, stride, onChange);
     }
 
     public RegionAllocatorHandle getIndexBufferAllocator(RenderRegion region, int stride, RegionAllocatorHandle.AllocationChangeConsumer onChange) {
-        return createAllocator(region, stride, onChange);
+        return this.createAllocator(region, stride, onChange);
     }
 
     private RegionAllocatorHandle createAllocator(RenderRegion region, int stride, RegionAllocatorHandle.AllocationChangeConsumer onChange) {
-        BufferArena backingArena = getArenaFittingFor(0, stride, true);
+        BufferArena backingArena = this.getArenaFittingFor(0, stride, true);
         return new RegionAllocatorHandle(region, onChange, backingArena);
     }
 
@@ -356,11 +356,11 @@ public class ArenaAggregator {
 
     BufferArena getArenaFittingFor(long requiredCapacity, int stride, boolean allowNewAllocation) {
         // TODO: create arena size based on top k region sizes, and scale up if all regions are big
-        return getDataTypeForStride(stride).ensureSharedArena(requiredCapacity, allowNewAllocation ? ALLOW_NEW_ALLOCATION : DISALLOW_NEW_ALLOCATION);
+        return this.getDataTypeForStride(stride).ensureSharedArena(requiredCapacity, allowNewAllocation ? ALLOW_NEW_ALLOCATION : DISALLOW_NEW_ALLOCATION);
     }
 
     BufferArena createDedicatedArena(long requiredCapacity, int stride) {
-        GpuBuffer buffer = getBufferOfSizeAtLeast(requiredCapacity * stride);
+        GpuBuffer buffer = this.getBufferOfSizeAtLeast(requiredCapacity * stride);
         long actualCapacity = buffer.size() / stride;
         return new SingleOwnerBufferArena(this, buffer, actualCapacity, stride);
     }

@@ -254,7 +254,7 @@ public abstract class BufferArena implements AllocatorBase {
 
         // If we weren't able to upload some buffers, they will have been left behind in the queue
         if (!queue.isEmpty()) {
-            handleResizeUploads(owner, queue, totalOwnerUsageAfterUploads);
+            this.handleResizeUploads(owner, queue, totalOwnerUsageAfterUploads);
         }
 
         return this.arenaBuffer != prevBuffer;
@@ -284,7 +284,7 @@ public abstract class BufferArena implements AllocatorBase {
 
     long estimateNewCapacityAfterUpload(float regionFillFractionInv, List<PendingUpload> queue) {
         // Calculate the amount of memory needed for the remaining uploads
-        long requiredNewSize = getNewRequiredSize(queue);
+        long requiredNewSize = this.getNewRequiredSize(queue);
 
         int newSegmentCount = this.usedSegments + queue.size();
 
