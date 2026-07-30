@@ -35,7 +35,7 @@ public class SharedQuadIndexBuffer {
     }
 
     private int getNextSize(int primitiveCount) {
-        return Math.clamp(primitiveCount + 16384, this.maxPrimitives * 2, this.indexFormat.getMaxPrimitiveCount());
+        return Math.min(Math.max(this.maxPrimitives * 2, primitiveCount + 16384), this.indexFormat.getMaxPrimitiveCount());
     }
 
     private void grow(int primitiveCount) {
