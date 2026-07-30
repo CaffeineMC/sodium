@@ -195,7 +195,7 @@ public class ArenaAggregator {
                 if (allocationSize <= 0) {
                     throw new IllegalStateException("Cannot allocate arena of with " + requiredCapacity + " bytes");
                 }
-                bestArena = createSharedArena(commands, allocationSize);
+                bestArena = this.createSharedArena(commands, allocationSize);
                 this.arenas.add(bestArena);
             }
 
@@ -334,15 +334,15 @@ public class ArenaAggregator {
     }
 
     public RegionAllocatorHandle getGeometryBufferAllocator(CommandList commands, RenderRegion region, int stride, RegionAllocatorHandle.AllocationChangeConsumer onChange) {
-        return createAllocator(commands, region, stride, onChange);
+        return this.createAllocator(commands, region, stride, onChange);
     }
 
     public RegionAllocatorHandle getIndexBufferAllocator(CommandList commands, RenderRegion region, int stride, RegionAllocatorHandle.AllocationChangeConsumer onChange) {
-        return createAllocator(commands, region, stride, onChange);
+        return this.createAllocator(commands, region, stride, onChange);
     }
 
     private RegionAllocatorHandle createAllocator(CommandList commands, RenderRegion region, int stride, RegionAllocatorHandle.AllocationChangeConsumer onChange) {
-        BufferArena backingArena = getArenaFittingFor(commands, 0, stride, true);
+        BufferArena backingArena = this.getArenaFittingFor(commands, 0, stride, true);
         return new RegionAllocatorHandle(region, onChange, backingArena);
     }
 
@@ -358,11 +358,11 @@ public class ArenaAggregator {
 
     BufferArena getArenaFittingFor(CommandList commands, long requiredCapacity, int stride, boolean allowNewAllocation) {
         // TODO: create arena size based on top k region sizes, and scale up if all regions are big
-        return getDataTypeForStride(stride).ensureSharedArena(commands, requiredCapacity, allowNewAllocation ? ALLOW_NEW_ALLOCATION : DISALLOW_NEW_ALLOCATION);
+        return this.getDataTypeForStride(stride).ensureSharedArena(commands, requiredCapacity, allowNewAllocation ? ALLOW_NEW_ALLOCATION : DISALLOW_NEW_ALLOCATION);
     }
 
     BufferArena createDedicatedArena(CommandList commands, long requiredCapacity, int stride) {
-        GlMutableBuffer buffer = getBufferOfSizeAtLeast(commands, requiredCapacity * stride);
+        GlMutableBuffer buffer = this.getBufferOfSizeAtLeast(commands, requiredCapacity * stride);
         long actualCapacity = buffer.getSize() / stride;
         return new SingleOwnerBufferArena(this, buffer, actualCapacity, stride);
     }
@@ -370,7 +370,7 @@ public class ArenaAggregator {
     GlMutableBuffer getBufferOfSizeAtLeast(CommandList commands, long bytes) {
         GlMutableBuffer buffer = null;
 
-        if (freeBufferCount > 0) {
+        if (this.freeBufferCount > 0) {
             // get any buffer of at least the requested size but at most MAX_BUFFER_REUSE_SIZE_FACTOR larger
             long maxAcceptableSize = (long) (bytes * MAX_BUFFER_REUSE_SIZE_FACTOR);
 
@@ -389,7 +389,7 @@ public class ArenaAggregator {
             }
             if (buffer != null) {
                 this.freeBuffers[candidateIndex] = null;
-                freeBufferCount--;
+                this.freeBufferCount--;
             }
         }
 
@@ -404,11 +404,11 @@ public class ArenaAggregator {
 
     void releaseBufferForReuse(CommandList commands, GlMutableBuffer buffer) {
         // find an empty slot if there is one
-        if (freeBufferCount < this.freeBuffers.length) {
+        if (this.freeBufferCount < this.freeBuffers.length) {
             for (int i = 0; i < this.freeBuffers.length; i++) {
                 if (this.freeBuffers[i] == null) {
                     this.freeBuffers[i] = buffer;
-                    freeBufferCount++;
+                    this.freeBufferCount++;
                     return;
                 }
             }
@@ -428,7 +428,7 @@ public class ArenaAggregator {
                 this.freeBuffers[i] = null;
             }
         }
-        freeBufferCount = 0;
+        this.freeBufferCount = 0;
 
         for (var dataType : this.dataTypes) {
             for (var arenaEntry : dataType.arenas) {
@@ -494,7 +494,7 @@ public class ArenaAggregator {
     }
 
     public int getBufferCount() {
-        int count = freeBufferCount;
+        int count = this.freeBufferCount;
         for (var dataType : this.dataTypes) {
             count += dataType.arenas.size();
         }

@@ -15,7 +15,7 @@ public class SingleOwnerBufferArena extends BufferArena {
     @Override
     protected void handleResizeUploads(CommandList commandList, RegionAllocatorHandle owner, List<PendingUpload> queue, long totalUploadBytes) {
         // resize to the new estimated capacity
-        this.resize(commandList, estimateNewCapacityAfterUpload(owner.getFillFractionInv(), queue));
+        this.resize(commandList, this.estimateNewCapacityAfterUpload(owner.getFillFractionInv(), queue));
 
         // Try again to upload any buffers that failed last time
         this.tryUploads(commandList, owner, queue);
@@ -92,7 +92,7 @@ public class SingleOwnerBufferArena extends BufferArena {
         GlMutableBuffer srcBufferObj = this.arenaBuffer;
         GlMutableBuffer dstBufferObj = this.parent.getBufferOfSizeAtLeast(commandList, bufferSize);
 
-        executeCopyCommands(commandList, list, srcBufferObj, dstBufferObj);
+        this.executeCopyCommands(commandList, list, srcBufferObj, dstBufferObj);
 
         this.parent.releaseBufferForReuse(commandList, srcBufferObj);
 

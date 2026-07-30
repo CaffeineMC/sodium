@@ -35,7 +35,6 @@ import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.BlockDestructionProgress;
@@ -257,7 +256,7 @@ public class SodiumWorldRenderer {
 
             profiler.popPush("chunk_update");
 
-            this.renderSectionManager.cleanupAndFlip(uniformBufferManager);
+            this.renderSectionManager.cleanupAndFlip(this.uniformBufferManager);
             this.renderSectionManager.updateChunks(viewport, updateChunksImmediately);
 
             profiler.popPush("chunk_upload");

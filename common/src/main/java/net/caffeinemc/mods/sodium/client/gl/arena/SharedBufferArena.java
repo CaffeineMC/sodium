@@ -141,7 +141,7 @@ public class SharedBufferArena extends DefragmentingBufferArena implements Sized
                 throw new IllegalStateException("No owner to evict found even though arena is not empty");
             }
 
-            copyCount = estimateAndTransferOwner(commands, ownerToEvict, false);
+            copyCount = this.estimateAndTransferOwner(commands, ownerToEvict, false);
 
             // stop emptying if there's no arena that can accommodate the eviction
             if (copyCount == TRANSFER_ABORTED) {
@@ -204,7 +204,7 @@ public class SharedBufferArena extends DefragmentingBufferArena implements Sized
                 throw new IllegalStateException("No owner found to evict");
             }
             this.removeOwner(biggestUsageOwner);
-            estimateAndTransferUploadingOwner(commands, biggestUsageSegmentCount, biggestUsageOwner, biggestUsage, true);
+            this.estimateAndTransferUploadingOwner(commands, biggestUsageSegmentCount, biggestUsageOwner, biggestUsage, true);
 
             // try uploading again
             uploadingOwner.getBackingArena().tryUploads(commands, uploadingOwner, queue);
@@ -216,7 +216,7 @@ public class SharedBufferArena extends DefragmentingBufferArena implements Sized
         if (targetArena == null && !allowNewAllocation) {
             return TRANSFER_ABORTED;
         }
-        return transferOwnerTo(commands, owner, targetArena);
+        return this.transferOwnerTo(commands, owner, targetArena);
     }
 
     private int transferOwnerTo(CommandList commands, RegionAllocatorHandle owner, BufferArena targetArena) {
@@ -325,7 +325,7 @@ public class SharedBufferArena extends DefragmentingBufferArena implements Sized
 
             if (current.getOwner() == owner) {
                 // patch links, offsets, and lengths of surrounding segments
-                extractSegment(current, next);
+                this.extractSegment(current, next);
 
                 extractedSegments.add(current);
                 current.setAllocator(newAllocator);

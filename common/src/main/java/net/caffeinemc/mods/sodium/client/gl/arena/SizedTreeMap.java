@@ -20,7 +20,7 @@ public class SizedTreeMap<V extends SizedTreeMap.Sized> extends TreeMap<Long, V>
         long getIdentifier();
 
         default long makeKey() {
-            return (getSize() << 32) | (getIdentifier() & 0xFFFFFFFFL);
+            return (this.getSize() << 32) | (this.getIdentifier() & 0xFFFFFFFFL);
         }
     }
 
@@ -35,7 +35,7 @@ public class SizedTreeMap<V extends SizedTreeMap.Sized> extends TreeMap<Long, V>
 
     public V removeSized(V value) {
         var removed = super.remove(value.makeKey());
-        clearCacheWithRemoved(removed);
+        this.clearCacheWithRemoved(removed);
         return removed;
     }
 
@@ -51,7 +51,7 @@ public class SizedTreeMap<V extends SizedTreeMap.Sized> extends TreeMap<Long, V>
             return null;
         }
         var removed = tailMap.pollFirstEntry().getValue();
-        clearCacheWithRemoved(removed);
+        this.clearCacheWithRemoved(removed);
         return removed;
     }
 
@@ -61,7 +61,7 @@ public class SizedTreeMap<V extends SizedTreeMap.Sized> extends TreeMap<Long, V>
             return null;
         }
         var removed = entry.getValue();
-        clearCacheWithRemoved(removed);
+        this.clearCacheWithRemoved(removed);
         return removed;
     }
 

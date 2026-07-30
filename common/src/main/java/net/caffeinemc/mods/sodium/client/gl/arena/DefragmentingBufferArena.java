@@ -90,7 +90,7 @@ public abstract class DefragmentingBufferArena extends BufferArena {
         int defragmentationSteps = calculateDefragmentationSteps(fragmentationDegree);
 
         for (int i = 0; i < defragmentationSteps; i++) {
-            defragmentationStep(commands, descendingFreeSegments, requiredSeenFreeSize, budget);
+            this.defragmentationStep(commands, descendingFreeSegments, requiredSeenFreeSize, budget);
             if (budget.isElementBudgetEmpty()) {
                 break;
             }
@@ -112,7 +112,7 @@ public abstract class DefragmentingBufferArena extends BufferArena {
                 return;
             }
 
-            if (defragmentDirectional(commands, budget, segmentToMove, descendingFreeSegments)) {
+            if (this.defragmentDirectional(commands, budget, segmentToMove, descendingFreeSegments)) {
                 return;
             }
         }
@@ -157,12 +157,12 @@ public abstract class DefragmentingBufferArena extends BufferArena {
         }
 
         if (defragmentRightLocal) {
-            if (next != null && defragmentRightwards(commands, biggestFree, budget)) {
+            if (next != null && this.defragmentRightwards(commands, biggestFree, budget)) {
                 this.checkAssertions();
                 return true;
             }
         } else {
-            if (prev != this.head && biggestFree != this.head && defragmentLeftwards(commands, biggestFree, budget)) {
+            if (prev != this.head && biggestFree != this.head && this.defragmentLeftwards(commands, biggestFree, budget)) {
                 this.checkAssertions();
                 return true;
             }
