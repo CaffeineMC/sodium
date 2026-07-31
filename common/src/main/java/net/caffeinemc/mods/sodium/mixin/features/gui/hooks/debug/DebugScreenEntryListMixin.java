@@ -63,11 +63,6 @@ public class DebugScreenEntryListMixin {
             this.allStatuses.put(setting, DebugScreenEntryStatus.IN_OVERLAY);
         }
 
-        // TODO: turn this off by default before shipping
-        if (!this.allStatuses.containsKey(SodiumClientMod.SODIUM_DEBUG_ENTRY_BUFFER_ARENA)) {
-            this.allStatuses.put(SodiumClientMod.SODIUM_DEBUG_ENTRY_BUFFER_ARENA, DebugScreenEntryStatus.IN_OVERLAY);
-        }
-
         if (!this.allStatuses.containsKey(SodiumClientMod.SODIUM_FPS_PERCENTILES)) {
             this.allStatuses.put(SodiumClientMod.SODIUM_FPS_PERCENTILES, DebugScreenEntryStatus.IN_OVERLAY);
         }
