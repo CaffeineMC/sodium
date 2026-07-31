@@ -23,3 +23,6 @@ Other changes include improvements to our item meshing, optimizations for item r
 - Backport fix from 26.3 Snapshot 6 for buffer recycling to restore inventory item rendering performance
 
 Thank you to all the contributors who added to this release!
+
+Alpha series changelog:
+- Fixed crash when opening video settings
