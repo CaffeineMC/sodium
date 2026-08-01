@@ -107,7 +107,8 @@
     "simply-no-shading": "<7.6.2",
     "betterend" : "<=21.0.11",
     "enchanteds_sodium_options" : "<1.0.1",
-    "fullscreenfix": "<=2.4.1"
+    "fullscreenfix": "<=2.4.1",
+    "voxy": "<=0.2.18-beta"
   },
   "provides" : [
     "indium"
