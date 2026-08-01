@@ -8,7 +8,7 @@ object BuildConfig {
     val SUPPORT_FRAPI : Boolean = true
 
     // https://semver.org/
-    val MOD_VERSION: String = "0.9.2-alpha.2"
+    val MOD_VERSION: String = "0.9.2-alpha.3"
 
     val MINECRAFT_VERSION_SHORT: String = MINECRAFT_VERSION
             .replace("-snapshot-", "s")

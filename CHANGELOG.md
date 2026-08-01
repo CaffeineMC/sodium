@@ -20,3 +20,6 @@ Other changes include improvements to our item meshing, optimizations for item r
 - Handle resizing the section time buffer to fix [#3809](https://github.com/CaffeineMC/sodium/issues/3809)
 
 Thank you to all the contributors who added to this release!
+
+Alpha series changelog:
+- Disabled automatic enabling of the arena buffer debug widget
