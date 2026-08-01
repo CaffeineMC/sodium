@@ -26,3 +26,4 @@ Thank you to all the contributors who added to this release!
 
 Alpha series changelog:
 - Fixed crash when opening video settings
+- Disabled automatic enabling of the arena buffer debug widget
