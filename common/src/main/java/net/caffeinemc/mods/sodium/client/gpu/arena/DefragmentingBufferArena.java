@@ -131,14 +131,11 @@ public abstract class DefragmentingBufferArena extends BufferArena {
         }
 
         // find as many segments as will fit into the free segment in the chosen direction to move in the opposite direction, which causes the free segment to move in the chosen direction
-        // TODO: this is causing likely the cause of a java.lang.IllegalStateException: segment.prev.end > segment.start: overlapping segments (corrupted) within the segment extraction code
-        // TODO: more smartly determine whether moving the free space in any particular direction would actually gain us anything, i.e. if there's no significant amount of free segments to be combined with in this direction, don't even try. maybe just get the top N biggest free segments and move them towards each other preferentially? -> use while loops and collect the biggest and second biggest and try to move the biggest towards the second biggest, and if that doesn't work, in the other direction, and if that doesn't work, try the second and third biggest, etc.
-        // TODO: byte and copy count budgeting, integrate with time estimation?
         var defragmentRightLocal = this.defragmentRight;
 
-        // if there are any, move towards the closest segments weighted by size
+        // if there are any, move towards the most worthwhile segments
         var ownOffset = biggestFree.getOffset();
-        long lowestDistance = Long.MAX_VALUE;
+        double bestScore = -1.0;
         var count = 0;
         for (var candidate : biggestSegments) {
             if (candidate == biggestFree) {
@@ -150,8 +147,13 @@ public abstract class DefragmentingBufferArena extends BufferArena {
             long candidateOffset = candidate.getOffset();
             var candidateIsRight = candidateOffset > ownOffset;
             long distance = candidateIsRight ? candidateOffset - biggestFree.getEnd() : ownOffset - candidate.getEnd();
-            if (distance < lowestDistance) {
-                lowestDistance = distance;
+            
+            // Score is the gain (size of the free segment we're moving towards) divided by the cost (distance to move)
+            // A higher score means a better target. Add a small value to distance to prevent division by zero.
+            double score = (double) candidate.getLength() / (distance + 1.0);
+            
+            if (score > bestScore) {
+                bestScore = score;
                 defragmentRightLocal = candidateIsRight;
             }
         }
@@ -162,7 +164,7 @@ public abstract class DefragmentingBufferArena extends BufferArena {
                 return true;
             }
         } else {
-            if (prev != this.head && biggestFree != this.head && this.defragmentLeftwards(biggestFree, budget)) {
+            if (biggestFree != this.head && this.defragmentLeftwards(biggestFree, budget)) {
                 this.checkAssertions();
                 return true;
             }
@@ -254,7 +256,7 @@ public abstract class DefragmentingBufferArena extends BufferArena {
         long totalMoveLength = 0;
         var toMove = biggestFree.getPrev();
         var destinationNext = biggestFree.getNext();
-        while (toMove != this.head && !toMove.isFree()) {
+        while (toMove != null && !toMove.isFree()) {
             var newTotalMoveLength = totalMoveLength + toMove.getLength();
             if (newTotalMoveLength > freeLength || totalMoveLength != 0 && budget.elementCopyExceedsBudget(newTotalMoveLength)) {
                 break;
@@ -294,7 +296,6 @@ public abstract class DefragmentingBufferArena extends BufferArena {
             // adjust the free segment
             this.removeFreeSegment(biggestFree);
 
-            // TODO: in weird rare cases this results in a negative offset, why?
             // run with asserts enabled in mangrove forest: the overlapping segments are probably the cause
             if (freeOffset < totalMoveLength) {
                 CHECK_ASSERTIONS = true;

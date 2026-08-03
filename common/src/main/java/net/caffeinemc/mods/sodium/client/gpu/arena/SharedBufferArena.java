@@ -170,7 +170,6 @@ public class SharedBufferArena extends DefragmentingBufferArena implements Sized
     }
 
     private int estimateAndTransferUploadingOwner(int finalSegmentCount, RegionAllocatorHandle biggestUsageOwner, long finalUsage, boolean allowNewAllocation) {
-        // TODO: when estimating new capacity, take into account how full the section already is since a full section will not grow much anymore
         var newCapacity = BufferArena.estimateNewCapacity(finalSegmentCount, biggestUsageOwner.getFillFractionInv(), finalUsage);
         return this.evictOwner(biggestUsageOwner, newCapacity, allowNewAllocation);
     }
