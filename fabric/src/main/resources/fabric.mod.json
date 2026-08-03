@@ -107,8 +107,7 @@
     "simply-no-shading": "<7.6.2",
     "betterend" : "<=21.0.11",
     "enchanteds_sodium_options" : "<1.0.1",
-    "betterblockentities": "<1.3.5",
-    "voxy": "<=0.2.18-beta"
+    "betterblockentities": "<1.3.5"
   },
   "provides" : [
     "indium"
