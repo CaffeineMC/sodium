@@ -80,19 +80,23 @@ public class Config implements ConfigState {
     }
 
     private void applyOptionChanges() {
-        var overrides = new Object2ReferenceOpenHashMap<Identifier, OptionOverride>();
-        var overlays = new Object2ReferenceOpenHashMap<Identifier, OptionOverlay>();
+        var overrides = new Object2ReferenceOpenHashMap<Identifier, ObjectArrayList<OptionOverride>>();
+        var overlays = new Object2ReferenceOpenHashMap<Identifier, ObjectArrayList<OptionOverlay>>();
 
-        // collect overrides and overlays and validate them, also against each other
+        // collect overrides and overlays and validate them
         for (var modConfig : this.modOptions) {
             for (var override : modConfig.overrides()) {
                 if (override.target().getNamespace().equals(modConfig.configId())) {
                     throw new IllegalArgumentException("Override by mod '" + modConfig.configId() + "' targets its own option '" + override.target() + "'");
                 }
 
-                var oldOverride = overrides.put(override.target(), override);
-                if (oldOverride != null) {
-                    throw new IllegalArgumentException("Multiple overrides for option '" + override.target() + "'! Sources: " + oldOverride.source() + " and " + override.source());
+                var existingOverrides = overrides.computeIfAbsent(override.target(), _ -> new ObjectArrayList<>(1));
+                var existingOverridePriority = existingOverrides.isEmpty() ? override.priority() : existingOverrides.getFirst().priority();
+                if (override.priority() > existingOverridePriority) {
+                    existingOverrides.clear();
+                }
+                if (override.priority() >= existingOverridePriority) {
+                    existingOverrides.add(override);
                 }
             }
 
@@ -101,9 +105,13 @@ public class Config implements ConfigState {
                     throw new IllegalArgumentException("Overlay by mod '" + modConfig.configId() + "' targets its own option '" + overlay.target() + "'");
                 }
 
-                var oldOverlay = overlays.put(overlay.target(), overlay);
-                if (oldOverlay != null) {
-                    throw new IllegalArgumentException("Multiple overlays for option '" + overlay.target() + "'! Sources: " + oldOverlay.source() + " and " + overlay.source());
+                var existingOverlays = overlays.computeIfAbsent(overlay.target(), _ -> new ObjectArrayList<>(1));
+                var existingOverlayPriority = existingOverlays.isEmpty() ? overlay.priority() : existingOverlays.getFirst().priority();
+                if (overlay.priority() > existingOverlayPriority) {
+                    existingOverlays.clear();
+                }
+                if (overlay.priority() >= existingOverlayPriority) {
+                    existingOverlays.add(overlay);
                 }
             }
         }
@@ -115,13 +123,16 @@ public class Config implements ConfigState {
                     var options = group.options();
                     for (int i = 0; i < options.size(); i++) {
                         var option = options.get(i);
-                        var override = overrides.get(option.id);
-
-                        // apply override to option if it exists
-                        if (override != null) {
-                            var replacement = override.change();
-                            this.exchangeOption(options, i, replacement, option);
+                        var optionOverrides = overrides.get(option.id);
+                        if (optionOverrides == null || optionOverrides.isEmpty()) {
+                            continue;
                         }
+                        if (optionOverrides.size() > 1) {
+                            throw new IllegalArgumentException("Multiple overrides for option '" + optionOverrides.getFirst().target() + "'! Sources: " + optionOverrides.getFirst().source() + " and " + optionOverrides.getLast().source());
+                        }
+
+                        var replacement = optionOverrides.getFirst().change();
+                        this.exchangeOption(options, i, replacement, option);
                     }
                 }
             }
@@ -134,17 +145,20 @@ public class Config implements ConfigState {
                     var options = group.options();
                     for (int i = 0; i < options.size(); i++) {
                         var option = options.get(i);
-                        var overlay = overlays.get(option.id);
+                        var optionOverlays = overlays.get(option.id);
+                        if (optionOverlays == null || optionOverlays.isEmpty()) {
+                            continue;
+                        }
+                        if (optionOverlays.size() > 1) {
+                            throw new IllegalArgumentException("Multiple overlays for option '" + optionOverlays.getFirst().target() + "'! Sources: " + optionOverlays.getFirst().source() + " and " + optionOverlays.getLast().source());
+                        }
 
-                        // apply overlay to option if it exists
-                        if (overlay != null) {
-                            var change = overlay.change();
-                            try {
-                                var overlaidOption = change.buildWithBaseOption(option);
-                                this.exchangeOption(options, i, overlaidOption, option);
-                            } catch (Exception e) {
-                                throw new IllegalArgumentException("Failed to apply overlay from '" + overlay.source() + "' to option '" + option.id + "'", e);
-                            }
+                        var change = optionOverlays.getFirst().change();
+                        try {
+                            var overlaidOption = change.buildWithBaseOption(option);
+                            this.exchangeOption(options, i, overlaidOption, option);
+                        } catch (Exception e) {
+                            throw new IllegalArgumentException("Failed to apply overlay from '" + optionOverlays.getFirst().source() + "' to option '" + option.id + "'", e);
                         }
                     }
                 }
