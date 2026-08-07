@@ -90,7 +90,7 @@ public class Config implements ConfigState {
                     throw new IllegalArgumentException("Override by mod '" + modConfig.configId() + "' targets its own option '" + override.target() + "'");
                 }
 
-                var existingOverrides = overrides.computeIfAbsent(override.target(), _ -> new ObjectArrayList<>(1));
+                var existingOverrides = overrides.computeIfAbsent(override.target(), o -> new ObjectArrayList<>(1));
                 var existingOverridePriority = existingOverrides.isEmpty() ? override.priority() : existingOverrides.getFirst().priority();
                 if (override.priority() > existingOverridePriority) {
                     existingOverrides.clear();
@@ -105,7 +105,7 @@ public class Config implements ConfigState {
                     throw new IllegalArgumentException("Overlay by mod '" + modConfig.configId() + "' targets its own option '" + overlay.target() + "'");
                 }
 
-                var existingOverlays = overlays.computeIfAbsent(overlay.target(), _ -> new ObjectArrayList<>(1));
+                var existingOverlays = overlays.computeIfAbsent(overlay.target(), o -> new ObjectArrayList<>(1));
                 var existingOverlayPriority = existingOverlays.isEmpty() ? overlay.priority() : existingOverlays.getFirst().priority();
                 if (overlay.priority() > existingOverlayPriority) {
                     existingOverlays.clear();
