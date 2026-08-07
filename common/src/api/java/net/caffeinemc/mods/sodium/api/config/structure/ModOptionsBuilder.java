@@ -94,6 +94,18 @@ public interface ModOptionsBuilder {
     ModOptionsBuilder registerOptionReplacement(ResourceLocation target, OptionBuilder replacement);
 
     /**
+     * Registers an option override provided by this mod. Overrides allow modifying the behavior or appearance of options defined by other mods.
+     * <p>
+     * The ID of the provided replacement option can match the original option to allow other mods to apply overlays targeting the original option ID. If the replacement option has a different ID, overlays must target the new ID.
+     *
+     * @param target      The ID of the option to override.
+     * @param replacement The option builder that defines the replacement option.
+     * @param priority    The override priority. Higher-priority overrides take precedence over lower-priority overrides. If multiple overrides are registered for the same target with the same priority, an error is raised. Defaults to {@code 0}.
+     * @return The current builder instance.
+     */
+    ModOptionsBuilder registerOptionReplacement(ResourceLocation target, OptionBuilder replacement, int priority);
+
+    /**
      * Registers an option overlay provided by this mod. Overlays allow partially changing an option instead of replacing it entirely.
      * <p>
      * The target option ID must match the ID of an existing option, either defined by another mod or by a replacement option defined by this mod. If the target option has been replaced, overlays must target the ID of the replacement option, which may or may not be the same as the original option ID.
@@ -103,6 +115,18 @@ public interface ModOptionsBuilder {
      * @return The current builder instance.
      */
     ModOptionsBuilder registerOptionOverlay(ResourceLocation target, OptionBuilder overlay);
+
+    /**
+     * Registers an option overlay provided by this mod. Overlays allow partially changing an option instead of replacing it entirely.
+     * <p>
+     * The target option ID must match the ID of an existing option, either defined by another mod or by a replacement option defined by this mod. If the target option has been replaced, overlays must target the ID of the replacement option, which may or may not be the same as the original option ID.
+     *
+     * @param target   The ID of the option to overlay.
+     * @param overlay  The option builder that defines the overlay changes.
+     * @param priority The overlay priority. Higher-priority overlays take precedence over lower-priority overlays. If multiple overlays are registered for the same target with the same priority, an error is raised. Defaults to {@code 0}.
+     * @return The current builder instance.
+     */
+    ModOptionsBuilder registerOptionOverlay(ResourceLocation target, OptionBuilder overlay, int priority);
 
     /**
      * Registers a hook that will be called after an option which has any of the specified flags changed. This can be used to implement custom behavior in response to option changes. To hook on built-in flags, use the identifiers given by {@link OptionFlag#getId()}. The hook is given an array of all flags that triggered the hook. Note that the hook may be called with a set of flags larger than the set of flags it is interested in for performance reasons, since this lets us avoid generating a different flag set for every hook.
