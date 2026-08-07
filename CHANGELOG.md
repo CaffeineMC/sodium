@@ -10,3 +10,4 @@ Sodium [SodiumVersion]() fixes potential minor bugs and improves the crash log m
 - Fix buffer overflow in Kernel32.getModuleFileName
 - Use the correct atomic operations on NativeBuffer.ALLOCATED
 - Use clearenv() to delete environment variable
+- Implement override/overlay priority in the graphics options Config API ([#3866](https://github.com/CaffeineMC/sodium/pull/3866))
