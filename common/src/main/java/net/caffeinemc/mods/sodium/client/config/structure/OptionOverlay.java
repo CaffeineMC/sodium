@@ -3,5 +3,8 @@ package net.caffeinemc.mods.sodium.client.config.structure;
 import net.caffeinemc.mods.sodium.client.config.builder.OptionBuilderImpl;
 import net.minecraft.resources.Identifier;
 
-public record OptionOverlay(Identifier target, String source, OptionBuilderImpl<?> change) {
+public record OptionOverlay(Identifier target, String source, OptionBuilderImpl<?> change, int priority) {
+    public OptionOverlay(Identifier target, String source, OptionBuilderImpl<?> change) {
+        this(target, source, change, 0);
+    }
 }
