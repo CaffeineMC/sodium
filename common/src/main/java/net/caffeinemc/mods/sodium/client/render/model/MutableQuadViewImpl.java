@@ -85,7 +85,9 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
         quad.setCullFace(null);
         quad.setRenderType(ChunkSectionLayer.CUTOUT);
         quad.setItemRenderType(ItemRenderType.DEFAULT.renderType);
-        quad.setDiffuseShade(true);
+        quad.setItemGlintRenderType(ItemGlintRenderType.DEFAULT.renderType);
+        quad.setItemGlintSpecialRenderType(ItemGlintSpecialRenderType.DEFAULT.renderType);
+        quad.setShadeDirectionOverride(null);
         quad.setQuadAtlas(SodiumQuadAtlas.BLOCK);
         quad.setAmbientOcclusion(TriState.DEFAULT);
         quad.setGlint(null);
@@ -199,7 +201,7 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
     }
 
     public MutableQuadViewImpl setRenderType(@Nullable ChunkSectionLayer renderLayer) {
-        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.renderLayer(this.data[this.baseIndex + HEADER_BITS], renderLayer);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.chunkLayer(this.data[this.baseIndex + HEADER_BITS], renderLayer);
         return this;
     }
 
@@ -208,8 +210,8 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
         return this;
     }
 
-    public MutableQuadViewImpl setDiffuseShade(boolean shade) {
-        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.diffuseShade(this.data[this.baseIndex + HEADER_BITS], shade);
+    public MutableQuadViewImpl setShadeDirectionOverride(@Nullable Direction shadeDirection) {
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.shadeDirectionOverride(this.data[this.baseIndex + HEADER_BITS], shadeDirection);
         return this;
     }
 
@@ -220,7 +222,7 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
     }
 
     public MutableQuadViewImpl setGlint(@Nullable ItemStackRenderState.FoilType glint) {
-        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.glint(this.data[this.baseIndex + HEADER_BITS], glint);
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.foilType(this.data[this.baseIndex + HEADER_BITS], glint);
         return this;
     }
 
@@ -285,10 +287,11 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
     public final MutableQuadViewImpl fromBakedQuad(BakedQuad quad) {
         this.fromVanillaInternal(((BakedQuadView) (Object) quad));
         this.setNominalFace(quad.direction());
-        this.setDiffuseShade(quad.materialInfo().shade());
+        this.setShadeDirectionOverride(quad.materialInfo().shadeDirectionOverride());
         this.setTintIndex(quad.materialInfo().tintIndex());
         this.setAmbientOcclusion(((BakedQuadView) (Object) quad).hasAO() ? TriState.DEFAULT : TriState.FALSE); // TODO: TRUE, or DEFAULT?
         this.setItemRenderType(quad.materialInfo().itemRenderType());
+        this.setShadeDirectionOverride(quad.materialInfo().shadeDirectionOverride());
         this.setRenderType(quad.materialInfo().layer());
         this.setAnimated(quad.materialInfo().sprite().contents().isAnimated());
         this.setEmissive(quad.materialInfo().lightEmission() == 15);
@@ -298,7 +301,7 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
         NormI8.unpack(bakedView.getFaceNormal(), this.faceNormal);
         this.data[this.baseIndex + HEADER_FACE_NORMAL] = bakedView.getFaceNormal();
         int headerBits = EncodingFormat.lightFace(this.data[this.baseIndex + HEADER_BITS], bakedView.getLightFace());
-        headerBits = EncodingFormat.normalFace(headerBits, bakedView.getNormalFace());
+        this.normalFace = bakedView.getNormalFace();
         this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(headerBits, bakedView.getFlags());
         this.isGeometryInvalid = false;
 
@@ -336,6 +339,27 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
 
         return this;
     }
+
+    public MutableQuadViewImpl setItemGlintRenderType(RenderType renderType) {
+        ItemGlintRenderType enumValue = ItemGlintRenderType.RENDER_TYPE_TO_ENUM.get(renderType);
+
+        if (enumValue != null) {
+            data[baseIndex + HEADER_BITS] = EncodingFormat.itemGlintRenderType(data[baseIndex + HEADER_BITS], enumValue);
+        }
+
+        return this;
+    }
+
+    public MutableQuadViewImpl setItemGlintSpecialRenderType(RenderType renderType) {
+        ItemGlintSpecialRenderType enumValue = ItemGlintSpecialRenderType.RENDER_TYPE_TO_ENUM.get(renderType);
+
+        if (enumValue != null) {
+            data[baseIndex + HEADER_BITS] = EncodingFormat.itemGlintSpecialRenderType(data[baseIndex + HEADER_BITS], enumValue);
+        }
+
+        return this;
+    }
+
 
     public MutableQuadViewImpl setAnimated(boolean b) {
         this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.animated(this.data[this.baseIndex + HEADER_BITS], b);

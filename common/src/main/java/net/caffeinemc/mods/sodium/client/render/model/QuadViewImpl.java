@@ -52,6 +52,8 @@ public class QuadViewImpl implements ModelQuadView {
     /** Beginning of the quad. Also, the header index. */
     public int baseIndex = 0;
 
+    protected ModelQuadFacing normalFace;
+
     /**
      * Decodes necessary state from the backing data array.
      * The encoded data must contain valid computed geometry.
@@ -75,7 +77,7 @@ public class QuadViewImpl implements ModelQuadView {
             this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.lightFace(this.data[this.baseIndex + HEADER_BITS], lightFace);
 
             // depends on face normal
-            this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.normalFace(this.data[this.baseIndex + HEADER_BITS], ModelQuadFacing.fromPackedNormal(packedFaceNormal));
+            this.normalFace = ModelQuadFacing.fromPackedNormal(packedFaceNormal);
 
             // depends on light face
             this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(this.data[this.baseIndex + HEADER_BITS], ModelQuadFlags.getQuadFlags(this, lightFace));
@@ -89,7 +91,7 @@ public class QuadViewImpl implements ModelQuadView {
     }
 
     public boolean hasShade() {
-        return this.diffuseShade();
+        return true;
     }
 
     public Vector3f copyPos(int vertexIndex, @Nullable Vector3f target) {
@@ -104,15 +106,15 @@ public class QuadViewImpl implements ModelQuadView {
 
     @Nullable
     public ChunkSectionLayer getRenderType() {
-        return EncodingFormat.renderLayer(this.data[this.baseIndex + HEADER_BITS]);
+        return EncodingFormat.chunkLayer(this.data[this.baseIndex + HEADER_BITS]);
     }
 
     public boolean emissive() {
         return EncodingFormat.emissive(this.data[this.baseIndex + HEADER_BITS]);
     }
 
-    public boolean diffuseShade() {
-        return EncodingFormat.diffuseShade(this.data[this.baseIndex + HEADER_BITS]);
+    public @Nullable Direction shadeDirectionOverride() {
+        return EncodingFormat.shadeDirectionOverride(this.data[this.baseIndex + HEADER_BITS]);
     }
 
     public TriState ambientOcclusion() {
@@ -120,7 +122,7 @@ public class QuadViewImpl implements ModelQuadView {
     }
 
     public ItemStackRenderState.@Nullable FoilType glint() {
-        return EncodingFormat.glint(this.data[this.baseIndex + HEADER_BITS]);
+        return EncodingFormat.foilType(this.data[this.baseIndex + HEADER_BITS]);
     }
 
     public SodiumShadeMode getShadeMode() {
@@ -204,7 +206,7 @@ public class QuadViewImpl implements ModelQuadView {
 
     public final ModelQuadFacing normalFace() {
         this.computeGeometry();
-        return EncodingFormat.normalFace(this.data[this.baseIndex + HEADER_BITS]);
+        return normalFace;
     }
 
     @Nullable
@@ -311,5 +313,13 @@ public class QuadViewImpl implements ModelQuadView {
 
     public boolean animated() {
         return EncodingFormat.animated(this.data[this.baseIndex + HEADER_BITS]);
+    }
+
+    public RenderType itemGlintRenderType() {
+        return EncodingFormat.itemGlintRenderType(this.data[this.baseIndex + HEADER_BITS]);
+    }
+
+    public RenderType itemGlintSpecialRenderType() {
+        return EncodingFormat.itemGlintSpecialRenderType(this.data[this.baseIndex + HEADER_BITS]);
     }
 }

@@ -6,7 +6,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.VideoMode;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.FilterMode;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
@@ -227,8 +227,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
                                             // apply the fullscreen state
                                             if (this.window.isFullscreen() != this.vanillaOpts.fullscreen().get()) {
-                                                this.window.toggleFullScreen();
-
                                                 // The client might not be able to enter full-screen mode
                                                 this.vanillaOpts.fullscreen().set(this.window.isFullscreen());
                                             }
@@ -245,12 +243,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                             }
                                         })
                                 .setApplyHook((_) -> {
-                                    // check for a change in the exclusivity of the fullscreen mode (though don't care if fullscreen mode has been turned off)
-                                    var initialExclusiveFullscreen = ((OptionsAccessor) Minecraft.getInstance().options).sodium$initialExclusiveFullscreen();
-                                    var currentExclusiveFullscreen = this.vanillaOpts.exclusiveFullscreen().get();
-                                    if (initialExclusiveFullscreen != currentExclusiveFullscreen) {
-                                        Config.onGameNeedsRestart();
-                                    }
                                 })
                 )
                 .addOption(
@@ -357,7 +349,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                         builder.createBooleanOption(Identifier.parse("sodium:quality.graphics"))
                                 .setStorageHandler(this.vanillaStorage)
                                 .setName(Component.translatable("options.improvedTransparency"))
-                                .setTooltip(Component.translatable("options.improvedTransparency.tooltip"))
+                                .setTooltip(Component.translatable("options.improvedTransparency.oit.tooltip"))
                                 .setDefaultValue(false)
                                 .setBinding(this.vanillaOpts.improvedTransparency()::set, this.vanillaOpts.improvedTransparency()::get)
                                 .setImpact(OptionImpact.HIGH)
@@ -378,13 +370,6 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setDefaultValue(CloudStatus.FANCY)
                                 .setBinding((value) -> {
                                     this.vanillaOpts.cloudStatus().set(value);
-
-                                    if (Minecraft.getInstance().gameRenderer.gameRenderState().useShaderTransparency()) {
-                                        RenderTarget framebuffer = Minecraft.getInstance().levelRenderer.cloudsTarget();
-                                        if (framebuffer != null) {
-                                            RenderSystem.getDevice().createCommandEncoder().clearColorAndDepthTextures(framebuffer.getColorTexture(), new Vector4f(1.0f), framebuffer.getDepthTexture(), 1.0f);
-                                        }
-                                    }
                                 }, () -> this.vanillaOpts.cloudStatus().get())
                                 .setImpact(OptionImpact.LOW)
                 )

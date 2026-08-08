@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.vertex.serializers.generated;
 
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
 import org.objectweb.asm.*;

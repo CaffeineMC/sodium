@@ -29,10 +29,10 @@ const uint TEXTURE_MAX_VALUE    = TEXTURE_MAX_COORD - 1u;
 const float VERTEX_SCALE = 32.0 / float(POSITION_MAX_COORD);
 const float VERTEX_OFFSET = -8.0;
 
-in uvec2 a_Position;
-in vec4 a_Color;
-in uvec2 a_TexCoord;
-in uvec4 a_LightAndData;
+layout(location = 0) in uvec2 a_Position;
+layout(location = 1) in vec4 a_Color;
+layout(location = 2) in uvec2 a_TexCoord;
+layout(location = 3) in uvec4 a_LightAndData;
 
 uvec3 _deinterleave_u20x3(uvec2 data) {
     uvec3 hi = (uvec3(data.x) >> uvec3(0u, 10u, 20u)) & 0x3FFu;

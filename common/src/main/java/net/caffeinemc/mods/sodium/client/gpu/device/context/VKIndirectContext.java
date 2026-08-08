@@ -1,10 +1,11 @@
 package net.caffeinemc.mods.sodium.client.gpu.device.context;
 
 
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import net.minecraft.client.renderer.MappableRingBuffer;
+import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.vulkan.VkDrawIndexedIndirectCommand;
 
 public class VKIndirectContext extends VKDrawContext {
     private static final int INITIAL_SIZE = 512_000;
@@ -23,7 +24,7 @@ public class VKIndirectContext extends VKDrawContext {
 
         this.currentOffset += size;
 
-        if (this.currentOffset >= this.currentSize) {
+        if (this.currentOffset > this.currentSize) {
             this.recreateRingBuffer(Math.max(this.currentOffset, this.currentSize * 2));
         }
 
@@ -32,18 +33,18 @@ public class VKIndirectContext extends VKDrawContext {
 
     private void recreateRingBuffer(int size) {
         var lastRingBuffer = this.ringBuffer;
+        var lastMappedView = this.mappedView;
         var lastSize = this.currentSize;
 
         this.currentSize = size;
-        this.ringBuffer = new MappableRingBuffer(() -> "Indirect ring buffer", GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_INDIRECT_PARAMETERS | GpuBuffer.USAGE_COPY_SRC | GpuBuffer.USAGE_COPY_DST, size);
+        this.ringBuffer = new MappableRingBuffer(() -> "Indirect ring buffer", GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_INDIRECT_PARAMETERS, size);
+        this.mappedView = this.ringBuffer.currentBuffer().map(false, true);
 
         if (lastRingBuffer != null) {
-            this.mappedView.close();
-            RenderSystem.getDevice().createCommandEncoder().copyToBuffer(lastRingBuffer.currentBuffer().slice(), this.ringBuffer.currentBuffer().slice(0, lastSize));
-            lastRingBuffer.close(); // This will close the buffer once the frames in flight are done.
+            MemoryUtil.memCopy(MemoryUtil.memAddress(lastMappedView.data()), MemoryUtil.memAddress(this.mappedView.data()), lastSize);
+            lastMappedView.close();
+            lastRingBuffer.close();
         }
-
-        this.mappedView = this.ringBuffer.currentBuffer().map(false, true);
     }
 
     @Override
@@ -63,5 +64,10 @@ public class VKIndirectContext extends VKDrawContext {
     @Override
     public void endDraw() {
 
+    }
+
+    @Override
+    public String name() {
+        return "indirect (sodium)";
     }
 }

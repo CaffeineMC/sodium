@@ -1,10 +1,10 @@
 package net.caffeinemc.mods.sodium.client.gpu.arena.staging;
 
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.buffers.GpuFence;
-import com.mojang.blaze3d.opengl.GlBuffer;
-import com.mojang.blaze3d.opengl.GlDevice;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.commands.GpuFence;
+import com.mojang.renderpearl.backend.opengl.GlBuffer;
+import com.mojang.renderpearl.backend.opengl.GlDevice;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.PriorityQueue;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
@@ -76,19 +76,6 @@ public class MappedStagingBuffer implements StagingBuffer {
     public void flush() {
         if (this.pendingCopies.isEmpty()) {
             return;
-        }
-
-        // All memory is HOST_COHERENT currently in Vulkan.
-        if (DrawBackend.BACKEND == DrawBackend.OPENGL) {
-            var dsa = ((GlDevice) ((GpuDeviceAccessor) RenderSystem.getDevice()).sodium$getBackend()).directStateAccess();
-            var buffer = ((GlBuffer) this.mappedBuffer.buffer).handle();
-            var usage = this.mappedBuffer.buffer.usage();
-            if (this.pos < this.start) {
-                dsa.flushMappedBufferRange(buffer, this.start, this.capacity - this.start, usage);
-                dsa.flushMappedBufferRange(buffer, 0, this.pos, usage);
-            } else {
-                dsa.flushMappedBufferRange(buffer, this.start, this.pos - this.start, usage);
-            }
         }
 
         int bytes = 0;

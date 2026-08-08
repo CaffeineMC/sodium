@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class OptionsScreenMixin {
     @Dynamic
     @Inject(method = {
-            "lambda$init$3"
+            "lambda$init$2"
     }, require = 1, at = @At("HEAD"), cancellable = true)
     private void open(CallbackInfoReturnable<Screen> ci) {
         ci.setReturnValue(VideoSettingsScreen.createScreen((Screen) (Object) this));

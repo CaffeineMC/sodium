@@ -25,11 +25,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(ItemFeatureRenderer.class)
 public interface ItemFeatureRendererAccessor {
-    @Invoker("useTransparentGlint")
-    static boolean fabric_useTransparentGlint(RenderType renderType) {
-		throw new AssertionError();
-	}
-
     @Invoker("computeFoilDecalPose")
     static PoseStack.Pose fabric_computeFoilDecalPose(ItemDisplayContext type, PoseStack.Pose pose) {
 		throw new AssertionError();

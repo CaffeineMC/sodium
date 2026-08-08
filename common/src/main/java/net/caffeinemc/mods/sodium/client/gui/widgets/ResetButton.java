@@ -68,7 +68,7 @@ public class ResetButton extends AbstractWidget {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        if (!isShiftHeld() || event.button() != 0) {
+        if (!isShiftHeld() || event.button() != 1) {
             return false;
         }
 

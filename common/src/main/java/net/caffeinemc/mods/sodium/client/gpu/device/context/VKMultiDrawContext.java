@@ -15,4 +15,10 @@ public class VKMultiDrawContext extends VKDrawContext {
     public void endDraw() {
 
     }
+
+    @Override
+    public String name() {
+        return "ext_multidraw (sodium)";
+
+    }
 }
