@@ -9,15 +9,15 @@
     "elements": [
         {
             "name": "pitcher_crop_bottom_stage_0",
-            "from": [5, -1, 5],
-            "to": [11, 3, 11],
+            "from": [ 5, -1, 5 ],
+            "to": [ 11, 3, 11 ],
             "faces": {
-                "north": {"uv": [3, 10, 9, 14], "texture": "#pitcher_side"},
-                "east": {"uv": [3, 10, 9, 14], "texture": "#pitcher_side"},
-                "south": {"uv": [3, 10, 9, 14], "texture": "#pitcher_side"},
-                "west": {"uv": [3, 10, 9, 14], "texture": "#pitcher_side"},
-                "up": {"uv": [5, 5, 11, 11], "texture": "#pitcher_top"},
-                "down": {"uv": [5, 5, 11, 11], "texture": "#pitcher_bottom", "cullface": "down"}
+                "north": { "uv": [ 3, 10, 9, 14 ], "texture": "#pitcher_side" },
+                "east": { "uv": [ 3, 10, 9, 14 ], "texture": "#pitcher_side" },
+                "south": { "uv": [ 3, 10, 9, 14 ], "texture": "#pitcher_side" },
+                "west": { "uv": [ 3, 10, 9, 14 ], "texture": "#pitcher_side" },
+                "up": { "uv": [ 5, 5, 11, 11 ], "texture": "#pitcher_top" },
+                "down": { "uv": [ 5, 5, 11, 11 ], "texture": "#pitcher_bottom", "cullface": "down" }
             }
         }
     ]
