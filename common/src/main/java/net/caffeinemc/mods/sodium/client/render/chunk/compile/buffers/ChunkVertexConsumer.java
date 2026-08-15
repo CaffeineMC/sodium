@@ -129,6 +129,8 @@ public class ChunkVertexConsumer implements VertexConsumer {
         this.writtenAttributes = 0;
 
         if (this.vertexIndex == 4) {
+            this.vertexIndex = 0;
+
             int normal = this.calculateNormal();
 
             ModelQuadFacing cullFace = ModelQuadFacing.fromPackedNormal(normal);
@@ -154,8 +156,6 @@ public class ChunkVertexConsumer implements VertexConsumer {
             if (sprite != null) {
                 this.modelBuilder.addSprite(sprite);
             }
-
-            this.vertexIndex = 0;
         }
 
         return this;
