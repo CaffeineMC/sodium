@@ -39,9 +39,13 @@ public class QuadToPosPipe implements Consumer<QuadView> {
         for (int i = 0; i < 4; i++) {
             quad.copyPos(i, this.vec);
 
-            this.vec.x = MatrixHelper.transformPositionX(this.matrix, this.vec.x, this.vec.y, this.vec.z);
-            this.vec.y = MatrixHelper.transformPositionY(this.matrix, this.vec.x, this.vec.y, this.vec.z);
-            this.vec.z = MatrixHelper.transformPositionZ(this.matrix, this.vec.x, this.vec.y, this.vec.z);
+            float x = this.vec.x;
+            float y = this.vec.y;
+            float z = this.vec.z;
+
+            this.vec.x = MatrixHelper.transformPositionX(this.matrix, x, y, z);
+            this.vec.y = MatrixHelper.transformPositionY(this.matrix, x, y, z);
+            this.vec.z = MatrixHelper.transformPositionZ(this.matrix, x, y, z);
 
             this.posConsumer.accept(this.vec);
         }
