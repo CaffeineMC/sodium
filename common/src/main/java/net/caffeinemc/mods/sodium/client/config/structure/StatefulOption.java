@@ -11,6 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -78,7 +79,7 @@ public abstract class StatefulOption<V> extends Option {
     }
 
     public void modifyValue(V value) {
-        if (this.modifiedValue != value) {
+        if (!Objects.equals(this.modifiedValue, value)) {
             this.modifiedValue = value;
             this.state.invalidateDependents(this.dependents);
         }
@@ -101,14 +102,14 @@ public abstract class StatefulOption<V> extends Option {
         this.value = this.binding.load();
 
         var newValue = this.validateValue(this.value);
-        if (newValue != this.value) {
+        if (!Objects.equals(newValue, this.value)) {
             this.value = newValue;
             this.binding.save(this.value);
             this.state.notifyStorageWrite(this.storage);
         }
 
         this.modifiedValue = this.value;
-        if (this.value != previousValue) {
+        if (!Objects.equals(this.value, previousValue)) {
             this.state.invalidateDependents(this.dependents);
             this.state.invalidateDependents(this.applyDependents);
         }
@@ -116,7 +117,7 @@ public abstract class StatefulOption<V> extends Option {
 
     public V getValidatedValue() {
         var newValue = this.validateValue(this.modifiedValue);
-        if (newValue != this.modifiedValue) {
+        if (!Objects.equals(newValue, this.modifiedValue)) {
             this.modifiedValue = newValue;
             this.state.invalidateDependents(this.dependents);
         }
@@ -132,7 +133,7 @@ public abstract class StatefulOption<V> extends Option {
 
     @Override
     public boolean hasChanged() {
-        return this.modifiedValue != this.value;
+        return !Objects.equals(this.modifiedValue, this.value);
     }
 
     @Override
