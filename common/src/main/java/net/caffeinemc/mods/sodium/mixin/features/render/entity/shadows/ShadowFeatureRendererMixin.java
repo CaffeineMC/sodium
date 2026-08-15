@@ -126,6 +126,6 @@ public class ShadowFeatureRendererMixin {
         float yt = MatrixHelper.transformPositionY(matPosition, x, y, z);
         float zt = MatrixHelper.transformPositionZ(matPosition, x, y, z);
 
-        EntityVertex.write(ptr, xt, yt, zt, color, u, v, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, normal);
+        EntityVertex.write(ptr, xt, yt, zt, color, u, v, OverlayTexture.NO_OVERLAY, LightCoordsUtil.FULL_BRIGHT, normal);
     }
 }
