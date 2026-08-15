@@ -92,7 +92,7 @@ public abstract class BakedQuadMixin implements BakedQuadView {
     @Override
     public int getVertexNormal(int idx) {
         //this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.NORMAL_INDEX];
-        return this.bakedNormals == BakedNormals.UNSPECIFIED ? -1 : this.bakedNormals.normal(idx);
+        return this.bakedNormals == null || this.bakedNormals == BakedNormals.UNSPECIFIED ? 0 : this.bakedNormals.normal(idx);
     }
 
     @Override
