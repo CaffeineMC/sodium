@@ -14,6 +14,7 @@
     "minVersion": "0.5.2"
   },
   "client": [
+    "core.GlDeviceMixin",
     "core.GlRenderPassAccessor",
     "core.GpuDeviceAccessor",
     "core.MinecraftMixin",
