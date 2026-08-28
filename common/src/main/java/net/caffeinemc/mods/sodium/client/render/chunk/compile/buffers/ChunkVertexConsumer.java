@@ -131,7 +131,8 @@ public class ChunkVertexConsumer implements VertexConsumer {
             // let the collector intercept the quad but discard it if it's deemed invalid (i.e. not visible)
             if (this.material.isTranslucent() && this.collector != null &&
                     this.collector.appendQuad(this.vertices, cullFace, normal)) {
-               return this;
+                this.vertexIndex = 0;
+                return this;
             }
 
             this.modelBuilder.getVertexBuffer(cullFace).push(this.vertices, this.material);
