@@ -1,0 +1,31 @@
+{
+    "ambientocclusion": false,
+    "textures": {
+        "particle": "block/pitcher_crop_top_stage_4",
+        "top": "block/pitcher_crop_top_stage_4"
+    },
+    "elements": [
+        {
+            "name": "pitcher_plant_top",
+            "from": [ 8, -5, 0 ],
+            "to": [ 8, 11, 16 ],
+            "shade": false,
+            "rotation": { "angle": 45, "axis": "y", "origin": [ 8, 3, 8 ] },
+            "faces": {
+                "east": { "uv": [ 0, 0, 16, 16 ], "texture": "#top" },
+                "west": { "uv": [ 0, 0, 16, 16 ], "texture": "#top" }
+            }
+        },
+        {
+            "name": "pitcher_plant_top",
+            "from": [ 0, -5, 8 ],
+            "to": [ 16, 11, 8 ],
+            "shade": false,
+            "rotation": { "angle": 45, "axis": "y", "origin": [ 8, 3, 8 ] },
+            "faces": {
+                "north": { "uv": [ 0, 0, 16, 16 ], "texture": "#top" },
+                "south": { "uv": [ 0, 0, 16, 16 ], "texture": "#top" }
+            }
+        }
+    ]
+}
