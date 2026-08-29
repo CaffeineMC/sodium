@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 // This backports a fix from 26.3 Snapshot 6 that improves performance on OpenGL.
-@Mixin(targets = "net.minecraft.client.renderer.StagedVertexBuffer.GpuBufferPool")
+@Mixin(targets = "net.minecraft.client.renderer.StagedVertexBuffer$GpuBufferPool")
 public abstract class StagedVertexBufferMixin {
     @Shadow
     protected abstract void tryRecycleBuffers();
