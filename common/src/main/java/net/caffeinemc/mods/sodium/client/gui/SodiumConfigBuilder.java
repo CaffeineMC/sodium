@@ -38,6 +38,8 @@ import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWVidMode;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -304,7 +306,9 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setName(Component.translatable("options.framerateLimit"))
                                 .setTooltip(Component.translatable("sodium.options.fps_limit.tooltip"))
                                 .setValueFormatter(ControlValueFormatterImpls.fpsLimit())
-                                .setRange(10, 260, 10)
+                                .setValidatorProvider(
+                                        (state) -> new Range(10, this.getMaxFramerateLimit(), 10),
+                                        ConfigState.UPDATE_ON_REBUILD, ConfigState.UPDATE_ON_APPLY)
                                 .setDefaultValue(60)
                                 .setBinding(this.vanillaOpts.framerateLimit()::set, this.vanillaOpts.framerateLimit()::get)
                 )
@@ -346,7 +350,34 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                 .setDefaultValue(PreferredGraphicsApi.DEFAULT)
                 .setFlags(OptionFlag.REQUIRES_GAME_RESTART)
                 .setBinding((value) -> this.vanillaOpts.preferredGraphicsBackend().set(value), () -> this.vanillaOpts.preferredGraphicsBackend().get())));
+
         return generalPage;
+    }
+
+    /**
+     * this computes an appropriate maximum for the framerate limit slider based on the current
+     * monitor's refresh rate, so users on high-refresh-rate displays aren't capped at 260
+     * + falls back to the vanilla default max if the window/monitor context isn't available yet
+     * (e.g. during early config building).
+     */
+    private int getMaxFramerateLimit() {
+        int monitorRefreshRate = 60;
+        try {
+        if (this.window != null){
+            long windowHandle = this.window.handle();
+            long monitorHandle = GLFW.glfwGetWindowMonitor(windowHandle);
+            if (monitorHandle == 0L) {
+                monitorHandle = GLFW.glfwGetPrimaryMonitor();
+            }
+            GLFWVidMode vidMode = GLFW.glfwGetVideoMode(monitorHandle);
+            if (vidMode != null) {
+                monitorRefreshRate = vidMode.refreshRate();
+            }
+        }
+        } catch (Exception e) {
+            // fallback if window/monitor context is unavailable
+        }
+        return Math.max(260, ((monitorRefreshRate + 9) / 10) * 10 + 10);
     }
 
     private OptionPageBuilder buildQualityPage(ConfigBuilder builder) {
