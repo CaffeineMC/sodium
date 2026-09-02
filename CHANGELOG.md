@@ -21,6 +21,9 @@ Other changes include improvements to our item meshing, optimizations for item r
 
 Thank you to all the contributors who added to this release!
 
-Alpha series changelog:
+Alpha/beta series changelog:
 - Disabled automatic enabling of the arena buffer debug widget
 - Implement override/overlay priority in the graphics options Config API ([#3866](https://github.com/CaffeineMC/sodium/pull/3866))
+- Fixed incorrect breaks clause on borderless fullscreen mod
+- Implement override/overlay priority in the video settings config api ([#3866](https://github.com/CaffeineMC/sodium/pull/3866))
+
