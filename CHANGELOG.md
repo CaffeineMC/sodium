@@ -24,7 +24,14 @@ Other changes include improvements to our item meshing, optimizations for item r
 
 Thank you to all the contributors who added to this release!
 
-Alpha series changelog:
-- Fixed crash when opening video settings
-- Disabled automatic enabling of the arena buffer debug widget
+Alpha/beta series changelog:
+- Fix crash when opening video settings
+- Disable automatic enabling of the arena buffer debug widget
 - Implement override/overlay priority in the graphics options Config API ([#3866](https://github.com/CaffeineMC/sodium/pull/3866))
+- Fix incorrect breaks clause on borderless fullscreen mod
+- Implement override/overlay priority in the video settings config api ([#3866](https://github.com/CaffeineMC/sodium/pull/3866))
+- Backport buffer changes from 26.3 to fix severe frame pacing issues ([#3895](https://github.com/CaffeineMC/sodium/pull/3895))
+- Optimize pitcher plant models ([#3881](https://github.com/CaffeineMC/sodium/pull/3881))
+- Improve mod compatibility by correctly handling vertexIndex state
+- Remove the breaks clause for borderless fullscreen on 26.2 since the issue was only on 26.1
+- Backport buffer changes from 26.3 ([#3895](https://github.com/CaffeineMC/sodium/pull/3895))
