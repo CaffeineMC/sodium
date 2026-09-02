@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gpu.device.batch;
 
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import net.caffeinemc.mods.sodium.client.gpu.device.context.DrawContext;
 import net.caffeinemc.mods.sodium.client.gpu.device.context.VKIndirectContext;
@@ -10,6 +10,7 @@ import org.lwjgl.vulkan.VkDrawIndexedIndirectCommand;
 
 public final class VKIndirectDrawBatch extends MultiDrawBatch {
     private final long pCommands;
+    private long offset;
 
     public VKIndirectDrawBatch(int capacity) {
         this.pCommands = MemoryUtil.nmemAlignedAlloc(32, (long) VkDrawIndexedIndirectCommand.SIZEOF * capacity);
@@ -34,13 +35,21 @@ public final class VKIndirectDrawBatch extends MultiDrawBatch {
         VKIndirectContext context = (VKIndirectContext) dc;
         var byteSize = this.size * VkDrawIndexedIndirectCommand.SIZEOF;
 
+        GpuBufferSlice commands = context.mappedView.slice().slice(offset, byteSize);
+
+        context.getPass().drawIndexedIndirect(commands, this.size);
+    }
+
+    @Override
+    public void prepare(DrawContext dc) {
+        VKIndirectContext context = (VKIndirectContext) dc;
+        var byteSize = this.size * VkDrawIndexedIndirectCommand.SIZEOF;
+
         var offset = context.addCommand(byteSize);
 
         MemoryUtil.memCopy(this.pCommands, MemoryUtil.memAddress(context.mappedView.data()) + ((long) offset), byteSize);
 
-        GpuBufferSlice commands = context.mappedView.slice().slice(offset, byteSize);
-
-        context.getPass().drawIndexedIndirect(commands, this.size);
+        this.offset = offset;
     }
 
     @Override

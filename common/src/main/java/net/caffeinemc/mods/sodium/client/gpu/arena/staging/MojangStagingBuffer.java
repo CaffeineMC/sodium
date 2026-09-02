@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gpu.arena.staging;
 
-import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import java.nio.ByteBuffer;

@@ -1,15 +1,16 @@
-#version 330 core
+#version 330
+#extension GL_ARB_separate_shader_objects : require
 
-#moj_import <sodium:globals.glsl>
-#moj_import <sodium:fog.glsl>
-#moj_import <sodium:chunk_vertex.glsl>
+#include <sodium:globals.glsl>
+#include <sodium:fog.glsl>
+#include <sodium:chunk_vertex.glsl>
 
-out vec4 v_Color;
-out vec2 v_TexCoord;
+layout(location = 0) out vec4 v_Color;
+layout(location = 1) out vec2 v_TexCoord;
 
 #ifdef USE_FOG
-out vec2 v_FragDistance;
-out float fadeFactor;
+layout(location = 2) out vec2 v_FragDistance;
+layout(location = 3) out float fadeFactor;
 #endif
 
 uniform isamplerBuffer u_SectionTimeInfo;
@@ -26,7 +27,9 @@ uniform int u_CurrentTime;
 uniform uint u_RegionID;
 #endif
 
+#ifndef OIT_ALPHA_ONLY
 uniform sampler2D u_LightTex; // The light map texture sampler
+#endif
 
 uvec3 _get_relative_chunk_coord(uint pos) {
     // Packing scheme is defined by LocalSectionIndex
@@ -59,6 +62,11 @@ void main() {
     gl_Position = u_ProjectionMatrix * u_ModelViewMatrix * vec4(position, 1.0);
 
     // Add the light color to the vertex color, and pass the texture coordinates to the fragment shader
+#ifndef OIT_ALPHA_ONLY
     v_Color = _vert_color * texture(u_LightTex, _vert_tex_light_coord);
+#else
+    v_Color = _vert_color;
+#endif
+
     v_TexCoord = (_vert_tex_diffuse_coord_bias * u_TexCoordShrink) + _vert_tex_diffuse_coord; // FMA for precision
 }

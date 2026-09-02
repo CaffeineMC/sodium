@@ -39,4 +39,6 @@ public abstract class MultiDrawBatch {
     public abstract void draw(DrawContext drawContext);
 
     public abstract void delete();
+
+    public void prepare(DrawContext drawContext) {} // Overriden exclusively by VkIndirectDrawBatch
 }

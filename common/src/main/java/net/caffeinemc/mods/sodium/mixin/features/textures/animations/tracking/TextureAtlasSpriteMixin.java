@@ -10,8 +10,5 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TextureAtlasSprite.class)
 public abstract class TextureAtlasSpriteMixin {
-    @Inject(method = "wrap", at = @At("HEAD"))
-    private void markSpriteAsActive(CallbackInfoReturnable<VertexConsumer> cir) {
-        SpriteUtil.INSTANCE.markSpriteActive((TextureAtlasSprite) (Object) this);
-    }
+
 }

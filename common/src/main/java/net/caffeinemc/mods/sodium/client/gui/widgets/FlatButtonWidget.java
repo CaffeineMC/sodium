@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gui.widgets;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.caffeinemc.mods.sodium.client.gui.ButtonTheme;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
 import net.caffeinemc.mods.sodium.client.gui.Layout;
@@ -99,7 +100,7 @@ public class FlatButtonWidget extends AbstractWidget implements Renderable {
             return false;
         }
 
-        if (event.button() == 0 && this.isMouseOver(event.x(), event.y())) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && this.isMouseOver(event.x(), event.y())) {
             this.doAction();
 
             return true;

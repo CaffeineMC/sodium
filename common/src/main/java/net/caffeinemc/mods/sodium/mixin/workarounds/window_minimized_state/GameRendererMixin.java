@@ -3,7 +3,7 @@ package net.caffeinemc.mods.sodium.mixin.workarounds.window_minimized_state;
 import com.mojang.blaze3d.platform.Window;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
 import net.minecraft.client.renderer.GameRenderer;
-import org.lwjgl.glfw.GLFW;
+import org.lwjgl.sdl.SDLVideo;
 import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -27,16 +27,8 @@ public class GameRendererMixin {
             Workarounds.isWorkaroundEnabled(Workarounds.Reference.INTEL_FRAMEBUFFER_BLIT_CRASH_WHEN_UNFOCUSED);
 
     @Redirect(method = "extractWindow",
-            at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;isMinimized()Z"))
+            at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;isIconified()Z"))
     private boolean redirectWindowMinimized(Window window) {
-        if (!this.sodium$redirectWindowMinimizedState) {
-            return window.isMinimized();
-        }
-        try (var stack = MemoryStack.stackPush()) {
-            var width = stack.callocInt(1);
-            var height = stack.callocInt(1);
-            GLFW.glfwGetFramebufferSize(window.handle(), width, height);
-            return width.get(0) == 0 || height.get(0) == 0;
-        }
+        return window.isIconified() || (SDLVideo.SDL_GetWindowFlags(window.handle()) & SDLVideo.SDL_WINDOW_MINIMIZED) != 0;
     }
 }

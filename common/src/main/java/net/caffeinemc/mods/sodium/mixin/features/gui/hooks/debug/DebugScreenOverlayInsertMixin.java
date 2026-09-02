@@ -20,7 +20,7 @@ public class DebugScreenOverlayInsertMixin {
     @Inject(
             method = "extractRenderState",
             at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;extractLines(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Ljava/util/List;Z)V",
+                    target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;extractLines(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Ljava/util/List;ZI)V",
                     ordinal = 0)
     )
     private void sodium$insertFpsPercentiles(GuiGraphicsExtractor graphics,

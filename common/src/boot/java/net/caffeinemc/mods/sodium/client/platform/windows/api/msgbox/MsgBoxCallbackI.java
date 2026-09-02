@@ -13,7 +13,7 @@ import static org.lwjgl.system.libffi.LibFFI.*;
 @FunctionalInterface
 @NativeType("MSGBOXCALLBACK")
 public interface MsgBoxCallbackI extends CallbackI {
-    Callback.Descriptor CIF = new Callback.Descriptor(
+    Callback.Descriptor CIF = new Callback.Descriptor(MsgBoxCallbackI.class,
             MethodHandles.lookup(), apiCreateCIF(
             FFI_DEFAULT_ABI,
             ffi_type_void,
