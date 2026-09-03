@@ -31,8 +31,8 @@ public class ControlValueFormatterImpls {
         };
     }
 
-    public static ControlValueFormatter fpsLimit() {
-        return (v) -> (v == 260) ? Component.translatable("options.framerateLimit.max") : Component.translatable("options.framerate", v);
+    public static ControlValueFormatter fpsLimit(int maximum) {
+        return (v) -> (v == maximum) ? Component.translatable("options.framerateLimit.max") : Component.translatable("options.framerate", v);
     }
 
     public static ControlValueFormatter brightness() {
