@@ -4,6 +4,7 @@ import net.caffeinemc.mods.sodium.client.console.Console;
 import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.*;
+import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -17,6 +18,8 @@ import java.util.Set;
 
 public class ResourcePackScanner {
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium-ResourcePackScanner");
+
+    private static volatile List<ResourcePackProblem> currentProblems = List.of();
 
     private static final Set<String> SHADER_PROGRAM_BLACKLIST = Set.of(
             "rendertype_solid.vsh",
@@ -51,23 +54,66 @@ public class ResourcePackScanner {
      * Detailed information on shader files replaced by resource packs is printed in the client log.
      */
     public static void checkIfCoreShaderLoaded(ResourceManager manager) {
-        var outputs = manager.listPacks()
+        var scanResults = manager.listPacks()
                 .filter(ResourcePackScanner::isExternalResourcePack)
                 .map(ResourcePackScanner::scanResources)
                 .toList();
 
-        printToasts(outputs);
-        printCompatibilityReport(outputs);
+        var problems = createProblems(scanResults);
+        var previousProblems = currentProblems;
+
+        currentProblems = problems;
+
+        if (!problems.equals(previousProblems)) {
+            printToasts(problems);
+            printCompatibilityReport(scanResults);
+        }
     }
 
-    private static void printToasts(Collection<ScannedResourcePack> resourcePacks) {
-        var incompatibleResourcePacks = resourcePacks.stream()
-                .filter((pack) -> !pack.shaderPrograms.isEmpty())
+    public static List<ResourcePackProblem> getCurrentProblems() {
+        return currentProblems;
+    }
+
+    public static boolean hasSevereProblems() {
+        return currentProblems.stream()
+                .anyMatch(problem -> problem.severity() == Severity.SEVERE);
+    }
+
+    private static List<ResourcePackProblem> createProblems(Collection<ScannedResourcePack> scanResults) {
+        var problems = new ArrayList<ResourcePackProblem>();
+
+        for (var result : scanResults) {
+            if (result.shaderPrograms.isEmpty() && result.shaderIncludes.isEmpty()) {
+                continue;
+            }
+
+            var resources = new ArrayList<String>();
+            resources.addAll(result.shaderPrograms);
+            resources.addAll(result.shaderIncludes);
+            resources.sort(String::compareTo);
+
+            var resourcePack = result.resourcePack;
+            var severity = result.shaderPrograms.isEmpty() ? Severity.WARN : Severity.SEVERE;
+            boolean serverPack = resourcePack.location().source() == PackSource.SERVER;
+
+            problems.add(new ResourcePackProblem(
+                    resourcePack.packId(),
+                    serverPack ? resourcePack.location().title().getString() : getResourcePackName(resourcePack),
+                    serverPack,
+                    severity,
+                    resources));
+        }
+
+        return List.copyOf(problems);
+    }
+
+    private static void printToasts(Collection<ResourcePackProblem> problems) {
+        var incompatibleResourcePacks = problems.stream()
+                .filter((problem) -> problem.severity() == Severity.SEVERE)
                 .toList();
 
-        var likelyIncompatibleResourcePacks = resourcePacks.stream()
-                .filter((pack) -> !pack.shaderIncludes.isEmpty())
-                .filter((pack) -> !incompatibleResourcePacks.contains(pack)) // filter out known-incompatible packs
+        var likelyIncompatibleResourcePacks = problems.stream()
+                .filter((problem) -> problem.severity() == Severity.WARN)
                 .toList();
 
         boolean shown = false;
@@ -75,8 +121,8 @@ public class ResourcePackScanner {
         if (!incompatibleResourcePacks.isEmpty()) {
             showConsoleMessage("sodium.console.core_shaders_error", true, MessageLevel.SEVERE);
 
-            for (var entry : incompatibleResourcePacks) {
-                showConsoleMessage(getResourcePackName(entry.resourcePack), false, MessageLevel.SEVERE);
+            for (var problem : incompatibleResourcePacks) {
+                showConsoleMessage(problem.name(), false, MessageLevel.SEVERE);
             }
 
             shown = true;
@@ -85,8 +131,8 @@ public class ResourcePackScanner {
         if (!likelyIncompatibleResourcePacks.isEmpty()) {
             showConsoleMessage("sodium.console.core_shaders_warn", true, MessageLevel.WARN);
 
-            for (var entry : likelyIncompatibleResourcePacks) {
-                showConsoleMessage(getResourcePackName(entry.resourcePack), false, MessageLevel.WARN);
+            for (var problem : likelyIncompatibleResourcePacks) {
+                showConsoleMessage(problem.name(), false, MessageLevel.WARN);
             }
 
             shown = true;
@@ -215,5 +261,21 @@ public class ResourcePackScanner {
                                        ArrayList<String> shaderIncludes)
     {
 
+    }
+
+    public record ResourcePackProblem(String id,
+                                      String name,
+                                      boolean serverPack,
+                                      Severity severity,
+                                      List<String> resources)
+    {
+        public ResourcePackProblem {
+            resources = List.copyOf(resources);
+        }
+    }
+
+    public enum Severity {
+        WARN,
+        SEVERE
     }
 }
