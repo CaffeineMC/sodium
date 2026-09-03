@@ -156,8 +156,8 @@ public class DefaultFluidRenderer {
             // only a non-empty self-shape can occlude anything
             if (!ShapeComparisonCache.isEmptyShape(selfShape)) {
                 // a full self-shape occludes everything
-                if (ShapeComparisonCache.isFullShape(selfShape) && ShapeComparisonCache.isFullShape(fluidShape)) {
-                    return false;
+                if (ShapeComparisonCache.isFullShape(selfShape)) {
+                    return !ShapeComparisonCache.isFullShape(fluidShape);
                 }
 
                 // perform occlusion of the fluid by the block it's contained in
@@ -168,7 +168,12 @@ public class DefaultFluidRenderer {
         return true;
     }
 
+    private boolean isFullBlockFluidSelfVisible(BlockState blockState, Direction dir, VoxelShape fluidShape) {
+        return this.isFluidSelfVisible(blockState, dir, fluidShape);
+    }
+
     private boolean isFullBlockFluidSelfVisible(BlockState blockState, Direction dir) {
+        // Assume that is the fluid block is a full sized block
         return this.isFluidSelfVisible(blockState, dir, Shapes.block());
     }
 
@@ -232,7 +237,8 @@ public class DefaultFluidRenderer {
      * Calculates the combined visibility of a fluid face based on the neighboring block states and the fluid state.
      */
     private boolean isFullBlockFluidVisible(BlockAndTintGetter world, BlockPos pos, Direction dir, BlockState blockState, FluidState fluid) {
-        return this.isFullBlockFluidSelfVisible(blockState, dir) && this.isFullBlockFluidSideVisible(world, pos, dir, fluid);
+        VoxelShape fluidShape = fluid.getShape(world, pos);
+        return isFullBlockFluidSelfVisible(blockState, dir, fluidShape) && this.isFullBlockFluidSideVisible(world, pos, dir, fluid);
     }
 
     /**
