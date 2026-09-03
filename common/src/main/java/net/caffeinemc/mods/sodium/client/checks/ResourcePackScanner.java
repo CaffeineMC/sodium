@@ -1,7 +1,5 @@
 package net.caffeinemc.mods.sodium.client.checks;
 
-import net.caffeinemc.mods.sodium.client.console.Console;
-import net.caffeinemc.mods.sodium.client.console.message.MessageLevel;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.repository.PackSource;
@@ -65,7 +63,6 @@ public class ResourcePackScanner {
         currentProblems = problems;
 
         if (!problems.equals(previousProblems)) {
-            printToasts(problems);
             printCompatibilityReport(scanResults);
         }
     }
@@ -105,42 +102,6 @@ public class ResourcePackScanner {
         }
 
         return List.copyOf(problems);
-    }
-
-    private static void printToasts(Collection<ResourcePackProblem> problems) {
-        var incompatibleResourcePacks = problems.stream()
-                .filter((problem) -> problem.severity() == Severity.SEVERE)
-                .toList();
-
-        var likelyIncompatibleResourcePacks = problems.stream()
-                .filter((problem) -> problem.severity() == Severity.WARN)
-                .toList();
-
-        boolean shown = false;
-
-        if (!incompatibleResourcePacks.isEmpty()) {
-            showConsoleMessage("sodium.console.core_shaders_error", true, MessageLevel.SEVERE);
-
-            for (var problem : incompatibleResourcePacks) {
-                showConsoleMessage(problem.name(), false, MessageLevel.SEVERE);
-            }
-
-            shown = true;
-        }
-
-        if (!likelyIncompatibleResourcePacks.isEmpty()) {
-            showConsoleMessage("sodium.console.core_shaders_warn", true, MessageLevel.WARN);
-
-            for (var problem : likelyIncompatibleResourcePacks) {
-                showConsoleMessage(problem.name(), false, MessageLevel.WARN);
-            }
-
-            shown = true;
-        }
-
-        if (shown) {
-            showConsoleMessage("sodium.console.core_shaders_info", true, MessageLevel.INFO);
-        }
     }
 
     private static void printCompatibilityReport(Collection<ScannedResourcePack> scanResults) {
@@ -250,10 +211,6 @@ public class ResourcePackScanner {
             LOGGER.error("Failed to load pack.mcmeta file for resource pack '{}'", resourcePack.packId());
         }
         return ignoredShaders;
-    }
-
-    private static void showConsoleMessage(String message, boolean translatable, MessageLevel messageLevel) {
-        Console.instance().logMessage(messageLevel, message, translatable, 12.5);
     }
 
     private record ScannedResourcePack(PackResources resourcePack,

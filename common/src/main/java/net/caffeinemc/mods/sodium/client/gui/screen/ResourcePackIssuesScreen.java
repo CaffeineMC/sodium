@@ -50,12 +50,6 @@ public class ResourcePackIssuesScreen extends Screen {
 
         int contentWidth = Math.max(200, Math.min(360, this.width - 40));
 
-        body.addChild(FocusableTextWidget.builder(INTRO, this.font)
-                .maxWidth(contentWidth)
-                .alwaysShowBorder(false)
-                .backgroundFill(FocusableTextWidget.BackgroundFill.ON_FOCUS)
-                .build());
-
         if (this.shownProblems.isEmpty()) {
             body.addChild(FocusableTextWidget.builder(
                             Component.translatable("sodium.compatibility_issues.none"), this.font)
@@ -64,6 +58,12 @@ public class ResourcePackIssuesScreen extends Screen {
                     .backgroundFill(FocusableTextWidget.BackgroundFill.ON_FOCUS)
                     .build());
         } else {
+            body.addChild(FocusableTextWidget.builder(INTRO, this.font)
+                    .maxWidth(contentWidth)
+                    .alwaysShowBorder(false)
+                    .backgroundFill(FocusableTextWidget.BackgroundFill.ON_FOCUS)
+                    .build());
+
             for (var problem : this.shownProblems) {
                 body.addChild(this.createProblemWidget(problem, contentWidth));
             }
@@ -74,11 +74,14 @@ public class ResourcePackIssuesScreen extends Screen {
         this.layout.addToContents(this.bodyScroll);
 
         var footer = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
-        footer.addChild(Button.builder(
-                        Component.translatable("sodium.compatibility_issues.resource_packs"),
-                        button -> this.openResourcePackScreen())
-                .width(110)
-                .build());
+        if (this.shownProblems.isEmpty() || this.shownProblems.stream().anyMatch(problem -> !problem.serverPack())) {
+            footer.addChild(Button.builder(
+                            Component.translatable("sodium.compatibility_issues.resource_packs"),
+                            button -> this.openResourcePackScreen())
+                    .width(110)
+                    .build());
+        }
+
         footer.addChild(Button.builder(
                         Component.translatable("sodium.compatibility_issues.learn_more"),
                         ConfirmLinkScreen.confirmLink(this, RESOURCE_PACK_DOCUMENTATION))
@@ -155,7 +158,11 @@ public class ResourcePackIssuesScreen extends Screen {
 
     @Override
     public Component getNarrationMessage() {
-        return CommonComponents.joinForNarration(super.getNarrationMessage(), INTRO);
+        var description = this.shownProblems.isEmpty()
+                ? Component.translatable("sodium.compatibility_issues.none")
+                : INTRO;
+
+        return CommonComponents.joinForNarration(super.getNarrationMessage(), description);
     }
 
     @Override

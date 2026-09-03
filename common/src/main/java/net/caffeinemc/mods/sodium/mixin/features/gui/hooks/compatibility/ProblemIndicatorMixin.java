@@ -27,10 +27,12 @@ public abstract class ProblemIndicatorMixin extends Screen {
 
     @Inject(method = "init", at = @At("TAIL"))
     private void sodium$addProblemIndicator(CallbackInfo ci) {
+        boolean pauseScreen = (Object) this instanceof PauseScreen;
+
         this.sodium$problemIndicator = this.addRenderableWidget(Button.builder(
                         Component.empty(),
                         button -> this.minecraft.gui.setScreen(new ResourcePackIssuesScreen(this)))
-                .bounds(Math.max(4, this.width - 184), 4, 180, 20)
+                .bounds(pauseScreen ? 4 : Math.max(4, this.width - 184), 4, 180, 20)
                 .tooltip(Tooltip.create(Component.translatable("sodium.compatibility_issues.indicator.tooltip")))
                 .build());
 
