@@ -12,10 +12,15 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.material.FogType;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(Camera.class)
-public abstract class LevelRendererMixin {
+public abstract class CameraMixin {
+
+    @Shadow
+    public abstract FogType getFluidInCamera();
+
     /**
      * <p>Prevents the sky layer from rendering when the fog distance is reduced
      * from the default. This helps prevent situations where the sky can be seen
@@ -39,12 +44,12 @@ public abstract class LevelRendererMixin {
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/entity/LivingEntity;hasEffect(Lnet/minecraft/core/Holder;)Z",
                     ordinal = 0))
-    private boolean preRenderSky(LivingEntity instance, Holder<MobEffect> effect, Operation<Boolean> original) {
+    private boolean blockSkyIfUsingFluidFog(LivingEntity instance, Holder<MobEffect> effect, Operation<Boolean> original) {
         // Cancels sky rendering when the camera is submersed underwater.
         // This prevents the sky from being visible through chunks culled by Sodium's fog occlusion.
         // Fixes https://bugs.mojang.com/browse/MC-152504.
         // Credit to bytzo for noticing the change in 1.18.2.
-        if (Minecraft.getInstance().gameRenderer.mainCamera().getFluidInCamera() != FogType.NONE) {
+        if (this.getFluidInCamera() != FogType.NONE) {
             return true;
         }
 

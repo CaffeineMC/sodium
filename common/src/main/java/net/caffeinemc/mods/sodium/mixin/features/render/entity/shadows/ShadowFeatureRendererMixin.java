@@ -23,10 +23,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ShadowFeatureRenderer.class)
 public class ShadowFeatureRendererMixin {
     @Unique
-    private static final int DEFAULT_NORMAL = NormI8.pack(0.0f, 1.0f, 0.0f);
+    private static final int DEFAULT_NORMAL = NormI8.pack(0.0F, 1.0F, 0.0F);
 
     @Unique
-    private static final int SHADOW_COLOR = ColorABGR.pack(1.0f, 1.0f, 1.0f);
+    private static final int SHADOW_COLOR = ColorABGR.pack(1.0F, 1.0F, 1.0F);
 
     /**
      * @author JellySquid
@@ -47,25 +47,25 @@ public class ShadowFeatureRendererMixin {
         Matrix4fc matrices = submit.pose();
 
         for (int i = 0; i < submit.pieces().size(); i++) {
-            EntityRenderState.ShadowPiece shadowPiece = submit.pieces().get(i);
+            EntityRenderState.ShadowPiece piece = submit.pieces().get(i);
 
-            float alpha = shadowPiece.alpha();
+            float alpha = piece.alpha();
 
-            if (alpha >= 0.0F) {
-                if (alpha > 1.0F) {
-                    alpha = 1.0F;
-                }
-
-                AABB box = shadowPiece.shapeBelow().bounds();
-
-                float minX = (float) (shadowPiece.relativeX() + box.minX);
-                float maxX = (float) (shadowPiece.relativeX() + box.maxX);
-                float minY = (float) (shadowPiece.relativeY() + box.minY);
-                float minZ = (float) (shadowPiece.relativeZ() + box.minZ);
-                float maxZ = (float) (shadowPiece.relativeZ() + box.maxZ);
-
-                renderShadowPart(matrices, writer, submit.radius(), alpha, minX, maxX, minY, minZ, maxZ);
+            if (alpha <= 0.0F) {
+                continue;
+            } else if (alpha > 1.0F) {
+                alpha = 1.0F;
             }
+
+            AABB box = piece.shapeBelow().bounds();
+
+            float minX = (float) (piece.relativeX() + box.minX);
+            float maxX = (float) (piece.relativeX() + box.maxX);
+            float minY = (float) (piece.relativeY() + box.minY);
+            float minZ = (float) (piece.relativeZ() + box.minZ);
+            float maxZ = (float) (piece.relativeZ() + box.maxZ);
+
+            renderShadowPart(matrices, writer, submit.radius(), alpha, minX, maxX, minY, minZ, maxZ);
         }
     }
 
@@ -88,8 +88,8 @@ public class ShadowFeatureRendererMixin {
         float v2 = (-maxZ * size) + 0.5F;
 
 
-        var color = ColorABGR.withAlpha(SHADOW_COLOR, alpha);
-        var normal = DEFAULT_NORMAL; // This seems wrong, but it is identical to Vanilla's handling.
+        int color = ColorABGR.withAlpha(SHADOW_COLOR, alpha);
+        int normal = DEFAULT_NORMAL; // This seems wrong, but it is identical to Vanilla's handling.
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
             long buffer = stack.nmalloc(4 * EntityVertex.STRIDE);

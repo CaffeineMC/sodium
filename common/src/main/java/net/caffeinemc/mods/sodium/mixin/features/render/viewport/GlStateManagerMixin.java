@@ -25,6 +25,7 @@ public class GlStateManagerMixin {
         if (x == lastViewportX && y == lastViewportY && w == lastViewportWidth && h == lastViewportHeight) {
             return false;
         }
+
         lastViewportX = x;
         lastViewportY = y;
         lastViewportWidth = w;

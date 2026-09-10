@@ -27,7 +27,7 @@ public abstract class TextureSheetParticleMixin {
 
     @Inject(method = "extractRotatedQuad(Lnet/minecraft/client/renderer/state/level/QuadParticleRenderState;Lorg/joml/Quaternionf;FFFF)V",
             at = @At("HEAD"))
-    private void sodium$tickSprite(QuadParticleRenderState particleTypeRenderState,
+    private void markSpriteAsActive(QuadParticleRenderState particleTypeRenderState,
                                    Quaternionf rotation,
                                    float x,
                                    float y,

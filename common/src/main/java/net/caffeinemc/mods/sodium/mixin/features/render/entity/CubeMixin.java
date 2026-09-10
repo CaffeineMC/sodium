@@ -20,41 +20,29 @@ import java.util.Set;
 
 @Mixin(ModelPart.Cube.class)
 public class CubeMixin {
-    @Mutable
-    @Shadow
-    @Final
-    public float minX;
 
     @Unique
     private ModelCuboid sodium$cuboid;
 
     // Inject at the start of the function, so we don't capture modified locals
-    @Redirect(method = "<init>",
-            at = @At(value = "FIELD",
-                    opcode = Opcodes.PUTFIELD,
-                    target = "Lnet/minecraft/client/model/geom/ModelPart$Cube;minX:F",
-                    ordinal = 0))
-    private void onInit(ModelPart.Cube instance,
-                        float value,
-                        int xTexOffs,
-                        int yTexOffs,
-                        float minX,
-                        float minY,
-                        float minZ,
-                        float width,
-                        float height,
-                        float depth,
-                        float growX,
-                        float growY,
-                        float growZ,
+    @Inject(method = "<init>", at = @At("CTOR_HEAD"))
+    private void onInit(int xTexOffs, int yTexOffs,
+                        float minX, float minY, float minZ,
+                        float width, float height, float depth,
+                        float growX, float growY, float growZ,
                         boolean mirror,
-                        float xTexSize,
-                        float yTexSize,
-                        Set<Direction> visibleFaces) {
-        this.sodium$cuboid = new ModelCuboid(xTexOffs, yTexOffs, minX, minY, minZ, width, height, depth,
-                growX, growY, growZ, mirror, xTexSize, yTexSize, visibleFaces);
-
-        this.minX = value;
+                        float xTexSize, float yTexSize,
+                        Set<Direction> visibleFaces,
+                        CallbackInfo ci) {
+        this.sodium$cuboid = new ModelCuboid(
+                xTexOffs, yTexOffs,
+                minX, minY, minZ,
+                width, height, depth,
+                growX, growY, growZ,
+                mirror,
+                xTexSize, yTexSize,
+                visibleFaces
+        );
     }
 
     @Inject(method = "compile",

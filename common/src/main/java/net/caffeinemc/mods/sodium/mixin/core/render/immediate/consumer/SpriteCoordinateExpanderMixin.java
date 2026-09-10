@@ -73,9 +73,9 @@ public class SpriteCoordinateExpanderMixin implements VertexBufferWriter {
                                   float minU, float minV, float maxU, float maxV) {
         long stride = format.getVertexSize();
 
-        var cache = VertexFormatOffsetCache.getInstance().getCachedOffsets(format);
+        int[] cache = VertexFormatOffsetCache.getInstance().getCachedOffsets(format);
 
-        var offsetUV = cache[VertexFormatOffsetCache.UV];
+        int offsetUV = cache[VertexFormatOffsetCache.UV];
 
         // The width/height of the sprite
         float w = maxU - minU;

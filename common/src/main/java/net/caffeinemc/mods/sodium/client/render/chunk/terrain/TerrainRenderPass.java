@@ -34,7 +34,11 @@ public class TerrainRenderPass {
     }
 
     public RenderTarget getTarget() {
-        return (this.isTranslucent && Minecraft.getInstance().gameRenderer.gameRenderState().useShaderTransparency()) ? Minecraft.getInstance().levelRenderer.translucentTarget() : Minecraft.getInstance().gameRenderer.mainRenderTarget();
+        final Minecraft minecraft = Minecraft.getInstance();
+
+        return (this.isTranslucent && minecraft.gameRenderer.gameRenderState().useShaderTransparency())
+                ? minecraft.levelRenderer.translucentTarget()
+                : minecraft.gameRenderer.mainRenderTarget();
     }
 
     public GpuTextureView getAtlas() {

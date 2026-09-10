@@ -19,8 +19,7 @@ import java.util.List;
 public class BlockColorsMixin implements BlockColorsExtension {
     // We're keeping a copy as we need to be able to iterate over the entry pairs, rather than just the values.
     @Unique
-    private final Reference2ReferenceMap<Block, BlockTintSource[]> blocksToColor =
-            new Reference2ReferenceOpenHashMap<>();
+    private final Reference2ReferenceMap<Block, BlockTintSource[]> blocksToColor = new Reference2ReferenceOpenHashMap<>();
 
     @Unique
     private final ReferenceSet<Block> overridenBlocks = new ReferenceOpenHashSet<>();
@@ -32,7 +31,11 @@ public class BlockColorsMixin implements BlockColorsExtension {
             // it means a mod is using custom logic, and we need to disable per-vertex coloring
             if (this.blocksToColor.put(block, layers.toArray(BlockTintSource[]::new)) != null) {
                 this.overridenBlocks.add(block);
-                SodiumClientMod.logger().info("Block {} had its color provider replaced with {} and will not use per-vertex coloring", BuiltInRegistries.BLOCK.getKey(block), layers);
+                SodiumClientMod.logger().info(
+                        "Block {} had its color provider replaced with {} and will not use per-vertex coloring",
+                        BuiltInRegistries.BLOCK.getKey(block),
+                        layers
+                );
             }
         }
     }

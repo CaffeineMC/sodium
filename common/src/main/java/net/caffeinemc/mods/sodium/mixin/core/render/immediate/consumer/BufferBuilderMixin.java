@@ -50,11 +50,11 @@ public abstract class BufferBuilderMixin implements VertexBufferWriter, BufferBu
 
     @Override
     public void push(MemoryStack stack, long src, int count, VertexFormat format) {
-        var length = count * this.vertexSize;
+        int length = count * this.vertexSize;
 
         // The buffer may change in the even, so we need to make sure that the
         // pointer is retrieved *after* the resize
-        var dst = this.buffer.reserve(length);
+        long dst = this.buffer.reserve(length);
 
         if (format == this.format) {
             // The layout is the same, so we can just perform a memory copy

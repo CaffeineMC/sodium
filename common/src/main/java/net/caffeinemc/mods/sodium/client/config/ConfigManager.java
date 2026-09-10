@@ -20,15 +20,12 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class ConfigManager {
+public final class ConfigManager {
     public static final String CONFIG_ENTRY_POINT_KEY = "sodium:config_api_user";
 
-    private record ConfigUser(
-            Supplier<ConfigEntryPoint> configEntrypoint,
-            String modId) {
-    }
-    public record ModMetadata(String modName, String modVersion) {
-    }
+    private record ConfigUser(Supplier<ConfigEntryPoint> configEntrypoint, String modId) {}
+
+    public record ModMetadata(String modName, String modVersion) {}
 
     private static final Collection<ConfigUser> configUsers = new ArrayList<>();
 

@@ -10,6 +10,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import java.nio.IntBuffer;
+
 /** As a workaround for the blitting crash on some Intel GPUs (see
  * {@link Workarounds.Reference#INTEL_FRAMEBUFFER_BLIT_CRASH_WHEN_UNFOCUSED}), vanilla skips framebuffer blitting
  * when the window is minimized. However, the vanilla implementation of {@link Window#isMinimized()} relies on
@@ -32,9 +34,10 @@ public class GameRendererMixin {
         if (!this.sodium$redirectWindowMinimizedState) {
             return window.isMinimized();
         }
-        try (var stack = MemoryStack.stackPush()) {
-            var width = stack.callocInt(1);
-            var height = stack.callocInt(1);
+
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer width = stack.callocInt(1);
+            IntBuffer height = stack.callocInt(1);
             GLFW.glfwGetFramebufferSize(window.handle(), width, height);
             return width.get(0) == 0 || height.get(0) == 0;
         }

@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.mixin.features.textures.scan;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -15,22 +16,13 @@ public class TextureAtlasSpriteMixin implements TextureAtlasSpriteExtension {
     @Unique
     private boolean hasUnknownImageContents;
 
-    @WrapOperation(
-            method = "createAnimationState",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/texture/SpriteContents;createAnimationState(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;I)Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;"))
-    private SpriteContents.AnimationState hookTickerInstantiation(SpriteContents instance,
-                                                                  GpuBufferSlice uboSlice,
-                                                                  int spriteUboSize,
-                                                                  Operation<SpriteContents.AnimationState> original) {
-        var ticker = original.call(instance, uboSlice, spriteUboSize);
-
-        if (ticker != null && !(SpriteContents.AnimationState.class.equals(ticker.getClass()))) {
+    @ModifyReturnValue(method = "createAnimationState", at = @At("RETURN"))
+    private SpriteContents.AnimationState markUnknownIfUsingCustomAnimationState(SpriteContents.AnimationState animationState) {
+        if (animationState != null && !(SpriteContents.AnimationState.class.equals(animationState.getClass()))) {
             this.hasUnknownImageContents = true;
         }
 
-        return ticker;
+        return animationState;
     }
 
     @Override

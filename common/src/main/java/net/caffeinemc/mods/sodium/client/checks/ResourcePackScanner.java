@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-public class ResourcePackScanner {
+public final class ResourcePackScanner {
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium-ResourcePackScanner");
 
     private static final Set<String> SHADER_PROGRAM_BLACKLIST = Set.of(
@@ -51,7 +51,7 @@ public class ResourcePackScanner {
      * Detailed information on shader files replaced by resource packs is printed in the client log.
      */
     public static void checkIfCoreShaderLoaded(ResourceManager manager) {
-        var outputs = manager.listPacks()
+        List<ScannedResourcePack> outputs = manager.listPacks()
                 .filter(ResourcePackScanner::isExternalResourcePack)
                 .map(ResourcePackScanner::scanResources)
                 .toList();
@@ -61,11 +61,11 @@ public class ResourcePackScanner {
     }
 
     private static void printToasts(Collection<ScannedResourcePack> resourcePacks) {
-        var incompatibleResourcePacks = resourcePacks.stream()
+        List<ScannedResourcePack> incompatibleResourcePacks = resourcePacks.stream()
                 .filter((pack) -> !pack.shaderPrograms.isEmpty())
                 .toList();
 
-        var likelyIncompatibleResourcePacks = resourcePacks.stream()
+        List<ScannedResourcePack> likelyIncompatibleResourcePacks = resourcePacks.stream()
                 .filter((pack) -> !pack.shaderIncludes.isEmpty())
                 .filter((pack) -> !incompatibleResourcePacks.contains(pack)) // filter out known-incompatible packs
                 .toList();
@@ -98,9 +98,9 @@ public class ResourcePackScanner {
     }
 
     private static void printCompatibilityReport(Collection<ScannedResourcePack> scanResults) {
-        var builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder();
 
-        for (var entry : scanResults) {
+        for (ScannedResourcePack entry : scanResults) {
             if (entry.shaderPrograms.isEmpty() && entry.shaderIncludes.isEmpty()) {
                 continue;
             }
@@ -142,20 +142,20 @@ public class ResourcePackScanner {
 
     @NonNull
     private static ScannedResourcePack scanResources(PackResources resourcePack) {
-        final var ignoredShaders = determineIgnoredShaders(resourcePack);
+        final List<String> ignoredShaders = determineIgnoredShaders(resourcePack);
 
         if (!ignoredShaders.isEmpty()) {
             LOGGER.warn("Resource pack '{}' indicates the following shaders should be ignored: {}",
                     getResourcePackName(resourcePack), String.join(", ", ignoredShaders));
         }
 
-        final var unsupportedShaderPrograms = new ArrayList<String>();
-        final var unsupportedShaderIncludes = new ArrayList<String>();
+        final ArrayList<String> unsupportedShaderPrograms = new ArrayList<>();
+        final ArrayList<String> unsupportedShaderIncludes = new ArrayList<>();
 
         resourcePack.listResources(PackType.CLIENT_RESOURCES, Identifier.DEFAULT_NAMESPACE, "shaders", (identifier, supplier) -> {
             // Trim full shader file path to only contain the filename
-            final var path = identifier.getPath();
-            final var name = path.substring(path.lastIndexOf('/') + 1);
+            final String path = identifier.getPath();
+            final String name = path.substring(path.lastIndexOf('/') + 1);
 
             // Check if the pack has already acknowledged the warnings in this file,
             // in this case we report a different info log about the situation
@@ -179,7 +179,7 @@ public class ResourcePackScanner {
     }
 
     private static String getResourcePackName(PackResources pack) {
-        var path = pack.packId();
+        final String path = pack.packId();
 
         // Omit 'file/' prefix for the in-game message
         return path.startsWith("file/") ? path.substring(5) : path;
@@ -194,11 +194,11 @@ public class ResourcePackScanner {
      * @return A list of shaders to ignore, this is the filename only without the path
      */
     private static List<String> determineIgnoredShaders(PackResources resourcePack) {
-        var ignoredShaders = new ArrayList<String>();
+        List<String> ignoredShaders = new ArrayList<>();
         try {
-            var meta = resourcePack.getMetadataSection(SodiumResourcePackMetadata.SERIALIZER);
-            if (meta != null) {
-                ignoredShaders.addAll(meta.ignoredShaders());
+            SodiumResourcePackMetadata sodiumMetadata = resourcePack.getMetadataSection(SodiumResourcePackMetadata.SERIALIZER);
+            if (sodiumMetadata != null) {
+                ignoredShaders.addAll(sodiumMetadata.ignoredShaders());
             }
         } catch (IOException x) {
             LOGGER.error("Failed to load pack.mcmeta file for resource pack '{}'", resourcePack.packId());
@@ -210,10 +210,5 @@ public class ResourcePackScanner {
         Console.instance().logMessage(messageLevel, message, translatable, 12.5);
     }
 
-    private record ScannedResourcePack(PackResources resourcePack,
-                                       ArrayList<String> shaderPrograms,
-                                       ArrayList<String> shaderIncludes)
-    {
-
-    }
+    private record ScannedResourcePack(PackResources resourcePack, ArrayList<String> shaderPrograms, ArrayList<String> shaderIncludes) {}
 }

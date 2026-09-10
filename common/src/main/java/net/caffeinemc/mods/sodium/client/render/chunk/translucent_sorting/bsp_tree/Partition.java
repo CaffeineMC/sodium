@@ -7,5 +7,4 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  * plane with the specified distance. If the distance is -1 this is the "end"
  * partition after the last partition plane.
  */
-record Partition(float distance, IntArrayList quadsBefore, IntArrayList quadsOn) {
-}
+record Partition(float distance, IntArrayList quadsBefore, IntArrayList quadsOn) {}

@@ -1,23 +1,20 @@
 package net.caffeinemc.mods.sodium.mixin.features.textures.animations.tracking;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.minecraft.client.renderer.block.FluidModel;
 import net.minecraft.client.renderer.block.FluidStateModelSet;
 import net.minecraft.client.resources.model.sprite.Material;
-import net.minecraft.world.level.material.FluidState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(FluidStateModelSet.class)
 public class FluidStateModelSetMixin {
     // Catches fluid sprites accessed outside the chunk fluid rendering path, e.g. FramedBlocks' framed tank.
-    @Inject(method = "get", at = @At(value = "RETURN"))
-    private void sodium$catchUsedSprites(FluidState state, CallbackInfoReturnable<FluidModel> cir) {
-        FluidModel model = cir.getReturnValue();
+    @ModifyReturnValue(method = "get", at = @At(value = "RETURN"))
+    private FluidModel markSpritesAsActive(FluidModel model) {
         if (model == null) {
-            return;
+            return model;
         }
 
         SpriteUtil.INSTANCE.markSpriteActive(model.stillMaterial().sprite());
@@ -27,5 +24,6 @@ public class FluidStateModelSetMixin {
         if (overlay != null) {
             SpriteUtil.INSTANCE.markSpriteActive(overlay.sprite());
         }
+        return model;
     }
 }

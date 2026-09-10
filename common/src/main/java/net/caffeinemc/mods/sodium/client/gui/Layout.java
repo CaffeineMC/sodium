@@ -2,7 +2,7 @@ package net.caffeinemc.mods.sodium.client.gui;
 
 import net.minecraft.client.gui.Font;
 
-public class Layout {
+public final class Layout {
     public static final int BUTTON_SHORT = 20;
     public static final int BUTTON_LONG = 65;
     public static final int INNER_MARGIN = 5;

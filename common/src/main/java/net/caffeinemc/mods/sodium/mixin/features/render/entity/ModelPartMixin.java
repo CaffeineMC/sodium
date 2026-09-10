@@ -1,14 +1,25 @@
 package net.caffeinemc.mods.sodium.mixin.features.render.entity;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import net.minecraft.client.model.geom.ModelPart;
+import org.joml.Quaternionf;
+import org.joml.Quaternionfc;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(ModelPart.class)
 public class ModelPartMixin {
+
+    @Unique
+    private static final Quaternionf TEMP_QUAT = new Quaternionf();
+
     @Shadow
     public float x;
     @Shadow
@@ -17,35 +28,54 @@ public class ModelPartMixin {
     public float z;
 
     @Shadow
-    public float xScale;
-    @Shadow
-    public float yScale;
-    @Shadow
-    public float zScale;
-
-    @Shadow
     public float yRot;
     @Shadow
     public float xRot;
     @Shadow
     public float zRot;
 
-    /**
-     * @author JellySquid
-     * @reason Apply transform more quickly
-     */
-    @Overwrite
-    public void translateAndRotate(PoseStack matrixStack) {
-        if (this.x != 0.0F || this.y != 0.0F || this.z != 0.0F) {
-            matrixStack.translate(this.x * (1.0f / 16.0f), this.y * (1.0f / 16.0f), this.z * (1.0f / 16.0f));
-        }
+    @WrapWithCondition(
+            method = "translateAndRotate",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(FFF)V"
+            )
+    )
+    public boolean skipEmptyTranslation(PoseStack instance, float xo, float yo, float zo) {
+        return xo != 0.0F || yo != 0.0F || zo != 0.0F;
+    }
 
-        if (this.xRot != 0.0F || this.yRot != 0.0F || this.zRot != 0.0F) {
-            MatrixHelper.rotateZYX(matrixStack.last(), this.zRot, this.yRot, this.xRot);
-        }
+    // Avoid creating a new Quaternionf instance, while avoiding Overwrite usage
+    @WrapOperation(
+            method = "translateAndRotate",
+            at = @At(
+                    value = "NEW",
+                    target = "()Lorg/joml/Quaternionf;"
+            )
+    )
+    public Quaternionf avoidNewQuaternionInstance(Operation<Quaternionf> original) {
+        return TEMP_QUAT;
+    }
 
-        if (this.xScale != 1.0F || this.yScale != 1.0F || this.zScale != 1.0F) {
-            matrixStack.scale(this.xScale, this.yScale, this.zScale);
-        }
+    @WrapOperation(
+            method = "translateAndRotate",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lorg/joml/Quaternionf;rotationZYX(FFF)Lorg/joml/Quaternionf;"
+            )
+    )
+    public Quaternionf skipQuaternionRotation(Quaternionf quaternionf, float angleZ, float angleY, float angleX, Operation<Quaternionf> original) {
+        return quaternionf;
+    }
+
+    @WrapOperation(
+            method = "translateAndRotate",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/mojang/blaze3d/vertex/PoseStack;mulPose(Lorg/joml/Quaternionfc;)V"
+            )
+    )
+    public void useMatrixHelperForRotation(PoseStack poseStack, Quaternionfc by, Operation<Void> original) {
+        MatrixHelper.rotateZYX(poseStack.last(), this.zRot, this.yRot, this.xRot);
     }
 }

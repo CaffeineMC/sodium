@@ -76,7 +76,7 @@
     "features.render.particle.QuadParticleRenderStateMixin",
     "features.render.viewport.GlStateManagerMixin",
     "features.render.world.clouds.CloudRendererMixin",
-    "features.render.world.sky.LevelRendererMixin",
+    "features.render.world.sky.CameraMixin",
     "features.textures.NativeImageAccessor",
     "features.textures.animations.tracking.AtlasGlyphProviderMixin",
     "features.textures.animations.tracking.AtlasManagerMixin",

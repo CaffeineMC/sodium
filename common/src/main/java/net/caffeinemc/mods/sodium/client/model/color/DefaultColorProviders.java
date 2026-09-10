@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Arrays;
 
-public class DefaultColorProviders {
+public final class DefaultColorProviders {
     public static ColorProvider<BlockState> adapt(BlockTintSource color) {
         return new VanillaAdapter(color);
     }
@@ -22,9 +22,7 @@ public class DefaultColorProviders {
     public static class GrassColorProvider<T> extends BlendedColorProvider<T> {
         public static final ColorProvider<BlockState> BLOCKS = new GrassColorProvider<>();
 
-        private GrassColorProvider() {
-
-        }
+        private GrassColorProvider() {}
 
         @Override
         protected int getColor(LevelSlice slice, T state, BlockPos pos) {
@@ -35,9 +33,7 @@ public class DefaultColorProviders {
     public static class FoliageColorProvider<T> extends BlendedColorProvider<T> {
         public static final ColorProvider<BlockState> BLOCKS = new FoliageColorProvider<>();
 
-        private FoliageColorProvider() {
-
-        }
+        private FoliageColorProvider() {}
 
         @Override
         protected int getColor(LevelSlice slice, T state, BlockPos pos) {
@@ -46,24 +42,24 @@ public class DefaultColorProviders {
     }
 
     private static class VanillaAdapter implements ColorProvider<BlockState> {
-        private final BlockTintSource[] color;
+        private final BlockTintSource[] sources;
 
-        private VanillaAdapter(BlockTintSource color) {
-            this.color = new BlockTintSource[] { color };
+        private VanillaAdapter(BlockTintSource source) {
+            this.sources = new BlockTintSource[] { source };
         }
 
-        public VanillaAdapter(BlockTintSource[] colors) {
-            this.color = colors;
+        public VanillaAdapter(BlockTintSource[] sources) {
+            this.sources = sources;
         }
 
         @Override
         public void getColors(LevelSlice slice, BlockPos pos, BlockPos.MutableBlockPos scratchPos, BlockState state, ModelQuadView quad, int[] output, boolean smooth) {
-            if (quad.getTintIndex() >= this.color.length) {
+            if (quad.getTintIndex() >= this.sources.length) {
                 Arrays.fill(output, -1);
                 return;
             }
 
-            Arrays.fill(output, 0xFF000000 | this.color[quad.getTintIndex()].colorInWorld(state, slice, pos));
+            Arrays.fill(output, 0xFF000000 | this.sources[quad.getTintIndex()].colorInWorld(state, slice, pos));
         }
     }
 }
