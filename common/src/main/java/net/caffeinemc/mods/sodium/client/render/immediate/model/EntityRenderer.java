@@ -12,7 +12,7 @@ import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 
 import static net.caffeinemc.mods.sodium.client.render.immediate.model.ModelCuboid.*;
 
-public class EntityRenderer {
+public final class EntityRenderer {
     private static final Matrix3f prevNormalMatrix = new Matrix3f();
 
     private static final int VERTEX_BUFFER_BYTES = NUM_CUBE_FACES * NUM_FACE_VERTICES * EntityVertex.STRIDE;
@@ -152,4 +152,6 @@ public class EntityRenderer {
 
         prevNormalMatrix.set(matrices.normal());
     }
+
+    private EntityRenderer() {}
 }

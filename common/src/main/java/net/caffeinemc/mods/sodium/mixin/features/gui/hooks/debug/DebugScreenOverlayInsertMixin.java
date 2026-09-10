@@ -25,11 +25,11 @@ public class DebugScreenOverlayInsertMixin {
     )
     private void sodium$insertFpsPercentiles(GuiGraphicsExtractor graphics,
                                              CallbackInfo ci,
-                                             @Local(ordinal = 0) List<String> leftLines) {
-        Minecraft minecraft = Minecraft.getInstance();
-        if (!minecraft.debugEntries.isCurrentlyEnabled(SodiumClientMod.SODIUM_FPS_PERCENTILES)) {
+                                             @Local(name = "leftLines") List<String> leftLines) {
+        if (!Minecraft.getInstance().debugEntries.isCurrentlyEnabled(SodiumClientMod.SODIUM_FPS_PERCENTILES)) {
             return;
         }
+
         var results = FrameTimeStatistics.INSTANCE.get();
         if (results == null || results.isEmpty()) {
             return;
@@ -46,21 +46,22 @@ public class DebugScreenOverlayInsertMixin {
             }
         }
 
-        var sb = new StringBuilder();
+        StringBuilder builder = new StringBuilder();
         for (var entry : results.reference2LongEntrySet()) {
-            if (!sb.isEmpty()) {
-                sb.append(' ');
+            if (!builder.isEmpty()) {
+                builder.append(' ');
             }
+
             long ns = entry.getLongValue();
-            sb.append(ChatFormatting.GRAY)
+            builder.append(ChatFormatting.GRAY)
                     .append(entry.getKey().name()).append('=')
                     .append(ChatFormatting.RESET)
                     .append(sodium$nanosToFps(ns));
         }
 
-        sb.append(ChatFormatting.GRAY).append(" fps");
+        builder.append(ChatFormatting.GRAY).append(" fps");
 
-        leftLines.add(insertAt, sb.toString());
+        leftLines.add(insertAt, builder.toString());
     }
 
     @Unique

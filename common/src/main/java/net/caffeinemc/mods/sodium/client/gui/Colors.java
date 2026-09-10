@@ -4,7 +4,7 @@ import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.minecraft.util.Mth;
 
 // colors in ARGB format
-public class Colors {
+public final class Colors {
     public static final int THEME = 0xFF94E4D3;
     public static final int THEME_LIGHTER = 0xFFCCFDEE;
     public static final int THEME_DARKER = 0xFF7A9E9E;
@@ -21,8 +21,8 @@ public class Colors {
 
     public static final int BUTTON_BORDER = 0x8000FFEE;
 
-    private static final float LIGHTEN_FACTOR = 0.3f;
-    private static final float DARKEN_FACTOR = -0.23f;
+    private static final float LIGHTEN_FACTOR = 0.3F;
+    private static final float DARKEN_FACTOR = -0.23F;
 
     public static int darken(int color) {
         return adjust(color, DARKEN_FACTOR);

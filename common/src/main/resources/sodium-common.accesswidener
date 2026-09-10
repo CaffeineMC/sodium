@@ -17,6 +17,7 @@ accessible class com/mojang/blaze3d/opengl/GlDevice
 
 accessible field net/minecraft/world/level/GrassColor pixels [I
 accessible field net/minecraft/world/level/FoliageColor pixels [I
+accessible field net/minecraft/world/level/DryFoliageColor pixels [I
 
 accessible field net/minecraft/client/resources/model/cuboid/ItemModelGenerator MIN_Z F
 accessible field net/minecraft/client/resources/model/cuboid/ItemModelGenerator MAX_Z F

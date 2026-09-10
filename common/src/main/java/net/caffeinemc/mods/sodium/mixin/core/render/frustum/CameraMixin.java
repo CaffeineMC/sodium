@@ -1,29 +1,35 @@
 package net.caffeinemc.mods.sodium.mixin.core.render.frustum;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Camera.class)
 public class CameraMixin {
+
+    @Shadow
+    @Final
+    private Minecraft minecraft;
+
     /**
      * This fixes a bug causing nausea to not affect culling.
      */
-    @Inject(method = "createProjectionMatrixForCulling", at = @At("RETURN"), cancellable = true)
-    private void editMatrix(CallbackInfoReturnable<Matrix4f> cir) {
-        var x = cir.getReturnValue();
-
-        var gameRenderer = Minecraft.getInstance().gameRenderer;
-        var gameRendererAccessor = ((GameRendererAccessor) Minecraft.getInstance().gameRenderer);
-        var player = Minecraft.getInstance().player;
-        var worldPartialTicks = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
+    @ModifyReturnValue(method = "createProjectionMatrixForCulling", at = @At("RETURN"))
+    private Matrix4f editMatrix(Matrix4f original) {
+        final GameRenderer gameRenderer = this.minecraft.gameRenderer;
+        final GameRendererAccessor gameRendererAccessor = ((GameRendererAccessor) this.minecraft.gameRenderer);
+        final LocalPlayer player = this.minecraft.player;
+        final float worldPartialTicks = this.minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);
 
         float screenEffectScale = gameRenderer.gameRenderState().optionsRenderState.screenEffectScale;
         float portalIntensity = Mth.lerp(worldPartialTicks, player.oPortalEffectIntensity, player.portalEffectIntensity);
@@ -34,12 +40,11 @@ public class CameraMixin {
             skew *= skew;
             Vector3f axis = new Vector3f(0.0F, Mth.SQRT_OF_TWO / 2.0F, Mth.SQRT_OF_TWO / 2.0F);
             float angle = (gameRendererAccessor.getSpinningEffectTime() + worldPartialTicks * gameRendererAccessor.getSpinningEffectSpeed()) * ((float)Math.PI / 180F);
-            x.rotate(angle, axis);
-            x.scale(1.0F / skew, 1.0F, 1.0F);
-            x.rotate(-angle, axis);
-
-            cir.setReturnValue(x);
+            original.rotate(angle, axis);
+            original.scale(1.0F / skew, 1.0F, 1.0F);
+            original.rotate(-angle, axis);
         }
 
+        return original;
     }
 }
