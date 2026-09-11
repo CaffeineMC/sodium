@@ -15,7 +15,6 @@ import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.option.Range;
 import net.caffeinemc.mods.sodium.api.config.structure.*;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.compatibility.environment.OsUtils;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
 import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
@@ -241,9 +240,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                             if (monitor == null || monitor.getModeCount() <= 0) {
                                                 return false;
                                             }
-                                            var os = OsUtils.getOs();
-                                            return (os == OsUtils.OperatingSystem.WIN || os == OsUtils.OperatingSystem.MAC) &&
-                                                    state.readBooleanOption(Identifier.parse("sodium:general.fullscreen"));
+                                            return state.readBooleanOption(Identifier.parse("sodium:general.fullscreen"));
                                         },
                                         Identifier.parse("sodium:general.fullscreen"))
                                 .setFlags(OptionFlag.REQUIRES_VIDEOMODE_RELOAD)
