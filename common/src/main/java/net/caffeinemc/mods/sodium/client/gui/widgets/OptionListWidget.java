@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gui.widgets;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
@@ -377,7 +378,7 @@ public class OptionListWidget extends AbstractOptionList {
 
         @Override
         public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-            if (event.button() == 0 && this.isMouseOver(event.x(), event.y())) {
+            if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && this.isMouseOver(event.x(), event.y())) {
                 this.page.currentScreenConsumer().accept(this.screen);
                 this.playClickSound();
                 return true;

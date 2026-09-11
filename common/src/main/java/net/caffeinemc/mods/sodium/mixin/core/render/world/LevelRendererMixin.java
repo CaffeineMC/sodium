@@ -3,9 +3,9 @@ package net.caffeinemc.mods.sodium.mixin.core.render.world;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.systems.RenderPass;
-import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import com.mojang.renderpearl.api.textures.FilterMode;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
@@ -50,8 +50,7 @@ import java.util.List;
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin implements LevelRendererExtension {
     @Unique
-    private static final EnumMap<ChunkSectionLayer,Int2ObjectOpenHashMap<List<RenderPass.Draw<GpuBufferSlice[]>>>> STATIC_MAP =
-            new EnumMap<>(ChunkSectionLayer.class);
+    private static EnumMap<ChunkSectionLayer,Int2ObjectOpenHashMap<List<RenderPass.Draw<GpuBufferSlice[]>>>> STATIC_MAP;
 
     @Shadow
     @Final
@@ -74,6 +73,10 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     @Shadow
     @Final
     private SectionOcclusionGraph sectionOcclusionGraph;
+    @Mutable
+    @Shadow
+    @Final
+    private boolean multiDrawIndirectAvailable;
     @Unique
     private SodiumWorldRenderer renderer;
 
@@ -107,7 +110,9 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
                       int width,
                       int height,
                       CallbackInfo ci) {
+        STATIC_MAP = new EnumMap<>(ChunkSectionLayer.class);
         this.renderer = new SodiumWorldRenderer(Minecraft.getInstance());
+        this.multiDrawIndirectAvailable = false;
     }
 
     /**
@@ -129,44 +134,20 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         this.renderer.endFrame();
     }
 
-    /**
-     * @reason Redirect to our renderer
-     * @author IMS
-     */
-    @Overwrite
-    public ChunkSectionsToRender prepareChunkRenders(Matrix4fc matrix4fc) {
-        var texture = Minecraft.getInstance()
-                .getTextureManager()
-                .getTexture(TextureAtlas.LOCATION_BLOCKS)
-                .getTextureView();
-
-        return new ChunkSectionsToRender(texture, STATIC_MAP, -1, new GpuBufferSlice[0]);
-    }
-
-    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;prepareChunkRenders(Lorg/joml/Matrix4fc;)Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;"))
-    private ChunkSectionsToRender getRenderState(LevelRenderer instance,
-                                                 Matrix4fc modelViewMatrix,
-                                                 Operation<ChunkSectionsToRender> original,
-                                                 @Local Vector4f fogColor) {
-
+    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;prepareChunkRenders(Lorg/joml/Matrix4fc;Z)Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;"))
+    private ChunkSectionsToRender getRenderState(LevelRenderer instance, Matrix4fc modelViewMatrix, boolean b, Operation<ChunkSectionsToRender> original, @Local Vector4f fogColor) {
         var projectionMatrix = ((GameRendererStorage) Minecraft.getInstance().gameRenderer)
                 .sodium$getProjectionMatrix();
 
         this.matrices = new ChunkRenderMatrices(projectionMatrix, modelViewMatrix);
         var pos = this.levelRenderState.cameraRenderState.pos;
 
-        var chunkSectionsToRender = original.call(instance, modelViewMatrix);
-        ((SodiumChunkSection) (Object) chunkSectionsToRender)
-                .sodium$setRendering(this.renderer,
-                        this.matrices,
-                        pos.x,
-                        pos.y,
-                        pos.z);
-
         // update the fog color here with the actual fog color being used to render the sky, since the fog color that
         // SodiumWorldRenderer still has stored from FogRendererMixin is outdated.
         this.renderer.updateFogColor(fogColor);
-        return chunkSectionsToRender;
+
+        this.renderer.prepareChunkRendering(this.matrices, pos.x, pos.y, pos.z);
+        return new SodiumChunkSection(renderer, matrices, pos.x, pos.y, pos.z);
     }
 
     /**
@@ -174,7 +155,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
      * @author JellySquid
      */
     @Overwrite
-    public boolean isSectionCompiledAndVisible(BlockPos pos) {
+    public boolean isSectionCompiledAndVisible(BlockPos pos, final long chunkFadeDuration) {
         return this.renderer.isSectionReady(pos.getX() >> 4, pos.getY() >> 4, pos.getZ() >> 4);
     }
 
@@ -209,7 +190,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
             method = "lambda$addMainPass$0",
             at = @At(
                     value = "FIELD",
-                    target = "Lcom/mojang/blaze3d/textures/FilterMode;LINEAR:Lcom/mojang/blaze3d/textures/FilterMode;",
+                    target = "Lcom/mojang/renderpearl/api/textures/FilterMode;LINEAR:Lcom/mojang/renderpearl/api/textures/FilterMode;",
                     opcode = Opcodes.GETSTATIC))
     private FilterMode setFilterMode() {
         return SodiumClientMod.options().quality.pixelFilteringMode;

@@ -28,6 +28,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigge
 import net.caffeinemc.mods.sodium.client.render.chunk.tree.RemovableMultiForest;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
 import net.caffeinemc.mods.sodium.client.render.util.RenderAsserts;
+import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
@@ -1201,5 +1202,9 @@ public class RenderSectionManager {
 
     public void renderBufferDebug(GuiGraphicsExtractor guiGraphics) {
         this.regions.getArenaAggregator().renderBufferDebug(guiGraphics);
+    }
+
+    public void prepareChunkRendering(ChunkRenderMatrices matrices, double x, double y, double z, boolean indexedRenderingEnabled) {
+        this.chunkRenderer.prepare(getRenderLists(), new CameraTransform(x, y, z), indexedRenderingEnabled);
     }
 }

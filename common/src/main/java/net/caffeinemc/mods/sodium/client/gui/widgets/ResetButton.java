@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gui.widgets;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import net.caffeinemc.mods.sodium.client.gui.Layout;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
@@ -68,7 +69,7 @@ public class ResetButton extends AbstractWidget {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        if (!isShiftHeld() || event.button() != 0) {
+        if (!isShiftHeld() || event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
             return false;
         }
 

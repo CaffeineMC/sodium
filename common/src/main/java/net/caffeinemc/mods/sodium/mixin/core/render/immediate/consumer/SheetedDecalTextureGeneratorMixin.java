@@ -2,7 +2,7 @@ package net.caffeinemc.mods.sodium.mixin.core.render.immediate.consumer;
 
 import com.mojang.blaze3d.vertex.SheetedDecalTextureGenerator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.util.NormI8;

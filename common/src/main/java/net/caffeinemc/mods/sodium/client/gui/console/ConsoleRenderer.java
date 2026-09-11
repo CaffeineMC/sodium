@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gui.console;
 
+import com.mojang.blaze3d.Blaze3D;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.util.ColorU8;
 import net.caffeinemc.mods.sodium.client.console.Console;
@@ -15,7 +16,6 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -51,7 +51,7 @@ public class ConsoleRenderer {
     }
 
     public void draw(GuiGraphicsExtractor context) {
-        var currentTime = GLFW.glfwGetTime();
+        var currentTime = Blaze3D.getTime();
 
         Minecraft minecraft = Minecraft.getInstance();
 

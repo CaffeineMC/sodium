@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gpu.arena;
 
-import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.client.gpu.arena.staging.StagingBuffer;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
@@ -62,7 +62,7 @@ public class ArenaAggregator {
         }
     };
 
-    private final DataType geometry = new DataType("Geometry", ChunkMeshFormats.COMPACT.getVertexFormat().getVertexSize()) {
+    private final DataType geometry = new DataType("Geometry", ChunkMeshFormats.getCurrent().getVertexFormat().getVertexSize()) {
         @Override
         long calculateArenaSize(int newArenaCount, long requiredSize) {
             var factorSize = switch (newArenaCount) {

@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.mixin.features.gui.hooks.console;
 
 
+import com.mojang.blaze3d.Blaze3D;
 import net.caffeinemc.mods.sodium.client.gui.console.ConsoleHooks;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -8,7 +9,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.state.GameRenderState;
 import net.minecraft.util.profiling.Profiler;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -32,7 +32,7 @@ public class GameRendererMixin {
 
     @Inject(method = "render",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/render/GuiRenderer;render()V"))
-    private void onRender(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
+    private void onRender(CallbackInfo ci) {
         // Do not start updating the console overlay until the font renderer is ready
         // This prevents the console from using tofu boxes for everything during early startup
         if (Minecraft.getInstance().gui.overlay() != null) {
@@ -46,7 +46,7 @@ public class GameRendererMixin {
         int mouseY = (int)this.minecraft.mouseHandler.getScaledYPos(this.minecraft.getWindow());
         GuiGraphicsExtractor drawContext = new GuiGraphicsExtractor(this.minecraft, this.gameRenderState.guiRenderState, mouseX, mouseY);
 
-        ConsoleHooks.render(drawContext, GLFW.glfwGetTime());
+        ConsoleHooks.render(drawContext, Blaze3D.getTime());
 
         Profiler.get().pop();
 

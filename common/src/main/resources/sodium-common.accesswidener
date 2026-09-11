@@ -13,7 +13,7 @@ accessible method net/minecraft/client/renderer/SectionBufferBuilderPool <init> 
 accessible class net/minecraft/client/gui/font/glyphs/BakedSheetGlyph$EffectInstance
 accessible field com/mojang/blaze3d/vertex/PoseStack$Pose trustedNormals Z
 accessible class net/minecraft/client/renderer/CloudRenderer$RelativeCameraPos
-accessible class com/mojang/blaze3d/opengl/GlDevice
+accessible class com/mojang/renderpearl/backend/opengl/GlDevice
 
 accessible field net/minecraft/world/level/GrassColor pixels [I
 accessible field net/minecraft/world/level/FoliageColor pixels [I
@@ -24,3 +24,4 @@ accessible field net/minecraft/client/resources/model/cuboid/ItemModelGenerator 
 accessible method net/minecraft/client/resources/model/cuboid/ItemModelGenerator isTransparent (Lnet/minecraft/client/renderer/texture/SpriteContents;IIIII)Z
 accessible class net/minecraft/client/resources/model/cuboid/ItemModelGenerator$SideDirection
 accessible method net/minecraft/client/resources/model/cuboid/ItemModelGenerator$SideDirection isHorizontal ()Z
+accessible method net/minecraft/client/renderer/chunk/ChunkSectionsToRender <init> (Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;I)V

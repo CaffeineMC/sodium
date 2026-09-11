@@ -47,12 +47,7 @@ public class ClientChunkCacheMixin {
                     shift = At.Shift.AFTER
             )
     )
-    private void onChunkLoaded(int chunkX,
-                               int chunkZ,
-                               FriendlyByteBuf readBuffer,
-                               Map<Heightmap.Types, long[]> heightmaps,
-                               Consumer<ClientboundLevelChunkPacketData.BlockEntityTagOutput> blockEntities,
-                               CallbackInfoReturnable<LevelChunk> cir) {
+    private void onChunkLoaded(int chunkX, int chunkZ, ClientboundLevelChunkPacketData chunkData, CallbackInfoReturnable<LevelChunk> cir) {
         ChunkTrackerHolder.get(this.level)
                 .onChunkStatusAdded(chunkX, chunkZ, ChunkStatus.FLAG_HAS_BLOCK_DATA);
     }

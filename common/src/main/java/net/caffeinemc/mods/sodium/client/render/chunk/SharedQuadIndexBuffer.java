@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
-import com.mojang.blaze3d.IndexType;
-import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.pipeline.IndexType;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
 

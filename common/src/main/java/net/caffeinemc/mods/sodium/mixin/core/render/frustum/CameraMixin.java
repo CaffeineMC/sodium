@@ -23,23 +23,22 @@ public class CameraMixin {
         var gameRenderer = Minecraft.getInstance().gameRenderer;
         var gameRendererAccessor = ((GameRendererAccessor) Minecraft.getInstance().gameRenderer);
         var player = Minecraft.getInstance().player;
-        var worldPartialTicks = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
 
+        float worldPartialTicks = gameRenderer.gameRenderState().levelRenderState.worldPartialTicks;
         float screenEffectScale = gameRenderer.gameRenderState().optionsRenderState.screenEffectScale;
-        float portalIntensity = Mth.lerp(worldPartialTicks, player.oPortalEffectIntensity, player.portalEffectIntensity);
-        float nauseaIntensity = player.getEffectBlendFactor(MobEffects.NAUSEA, worldPartialTicks);
+        float portalIntensity = gameRenderer.gameRenderState().levelRenderState.playerRenderState.portalEffectIntensity;
+        float nauseaIntensity = gameRenderer.gameRenderState().levelRenderState.playerRenderState.nauseaEffectIntensity;
         float spinningEffectIntensity = Math.max(portalIntensity, nauseaIntensity) * screenEffectScale * screenEffectScale;
         if (spinningEffectIntensity > 0.0F) {
             float skew = 5.0F / (spinningEffectIntensity * spinningEffectIntensity + 5.0F) - spinningEffectIntensity * 0.04F;
             skew *= skew;
             Vector3f axis = new Vector3f(0.0F, Mth.SQRT_OF_TWO / 2.0F, Mth.SQRT_OF_TWO / 2.0F);
-            float angle = (gameRendererAccessor.getSpinningEffectTime() + worldPartialTicks * gameRendererAccessor.getSpinningEffectSpeed()) * ((float)Math.PI / 180F);
+            float angle = gameRenderer.gameRenderState().levelRenderState.playerRenderState.spinningEffectAngle * ((float)Math.PI / 180F);
             x.rotate(angle, axis);
             x.scale(1.0F / skew, 1.0F, 1.0F);
             x.rotate(-angle, axis);
-
-            cir.setReturnValue(x);
         }
+        cir.setReturnValue(x);
 
     }
 }

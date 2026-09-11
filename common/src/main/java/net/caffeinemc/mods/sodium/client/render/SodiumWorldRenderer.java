@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render;
 
-import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
@@ -33,6 +34,7 @@ import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.oit.OitStage;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
@@ -286,21 +288,21 @@ public class SodiumWorldRenderer {
     /**
      * Performs a render pass for the given {@link RenderType} and draws all visible chunks for it.
      */
-    public void drawChunkLayer(ChunkSectionLayerGroup group, ChunkRenderMatrices matrices, double x, double y, double z, GpuSampler terrainSampler) {
+    public void drawChunkLayer(RenderPass pass, ChunkSectionLayerGroup group, ChunkRenderMatrices matrices, double x, double y, double z, GpuSampler terrainSampler, @Nullable OitStage stage) {
         if (group == ChunkSectionLayerGroup.OPAQUE) {
-            this.renderLayer(matrices, DefaultTerrainRenderPasses.SOLID, x, y, z, this.lastFogParameters, terrainSampler);
-            this.renderLayer(matrices, DefaultTerrainRenderPasses.CUTOUT, x, y, z, this.lastFogParameters, terrainSampler);
+            this.renderLayer(matrices, DefaultTerrainRenderPasses.SOLID, x, y, z, this.lastFogParameters, terrainSampler, pass, stage);
+            this.renderLayer(matrices, DefaultTerrainRenderPasses.CUTOUT, x, y, z, this.lastFogParameters, terrainSampler, pass, stage);
         } else if (group == ChunkSectionLayerGroup.TRANSLUCENT) {
-            this.renderLayer(matrices, DefaultTerrainRenderPasses.TRANSLUCENT, x, y, z, this.lastFogParameters, terrainSampler);
+            this.renderLayer(matrices, DefaultTerrainRenderPasses.TRANSLUCENT, x, y, z, this.lastFogParameters, terrainSampler, pass, stage);
         }
     }
 
-    public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters, GpuSampler terrainSampler) {
+    public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters, GpuSampler terrainSampler, RenderPass renderPass, @Nullable OitStage stage) {
         this.uniformBufferManager.update(matrices, fogParameters);
 
         this.renderSectionManager.getChunkRenderer().render(matrices, this.renderSectionManager.getRenderLists(), pass,
-                new CameraTransform(x, y, z), fogParameters, this.useTranslucencySorting,
-                terrainSampler, this.uniformBufferManager.getUniformBuffer(), this.uniformBufferManager.getSectionTimeInfo());
+                new CameraTransform(x, y, z), fogParameters, this.useTranslucencySorting, renderPass,
+                terrainSampler, this.uniformBufferManager.getUniformBuffer(), this.uniformBufferManager.getSectionTimeInfo(), stage);
     }
 
     public void reload() {
@@ -447,7 +449,7 @@ public class SodiumWorldRenderer {
      *
      * @return True if the entity is visible, otherwise false
      */
-    public <T extends Entity, S extends EntityRenderState> boolean isEntityVisible(EntityRenderer<T, S> renderer, T entity) {
+    public <T extends Entity, S extends EntityRenderState> boolean isEntityVisible(EntityRenderer<T, S> renderer, T entity, float partialTicks) {
         if (!this.useEntityCulling) {
             return true;
         }
@@ -457,7 +459,7 @@ public class SodiumWorldRenderer {
             return true;
         }
 
-        AABB bb = ((EntityRendererAccessor) renderer).sodium$getBoundingBoxForCulling(entity);
+        AABB bb = ((EntityRendererAccessor) renderer).sodium$getBoundingBoxForCulling(entity, partialTicks);
 
         // bail on very large entities to avoid checking many sections
         double entityVolume = (bb.maxX - bb.minX) * (bb.maxY - bb.minY) * (bb.maxZ - bb.minZ);
@@ -526,6 +528,12 @@ public class SodiumWorldRenderer {
     public void renderBufferDebug(GuiGraphicsExtractor guiGraphics) {
         if (this.renderSectionManager != null) {
             this.renderSectionManager.renderBufferDebug(guiGraphics);
+        }
+    }
+
+    public void prepareChunkRendering(ChunkRenderMatrices matrices, double x, double y, double z) {
+        if (this.renderSectionManager != null) {
+            this.renderSectionManager.prepareChunkRendering(matrices, x, y, z, this.useTranslucencySorting);
         }
     }
 }

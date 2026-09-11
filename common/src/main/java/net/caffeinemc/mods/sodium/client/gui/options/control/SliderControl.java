@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gui.options.control;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
 import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
@@ -148,7 +149,7 @@ public class SliderControl implements Control {
             if (super.mouseClicked(event, doubleClick)) return true;
             if (this.isResetOverlayActive()) return false;
 
-            if (this.option.isEnabled() && event.button() == 0 && this.isMouseOver(event.x(), event.y())) {
+            if (this.option.isEnabled() && event.button() == InputConstants.MOUSE_BUTTON_LEFT && this.isMouseOver(event.x(), event.y())) {
                 if (this.isMouseOverSlider(event.x(), event.y())) {
                     this.setValueFromMouse(event.x());
                     this.sliderHeld = true;
@@ -162,7 +163,7 @@ public class SliderControl implements Control {
 
         @Override
         public boolean mouseReleased(MouseButtonEvent event) {
-            if (this.option.isEnabled() && event.button() == 0 && this.sliderHeld) {
+            if (this.option.isEnabled() && event.button() == InputConstants.MOUSE_BUTTON_LEFT && this.sliderHeld) {
                 this.sliderHeld = false;
                 this.playClickSound();
                 return true;
@@ -173,7 +174,7 @@ public class SliderControl implements Control {
 
         @Override
         public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
-            if (this.option.isEnabled() && event.button() == 0) {
+            if (this.option.isEnabled() && event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
                 if (this.sliderHeld) {
                     this.setValueFromMouse(event.x());
                 }

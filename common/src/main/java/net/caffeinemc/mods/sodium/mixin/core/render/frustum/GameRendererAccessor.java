@@ -6,9 +6,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(GameRenderer.class)
 public interface GameRendererAccessor {
-    @Accessor
-    float getSpinningEffectTime();
 
-    @Accessor
-    float getSpinningEffectSpeed();
 }

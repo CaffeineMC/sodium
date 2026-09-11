@@ -1,12 +1,13 @@
 package net.caffeinemc.mods.sodium.mixin.core.render.world;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.feature.FeatureFrameContext;
 import net.minecraft.client.renderer.feature.QuadParticleFeatureRenderer;
+import net.minecraft.client.renderer.oit.OitStage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -27,13 +28,8 @@ public abstract class ParticleFeatureRendererMixin {
      * (presumably zero) for {@code GameTime} and other {@code Globals} and {@code Lighting} fields.
      * See <a href="https://github.com/CaffeineMC/sodium/issues/3612">this issue.</a>
      */
-    @Inject(method = "executeGroup", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;bindDefaultUniforms(Lcom/mojang/blaze3d/systems/RenderPass;)V"))
-    private void sodium$bindDefaultUniforms(FeatureFrameContext context,
-                                            int groupIndex,
-                                            List<QuadParticleFeatureRenderer.Submit> submits,
-                                            boolean strictlyOrdered,
-                                            CallbackInfo ci,
-                                            @Local RenderPass renderPass) {
+    @Inject(method = "executeGroup", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;bindDefaultUniforms(Lcom/mojang/renderpearl/api/commands/RenderPass;)V"))
+    private void sodium$bindDefaultUniforms(FeatureFrameContext context, OitStage stage, RenderPass renderPass, int groupIndex, List<QuadParticleFeatureRenderer.Submit> submits, boolean strictlyOrdered, CallbackInfo ci) {
         GpuBuffer globalUniform = RenderSystem.getGlobalSettingsUniform();
         if (globalUniform != null) {
             renderPass.setUniform("Globals", globalUniform);

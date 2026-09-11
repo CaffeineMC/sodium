@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.vertex;
 
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 
 import java.util.Map;

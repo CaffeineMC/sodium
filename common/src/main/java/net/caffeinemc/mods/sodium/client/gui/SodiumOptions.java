@@ -3,7 +3,7 @@ package net.caffeinemc.mods.sodium.client.gui;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.FilterMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;

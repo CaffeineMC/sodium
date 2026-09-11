@@ -2,7 +2,7 @@ package net.caffeinemc.mods.sodium.mixin.features.textures.scan;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.TextureAtlasSpriteExtension;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -19,7 +19,7 @@ public class TextureAtlasSpriteMixin implements TextureAtlasSpriteExtension {
             method = "createAnimationState",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/texture/SpriteContents;createAnimationState(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;I)Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;"))
+                    target = "Lnet/minecraft/client/renderer/texture/SpriteContents;createAnimationState(Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;I)Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;"))
     private SpriteContents.AnimationState hookTickerInstantiation(SpriteContents instance,
                                                                   GpuBufferSlice uboSlice,
                                                                   int spriteUboSize,

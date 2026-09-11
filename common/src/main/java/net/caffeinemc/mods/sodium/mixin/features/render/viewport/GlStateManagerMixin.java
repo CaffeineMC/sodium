@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.mixin.features.render.viewport;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;

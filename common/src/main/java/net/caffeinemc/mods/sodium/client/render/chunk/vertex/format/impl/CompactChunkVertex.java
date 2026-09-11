@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;

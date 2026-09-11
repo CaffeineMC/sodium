@@ -1,5 +1,7 @@
 package net.caffeinemc.mods.sodium.client.gui;
 
+import com.mojang.blaze3d.Blaze3D;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
@@ -29,9 +31,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
-import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
+import java.net.URI;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -236,9 +238,9 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
         int actionRowX = closeX + dx;
         int actionRowY = stackVertically ? closeY + dy : this.getLimitY() - (Layout.INNER_MARGIN + buttonH);
 
-        this.closeButton = new KeyBoundButtonWidget(new Dim2i(closeX, closeY, buttonW, buttonH), Component.translatable("gui.done"), this::onClose, true, false, GLFW.GLFW_KEY_D);
-        this.applyButton = new KeyBoundButtonWidget(new Dim2i(actionRowX, actionRowY, buttonW, buttonH), Component.translatable("sodium.options.buttons.apply"), ConfigManager.CONFIG::applyAllOptions, true, false, GLFW.GLFW_KEY_A);
-        this.undoButton = new KeyBoundButtonWidget(new Dim2i(actionRowX + dx, actionRowY + dy, buttonW, buttonH), Component.translatable("sodium.options.buttons.undo"), this::undoChanges, true, false, GLFW.GLFW_KEY_U);
+        this.closeButton = new KeyBoundButtonWidget(new Dim2i(closeX, closeY, buttonW, buttonH), Component.translatable("gui.done"), this::onClose, true, false, InputConstants.KEY_D);
+        this.applyButton = new KeyBoundButtonWidget(new Dim2i(actionRowX, actionRowY, buttonW, buttonH), Component.translatable("sodium.options.buttons.apply"), ConfigManager.CONFIG::applyAllOptions, true, false, InputConstants.KEY_A);
+        this.undoButton = new KeyBoundButtonWidget(new Dim2i(actionRowX + dx, actionRowY + dy, buttonW, buttonH), Component.translatable("sodium.options.buttons.undo"), this::undoChanges, true, false, InputConstants.KEY_U);
 
         this.addRenderableWidget(this.closeButton);
         this.addRenderableWidget(this.undoButton);
@@ -378,7 +380,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
     }
 
     private void openDonationPage() {
-        Util.getPlatform().openUri("https://caffeinemc.net/donate");
+        Blaze3D.openUri(URI.create("https://caffeinemc.net/donate"));
     }
 
     @Override
@@ -398,13 +400,13 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
     public boolean keyReleased(KeyEvent event) {
         if (this.prompt == null && !this.searchWidget.isSearching()) {
             // shift + P opens the vanilla video settings screen
-            if (event.key() == GLFW.GLFW_KEY_P && (event.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0) {
+            if (event.key() == InputConstants.KEY_P && (event.modifiers() & InputConstants.MOD_SHIFT) != 0) {
                 Minecraft.getInstance().gui.setScreen(new net.minecraft.client.gui.screens.options.VideoSettingsScreen(this.prevScreen, Minecraft.getInstance(), Minecraft.getInstance().options));
                 return true;
             }
 
             // T starts search
-            if (event.key() == GLFW.GLFW_KEY_T) {
+            if (event.key() == InputConstants.KEY_T) {
                 this.setFocused(this.searchWidget);
                 return true;
             }
@@ -418,7 +420,7 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
         }
 
         // ESC closes this screen without saving any pending changes
-        if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
+        if (event.key() == InputConstants.KEY_ESCAPE) {
             if (this.hasPendingChanges) {
                 this.undoChanges();
             }
