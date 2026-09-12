@@ -57,13 +57,15 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
     private final SortBehavior sortBehavior;
     private final boolean forceSort;
     private final boolean blockingTask;
+    private final long chunkCaptureTime;
 
-    public ChunkBuilderMeshingTask(RenderSection render, int buildTime, Vector3dc absoluteCameraPos, ChunkRenderContext renderContext, SortBehavior sortBehavior, boolean forceSort, boolean blockingTask) {
+    public ChunkBuilderMeshingTask(RenderSection render, int buildTime, Vector3dc absoluteCameraPos, ChunkRenderContext renderContext, SortBehavior sortBehavior, boolean forceSort, boolean blockingTask, long chunkCaptureTime) {
         super(render, buildTime, absoluteCameraPos);
         this.renderContext = renderContext;
         this.sortBehavior = sortBehavior;
         this.forceSort = forceSort;
         this.blockingTask = blockingTask;
+        this.chunkCaptureTime = chunkCaptureTime;
     }
 
     @Override
@@ -242,7 +244,7 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
         }
 
         renderData.setOcclusionData(occluder.resolve());
-        var output = new ChunkBuildOutput(this.section, this.submitTime, translucentData, renderData.build(), meshes, this.blockingTask);
+        var output = new ChunkBuildOutput(this.section, this.submitTime, translucentData, renderData.build(), meshes, this.blockingTask, this.chunkCaptureTime);
 
         if (sortEnabled) {
             // we need to set the reused sorter on reused dynamic data regardless of whether the uploaded index data is being reused

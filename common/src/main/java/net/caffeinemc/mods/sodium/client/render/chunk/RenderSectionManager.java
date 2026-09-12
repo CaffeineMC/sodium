@@ -37,11 +37,13 @@ import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
 import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
 import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.apache.commons.lang3.ArrayUtils;
@@ -594,6 +596,14 @@ public class RenderSectionManager {
         this.regions.uploadResults(outputs, uniforms);
         var uploadDuration = System.nanoTime() - uploadStart;
 
+        // just replicating what Vanilla does here...
+        for (var output : outputs) {
+            if (output instanceof ChunkBuildOutput buildOutput) {
+                Minecraft.getInstance().levelRenderer.removeTransientBlocksInSection(
+                        buildOutput.section.getPosition().asLong(), buildOutput.chunkCaptureTime);
+            }
+        }
+
         // insert and update the upload duration estimator with the total upload size,
         // since we don't know which task took how long and the time it takes to upload is not independent between tasks
         // we take the average size and duration
@@ -811,7 +821,8 @@ public class RenderSectionManager {
 
         ChunkBuilderTask<? extends BuilderTaskOutput> task;
         if (ChunkUpdateTypes.isInitialBuild(type) || ChunkUpdateTypes.isRebuild(type)) {
-            task = this.createRebuildTask(section, this.frame, blocking);
+            long chunkCaptureTime = Util.getNanos(); // Vanilla seems to capture it here, so let's do it just in case
+            task = this.createRebuildTask(section, this.frame, blocking, chunkCaptureTime);
 
             if (task == null) {
                 // if the section is empty or doesn't exist submit this null-task to set the
@@ -829,7 +840,7 @@ public class RenderSectionManager {
                 }
                 var result = ChunkJobResult.successfully(new ChunkBuildOutput(
                         section, this.frame, translucentData,
-                        BuiltSectionInfo.EMPTY, Collections.emptyMap(), false));
+                        BuiltSectionInfo.EMPTY, Collections.emptyMap(), false, chunkCaptureTime));
                 this.buildResults.add(result);
             }
         } else { // implies it's a type of sort task
@@ -856,14 +867,14 @@ public class RenderSectionManager {
         section.clearPendingUpdate();
     }
 
-    public @Nullable ChunkBuilderMeshingTask createRebuildTask(RenderSection render, int frame, boolean blocking) {
+    public @Nullable ChunkBuilderMeshingTask createRebuildTask(RenderSection render, int frame, boolean blocking, long chunkCaptureTime) {
         ChunkRenderContext context = LevelSlice.prepare(this.level, render.getPosition(), this.sectionCache);
 
         if (context == null) {
             return null;
         }
 
-        var task = new ChunkBuilderMeshingTask(render, frame, this.cameraPosition, context, this.sortBehavior, ChunkUpdateTypes.isRebuildWithSort(render.getPendingUpdate()), blocking);
+        var task = new ChunkBuilderMeshingTask(render, frame, this.cameraPosition, context, this.sortBehavior, ChunkUpdateTypes.isRebuildWithSort(render.getPendingUpdate()), blocking, chunkCaptureTime);
         task.calculateEstimations(this.jobDurationEstimator, this.meshTaskSizeEstimator, this.jobUploadDurationEstimator);
         return task;
     }
