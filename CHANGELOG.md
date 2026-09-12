@@ -10,3 +10,5 @@ Iris is not yet compatible. If you want to use Iris, don't update Sodium until I
 
 - Port to 26.3 ([#3902](https://github.com/CaffeineMC/sodium/pull/3902))
 - Re-enable "Fullscreen Resolution" control on Linux ([#3843](https://github.com/CaffeineMC/sodium/pull/3843))
+- Fix a memory leak caused by recreating resources in the F3 display
+- Fix issues with falling blocks
