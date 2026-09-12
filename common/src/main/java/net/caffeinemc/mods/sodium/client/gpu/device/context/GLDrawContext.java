@@ -23,9 +23,4 @@ public class GLDrawContext extends DrawContext {
     public void endDraw() {
 
     }
-
-    @Override
-    public String name() {
-        return "gl_multidraw (sodium)";
-    }
 }

@@ -27,4 +27,12 @@ public enum DrawBackend {
             return DrawBackend.OPENGL;
         }
     }
+
+    public String getName() {
+        return switch (this) {
+            case OPENGL -> "gl_multidraw (sodium)";
+            case VK_MULTIDRAW -> "ext_multidraw (sodium)";
+            case VK_INDIRECT -> "indirect (sodium)";
+        };
+    }
 }

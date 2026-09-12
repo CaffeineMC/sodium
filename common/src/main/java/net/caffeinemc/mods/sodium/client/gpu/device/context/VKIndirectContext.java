@@ -5,7 +5,6 @@ import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import net.minecraft.client.renderer.MappableRingBuffer;
 import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.vulkan.VkDrawIndexedIndirectCommand;
 
 public class VKIndirectContext extends VKDrawContext {
     private static final int INITIAL_SIZE = 512_000;
@@ -64,10 +63,5 @@ public class VKIndirectContext extends VKDrawContext {
     @Override
     public void endDraw() {
 
-    }
-
-    @Override
-    public String name() {
-        return "indirect (sodium)";
     }
 }
