@@ -152,7 +152,7 @@ public abstract class BakedQuadMixin implements BakedQuadView {
 
     @Override
     public boolean hasShade() {
-        return this.materialInfo.shade();
+        return true;
     }
 
     @Override

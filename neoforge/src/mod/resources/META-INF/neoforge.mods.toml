@@ -8,7 +8,7 @@ modId = "sodium"
 version = "${version}"
 displayName = "Sodium"
 
-logoFile = "sodium-icon.png" #optional
+iconFile = "sodium-icon.png" #optional
 
 authors = "JellySquid (jellysquid3), IMS212"
 

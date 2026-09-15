@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import org.joml.Vector3f;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A light pipeline which produces smooth interpolated lighting and ambient occlusion for model quads. This
@@ -66,7 +67,7 @@ public class SmoothLightPipeline implements LightPipeline {
     }
 
     @Override
-    public void calculate(ModelQuadView quad, BlockPos pos, QuadLightData out, Direction cullFace, Direction lightFace, boolean shade, boolean enhanced) {
+    public void calculate(ModelQuadView quad, BlockPos pos, QuadLightData out, Direction cullFace, Direction lightFace, @Nullable Direction shadeDirectionOverride, boolean enhanced) {
         this.updateCachedData(pos.asLong());
 
         int flags = quad.getFlags();
@@ -79,16 +80,16 @@ public class SmoothLightPipeline implements LightPipeline {
         // To match vanilla behavior, also treat the face as aligned if it is parallel and the block state is a full cube
         if ((flags & ModelQuadFlags.IS_ALIGNED) != 0 || ((flags & ModelQuadFlags.IS_PARALLEL) != 0 && LightDataAccess.unpackFC(this.lightCache.get(pos)))) {
             if ((flags & ModelQuadFlags.IS_PARTIAL) == 0) {
-                this.applyAlignedFullFace(neighborInfo, pos, lightFace, out, shade);
+                this.applyAlignedFullFace(neighborInfo, pos, lightFace, out, shadeDirectionOverride);
             } else {
-                this.applyAlignedPartialFace(neighborInfo, quad, pos, lightFace, out, shade);
+                this.applyAlignedPartialFace(neighborInfo, quad, pos, lightFace, out, shadeDirectionOverride);
             }
         } else if ((flags & ModelQuadFlags.IS_PARALLEL) != 0) {
-            this.applyParallelFace(neighborInfo, quad, pos, lightFace, out, shade);
+            this.applyParallelFace(neighborInfo, quad, pos, lightFace, out, shadeDirectionOverride);
         } else if (enhanced) {
-            this.applyIrregularFace(pos, quad, out, shade);
+            this.applyIrregularFace(pos, quad, out, shadeDirectionOverride);
         } else {
-            this.applyNonParallelFace(neighborInfo, quad, pos, lightFace, out, shade);
+            this.applyNonParallelFace(neighborInfo, quad, pos, lightFace, out, shadeDirectionOverride);
         }
     }
 
@@ -98,18 +99,18 @@ public class SmoothLightPipeline implements LightPipeline {
      * have two contributing sides.
      * Flags: IS_ALIGNED, !IS_PARTIAL
      */
-    private void applyAlignedFullFace(AoNeighborInfo neighborInfo, BlockPos pos, Direction dir, QuadLightData out, boolean shade) {
-        AoFaceData faceData = this.getCachedFaceData(pos, dir, true, shade);
+    private void applyAlignedFullFace(AoNeighborInfo neighborInfo, BlockPos pos, Direction dir, QuadLightData out, @Nullable Direction shadeDirectionOverride) {
+        AoFaceData faceData = this.getCachedFaceData(pos, dir, true, shadeDirectionOverride);
         neighborInfo.mapCorners(faceData.lm, faceData.ao, out.lm, out.br);
 
-        this.applyAmbientLighting(out.br, dir, shade);
+        this.applyAmbientLighting(out.br, dir, shadeDirectionOverride);
     }
 
     /**
      * Calculates the light data for a grid-aligned quad that does not cover the entire block volume's face.
      * Flags: IS_ALIGNED, IS_PARTIAL
      */
-    private void applyAlignedPartialFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out, boolean shade) {
+    private void applyAlignedPartialFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out, @Nullable Direction shadeDirectionOverride) {
         for (int i = 0; i < 4; i++) {
             // Clamp the vertex positions to the block's boundaries to prevent weird errors in lighting
             float cx = clamp(quad.getX(i));
@@ -118,20 +119,20 @@ public class SmoothLightPipeline implements LightPipeline {
 
             float[] weights = this.weights;
             neighborInfo.calculateCornerWeights(cx, cy, cz, weights);
-            this.applyAlignedPartialFaceVertex(pos, dir, weights, i, out, true, shade);
+            this.applyAlignedPartialFaceVertex(pos, dir, weights, i, out, true, shadeDirectionOverride);
         }
 
-        this.applyAmbientLighting(out.br, dir, shade);
+        this.applyAmbientLighting(out.br, dir, shadeDirectionOverride);
     }
 
     /**
      * This method is the same as {@link #applyNonParallelFace(AoNeighborInfo, ModelQuadView, BlockPos, Direction,
-     * QuadLightData, boolean)} but with the check for a depth of approximately 0 removed. If the quad is parallel but not
+     * QuadLightData, Direction)} but with the check for a depth of approximately 0 removed. If the quad is parallel but not
      * aligned, all of its vertices will have the same depth and this depth must be approximately greater than 0,
      * meaning the check for 0 will always return false.
      * Flags: !IS_ALIGNED, IS_PARALLEL
      */
-    private void applyParallelFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out, boolean shade) {
+    private void applyParallelFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out, @Nullable Direction shadeDirectionOverride) {
         for (int i = 0; i < 4; i++) {
             // Clamp the vertex positions to the block's boundaries to prevent weird errors in lighting
             float cx = clamp(quad.getX(i));
@@ -146,21 +147,21 @@ public class SmoothLightPipeline implements LightPipeline {
             // If the quad is approximately grid-aligned (not inset) to the other side of the block, avoid unnecessary
             // computation by treating it is as aligned
             if (Mth.equal(depth, 1.0F)) {
-                this.applyAlignedPartialFaceVertex(pos, dir, weights, i, out, false, shade);
+                this.applyAlignedPartialFaceVertex(pos, dir, weights, i, out, false, shadeDirectionOverride);
             } else {
                 // Blend the occlusion factor between the blocks directly beside this face and the blocks above it
                 // based on how inset the face is. This fixes a few issues with blocks such as farmland and paths.
-                this.applyInsetPartialFaceVertex(pos, dir, depth, 1.0f - depth, weights, i, out, shade);
+                this.applyInsetPartialFaceVertex(pos, dir, depth, 1.0f - depth, weights, i, out, shadeDirectionOverride);
             }
         }
 
-        this.applyAmbientLighting(out.br, dir, shade);
+        this.applyAmbientLighting(out.br, dir, shadeDirectionOverride);
     }
 
     /**
      * Flags: !IS_ALIGNED, !IS_PARALLEL
      */
-    private void applyNonParallelFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out, boolean shade) {
+    private void applyNonParallelFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out, @Nullable Direction shadeDirectionOverride) {
         for (int i = 0; i < 4; i++) {
             // Clamp the vertex positions to the block's boundaries to prevent weird errors in lighting
             float cx = clamp(quad.getX(i));
@@ -174,21 +175,21 @@ public class SmoothLightPipeline implements LightPipeline {
 
             // If the quad is approximately grid-aligned (not inset), avoid unnecessary computation by treating it is as aligned
             if (Mth.equal(depth, 0.0F)) {
-                this.applyAlignedPartialFaceVertex(pos, dir, weights, i, out, true, shade);
+                this.applyAlignedPartialFaceVertex(pos, dir, weights, i, out, true, shadeDirectionOverride);
             } else if (Mth.equal(depth, 1.0F)) {
-                this.applyAlignedPartialFaceVertex(pos, dir, weights, i, out, false, shade);
+                this.applyAlignedPartialFaceVertex(pos, dir, weights, i, out, false, shadeDirectionOverride);
             } else {
                 // Blend the occlusion factor between the blocks directly beside this face and the blocks above it
                 // based on how inset the face is. This fixes a few issues with blocks such as farmland and paths.
-                this.applyInsetPartialFaceVertex(pos, dir, depth, 1.0f - depth, weights, i, out, shade);
+                this.applyInsetPartialFaceVertex(pos, dir, depth, 1.0f - depth, weights, i, out, shadeDirectionOverride);
             }
         }
 
-        this.applyAmbientLighting(out.br, dir, shade);
+        this.applyAmbientLighting(out.br, dir, shadeDirectionOverride);
     }
 
-    private void applyAlignedPartialFaceVertex(BlockPos pos, Direction dir, float[] w, int i, QuadLightData out, boolean offset, boolean shade) {
-        AoFaceData faceData = this.getCachedFaceData(pos, dir, offset, shade);
+    private void applyAlignedPartialFaceVertex(BlockPos pos, Direction dir, float[] w, int i, QuadLightData out, boolean offset, @Nullable Direction shadeDirectionOverride) {
+        AoFaceData faceData = this.getCachedFaceData(pos, dir, offset, shadeDirectionOverride);
 
         if (!faceData.hasUnpackedLightData()) {
             faceData.unpackLightData();
@@ -202,14 +203,14 @@ public class SmoothLightPipeline implements LightPipeline {
         out.lm[i] = getLightMapCoord(sl, bl);
     }
 
-    private void applyInsetPartialFaceVertex(BlockPos pos, Direction dir, float n1d, float n2d, float[] w, int i, QuadLightData out, boolean shade) {
-        AoFaceData n1 = this.getCachedFaceData(pos, dir, false, shade);
+    private void applyInsetPartialFaceVertex(BlockPos pos, Direction dir, float n1d, float n2d, float[] w, int i, QuadLightData out, @Nullable Direction shadeDirectionOverride) {
+        AoFaceData n1 = this.getCachedFaceData(pos, dir, false, shadeDirectionOverride);
 
         if (!n1.hasUnpackedLightData()) {
             n1.unpackLightData();
         }
 
-        AoFaceData n2 = this.getCachedFaceData(pos, dir, true, shade);
+        AoFaceData n2 = this.getCachedFaceData(pos, dir, true, shadeDirectionOverride);
 
         if (!n2.hasUnpackedLightData()) {
             n2.unpackLightData();
@@ -228,17 +229,17 @@ public class SmoothLightPipeline implements LightPipeline {
     private final Vector3f vertexNormal = new Vector3f();
     private final AoFaceData tmpFace = new AoFaceData();
 
-    private AoFaceData gatherInsetFace(ModelQuadView quad, BlockPos blockPos, int vertexIndex, Direction lightFace, boolean shade) {
+    private AoFaceData gatherInsetFace(ModelQuadView quad, BlockPos blockPos, int vertexIndex, Direction lightFace, @Nullable Direction shadeDirectionOverride) {
         final float w1 = AoNeighborInfo.get(lightFace).getDepth(quad.getX(vertexIndex), quad.getY(vertexIndex), quad.getZ(vertexIndex));
 
         if (Mth.equal(w1, 0)) {
-            return this.getCachedFaceData(blockPos, lightFace, true, shade);
+            return this.getCachedFaceData(blockPos, lightFace, true, shadeDirectionOverride);
         } else if (Mth.equal(w1, 1)) {
-            return this.getCachedFaceData(blockPos, lightFace, false, shade);
+            return this.getCachedFaceData(blockPos, lightFace, false, shadeDirectionOverride);
         } else {
             this.tmpFace.reset();
             final float w0 = 1 - w1;
-            return AoFaceData.weightedMean(this.getCachedFaceData(blockPos, lightFace, true, shade), w0, this.getCachedFaceData(blockPos, lightFace, false, shade), w1, this.tmpFace);
+            return AoFaceData.weightedMean(this.getCachedFaceData(blockPos, lightFace, true, shadeDirectionOverride), w0, this.getCachedFaceData(blockPos, lightFace, false, shadeDirectionOverride), w1, this.tmpFace);
         }
     }
 
@@ -246,7 +247,7 @@ public class SmoothLightPipeline implements LightPipeline {
      * Calculates the light data for a quad that does not follow any grid and is not parallel to it's light face.
      * Flags: !IS_ALIGNED, !IS_PARTIAL, !IS_FULL
      */
-    private void applyIrregularFace(BlockPos blockPos, ModelQuadView quad, QuadLightData out, boolean shade) {
+    private void applyIrregularFace(BlockPos blockPos, ModelQuadView quad, QuadLightData out, @Nullable Direction shadeDirectionOverride) {
         final float[] w = this.weights;
         final float[] aoResult = out.br;
         final int[] lightResult = out.lm;
@@ -261,10 +262,10 @@ public class SmoothLightPipeline implements LightPipeline {
 
             if (!Mth.equal(0f, x)) {
                 final Direction face = x > 0 ? Direction.EAST : Direction.WEST;
-                final AoFaceData fd = this.gatherInsetFace(quad, blockPos, i, face, shade);
+                final AoFaceData fd = this.gatherInsetFace(quad, blockPos, i, face, shadeDirectionOverride);
                 AoNeighborInfo.get(face).calculateCornerWeights(quad.getX(i), quad.getY(i), quad.getZ(i), w);
                 final float n = x * x;
-                final float a = fd.getBlendedShade(w) * this.getAmbientBrightness(face, shade);
+                final float a = fd.getBlendedShade(w) * this.getAmbientBrightness(face, shadeDirectionOverride);
                 final float s = fd.getBlendedSkyLight(w);
                 final float b = fd.getBlendedBlockLight(w);
                 ao += n * a;
@@ -279,10 +280,10 @@ public class SmoothLightPipeline implements LightPipeline {
 
             if (!Mth.equal(0f, y)) {
                 final Direction face = y > 0 ? Direction.UP : Direction.DOWN;
-                final AoFaceData fd = this.gatherInsetFace(quad, blockPos, i, face, shade);
+                final AoFaceData fd = this.gatherInsetFace(quad, blockPos, i, face, shadeDirectionOverride);
                 AoNeighborInfo.get(face).calculateCornerWeights(quad.getX(i), quad.getY(i), quad.getZ(i), w);
                 final float n = y * y;
-                final float a = fd.getBlendedShade(w) * this.getAmbientBrightness(face, shade);
+                final float a = fd.getBlendedShade(w) * this.getAmbientBrightness(face, shadeDirectionOverride);
                 final float s = fd.getBlendedSkyLight(w);
                 final float b = fd.getBlendedBlockLight(w);
                 ao += n * a;
@@ -297,10 +298,10 @@ public class SmoothLightPipeline implements LightPipeline {
 
             if (!Mth.equal(0f, z)) {
                 final Direction face = z > 0 ? Direction.SOUTH : Direction.NORTH;
-                final AoFaceData fd = this.gatherInsetFace(quad, blockPos, i, face, shade);
+                final AoFaceData fd = this.gatherInsetFace(quad, blockPos, i, face, shadeDirectionOverride);
                 AoNeighborInfo.get(face).calculateCornerWeights(quad.getX(i), quad.getY(i), quad.getZ(i), w);
                 final float n = z * z;
-                final float a = fd.getBlendedShade(w) * this.getAmbientBrightness(face, shade);
+                final float a = fd.getBlendedShade(w) * this.getAmbientBrightness(face, shadeDirectionOverride);
                 final float s = fd.getBlendedSkyLight(w);
                 final float b = fd.getBlendedBlockLight(w);
                 ao += n * a;
@@ -322,8 +323,8 @@ public class SmoothLightPipeline implements LightPipeline {
      * @param face The facing of the quad
      * @param shade Whether the quad should receive directional lighting
      */
-    private void applyAmbientLighting(final float[] brightness, Direction face, boolean shade) {
-        final float multiplier = this.getAmbientBrightness(face, shade);
+    private void applyAmbientLighting(final float[] brightness, Direction face, @Nullable Direction shadeDirectionOverride) {
+        final float multiplier = this.getAmbientBrightness(face, shadeDirectionOverride);
 
         for (int i = 0; i < brightness.length; i++) {
             brightness[i] *= multiplier;
@@ -335,14 +336,14 @@ public class SmoothLightPipeline implements LightPipeline {
      * @param face The block face
      * @param shade Whether the block face is receiving directional light
      */
-    private float getAmbientBrightness(Direction face, boolean shade) {
-        return shade ? this.lightCache.getLevel().cardinalLighting().byFace(face) : this.lightCache.getLevel().cardinalLighting().up();
+    private float getAmbientBrightness(Direction face, @Nullable Direction shadeDirectionOverride) {
+        return this.lightCache.getLevel().cardinalLighting().byFace(shadeDirectionOverride != null ? shadeDirectionOverride : face);
     }
 
     /**
      * Returns the cached data for a given facing or calculates it if it hasn't been cached.
      */
-    private AoFaceData getCachedFaceData(BlockPos pos, Direction face, boolean offset, boolean shade) {
+    private AoFaceData getCachedFaceData(BlockPos pos, Direction face, boolean offset, @Nullable Direction shadeDirectionOverride) {
         AoFaceData data = this.cachedFaceData[offset ? face.ordinal() : face.ordinal() + 6];
 
         if (data.hasLightData()) {

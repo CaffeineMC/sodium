@@ -8,6 +8,7 @@ import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.LightCoordsUtil;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 
@@ -25,16 +26,16 @@ public class FlatFluidLightPipeline extends FlatLightPipeline {
     }
 
     @Override
-    public void calculate(ModelQuadView quad, BlockPos pos, QuadLightData out, Direction cullFace, Direction lightFace, boolean shade, boolean enhanced) {
+    public void calculate(ModelQuadView quad, BlockPos pos, QuadLightData out, Direction cullFace, Direction lightFace, @Nullable Direction shadeDirectionOverride, boolean enhanced) {
         // this first part is a reduced implementation of FlatLightPipeline
         if (cullFace != null) {
-            Arrays.fill(out.br, this.getShade(this.lightCache.getLevel(), lightFace, shade));
+            Arrays.fill(out.br, this.getShade(this.lightCache.getLevel(), lightFace, shadeDirectionOverride));
         } else {
             int flags = quad.getFlags();
             if ((flags & ModelQuadFlags.IS_ALIGNED) != 0 || ((flags & ModelQuadFlags.IS_PARALLEL) != 0 && unpackFC(this.lightCache.get(pos)))) {
-                Arrays.fill(out.br, this.getShade(this.lightCache.getLevel(), lightFace, shade));
+                Arrays.fill(out.br, this.getShade(this.lightCache.getLevel(), lightFace, shadeDirectionOverride));
             } else {
-                Arrays.fill(out.br, enhanced ? PlatformBlockAccess.getInstance().getNormalVectorShade(quad, this.lightCache.getLevel(), shade) : this.getShade(this.lightCache.getLevel(), lightFace, shade));
+                Arrays.fill(out.br, shadeDirectionOverride == null && enhanced ? PlatformBlockAccess.getInstance().getNormalVectorShade(quad, this.lightCache.getLevel(), true) : this.getShade(this.lightCache.getLevel(), lightFace, shadeDirectionOverride));
             }
         }
 

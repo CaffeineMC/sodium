@@ -76,6 +76,7 @@ dependencies {
 
     if (BuildConfig.SUPPORT_FRAPI) {
         addEmbeddedFabricModule("fabric-renderer-api-v1")
+        addEmbeddedFabricModule("fabric-renderer-indigo")
     }
 
     addEmbeddedFabricModule("fabric-lifecycle-events-v1")

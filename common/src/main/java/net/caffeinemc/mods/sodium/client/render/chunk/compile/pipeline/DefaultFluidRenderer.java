@@ -809,7 +809,7 @@ public class DefaultFluidRenderer {
 
         QuadLightData light = this.quadLightData;
 
-        lighter.calculate(quad, pos, light, null, dir, false, false);
+        lighter.calculate(quad, pos, light, null, dir, Direction.UP, false);
 
         colorProvider.getColors(level, pos, this.scratchPos, fluidState, quad, this.quadColors, level.hasBiomeBlend());
 
