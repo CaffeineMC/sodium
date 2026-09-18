@@ -14,6 +14,7 @@
     "minVersion": "0.5.2"
   },
   "client": [
+    "core.GlFallbackAllocatorMixin",
     "core.GpuDeviceAccessor",
     "core.MinecraftMixin",
     "core.WindowMixin",
