@@ -1,10 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gui;
 
-import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.platform.Monitor;
-import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.platform.VideoMode;
-import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.platform.*;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.textures.FilterMode;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
@@ -16,13 +12,11 @@ import net.caffeinemc.mods.sodium.api.config.option.Range;
 import net.caffeinemc.mods.sodium.api.config.structure.*;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.Workarounds;
-import net.caffeinemc.mods.sodium.client.config.structure.Config;
 import net.caffeinemc.mods.sodium.client.gui.options.FullscreenMode;
 import net.caffeinemc.mods.sodium.client.gui.options.Toggle;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
-import net.caffeinemc.mods.sodium.mixin.features.gui.OptionsAccessor;
 import net.minecraft.client.*;
 import net.minecraft.client.renderer.texture.MipmapStrategy;
 import net.minecraft.client.renderer.texture.ReloadableTexture;
@@ -33,7 +27,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.server.packs.resources.ResourceManager;
-import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
@@ -311,8 +304,9 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setBinding(this.vanillaOpts.showAutosaveIndicator()::set, this.vanillaOpts.showAutosaveIndicator()::get)
                 )
         );
-        generalPage.addOptionGroup(builder.createOptionGroup().addOption(builder.createEnumOption(Identifier.fromNamespaceAndPath("sodium", "general.graphics_api"),
-                PreferredGraphicsApi.class)
+
+        var platformGroup = builder.createOptionGroup().addOption(builder.createEnumOption(Identifier.fromNamespaceAndPath("sodium", "general.graphics_api"),
+                        PreferredGraphicsApi.class)
                 .setStorageHandler(this.vanillaStorage)
                 .setName(Component.translatable("options.graphicsApi"))
                 .setTooltip(i -> {
@@ -328,7 +322,20 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                         Component.literal("Prefer Vulkan")))
                 .setDefaultValue(PreferredGraphicsApi.DEFAULT)
                 .setFlags(OptionFlag.REQUIRES_GAME_RESTART)
-                .setBinding((value) -> this.vanillaOpts.preferredGraphicsBackend().set(value), () -> this.vanillaOpts.preferredGraphicsBackend().get())));
+                .setBinding((value) -> this.vanillaOpts.preferredGraphicsBackend().set(value), () -> this.vanillaOpts.preferredGraphicsBackend().get()));
+
+        if (MacosUtil.IS_MACOS) {
+            platformGroup.addOption(
+                    builder.createBooleanOption(Identifier.parse("sodium:general.mac_fullscreen_menu_visibility"))
+                            .setStorageHandler(this.vanillaStorage)
+                            .setName(Component.translatable("options.macFullscreenMenuVisibility"))
+                            .setTooltip(Component.translatable("options.macFullscreenMenuVisibility.tooltip"))
+                            .setDefaultValue(false)
+                            .setBinding(this.vanillaOpts.macFullscreenMenuVisibility()::set, this.vanillaOpts.macFullscreenMenuVisibility()::get)
+            );
+        }
+        generalPage.addOptionGroup(platformGroup);
+
         return generalPage;
     }
 
