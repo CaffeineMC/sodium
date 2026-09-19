@@ -19,6 +19,7 @@ import java.util.function.Supplier;
 
 class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, Integer> implements IntegerOptionBuilder {
     private DependentValue<? extends SteppedValidator> validatorProvider;
+    private IntegerOptionControlStyle control = IntegerOptionControlStyle.SLIDER;
     private ControlValueFormatter valueFormatter;
 
     IntegerOptionBuilderImpl(Identifier id) {
@@ -31,6 +32,7 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
 
         Validate.notNull(this.getValidatorProvider(), "Validator provider must be set");
         Validate.notNull(this.getValueFormatter(), "Value formatter must be set");
+        Validate.notNull(this.getControlStyle(), "Control style must be set");
     }
 
     @Override
@@ -51,6 +53,7 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
                 this.getBinding(),
                 this.getApplyHook(),
                 this.getValidatorProvider(),
+                this.getControlStyle(),
                 this.getValueFormatter());
     }
 
@@ -68,6 +71,10 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
 
     DependentValue<? extends SteppedValidator> getValidatorProvider() {
         return this.getFirstNotNull(this.validatorProvider, IntegerOption::getValidatorProvider);
+    }
+
+    IntegerOptionControlStyle getControlStyle() {
+        return getFirstNotNull(this.control, IntegerOption::getControlStyle);
     }
 
     ControlValueFormatter getValueFormatter() {
@@ -190,6 +197,12 @@ class IntegerOptionBuilderImpl extends StatefulOptionBuilderImpl<IntegerOption, 
     @Override
     public IntegerOptionBuilder setValidatorProvider(Function<ConfigState, ? extends SteppedValidator> provider, Identifier... dependencies) {
         this.validatorProvider = new DynamicValue<>(provider, dependencies);
+        return this;
+    }
+
+    @Override
+    public IntegerOptionBuilder setControlStyle(IntegerOptionControlStyle control) {
+        this.control = control;
         return this;
     }
 
