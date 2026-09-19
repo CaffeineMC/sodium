@@ -46,7 +46,10 @@ public class MinecraftMixin {
      */
     @Inject(method = "reloadResourcePacks()Ljava/util/concurrent/CompletableFuture;", at = @At("TAIL"))
     private void postResourceReload(CallbackInfoReturnable<CompletableFuture<Void>> cir) {
-        ResourcePackScanner.checkIfCoreShaderLoaded(this.resourceManager);
+        cir.getReturnValue()
+                .thenRunAsync(
+                        () -> ResourcePackScanner.checkIfCoreShaderLoaded(this.resourceManager),
+                        Minecraft.getInstance());
     }
 
     @WrapOperation(
