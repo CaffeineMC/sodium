@@ -4,11 +4,8 @@
 Everything above the line is ignored and not included in the changelog. Everything below will be in the
 changelog on GitHub, Modrinth and CurseForge.
 ----------
-Sodium [SodiumVersion]() is a release for Minecraft 26.3-rc-2. It's based on the recently released Sodium 0.9.2.
+Sodium [SodiumVersion]() fixes graphical glitches on Intel iGPUs, fluid culling for unusual blocks, and adds the macOS fullscreen menu visibility option.
 
-Iris is not yet compatible. If you want to use Iris, don't update Sodium until Iris receives an update.
-
-- Port to 26.3 ([#3902](https://github.com/CaffeineMC/sodium/pull/3902))
-- Re-enable "Fullscreen Resolution" control on Linux ([#3843](https://github.com/CaffeineMC/sodium/pull/3843))
-- Fix a memory leak caused by recreating resources in the F3 display
-- Fix issues with falling blocks
+- Fix graphical glitches on some Intel iGPUs
+- Show macOS fullscreen menu visibility option on the Video Settings screen
+- Fix Fluid Culling For Non-Full Blocks With Unusual Shapes ([#3916](https://github.com/CaffeineMC/sodium/pull/3916))
