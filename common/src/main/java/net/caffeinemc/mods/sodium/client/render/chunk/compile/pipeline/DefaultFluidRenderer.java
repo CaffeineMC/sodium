@@ -1,6 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline;
 
 import com.google.common.base.Suppliers;
+import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
@@ -27,6 +28,7 @@ import net.caffeinemc.mods.sodium.mixin.core.world.VoxelShapeAccessor;
 import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.client.renderer.block.FluidModel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.core.AxisCycle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
@@ -36,9 +38,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.DiscreteVoxelShape;
 import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.world.phys.shapes.SliceShape;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.function.Supplier;
@@ -171,7 +172,7 @@ public class DefaultFluidRenderer {
     }
 
     /**
-     * Checks if a face of the fluid is self-visible and not occluded by the block it's contained in. This method assumes the fluid face spans the full block but allows it to be offset from the block's outer face, and to be sloped. The block's occlusion shape is sliced at every layer the face passes through, and the face is only hidden if all of these slices are completely covered.
+     * Checks if a face of the fluid is self-visible and not occluded by the block it's contained in. This method assumes the fluid is defined by a full-block shape with an offset range. The face is only hidden if the block's occlusion shape completely covers the fluid in every layer it may occupy.
      *
      * @param selfBlockState The state of the block in the level
      * @param facing The facing direction of the side to check
@@ -200,22 +201,51 @@ public class DefaultFluidRenderer {
         var accessor = (VoxelShapeAccessor) selfShape;
         int firstIndex = accessor.sodium$findIndex(axis, minOffset);
         int lastIndex = accessor.sodium$findIndex(axis, Math.min(maxOffset, 0.9999999));
-        int layerCount = selfShape.getCoords(axis).size() - 1;
 
-        for (int index = firstIndex; index <= lastIndex; index++) {
-            // a layer outside the shape's extent is empty and can't occlude anything
-            if (index < 0 || index >= layerCount) {
-                return true;
-            }
+        return !isLayerRangeFull(selfShape, accessor.sodium$getShape(), axis, firstIndex, lastIndex);
+    }
 
-            // the slice spans the block's full depth along the axis, so the face is visible if the slice leaves any of the full block uncovered
-            var layerSlice = new SliceShape(selfShape, axis, index);
-            if (Shapes.joinIsNotEmpty(Shapes.block(), layerSlice, BooleanOp.ONLY_FIRST)) {
-                return true;
+    /**
+     * Checks if the shape completely covers the block in every layer from {@code firstLayer} to {@code lastLayer} (inclusive) along the axis. Joining SliceShapes is slower than scanning the shape's voxel grid directly like this.
+     */
+    private static boolean isLayerRangeFull(VoxelShape shape, DiscreteVoxelShape grid, Direction.Axis axis, int firstLayer, int lastLayer) {
+        // layers outside the shape's extent are empty
+        if (firstLayer < 0 || lastLayer >= grid.getSize(axis)) {
+            return false;
+        }
+
+        Direction.Axis axisB = AxisCycle.FORWARD.cycle(axis);
+        Direction.Axis axisC = AxisCycle.BACKWARD.cycle(axis);
+
+        // a shape that doesn't reach the block's edges can't cover it
+        if (isShapeNonBlockSpanning(shape.getCoords(axisB)) || isShapeNonBlockSpanning(shape.getCoords(axisC))) {
+            return false;
+        }
+
+        var transform = AxisCycle.between(Direction.Axis.X, axis);
+        for (int layer = firstLayer; layer <= lastLayer; layer++) {
+            if (!isLayerFull(grid, transform, layer, grid.getSize(axisB), grid.getSize(axisC))) {
+                return false;
             }
         }
 
-        return false;
+        return true;
+    }
+
+    private static boolean isLayerFull(DiscreteVoxelShape grid, AxisCycle transform, int layer, int sizeB, int sizeC) {
+        for (int b = 0; b < sizeB; b++) {
+            for (int c = 0; c < sizeC; c++) {
+                if (!grid.isFull(transform, layer, b, c)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean isShapeNonBlockSpanning(DoubleList coords) {
+        return !(coords.getDouble(0) <= Shapes.EPSILON) || !(coords.getDouble(coords.size() - 1) >= 1.0 - Shapes.EPSILON);
     }
 
     /**
