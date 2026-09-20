@@ -39,6 +39,7 @@
     "core.render.world.ParticleFeatureRendererMixin",
     "core.render.world.RenderBuffersMixin",
     "core.render.world.ViewAreaMixin",
+    "core.world.VoxelShapeAccessor",
     "core.world.biome.ClientLevelMixin",
     "core.world.chunk.PalettedContainerMixin",
     "core.world.chunk.SimpleBitStorageMixin",
