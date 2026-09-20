@@ -4,9 +4,8 @@
 Everything above the line is ignored and not included in the changelog. Everything below will be in the
 changelog on GitHub, Modrinth and CurseForge.
 ----------
-Sodium [SodiumVersion]() fixes potential minor bugs.
+Sodium [SodiumVersion]() adds optimized pitcher plant models, and fixes two bugs.
 
-- Fix buffer overflow in Kernel32.getModuleFileName
-- Use the correct atomic operations on NativeBuffer.ALLOCATED
-- Use clearenv() to delete environment variables
-- Implement override/overlay priority in the graphics options Config API ([#3866](https://github.com/CaffeineMC/sodium/pull/3866))
+- Optimize pitcher plant models ([#3881](https://github.com/CaffeineMC/sodium/pull/3881))
+- Correctly handle vertexIndex state when discarding invalid translucent quads
+- Fix Fluid Culling For Non-Full Blocks With Unusual Shapes ([#3916](https://github.com/CaffeineMC/sodium/pull/3916))
