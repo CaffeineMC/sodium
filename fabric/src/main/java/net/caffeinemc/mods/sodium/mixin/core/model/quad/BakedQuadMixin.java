@@ -99,6 +99,7 @@ public abstract class BakedQuadMixin implements BakedQuadView {
     }
 
     @Override
+    @Unique(silent = true) // The target class has a function with the same name in a remapped environment
     public int getColorIndex() {
         return this.tintIndex;
     }
