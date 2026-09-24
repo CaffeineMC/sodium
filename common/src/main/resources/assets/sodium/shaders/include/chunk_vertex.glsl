@@ -62,5 +62,20 @@ void _vert_init() {
 }
 
 #else
-#error "Vertex compression must be enabled"
+layout(location = 0) in vec3 a_Position;
+layout(location = 1) in vec4 a_Color;
+layout(location = 2) in vec2 a_TexCoord;
+layout(location = 3) in uvec4 a_LightAndData;
+
+void _vert_init() {
+    _vert_position = a_Position;
+    _vert_color = a_Color;
+    _vert_tex_diffuse_coord = a_TexCoord;
+    _vert_tex_diffuse_coord_bias = vec2(0.0);
+
+    _vert_tex_light_coord = vec2(a_LightAndData.xy) / vec2(256.0);
+
+    _material_params = a_LightAndData[2];
+    _draw_id = a_LightAndData[3];
+}
 #endif

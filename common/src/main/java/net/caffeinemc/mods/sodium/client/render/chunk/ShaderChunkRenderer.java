@@ -8,6 +8,7 @@ import com.mojang.renderpearl.api.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl.CompactChunkVertex;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.minecraft.client.renderer.oit.OitPipelineSet;
 import net.minecraft.client.renderer.oit.OitStage;
@@ -126,10 +127,13 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
                 "sodium_terrain", builder).withAccumulateModifier(i -> i.withBindGroupLayout(LIGHT_GROUP)).build();
     }
 
-    private static List<String> createShaderConstants(TerrainRenderPass pass) {
+    private List<String> createShaderConstants(TerrainRenderPass pass) {
         List<String> defines = new ArrayList<>();
 
-        defines.add("USE_VERTEX_COMPRESSION"); // TODO: allow compact vertex format to be disabled
+        if (this.vertexType instanceof CompactChunkVertex) {
+            defines.add("USE_VERTEX_COMPRESSION");
+        }
+
         defines.add("USE_FOG");
 
         return defines;
