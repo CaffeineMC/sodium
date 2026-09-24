@@ -5,11 +5,10 @@ import net.caffeinemc.mods.sodium.client.compatibility.environment.probe.Graphic
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.intel.IntelWorkarounds;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaDriverVersion;
 import net.caffeinemc.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds;
-import net.caffeinemc.mods.sodium.client.platform.NativeWindowHandle;
 import net.caffeinemc.mods.sodium.client.platform.PlatformHelper;
 
 class GraphicsDriverChecks {
-    static void postContextInit(NativeWindowHandle window, GlContextInfo context) {
+    static void postContextInit(long pWindow, GlContextInfo context) {
         var vendor = GraphicsAdapterVendor.fromContext(context);
 
         if (vendor == GraphicsAdapterVendor.UNKNOWN) {
@@ -22,7 +21,7 @@ class GraphicsDriverChecks {
             if (installedVersion != null) {
                 var installedVersionString = installedVersion.toString();
 
-                PlatformHelper.showCriticalErrorAndClose(window,
+                PlatformHelper.showCriticalErrorAndClose(pWindow,
                         "Sodium Renderer - Unsupported Driver",
                         """
                                 The game failed to start because the currently installed Intel Graphics Driver is not \
@@ -44,7 +43,7 @@ class GraphicsDriverChecks {
                 var installedVersionString = NvidiaDriverVersion.parse(installedVersion)
                         .toString();
 
-                PlatformHelper.showCriticalErrorAndClose(window,
+                PlatformHelper.showCriticalErrorAndClose(pWindow,
                         "Sodium Renderer - Unsupported Driver",
                         """
                                 The game failed to start because the currently installed NVIDIA Graphics Driver is not \

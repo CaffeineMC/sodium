@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.client.compatibility.checks;
 
 import net.caffeinemc.mods.sodium.client.platform.PlatformHelper;
 import org.lwjgl.Version;
+import org.lwjgl.system.MemoryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,7 +106,7 @@ public class PreLaunchChecks {
                 .replace("###REQUIRED_VERSION###", REQUIRED_LWJGL_VERSION)
                 .replace("###ADVICE_STRING###", advice);
 
-        PlatformHelper.showCriticalErrorAndClose(null, "Sodium Renderer - Unsupported LWJGL", message,
+        PlatformHelper.showCriticalErrorAndClose(MemoryUtil.NULL, "Sodium Renderer - Unsupported LWJGL", message,
                 "https://link.caffeinemc.net/help/sodium/runtime-issue/lwjgl3/gh-2561");
     }
 

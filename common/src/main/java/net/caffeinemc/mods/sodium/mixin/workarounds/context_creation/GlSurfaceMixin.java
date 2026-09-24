@@ -1,16 +1,13 @@
 package net.caffeinemc.mods.sodium.mixin.workarounds.context_creation;
 
-import com.mojang.renderpearl.backend.opengl.GlSurface;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.renderpearl.backend.opengl.GlSurface;
 import net.caffeinemc.mods.sodium.client.compatibility.checks.ModuleScanner;
 import net.caffeinemc.mods.sodium.client.compatibility.checks.PostLaunchChecks;
 import net.caffeinemc.mods.sodium.client.compatibility.environment.GlContextInfo;
-import net.caffeinemc.mods.sodium.client.platform.NativeWindowHandle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Util;
 import org.lwjgl.opengl.WGL;
-import org.lwjgl.sdl.SDLProperties;
-import org.lwjgl.sdl.SDLVideo;
 import org.lwjgl.system.MemoryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,21 +39,18 @@ public class GlSurfaceMixin {
         hasDonePostLaunchChecks = true;
 
         LOGGER.info(String.valueOf(Thread.currentThread()));
-        NativeWindowHandle handle = () -> {
-            var window = Minecraft.getInstance().getWindow();
-            return SDLProperties.SDL_GetPointerProperty(SDLVideo.SDL_GetWindowProperties(window.handle()), SDLVideo.SDL_PROP_WINDOW_WIN32_HWND_POINTER, 0L);
-        };
+        long pWindow = Minecraft.getInstance().getWindow().handle();
 
         if (RenderSystem.getDevice().getDeviceInfo().backendName().contains("OpenGL")) {
             GlContextInfo context = GlContextInfo.create();
             LOGGER.info("OpenGL Vendor: {}", context.vendor());
             LOGGER.info("OpenGL Renderer: {}", context.renderer());
             LOGGER.info("OpenGL Version: {}", context.version());
-            PostLaunchChecks.onContextInitialized(handle, context);
+            PostLaunchChecks.onContextInitialized(pWindow, context);
         }
 
 
-        ModuleScanner.checkModules(handle);
+        ModuleScanner.checkModules(pWindow);
     }
 
     @Inject(method = "present", at = @At(value = "RETURN"))
@@ -92,9 +86,6 @@ public class GlSurfaceMixin {
 
         // Likely, this indicates a module was injected into the current process. We should check that
         // nothing problematic was just installed.
-        ModuleScanner.checkModules(() -> {
-            var window = Minecraft.getInstance().getWindow();
-            return SDLProperties.SDL_GetPointerProperty(SDLVideo.SDL_GetWindowProperties(window.handle()), SDLVideo.SDL_PROP_WINDOW_WIN32_HWND_POINTER, 0L);
-        });
+        ModuleScanner.checkModules(Minecraft.getInstance().getWindow().handle());
     }
 }
