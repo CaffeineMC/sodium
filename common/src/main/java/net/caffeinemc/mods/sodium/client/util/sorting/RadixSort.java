@@ -130,6 +130,10 @@ public class RadixSort {
     }
 
     private static int extractDigit(int key, int digit) {
-        return ((key >>> (digit * DIGIT_BITS)) & DIGIT_MASK);
+        // The digits are bucketed in unsigned order, so the sign bit is flipped to map the signed
+        // key range onto the unsigned range. Without this, negative keys would sort after positive
+        // ones, which does not match the natural ascending order that the fallback path produces.
+        // Since the XOR only affects bit 31, it is a no-op for every digit but the most significant.
+        return (((key ^ Integer.MIN_VALUE) >>> (digit * DIGIT_BITS)) & DIGIT_MASK);
     }
 }

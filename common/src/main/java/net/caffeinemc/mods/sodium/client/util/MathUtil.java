@@ -40,8 +40,9 @@ public class MathUtil {
      * Converts a float to a comparable integer value. This is used to compare
      * floating point values by their int bits (for example packed in a long).
      * <p>
-     * The resulting integer can be treated as if it's unsigned and numbers the
-     * floats from the smallest negative to the largest positive value.
+     * The resulting integer is ordered as a <em>signed</em> integer, numbering the floats from the
+     * smallest negative to the largest positive value. Comparing the result as if it were unsigned
+     * sorts all negative floats after all positive ones.
      * <p>
      * Reference: <a href="https://stackoverflow.com/questions/23900328/are-floats-bit-patterns-ordered">StackOverflow Answer</a>
      */
