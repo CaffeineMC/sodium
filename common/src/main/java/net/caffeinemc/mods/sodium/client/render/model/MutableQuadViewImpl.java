@@ -291,7 +291,6 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
         this.setTintIndex(quad.materialInfo().tintIndex());
         this.setAmbientOcclusion(((BakedQuadView) (Object) quad).hasAO() ? TriState.DEFAULT : TriState.FALSE); // TODO: TRUE, or DEFAULT?
         this.setItemRenderType(quad.materialInfo().itemRenderType());
-        this.setShadeDirectionOverride(quad.materialInfo().shadeDirectionOverride());
         this.setRenderType(quad.materialInfo().layer());
         this.setAnimated(quad.materialInfo().sprite().contents().isAnimated());
         this.setEmissive(quad.materialInfo().lightEmission() == 15);
@@ -299,9 +298,8 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
         // Copy geometry cached inside the quad
         BakedQuadView bakedView = (BakedQuadView) (Object) quad;
         NormI8.unpack(bakedView.getFaceNormal(), this.faceNormal);
-        this.data[this.baseIndex + HEADER_FACE_NORMAL] = bakedView.getFaceNormal();
+        this.data[this.baseIndex + HEADER_FACE_NORMAL] = EncodingFormat.normalFace(bakedView.getFaceNormal(), bakedView.getNormalFace());
         int headerBits = EncodingFormat.lightFace(this.data[this.baseIndex + HEADER_BITS], bakedView.getLightFace());
-        this.normalFace = bakedView.getNormalFace();
         this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(headerBits, bakedView.getFlags());
         this.isGeometryInvalid = false;
 

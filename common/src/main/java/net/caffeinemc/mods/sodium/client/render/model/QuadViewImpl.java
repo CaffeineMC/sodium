@@ -52,8 +52,6 @@ public class QuadViewImpl implements ModelQuadView {
     /** Beginning of the quad. Also, the header index. */
     public int baseIndex = 0;
 
-    protected ModelQuadFacing normalFace;
-
     /**
      * Decodes necessary state from the backing data array.
      * The encoded data must contain valid computed geometry.
@@ -70,14 +68,11 @@ public class QuadViewImpl implements ModelQuadView {
 
             NormalHelper.computeFaceNormal(this.faceNormal, this);
             int packedFaceNormal = NormI8.pack(this.faceNormal);
-            this.data[this.baseIndex + HEADER_FACE_NORMAL] = packedFaceNormal;
+            this.data[this.baseIndex + HEADER_FACE_NORMAL] = EncodingFormat.normalFace(packedFaceNormal, ModelQuadFacing.fromPackedNormal(packedFaceNormal));
 
             // depends on face normal
             Direction lightFace = GeometryHelper.lightFace(this);
             this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.lightFace(this.data[this.baseIndex + HEADER_BITS], lightFace);
-
-            // depends on face normal
-            this.normalFace = ModelQuadFacing.fromPackedNormal(packedFaceNormal);
 
             // depends on light face
             this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(this.data[this.baseIndex + HEADER_BITS], ModelQuadFlags.getQuadFlags(this, lightFace));
@@ -88,10 +83,6 @@ public class QuadViewImpl implements ModelQuadView {
     public int geometryFlags() {
         this.computeGeometry();
         return EncodingFormat.geometryFlags(this.data[this.baseIndex + HEADER_BITS]);
-    }
-
-    public boolean hasShade() {
-        return true;
     }
 
     public Vector3f copyPos(int vertexIndex, @Nullable Vector3f target) {
@@ -206,7 +197,7 @@ public class QuadViewImpl implements ModelQuadView {
 
     public final ModelQuadFacing normalFace() {
         this.computeGeometry();
-        return normalFace;
+        return EncodingFormat.normalFace(this.data[this.baseIndex + HEADER_FACE_NORMAL]);
     }
 
     @Nullable
@@ -216,7 +207,7 @@ public class QuadViewImpl implements ModelQuadView {
 
     public final int packedFaceNormal() {
         this.computeGeometry();
-        return this.data[this.baseIndex + HEADER_FACE_NORMAL];
+        return EncodingFormat.faceNormal(this.data[this.baseIndex + HEADER_FACE_NORMAL]);
     }
 
     public final Vector3f faceNormal() {

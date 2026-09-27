@@ -17,6 +17,7 @@
 package net.caffeinemc.mods.sodium.client.render.model;
 
 import com.google.common.base.Preconditions;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.helper.GeometryHelper;
 import net.caffeinemc.mods.sodium.client.render.helper.ModelHelper;
 import net.minecraft.util.TriState;
@@ -125,6 +126,8 @@ public final class EncodingFormat {
             NULLABLE_FOIL_TYPE_COUNT);
     private static final int SHADE_MODE_BIT_LENGTH = Mth.ceillog2(SHADE_MODE_COUNT);
     private static final int ANIMATED_BIT_LENGTH = 1;
+    private static final int FACE_NORMAL_BIT_LENGTH = 24;
+    private static final int NORMAL_FACE_BIT_LENGTH = Mth.ceillog2(ModelQuadFacing.COUNT);
 
     private static final int CULL_BIT_OFFSET = 0;
     private static final int LIGHT_BIT_OFFSET = CULL_BIT_OFFSET + CULL_BIT_LENGTH;
@@ -142,6 +145,8 @@ public final class EncodingFormat {
     private static final int SHADE_MODE_BIT_OFFSET = FOIL_TYPE_BIT_OFFSET + FOIL_TYPE_BIT_LENGTH;
     private static final int ANIMATED_BIT_OFFSET = SHADE_MODE_BIT_OFFSET + SHADE_MODE_BIT_LENGTH;
     private static final int TOTAL_BIT_LENGTH = ANIMATED_BIT_OFFSET + ANIMATED_BIT_LENGTH;
+
+    private static final int NORMAL_FACE_BIT_OFFSET = FACE_NORMAL_BIT_LENGTH;
 
     private static final int CULL_MASK = bitMask(CULL_BIT_LENGTH, CULL_BIT_OFFSET);
     private static final int LIGHT_MASK = bitMask(LIGHT_BIT_LENGTH, LIGHT_BIT_OFFSET);
@@ -163,9 +168,12 @@ public final class EncodingFormat {
     );
     private static final int SHADE_MODE_MASK = bitMask(SHADE_MODE_BIT_LENGTH, SHADE_MODE_BIT_OFFSET);
     private static final int ANIMATED_MASK = bitMask(ANIMATED_BIT_LENGTH, ANIMATED_BIT_OFFSET);
+    private static final int FACE_NORMAL_MASK = bitMask(FACE_NORMAL_BIT_LENGTH, 0);
+    private static final int NORMAL_FACE_MASK = bitMask(NORMAL_FACE_BIT_LENGTH, NORMAL_FACE_BIT_OFFSET);
 
     static {
-        Preconditions.checkArgument(TOTAL_BIT_LENGTH <= 32, "Indigo header encoding bit count (%s) exceeds integer bit length)", TOTAL_STRIDE);
+        Preconditions.checkArgument(TOTAL_BIT_LENGTH <= 32, "Indigo header encoding bit count (%s) exceeds integer bit length)", TOTAL_BIT_LENGTH);
+        Preconditions.checkArgument(NORMAL_FACE_BIT_OFFSET + NORMAL_FACE_BIT_LENGTH <= 32, "face normal + normal face > 32 bits (how?)");
     }
 
     private static int bitMask(int bitLength, int bitOffset) {
@@ -188,6 +196,18 @@ public final class EncodingFormat {
 
     static int lightFace(int bits, Direction face) {
         return (bits & ~LIGHT_MASK) | (ModelHelper.toFaceIndex(face) << LIGHT_BIT_OFFSET);
+    }
+
+    static int faceNormal(int bits) {
+        return bits & FACE_NORMAL_MASK;
+    }
+
+    static ModelQuadFacing normalFace(int bits) {
+        return ModelQuadFacing.VALUES[(bits & NORMAL_FACE_MASK) >>> NORMAL_FACE_BIT_OFFSET];
+    }
+
+    static int normalFace(int bits, ModelQuadFacing face) {
+        return (bits & ~NORMAL_FACE_MASK) | ((face.ordinal() << NORMAL_FACE_BIT_OFFSET) & NORMAL_FACE_MASK);
     }
 
     /** indicate if vertex normal has been set - bits correspond to vertex ordinals. */
