@@ -52,15 +52,15 @@ public class MessageBox {
 
             IntBuffer pButtonId = stack.mallocInt(1);
 
-            while (SDL_ShowMessageBox(data, pButtonId)) {
+            if (SDL_ShowMessageBox(data, pButtonId)) {
+                LOGGER.error("Failed to show message box: {}", SDLError.SDL_GetError());
+            } else {
                 if (helpUrl == null || pButtonId.get(0) != BUTTON_HELP) {
                     return;
                 }
 
                 SDLMisc.SDL_OpenURL(helpUrl);
             }
-
-            LOGGER.error("Failed to show message box: {}", SDLError.SDL_GetError());
         }
     }
 
