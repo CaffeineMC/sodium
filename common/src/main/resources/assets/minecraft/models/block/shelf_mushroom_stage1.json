@@ -1,0 +1,45 @@
+{
+  "gui_light": "front",
+  "textures": {
+    "large": "block/shelf_mushroom_stage1",
+    "mat1": "block/shelf_mushroom_particle",
+    "particle": "#mat1"
+  },
+  "elements": [
+    {
+      "name": "mushroom_top",
+      "from": [1, 8, 6],
+      "to": [15, 11, 16],
+      "faces": {
+        "north": { "uv": [7, 3, 14, 4.5], "texture": "#large" },
+        "east": { "uv": [7, 0, 12, 1.5], "texture": "#large" },
+        "south": { "uv": [7, 4.5, 14, 6], "texture": "#large", "cullface": "south" },
+        "west": { "uv": [7, 1.5, 12, 3], "texture": "#large" },
+        "up": { "uv": [7, 5, 0, 0], "texture": "#large" },
+        "down": { "uv": [7, 5, 0, 10], "texture": "#large" }
+      }
+    },
+    {
+      "name": "mushroom_bottom",
+      "from": [4, 6, 10],
+      "to": [12, 8, 16],
+      "faces": {
+        "north": { "uv": [4, 12, 8, 13], "texture": "#large" },
+        "east": { "uv": [4, 10, 7, 11], "texture": "#large" },
+        "south": { "uv": [4, 13, 8, 14], "texture": "#large", "cullface": "south" },
+        "west": { "uv": [4, 11, 7, 12], "texture": "#large" },
+        "down": { "uv": [4, 13, 0, 16], "texture": "#large" }
+      }
+    }
+  ],
+  "display": {
+    "firstperson_lefthand": { "rotation": [0, 225, 0], "scale": [0.5, 0.5, 0.5] },
+    "firstperson_righthand": { "rotation": [0, 45, 0], "scale": [0.5, 0.5, 0.5] },
+    "thirdperson_righthand": { "rotation": [53, 0, 0], "translation": [0, 2.5, 0.25], "scale": [0.375, 0.375, 0.375] },
+    "head": { "translation": [0, 7.75, -2.75] },
+    "gui": { "rotation": [30, 225, 0], "translation": [1.75, -1.75, 0], "scale": [0.85, 0.85, 0.85] },
+    "ground": { "translation": [0, 2.55, -1.35], "scale": [0.3, 0.3, 0.3] },
+    "fixed": { "translation": [0, 0, -3.75], "scale": [0.6, 0.6, 0.6] },
+    "on_shelf": { "rotation": [0, 180, 0], "translation": [0, 0, 4] }
+  }
+}
