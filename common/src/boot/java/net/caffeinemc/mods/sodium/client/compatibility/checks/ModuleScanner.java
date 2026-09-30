@@ -3,7 +3,6 @@ package net.caffeinemc.mods.sodium.client.compatibility.checks;
 import com.sun.jna.Platform;
 import com.sun.jna.platform.win32.Kernel32Util;
 import net.caffeinemc.mods.sodium.client.platform.MessageBox;
-import net.caffeinemc.mods.sodium.client.platform.NativeWindowHandle;
 import net.caffeinemc.mods.sodium.client.platform.windows.WindowsFileVersion;
 import net.caffeinemc.mods.sodium.client.platform.windows.api.Kernel32;
 import net.caffeinemc.mods.sodium.client.platform.windows.api.version.Version;
@@ -36,7 +35,7 @@ public class ModuleScanner {
             "GTIII-OSD64.dll",      "GTIII-OSD.dll"
     };
 
-    public static void checkModules(NativeWindowHandle window) {
+    public static void checkModules(long pWindow) {
         List<String> modules;
 
         try {
@@ -54,14 +53,14 @@ public class ModuleScanner {
         // is blacklisted in the settings. The only way to stop it from injecting is to close the server process
         // entirely.
         if (BugChecks.ISSUE_2048 && isModuleLoaded(modules, RTSS_HOOKS_MODULE_NAMES)) {
-            checkRTSSModules(window);
+            checkRTSSModules(pWindow);
         }
 
         // ASUS GPU Tweak III hooks SwapBuffers() function to inject itself, and does so even if the On-Screen
         // Display (OSD) is disabled. The only way to stop it from hooking the game is to add the Java process to
         // the blacklist, or uninstall the application entirely.
         if (BugChecks.ISSUE_2637 && isModuleLoaded(modules, ASUS_GPU_TWEAK_MODULE_NAMES)) {
-            checkASUSGpuTweakIII(window);
+            checkASUSGpuTweakIII(pWindow);
         }
     }
 
@@ -80,7 +79,7 @@ public class ModuleScanner {
         return Collections.unmodifiableList(modules);
     }
 
-    private static void checkRTSSModules(NativeWindowHandle window) {
+    private static void checkRTSSModules(long pWindow) {
         LOGGER.warn("RivaTuner Statistics Server (RTSS) has injected into the process! Attempting to apply workarounds for compatibility...");
 
         @Nullable WindowsFileVersion version = null;
@@ -98,7 +97,7 @@ public class ModuleScanner {
         }
 
         if (version == null || !isRTSSCompatible(version)) {
-            MessageBox.showMessageBox(window, MessageBox.IconType.ERROR, "Sodium Renderer",
+            MessageBox.showMessageBox(pWindow, MessageBox.IconType.ERROR, "Sodium Renderer",
                     """
                             You appear to be using an older version of RivaTuner Statistics Server (RTSS) which is not compatible with Sodium.
                             
@@ -121,8 +120,8 @@ public class ModuleScanner {
         return x > 7 || (x == 7 && y > 3) || (x == 7 && y == 3 && z >= 4);
     }
 
-    private static void checkASUSGpuTweakIII(NativeWindowHandle window) {
-        MessageBox.showMessageBox(window, MessageBox.IconType.ERROR, "Sodium Renderer",
+    private static void checkASUSGpuTweakIII(long pWindow) {
+        MessageBox.showMessageBox(pWindow, MessageBox.IconType.ERROR, "Sodium Renderer",
                 """
                         ASUS GPU Tweak III is not compatible with Minecraft, and causes extreme performance issues and severe graphical corruption when used with Minecraft.
                         
