@@ -1,0 +1,238 @@
+{
+  "gui_light": "front",
+  "textures": {
+    "particle": "minecraft:block/shelf_mushroom_particle",
+    "small": "minecraft:block/shelf_mushroom_stage0"
+  },
+  "elements": [
+    {
+      "name": "mushroom_top",
+      "from": [
+        3,
+        9,
+        9
+      ],
+      "to": [
+        13,
+        11,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            5,
+            2,
+            10,
+            3
+          ],
+          "texture": "#small"
+        },
+        "east": {
+          "uv": [
+            5,
+            0,
+            8.5,
+            1
+          ],
+          "texture": "#small"
+        },
+        "south": {
+          "uv": [
+            5,
+            3,
+            10,
+            4
+          ],
+          "texture": "#small",
+          "cullface": "south"
+        },
+        "west": {
+          "uv": [
+            5,
+            1,
+            8.5,
+            2
+          ],
+          "texture": "#small"
+        },
+        "up": {
+          "uv": [
+            5,
+            3.5,
+            0,
+            0
+          ],
+          "texture": "#small"
+        },
+        "down": {
+          "uv": [
+            5,
+            3.5,
+            0,
+            7
+          ],
+          "texture": "#small"
+        }
+      }
+    },
+    {
+      "name": "mushroom_bottom",
+      "from": [
+        5,
+        8,
+        12
+      ],
+      "to": [
+        11,
+        9,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            5,
+            5,
+            8,
+            5.5
+          ],
+          "texture": "#small"
+        },
+        "east": {
+          "uv": [
+            5,
+            4,
+            7,
+            4.5
+          ],
+          "texture": "#small"
+        },
+        "south": {
+          "uv": [
+            5,
+            5.5,
+            8,
+            6
+          ],
+          "texture": "#small",
+          "cullface": "south"
+        },
+        "west": {
+          "uv": [
+            5,
+            4.5,
+            7,
+            5
+          ],
+          "texture": "#small"
+        },
+        "down": {
+          "uv": [
+            3,
+            9,
+            0,
+            11
+          ],
+          "texture": "#small"
+        }
+      }
+    }
+  ],
+  "display": {
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "translation": [
+        0.25,
+        0,
+        0
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        53,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        2.25,
+        0.25
+      ],
+      "scale": [
+        0.375,
+        0.375,
+        0.375
+      ]
+    },
+    "head": {
+      "translation": [
+        0,
+        -4.75,
+        -13.75
+      ]
+    },
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        3.25,
+        -3,
+        0
+      ]
+    },
+    "ground": {
+      "translation": [
+        0,
+        2.55,
+        -1.35
+      ],
+      "scale": [
+        0.3,
+        0.3,
+        0.3
+      ]
+    },
+    "fixed": {
+      "translation": [
+        0,
+        -1,
+        -6.75
+      ]
+    },
+    "on_shelf": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        4
+      ]
+    }
+  }
+}
