@@ -104,6 +104,14 @@ public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
     IntegerOptionBuilder setValidatorProvider(Function<ConfigState, ? extends SteppedValidator> provider, Identifier... dependencies);
 
     /**
+     * Sets the control style for this integer option.
+     *
+     * @param control The control style to use.
+     * @return The current builder instance.
+     */
+    IntegerOptionBuilder setControlStyle(IntegerOptionControlStyle control);
+
+    /**
      * Sets the value formatter for this integer option.
      *
      * @param formatter The formatter to format the integer value of this option.
