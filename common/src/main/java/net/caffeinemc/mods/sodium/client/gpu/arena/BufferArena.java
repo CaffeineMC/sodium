@@ -43,6 +43,11 @@ public abstract class BufferArena implements AllocatorBase {
     final int stride;
 
     protected BufferArena(ArenaAggregator parent, GpuBuffer initialBuffer, long capacity, int stride) {
+        // round down to the nearest multiple of 4 to not leave a misaligned segment at the end of the arena
+        // see https://github.com/CaffeineMC/sodium/issues/3509 for an earlier discussion and patch
+        // that didnt make it into the arena allocator
+        capacity &= ~3L;
+
         this.parent = parent;
         this.stagingBuffer = parent.stagingBuffer;
         this.arenaBuffer = initialBuffer;
