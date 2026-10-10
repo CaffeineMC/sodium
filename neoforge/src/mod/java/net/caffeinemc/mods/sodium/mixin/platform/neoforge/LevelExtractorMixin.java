@@ -19,13 +19,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class LevelExtractorMixin {
     @Shadow private @Nullable ClientLevel level;
 
-    @Inject(method = "extractVisibleBlockEntities(Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/client/renderer/culling/Frustum;)V",
+    @Inject(method = "extractVisibleBlockEntities(Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/state/level/LevelRenderState;)V",
             at = @At("HEAD"),
             cancellable = true)
     private void extractVisibleBlockEntities$neoForge(Camera camera,
                                                       float deltaPartialTick,
                                                       LevelRenderState levelRenderState,
-                                                      Frustum cullFrustum,
                                                       CallbackInfo ci) {
         ci.cancel();
 
