@@ -18,6 +18,8 @@
     "core.MinecraftMixin",
     "core.WindowMixin",
     "core.gui.LevelLoadTrackerMixin",
+    "core.gui.OptionInstanceAccessor",
+    "core.gui.TooltipAccessor",
     "core.model.colors.BlockColorsMixin",
     "core.render.BlockEntityTypeMixin",
     "core.render.CompactVectorArrayMixin",

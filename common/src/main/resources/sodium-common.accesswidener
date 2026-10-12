@@ -14,6 +14,7 @@ accessible class net/minecraft/client/gui/font/glyphs/BakedSheetGlyph$EffectInst
 accessible field com/mojang/blaze3d/vertex/PoseStack$Pose trustedNormals Z
 accessible class net/minecraft/client/renderer/CloudRenderer$RelativeCameraPos
 accessible class com/mojang/blaze3d/opengl/GlDevice
+accessible class net/minecraft/client/OptionInstance$SliderableValueSet
 
 accessible field net/minecraft/world/level/GrassColor pixels [I
 accessible field net/minecraft/world/level/FoliageColor pixels [I
