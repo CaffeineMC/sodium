@@ -388,6 +388,16 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
             return true;
         }
 
+        // ESC closes this screen without saving any pending changes
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            if (this.hasPendingChanges) {
+                this.undoChanges();
+            }
+
+            this.onClose();
+            return true;
+        }
+
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
@@ -412,15 +422,6 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
             if (button.tryActivateShortcut(keyCode, modifiers)) {
                 return true;
             }
-        }
-
-        // ESC closes this screen without saving any pending changes
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
-            if (this.hasPendingChanges) {
-                this.undoChanges();
-            }
-
-            this.onClose();
         }
 
         return super.keyReleased(keyCode, scanCode, modifiers);
