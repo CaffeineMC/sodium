@@ -4,8 +4,13 @@
 Everything above the line is ignored and not included in the changelog. Everything below will be in the
 changelog on GitHub, Modrinth and CurseForge.
 ----------
-Sodium [SodiumVersion]() fixes graphical glitches on Intel iGPUs, fluid culling for unusual blocks, and adds the macOS fullscreen menu visibility option.
+Sodium [SodiumVersion]() implements a number of bug fixes and minor improvements.
 
-- Fix graphical glitches on some Intel iGPUs
-- Show macOS fullscreen menu visibility option on the Video Settings screen
+- Show macOS fullscreen menu visibility option on the Sodium options screen
 - Fix Fluid Culling For Non-Full Blocks With Unusual Shapes ([#3916](https://github.com/CaffeineMC/sodium/pull/3916))
+- Use SDL message box instead of TFD ([#3923](https://github.com/CaffeineMC/sodium/pull/3923))
+- Optimization for shelf mushroom models ([#3927](https://github.com/CaffeineMC/sodium/pull/3927))
+- Fix compatibility with Neoforge 26.3.0.65-beta and remove platform-specific LevelExtractorMixin ([#3948](https://github.com/CaffeineMC/sodium/pull/3948))
+- Source vanilla option defaults and ranges directly from vanilla options ([#3947](https://github.com/CaffeineMC/sodium/pull/3947))
+- Allow rendering buffer debug outside F3 Debug Screen ([#3943](https://github.com/CaffeineMC/sodium/pull/3943))
+- Make VideoSettingsScreen trigger onClose in keyPressed to fix interaction with Iris, for example ([#3938](https://github.com/CaffeineMC/sodium/pull/3938))
