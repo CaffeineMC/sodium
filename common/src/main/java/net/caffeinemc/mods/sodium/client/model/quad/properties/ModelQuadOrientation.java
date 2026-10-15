@@ -60,8 +60,8 @@ public enum ModelQuadOrientation {
         }
 
         // If one side of the quad is darker, flip the sides
-        int lm02 = quad.getLight(0) + quad.getLight(2);
-        int lm13 = quad.getLight(1) + quad.getLight(3);
+        int lm02 = quad.sodium$getLight(0) + quad.sodium$getLight(2);
+        int lm13 = quad.sodium$getLight(1) + quad.sodium$getLight(3);
         if (lm02 <= lm13) {
             return NORMAL;
         } else {

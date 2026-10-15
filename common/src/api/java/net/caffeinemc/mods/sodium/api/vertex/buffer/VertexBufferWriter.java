@@ -14,12 +14,12 @@ public interface VertexBufferWriter {
      * @return An implementation of {@link VertexBufferWriter} which will write vertices into {@param consumer}
      * @throws IllegalArgumentException If the vertex consumer does not implement the necessary interface
      */
-    static VertexBufferWriter of(VertexConsumer consumer) {
-        if (consumer instanceof VertexBufferWriter writer && writer.canUseIntrinsics()) {
+    static VertexBufferWriter sodium$of(VertexConsumer consumer) {
+        if (consumer instanceof VertexBufferWriter writer && writer.sodium$canUseIntrinsics()) {
             return writer;
         }
 
-        throw createUnsupportedVertexConsumerThrowable(consumer);
+        throw sodium$createUnsupportedVertexConsumerThrowable(consumer);
     }
 
     /**
@@ -30,15 +30,15 @@ public interface VertexBufferWriter {
      * if the vertex consumer does not implement the necessary interface
      */
     @Nullable
-    static VertexBufferWriter tryOf(VertexConsumer consumer) {
-        if (consumer instanceof VertexBufferWriter writer && writer.canUseIntrinsics()) {
+    static VertexBufferWriter sodium$tryOf(VertexConsumer consumer) {
+        if (consumer instanceof VertexBufferWriter writer && writer.sodium$canUseIntrinsics()) {
             return writer;
         }
 
         return null;
     }
 
-    private static RuntimeException createUnsupportedVertexConsumerThrowable(VertexConsumer consumer) {
+    private static RuntimeException sodium$createUnsupportedVertexConsumerThrowable(VertexConsumer consumer) {
         var clazz = consumer.getClass();
         var name = clazz.getName();
 
@@ -61,7 +61,7 @@ public interface VertexBufferWriter {
      * @param count  The number of vertices to copy
      * @param format The format of the vertices
      */
-    void push(MemoryStack stack, long ptr, int count, VertexFormat format);
+    void sodium$push(MemoryStack stack, long ptr, int count, VertexFormat format);
 
     /**
      * If this {@link VertexBufferWriter} passes through data to nested {@link VertexConsumer} implementations,
@@ -69,7 +69,7 @@ public interface VertexBufferWriter {
      * methods.
      * @return true if the inner consumer is also a valid {@link VertexBufferWriter} that can use intrinsics
      */
-    default boolean canUseIntrinsics() {
+    default boolean sodium$canUseIntrinsics() {
         return true;
     }
 
@@ -84,15 +84,14 @@ public interface VertexBufferWriter {
      * @param count    The number of vertices to push
      * @param format   The format of the vertices
      */
-    static void copyInto(VertexBufferWriter writer,
-                         MemoryStack stack, long ptr, int count,
-                         VertexFormat format)
-    {
+    static void sodium$copyInto(VertexBufferWriter writer,
+                                MemoryStack stack, long ptr, int count,
+                                VertexFormat format) {
         var length = count * format.getVertexSize();
         var copy = stack.nmalloc(length);
 
         MemoryIntrinsics.copyMemory(ptr, copy, length);
 
-        writer.push(stack, copy, count, format);
+        writer.sodium$push(stack, copy, count, format);
     }
 }

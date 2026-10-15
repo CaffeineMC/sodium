@@ -60,7 +60,7 @@ public abstract class BufferBuilderMixin implements VertexConsumer {
             return;
         }
 
-        VertexBufferWriter writer = VertexBufferWriter.of(this);
+        VertexBufferWriter writer = VertexBufferWriter.sodium$of(this);
 
         BakedQuadView quadX = (BakedQuadView) (Object) quad;
 

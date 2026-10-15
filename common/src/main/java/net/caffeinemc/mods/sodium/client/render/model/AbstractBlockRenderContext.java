@@ -198,7 +198,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     protected void shadeQuad(MutableQuadViewImpl quad, LightMode lightMode, boolean emissive, SodiumShadeMode shadeMode) {
         LightPipeline lighter = this.lighters.getLighter(lightMode);
         QuadLightData data = this.quadLightData;
-        lighter.calculate(quad, this.pos, data, quad.getCullFace(), quad.getLightFace(), quad.shadeDirectionOverride(), shadeMode == SodiumShadeMode.ENHANCED);
+        lighter.calculate(quad, this.pos, data, quad.getCullFace(), quad.sodium$getLightFace(), quad.shadeDirectionOverride(), shadeMode == SodiumShadeMode.ENHANCED);
 
         if (emissive) {
             for (int i = 0; i < 4; i++) {
@@ -208,7 +208,7 @@ public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
             int[] lightmaps = data.lm;
 
             for (int i = 0; i < 4; i++) {
-                quad.setLight(i, ColorHelper.maxBrightness(quad.getLight(i), lightmaps[i]));
+                quad.setLight(i, ColorHelper.maxBrightness(quad.sodium$getLight(i), lightmaps[i]));
             }
         }
     }

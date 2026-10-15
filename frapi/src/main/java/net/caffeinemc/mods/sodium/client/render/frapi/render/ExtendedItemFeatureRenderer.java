@@ -19,20 +19,17 @@ package net.caffeinemc.mods.sodium.client.render.frapi.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.ExtendedMutableQuadViewImpl;
-import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.MutableQuadViewWrapper;
 import net.caffeinemc.mods.sodium.client.render.model.EncodingFormat;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.mixin.frapi.ItemFeatureRendererAccessor;
 import net.fabricmc.fabric.api.client.renderer.v1.mesh.MutableQuadView;
 import net.fabricmc.fabric.api.client.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.api.client.renderer.v1.render.submit.ExtendedItemSubmit;
-import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.feature.FeatureFrameContext;
 import net.minecraft.client.renderer.feature.ItemFeatureRenderer;
 import net.minecraft.client.renderer.feature.RenderTypeFeatureRenderer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.util.LightCoordsUtil;
 import org.joml.Matrix3f;
@@ -51,7 +48,7 @@ public class ExtendedItemFeatureRenderer extends RenderTypeFeatureRenderer<Exten
         public void emitDirectly() {
 			switch (ExtendedItemFeatureRenderer.this.outputType) {
 				case MAIN -> ExtendedItemFeatureRenderer.this.bufferMain(this);
-				case OUTLINE -> ExtendedItemFeatureRenderer.this.bufferOutline(((ExtendedMutableQuadViewImpl) (Object) this).getWrapper());
+				case OUTLINE -> ExtendedItemFeatureRenderer.this.bufferOutline(((ExtendedMutableQuadViewImpl) (Object) this).sodium$getWrapper());
 			}
 		}
 	};
@@ -85,7 +82,7 @@ public class ExtendedItemFeatureRenderer extends RenderTypeFeatureRenderer<Exten
             this.outputType = OutputType.MAIN;
 		}
 
-		QuadEmitter emitter = ((ExtendedMutableQuadViewImpl) this.emitter).getWrapper();
+		QuadEmitter emitter = ((ExtendedMutableQuadViewImpl) this.emitter).sodium$getWrapper();
 		emitter.clear();
 
 		List<BakedQuad> vanillaQuads = submit.quads();
@@ -101,7 +98,7 @@ public class ExtendedItemFeatureRenderer extends RenderTypeFeatureRenderer<Exten
 	}
 
 	private void bufferMain(MutableQuadViewImpl q) {
-        var quad = ((ExtendedMutableQuadViewImpl) q).getWrapper();
+        var quad = ((ExtendedMutableQuadViewImpl) q).sodium$getWrapper();
 		if (quad.emissive()) {
 			quad.lightmap(LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT);
 		} else {
