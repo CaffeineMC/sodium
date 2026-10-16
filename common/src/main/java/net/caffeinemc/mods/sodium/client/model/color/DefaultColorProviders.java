@@ -58,12 +58,12 @@ public class DefaultColorProviders {
 
         @Override
         public void getColors(LevelSlice slice, BlockPos pos, BlockPos.MutableBlockPos scratchPos, BlockState state, ModelQuadView quad, int[] output, boolean smooth) {
-            if (quad.getTintIndex() >= this.color.length) {
+            if (quad.sodium$getTintIndex() >= this.color.length) {
                 Arrays.fill(output, -1);
                 return;
             }
 
-            Arrays.fill(output, 0xFF000000 | this.color[quad.getTintIndex()].colorInWorld(state, slice, pos));
+            Arrays.fill(output, 0xFF000000 | this.color[quad.sodium$getTintIndex()].colorInWorld(state, slice, pos));
         }
     }
 }

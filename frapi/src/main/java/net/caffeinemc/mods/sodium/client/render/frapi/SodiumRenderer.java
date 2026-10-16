@@ -36,7 +36,7 @@ import java.util.function.Consumer;
  */
 public class SodiumRenderer implements Renderer {
     public static final SodiumRenderer INSTANCE = new SodiumRenderer();
-    public static final Consumer<MutableQuadViewImpl> BUFFERER = quad -> ((ExtendedMutableQuadViewImpl) quad).getWrapper().transformAndEmit();
+    public static final Consumer<MutableQuadViewImpl> BUFFERER = quad -> ((ExtendedMutableQuadViewImpl) quad).sodium$getWrapper().transformAndEmit();
 
     private SodiumRenderer() { }
 

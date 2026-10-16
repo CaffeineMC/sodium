@@ -24,7 +24,7 @@ public class VertexFormatMixin implements VertexFormatExtensions {
                 .allocateGlobalId((VertexFormat) (Object) this);
     }
 
-    @Unique
+    @Override
     public int sodium$getGlobalId() {
         return this.sodium$globalId;
     }

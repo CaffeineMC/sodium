@@ -884,7 +884,7 @@ public class DefaultFluidRenderer {
         if (facing.isAligned()) {
             normal = facing.getPackedAlignedNormal();
         } else {
-            normal = quad.calculateNormal();
+            normal = quad.sodium$calculateNormal();
         }
 
         quad.setFaceNormal(normal);
@@ -909,18 +909,18 @@ public class DefaultFluidRenderer {
 
         for (int i = 0; i < 4; i++) {
             var out = vertices[flip ? (3 - i + 1) & 0b11 : i];
-            out.x = offset.getX() + quad.getX(i);
-            out.y = offset.getY() + quad.getY(i);
-            out.z = offset.getZ() + quad.getZ(i);
+            out.x = offset.getX() + quad.sodium$getX(i);
+            out.y = offset.getY() + quad.sodium$getY(i);
+            out.z = offset.getZ() + quad.sodium$getZ(i);
 
             out.color = this.quadColors[i];
             out.ao = this.brightness[i];
-            out.u = quad.getTexU(i);
-            out.v = quad.getTexV(i);
+            out.u = quad.sodium$getTexU(i);
+            out.v = quad.sodium$getTexV(i);
             out.light = this.quadLightData.lm[i];
         }
 
-        TextureAtlasSprite sprite = quad.getSprite();
+        TextureAtlasSprite sprite = quad.sodium$getSprite();
 
         if (sprite != null) {
             builder.addSprite(sprite);
@@ -933,7 +933,7 @@ public class DefaultFluidRenderer {
                 normal = facing.getPackedAlignedNormal();
             } else {
                 // This was updated earlier in updateQuad. There is no situation where the normal vector should have changed.
-                normal = quad.getFaceNormal();
+                normal = quad.sodium$getFaceNormal();
             }
 
             if (flip) {

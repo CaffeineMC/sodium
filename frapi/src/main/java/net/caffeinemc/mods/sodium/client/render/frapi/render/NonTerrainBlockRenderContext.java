@@ -181,7 +181,7 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext imp
     }
 
     private void tintQuad(MutableQuadViewImpl quad) {
-        int tintIndex = quad.getTintIndex();
+        int tintIndex = quad.sodium$getTintIndex();
 
         if (tintIndex != -1) {
             int tint = this.getTintColor(this.level, this.state, this.pos, tintIndex);
