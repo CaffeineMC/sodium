@@ -12,7 +12,7 @@ public class MutableQuadViewImplMixin implements ExtendedMutableQuadViewImpl {
     private MutableQuadViewWrapper wrapper;
 
     @Override
-    public MutableQuadViewWrapper getWrapper() {
+    public MutableQuadViewWrapper sodium$getWrapper() {
         if (this.wrapper == null) this.wrapper = new MutableQuadViewWrapper((MutableQuadViewImpl) (Object) this);
         return this.wrapper;
     }

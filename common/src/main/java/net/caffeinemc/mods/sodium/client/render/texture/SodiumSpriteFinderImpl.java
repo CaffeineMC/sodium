@@ -56,8 +56,8 @@ public class SodiumSpriteFinderImpl implements SodiumSpriteFinder {
         float v = 0;
 
         for (int i = 0; i < 4; i++) {
-            u += quad.getTexU(i);
-            v += quad.getTexV(i);
+            u += quad.sodium$getTexU(i);
+            v += quad.sodium$getTexV(i);
         }
 
         return this.find(u * 0.25f, v * 0.25f);

@@ -43,17 +43,17 @@ public class SpriteCoordinateExpanderMixin implements VertexBufferWriter {
     }
 
     @Override
-    public boolean canUseIntrinsics() {
+    public boolean sodium$canUseIntrinsics() {
         return this.canUseIntrinsics;
     }
 
     @Override
-    public void push(MemoryStack stack, final long ptr, int count, VertexFormat format) {
+    public void sodium$push(MemoryStack stack, final long ptr, int count, VertexFormat format) {
         transform(ptr, count, format,
                 this.minU, this.minV, this.maxU, this.maxV);
 
         VertexBufferWriter.of(this.delegate)
-                .push(stack, ptr, count, format);
+                .sodium$push(stack, ptr, count, format);
     }
 
     /**

@@ -122,7 +122,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
     }
 
     private void tintQuad(MutableQuadViewImpl quad) {
-        int tintIndex = quad.getTintIndex();
+        int tintIndex = quad.sodium$getTintIndex();
 
         if (tintIndex != -1) {
             ColorProvider<BlockState> colorProvider = this.colorProvider;
@@ -150,18 +150,18 @@ public class BlockRenderer extends AbstractBlockRenderContext {
             int srcIndex = orientation.getVertexIndex(dstIndex);
 
             ChunkVertexEncoder.Vertex out = vertices[dstIndex];
-            out.x = quad.getX(srcIndex) + offset.x;
-            out.y = quad.getY(srcIndex) + offset.y;
-            out.z = quad.getZ(srcIndex) + offset.z;
+            out.x = quad.sodium$getX(srcIndex) + offset.x;
+            out.y = quad.sodium$getY(srcIndex) + offset.y;
+            out.z = quad.sodium$getZ(srcIndex) + offset.z;
 
             // FRAPI uses ARGB color format; convert to ABGR.
             out.color = ColorARGB.toABGR(quad.baseColor(srcIndex));
             out.ao = brightnesses[srcIndex];
 
-            out.u = quad.getTexU(srcIndex);
-            out.v = quad.getTexV(srcIndex);
+            out.u = quad.sodium$getTexU(srcIndex);
+            out.v = quad.sodium$getTexV(srcIndex);
 
-            out.light = quad.getLight(srcIndex);
+            out.light = quad.sodium$getLight(srcIndex);
         }
 
         var atlasSprite = quad.sprite(SpriteFinderCache.forBlockAtlas());
@@ -173,7 +173,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         // collect all translucent quads into the translucency sorting system if enabled,
         // and discard the quad if it's invalid (i.e. not visible)
         if (pass.isTranslucent() && this.collector != null &&
-                this.collector.appendQuad(vertices, normalFace, quad.getFaceNormal())) {
+                this.collector.appendQuad(vertices, normalFace, quad.sodium$getFaceNormal())) {
             return;
         }
 

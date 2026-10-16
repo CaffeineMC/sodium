@@ -85,7 +85,7 @@ public abstract class QuadParticleRenderStateMixin {
             ParticleVertex.put(ptr, TEMP_VECTOR.x, TEMP_VECTOR.y, TEMP_VECTOR.z, u0, v1, color, light);
             ptr += ParticleVertex.STRIDE;
 
-            writer.push(stack, buffer, 4, ParticleVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 4, ParticleVertex.FORMAT);
         }
     }
 }

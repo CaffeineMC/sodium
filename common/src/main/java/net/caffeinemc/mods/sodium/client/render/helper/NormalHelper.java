@@ -47,18 +47,18 @@ public abstract class NormalHelper {
             return;
         }
 
-        final float x0 = q.getX(0);
-        final float y0 = q.getY(0);
-        final float z0 = q.getZ(0);
-        final float x1 = q.getX(1);
-        final float y1 = q.getY(1);
-        final float z1 = q.getZ(1);
-        final float x2 = q.getX(2);
-        final float y2 = q.getY(2);
-        final float z2 = q.getZ(2);
-        final float x3 = q.getX(3);
-        final float y3 = q.getY(3);
-        final float z3 = q.getZ(3);
+        final float x0 = q.sodium$getX(0);
+        final float y0 = q.sodium$getY(0);
+        final float z0 = q.sodium$getZ(0);
+        final float x1 = q.sodium$getX(1);
+        final float y1 = q.sodium$getY(1);
+        final float z1 = q.sodium$getZ(1);
+        final float x2 = q.sodium$getX(2);
+        final float y2 = q.sodium$getY(2);
+        final float z2 = q.sodium$getZ(2);
+        final float x3 = q.sodium$getX(3);
+        final float y3 = q.sodium$getY(3);
+        final float z3 = q.sodium$getZ(3);
 
         final float dx0 = x2 - x0;
         final float dy0 = y2 - y0;

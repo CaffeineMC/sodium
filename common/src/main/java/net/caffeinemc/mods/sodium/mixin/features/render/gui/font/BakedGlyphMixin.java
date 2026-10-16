@@ -99,7 +99,7 @@ public class BakedGlyphMixin {
             write(ptr, pose, x2 + w1 + offset, h1 - offset, z, color, this.u1, this.v0, packedLightCoords);
             ptr += GlyphVertex.STRIDE;
 
-            writer.push(stack, buffer, 4, GlyphVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 4, GlyphVertex.FORMAT);
         }
     }
 
@@ -147,7 +147,7 @@ public class BakedGlyphMixin {
             write(ptr, pose, x1 + offset, h2 + offset, z, color, this.u1, this.v0, packedLightCoords);
             ptr += GlyphVertex.STRIDE;
 
-            writer.push(stack, mem, 4, GlyphVertex.FORMAT);
+            writer.sodium$push(stack, mem, 4, GlyphVertex.FORMAT);
         }
     }
 

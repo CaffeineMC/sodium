@@ -20,7 +20,7 @@ public class FabricMutableProvider implements ColorProvider<BlockState> {
 
     @Override
     public void getColors(LevelSlice slice, BlockPos pos, BlockPos.MutableBlockPos scratchPos, BlockState state, ModelQuadView quad, int[] output, boolean smooth) {
-        int tintIndex = quad.getTintIndex();
+        int tintIndex = quad.sodium$getTintIndex();
         final BlockTintsFactory factory = BlockColorRegistry.getFactory(state);
 
         if (factory == null) {

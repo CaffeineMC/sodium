@@ -15,7 +15,7 @@ public interface VertexBufferWriter {
      * @throws IllegalArgumentException If the vertex consumer does not implement the necessary interface
      */
     static VertexBufferWriter of(VertexConsumer consumer) {
-        if (consumer instanceof VertexBufferWriter writer && writer.canUseIntrinsics()) {
+        if (consumer instanceof VertexBufferWriter writer && writer.sodium$canUseIntrinsics()) {
             return writer;
         }
 
@@ -31,7 +31,7 @@ public interface VertexBufferWriter {
      */
     @Nullable
     static VertexBufferWriter tryOf(VertexConsumer consumer) {
-        if (consumer instanceof VertexBufferWriter writer && writer.canUseIntrinsics()) {
+        if (consumer instanceof VertexBufferWriter writer && writer.sodium$canUseIntrinsics()) {
             return writer;
         }
 
@@ -61,7 +61,7 @@ public interface VertexBufferWriter {
      * @param count  The number of vertices to copy
      * @param format The format of the vertices
      */
-    void push(MemoryStack stack, long ptr, int count, VertexFormat format);
+    void sodium$push(MemoryStack stack, long ptr, int count, VertexFormat format);
 
     /**
      * If this {@link VertexBufferWriter} passes through data to nested {@link VertexConsumer} implementations,
@@ -69,7 +69,7 @@ public interface VertexBufferWriter {
      * methods.
      * @return true if the inner consumer is also a valid {@link VertexBufferWriter} that can use intrinsics
      */
-    default boolean canUseIntrinsics() {
+    default boolean sodium$canUseIntrinsics() {
         return true;
     }
 
@@ -93,6 +93,6 @@ public interface VertexBufferWriter {
 
         MemoryIntrinsics.copyMemory(ptr, copy, length);
 
-        writer.push(stack, copy, count, format);
+        writer.sodium$push(stack, copy, count, format);
     }
 }

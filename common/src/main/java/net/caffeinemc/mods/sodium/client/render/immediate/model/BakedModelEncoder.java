@@ -34,34 +34,34 @@ public class BakedModelEncoder {
 
             for (int i = 0; i < 4; i++) {
                 // The position vector
-                float x = quad.getX(i);
-                float y = quad.getY(i);
-                float z = quad.getZ(i);
+                float x = quad.sodium$getX(i);
+                float y = quad.sodium$getY(i);
+                float z = quad.sodium$getZ(i);
 
                 // take the base quad's material's emission and apply it to the instance's light
-                int newLight = instance.getLightCoordsWithEmission(i, quad.getLightEmission());
+                int newLight = instance.getLightCoordsWithEmission(i, quad.sodium$getLightEmission());
 
                 //  NeoForge patches the default VertexConsumer.putBakedQuad to do ARGB.multiply(instance.getColor(vertex), quad.bakedColors().color(vertex)), but Sodium short-circuits that path via BufferBuilderMixin, so the multiplication is lost. Blocks that encode their tint only in element.color(...) (XyCraft ores) lose all color, and blocks combining a BlockTintSource with a baked color get only one factor applied.
                 //  The platform flag is needed because Fabric's default implementation does not perform this multiplication.
                 int color = instance.getColor(i);
                 if (USE_COLOR_MULTIPLICATION) {
-                    color = ColorMixer.mulComponentWise(color, quad.getColor(i));
+                    color = ColorMixer.mulComponentWise(color, quad.sodium$getColor(i));
                 }
                 int newColor = ColorARGB.toABGR(color);
 
                 // The packed transformed normal vector
-                int normal = MatrixHelper.transformNormal(matNormal, matrices.trustedNormals, quad.getAccurateNormal(i));
+                int normal = MatrixHelper.transformNormal(matNormal, matrices.trustedNormals, quad.sodium$getAccurateNormal(i));
 
                 // The transformed position vector
                 float xt = MatrixHelper.transformPositionX(matPosition, x, y, z);
                 float yt = MatrixHelper.transformPositionY(matPosition, x, y, z);
                 float zt = MatrixHelper.transformPositionZ(matPosition, x, y, z);
 
-                EntityVertex.write(ptr, xt, yt, zt, newColor, quad.getTexU(i), quad.getTexV(i), instance.overlayCoords(), newLight, normal);
+                EntityVertex.write(ptr, xt, yt, zt, newColor, quad.sodium$getTexU(i), quad.sodium$getTexV(i), instance.overlayCoords(), newLight, normal);
                 ptr += EntityVertex.STRIDE;
             }
 
-            writer.push(stack, buffer, 4, EntityVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 4, EntityVertex.FORMAT);
         }
     }
 }

@@ -83,7 +83,7 @@ public class ExtendedItemFeatureRenderer extends RenderTypeFeatureRenderer<Exten
             this.outputType = OutputType.MAIN;
 		}
 
-		QuadEmitter emitter = ((ExtendedMutableQuadViewImpl) this.emitter).getWrapper();
+		QuadEmitter emitter = ((ExtendedMutableQuadViewImpl) this.emitter).sodium$getWrapper();
 		emitter.clear();
 
 		List<BakedQuad> vanillaQuads = submit.quads();
@@ -99,7 +99,7 @@ public class ExtendedItemFeatureRenderer extends RenderTypeFeatureRenderer<Exten
 	}
 
 	private void bufferMain(MutableQuadViewImpl q) {
-        var quad = ((ExtendedMutableQuadViewImpl) q).getWrapper();
+        var quad = ((ExtendedMutableQuadViewImpl) q).sodium$getWrapper();
 		if (quad.emissive()) {
 			quad.lightmap(LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT);
 		} else {
@@ -116,7 +116,7 @@ public class ExtendedItemFeatureRenderer extends RenderTypeFeatureRenderer<Exten
 	}
 
 	private void bufferOutline(MutableQuadViewImpl q) {
-        var quad = ((ExtendedMutableQuadViewImpl) q).getWrapper();
+        var quad = ((ExtendedMutableQuadViewImpl) q).sodium$getWrapper();
 
         RenderType renderType = quad.itemRenderType().outline().orElse(null);
 
@@ -128,7 +128,7 @@ public class ExtendedItemFeatureRenderer extends RenderTypeFeatureRenderer<Exten
 	}
 
 	private void bufferFoil(MutableQuadViewImpl q) {
-        var quad = ((ExtendedMutableQuadViewImpl) q).getWrapper();
+        var quad = ((ExtendedMutableQuadViewImpl) q).sodium$getWrapper();
 
         ItemStackRenderState.FoilType quadFoilType = quad.foilType();
 		ItemStackRenderState.FoilType foilType = quadFoilType == null ? this.submit.foilType() : quadFoilType;

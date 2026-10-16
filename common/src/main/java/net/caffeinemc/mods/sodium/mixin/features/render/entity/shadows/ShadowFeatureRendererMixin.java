@@ -107,7 +107,7 @@ public class ShadowFeatureRendererMixin {
             writeShadowVertex(ptr, matPosition, maxX, minY, minZ, u2, v1, color, normal);
             ptr += EntityVertex.STRIDE;
 
-            writer.push(stack, buffer, 4, EntityVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 4, EntityVertex.FORMAT);
         }
     }
 
