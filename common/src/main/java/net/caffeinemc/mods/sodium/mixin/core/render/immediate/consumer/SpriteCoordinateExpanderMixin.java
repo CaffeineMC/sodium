@@ -6,7 +6,6 @@ import net.caffeinemc.mods.sodium.api.vertex.attributes.common.TextureAttribute;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.client.render.vertex.VertexFormatOffsetCache;
 import net.minecraft.client.renderer.SpriteCoordinateExpander;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.UvMapping;
 import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.Final;
@@ -31,20 +30,20 @@ public class SpriteCoordinateExpanderMixin implements VertexBufferWriter {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(VertexConsumer delegate, UvMapping mapping, CallbackInfo ci) {
-        this.canUseIntrinsics = VertexBufferWriter.tryOf(this.delegate) != null;
+        this.canUseIntrinsics = VertexBufferWriter.sodium$tryOf(this.delegate) != null;
     }
 
     @Override
-    public boolean canUseIntrinsics() {
+    public boolean sodium$canUseIntrinsics() {
         return this.canUseIntrinsics;
     }
 
     @Override
-    public void push(MemoryStack stack, final long ptr, int count, VertexFormat format) {
+    public void sodium$push(MemoryStack stack, final long ptr, int count, VertexFormat format) {
         transform(ptr, count, format, this.mapping);
 
-        VertexBufferWriter.of(this.delegate)
-                .push(stack, ptr, count, format);
+        VertexBufferWriter.sodium$of(this.delegate)
+                .sodium$push(stack, ptr, count, format);
     }
 
     /**

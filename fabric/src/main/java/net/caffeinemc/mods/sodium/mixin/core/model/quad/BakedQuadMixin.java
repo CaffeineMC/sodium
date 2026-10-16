@@ -52,100 +52,99 @@ public abstract class BakedQuadMixin implements BakedQuadView {
                       Direction direction,
                       BakedQuad.MaterialInfo materialInfo,
                       CallbackInfo ci) {
-        this.normal = this.calculateNormal();
+        this.normal = this.sodium$calculateNormal();
         this.normalFace = ModelQuadFacing.fromPackedNormal(this.normal);
 
         this.flags = ModelQuadFlags.getQuadFlags(this, direction);
     }
 
     @Override
-    public float getX(int idx) {
+    public float sodium$getX(int idx) {
         return this.position(idx).x();
     }
 
     @Override
-    public float getY(int idx) {
+    public float sodium$getY(int idx) {
         return this.position(idx).y();
     }
 
     @Override
-    public float getZ(int idx) {
+    public float sodium$getZ(int idx) {
         return this.position(idx).z();
     }
 
     @Override
-    public int getColor(int idx) {
+    public int sodium$getColor(int idx) {
         return 0xFFFFFFFF;
     }
 
     @Override
-    public int getVertexNormal(int idx) {
+    public int sodium$getVertexNormal(int idx) {
         return this.normal;
     }
 
     @Override
-    public int getLight(int idx) {
+    public int sodium$getLight(int idx) {
         return 0;
     }
 
     @Override
-    public TextureAtlasSprite getSprite() {
+    public TextureAtlasSprite sodium$getSprite() {
         return this.materialInfo.sprite();
     }
 
     @Override
-    public float getTexU(int idx) {
+    public float sodium$getTexU(int idx) {
         return UVPair.unpackU(this.packedUV(idx));
     }
 
     @Override
-    public float getTexV(int idx) {
+    public float sodium$getTexV(int idx) {
         return UVPair.unpackV(this.packedUV(idx));
     }
 
     @Override
-    public int getFlags() {
+    public int sodium$getFlags() {
         return this.flags;
     }
 
     @Override
-    public int getTintIndex() {
+    public int sodium$getTintIndex() {
         return this.materialInfo.tintIndex();
     }
 
     @Override
-    public ModelQuadFacing getNormalFace() {
+    public ModelQuadFacing sodium$getNormalFace() {
         return this.normalFace;
     }
 
     @Override
-    public int getFaceNormal() {
+    public int sodium$getFaceNormal() {
         return this.normal;
     }
 
     @Override
-    public Direction getLightFace() {
+    public Direction sodium$getLightFace() {
         return this.direction;
     }
 
     @Override
-    public int getMaxLightQuad(int idx) {
-        return LightCoordsUtil.lightCoordsWithEmission(this.getLight(idx), this.materialInfo.lightEmission());
+    public int sodium$getMaxLightQuad(int idx) {
+        return LightCoordsUtil.lightCoordsWithEmission(this.sodium$getLight(idx), this.materialInfo.lightEmission());
     }
 
     @Override
-    public int getLightEmission() {
+    public int sodium$getLightEmission() {
         return this.materialInfo.lightEmission();
     }
 
     @Override
-    @Unique(silent = true) // The target class has a function with the same name in a remapped environment
-    public boolean hasShade() {
+    public boolean sodium$hasShade() {
         return true;
     }
 
     @Override
-    public boolean hasAO() {
+    public boolean sodium$hasAO() {
         return true;
     }
 }

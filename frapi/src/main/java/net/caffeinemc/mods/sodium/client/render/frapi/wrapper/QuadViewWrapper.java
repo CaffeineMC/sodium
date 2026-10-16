@@ -33,17 +33,17 @@ public class QuadViewWrapper implements QuadView {
 
     @Override
     public float x(int vertexIndex) {
-        return this.quad.getX(vertexIndex);
+        return this.quad.sodium$getX(vertexIndex);
     }
 
     @Override
     public float y(int vertexIndex) {
-        return this.quad.getY(vertexIndex);
+        return this.quad.sodium$getY(vertexIndex);
     }
 
     @Override
     public float z(int vertexIndex) {
-        return this.quad.getZ(vertexIndex);
+        return this.quad.sodium$getZ(vertexIndex);
     }
 
     @Override
@@ -58,17 +58,17 @@ public class QuadViewWrapper implements QuadView {
 
     @Override
     public int color(int vertexIndex) {
-        return this.quad.getColor(vertexIndex);
+        return this.quad.sodium$getColor(vertexIndex);
     }
 
     @Override
     public float u(int vertexIndex) {
-        return this.quad.getTexU(vertexIndex);
+        return this.quad.sodium$getTexU(vertexIndex);
     }
 
     @Override
     public float v(int vertexIndex) {
-        return this.quad.getTexV(vertexIndex);
+        return this.quad.sodium$getTexV(vertexIndex);
     }
 
     @Override
@@ -78,7 +78,7 @@ public class QuadViewWrapper implements QuadView {
 
     @Override
     public int lightmap(int vertexIndex) {
-        return this.quad.getLight(vertexIndex);
+        return this.quad.sodium$getLight(vertexIndex);
     }
 
     @Override
@@ -113,7 +113,7 @@ public class QuadViewWrapper implements QuadView {
 
     @Override
     public @NonNull Direction lightFace() {
-        return this.quad.getLightFace();
+        return this.quad.sodium$getLightFace();
     }
 
     @Override
@@ -182,7 +182,7 @@ public class QuadViewWrapper implements QuadView {
 
     @Override
     public int tintIndex() {
-        return this.quad.getTintIndex();
+        return this.quad.sodium$getTintIndex();
     }
 
     @Override

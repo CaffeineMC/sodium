@@ -31,7 +31,7 @@ public class FlatFluidLightPipeline extends FlatLightPipeline {
         if (cullFace != null) {
             Arrays.fill(out.br, this.getShade(this.lightCache.getLevel(), lightFace, shadeDirectionOverride));
         } else {
-            int flags = quad.getFlags();
+            int flags = quad.sodium$getFlags();
             if ((flags & ModelQuadFlags.IS_ALIGNED) != 0 || ((flags & ModelQuadFlags.IS_PARALLEL) != 0 && unpackFC(this.lightCache.get(pos)))) {
                 Arrays.fill(out.br, this.getShade(this.lightCache.getLevel(), lightFace, shadeDirectionOverride));
             } else {

@@ -69,13 +69,13 @@ public class MutableMeshImpl extends MeshViewImpl implements MutableMesh {
     @Override
     public QuadEmitter emitter() {
         this.emitter.clear();
-        return ((ExtendedMutableQuadViewImpl) this.emitter).getWrapper();
+        return ((ExtendedMutableQuadViewImpl) this.emitter).sodium$getWrapper();
     }
 
     @Override
     public void forEachMutable(Consumer<? super MutableQuadView> action) {
         // emitDirectly will not be called by forEach, so just reuse the main emitter.
-        this.forEach((a) -> action.accept((MutableQuadView) a), ((ExtendedMutableQuadViewImpl) this.emitter).getWrapper()); // TODO: probably wrong
+        this.forEach((a) -> action.accept((MutableQuadView) a), ((ExtendedMutableQuadViewImpl) this.emitter).sodium$getWrapper()); // TODO: probably wrong
         this.emitter.data = this.data;
         this.emitter.baseIndex = this.limit;
     }

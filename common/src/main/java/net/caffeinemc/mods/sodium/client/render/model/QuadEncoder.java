@@ -42,9 +42,9 @@ public class QuadEncoder {
 
             for (int i = 0; i < 4; i++) {
                 // The position vector
-                float x = quad.getX(i);
-                float y = quad.getY(i);
-                float z = quad.getZ(i);
+                float x = quad.sodium$getX(i);
+                float y = quad.sodium$getY(i);
+                float z = quad.sodium$getZ(i);
 
                 // The transformed position vector
                 float xt = MatrixHelper.transformPositionX(matPosition, x, y, z);
@@ -55,11 +55,11 @@ public class QuadEncoder {
                     normal = MatrixHelper.transformNormal(matNormal, trustedNormals, quad.packedNormal(i));
                 }
 
-                EntityVertex.write(ptr, xt, yt, zt, ColorARGB.toABGR(quad.baseColor(i)), quad.getTexU(i), quad.getTexV(i), overlay, quad.getLight(i), normal);
+                EntityVertex.write(ptr, xt, yt, zt, ColorARGB.toABGR(quad.baseColor(i)), quad.sodium$getTexU(i), quad.sodium$getTexV(i), overlay, quad.sodium$getLight(i), normal);
                 ptr += EntityVertex.STRIDE;
             }
 
-            writer.push(stack, buffer, 4, EntityVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 4, EntityVertex.FORMAT);
         }
     }
 
@@ -96,9 +96,9 @@ public class QuadEncoder {
 
         for (int i = 0; i < 4; i++) {
             // The position vector
-            float x = quad.getX(i);
-            float y = quad.getY(i);
-            float z = quad.getZ(i);
+            float x = quad.sodium$getX(i);
+            float y = quad.sodium$getY(i);
+            float z = quad.sodium$getZ(i);
 
             // The transformed position vector
             float xt = MatrixHelper.transformPositionX(matPosition, x, y, z);
@@ -108,9 +108,9 @@ public class QuadEncoder {
             vertexConsumer.addVertex(xt, yt, zt);
 
             vertexConsumer.setColor(quad.baseColor(i));
-            vertexConsumer.setUv(quad.getTexU(i), quad.getTexV(i));
+            vertexConsumer.setUv(quad.sodium$getTexU(i), quad.sodium$getTexV(i));
             vertexConsumer.setOverlay(overlay);
-            vertexConsumer.setLight(quad.getLight(i));
+            vertexConsumer.setLight(quad.sodium$getLight(i));
 
             if (useNormals) {
                 int packedNormal = quad.packedNormal(i);

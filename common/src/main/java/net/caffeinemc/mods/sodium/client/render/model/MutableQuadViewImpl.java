@@ -271,12 +271,12 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
         boolean hasNormals = false;
 
         for (int i = 0; i < 4; i++) {
-            this.setPos(i, quadData.getX(i), quadData.getY(i), quadData.getZ(i));
-            this.setColor(i, quadData.getColor(i));
-            this.setUV(i, quadData.getTexU(i), quadData.getTexV(i));
-            this.setLight(i, quadData.getMaxLightQuad(i));
+            this.setPos(i, quadData.sodium$getX(i), quadData.sodium$getY(i), quadData.sodium$getZ(i));
+            this.setColor(i, quadData.sodium$getColor(i));
+            this.setUV(i, quadData.sodium$getTexU(i), quadData.sodium$getTexV(i));
+            this.setLight(i, quadData.sodium$getMaxLightQuad(i));
 
-            int normal = quadData.getVertexNormal(i);
+            int normal = quadData.sodium$getVertexNormal(i);
             if (normal != 0) hasNormals = true;
             this.setNormal(i, NormI8.unpackX(normal), NormI8.unpackY(normal), NormI8.unpackZ(normal));
         }
@@ -289,7 +289,7 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
         this.setNominalFace(quad.direction());
         this.setShadeDirectionOverride(quad.materialInfo().shadeDirectionOverride());
         this.setTintIndex(quad.materialInfo().tintIndex());
-        this.setAmbientOcclusion(((BakedQuadView) (Object) quad).hasAO() ? TriState.DEFAULT : TriState.FALSE); // TODO: TRUE, or DEFAULT?
+        this.setAmbientOcclusion(((BakedQuadView) (Object) quad).sodium$hasAO() ? TriState.DEFAULT : TriState.FALSE); // TODO: TRUE, or DEFAULT?
         this.setItemRenderType(quad.materialInfo().itemRenderType());
         this.setRenderType(quad.materialInfo().layer());
         this.setAnimated(quad.materialInfo().sprite().contents().isAnimated());
@@ -297,10 +297,10 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
 
         // Copy geometry cached inside the quad
         BakedQuadView bakedView = (BakedQuadView) (Object) quad;
-        NormI8.unpack(bakedView.getFaceNormal(), this.faceNormal);
-        this.data[this.baseIndex + HEADER_FACE_NORMAL] = EncodingFormat.normalFace(bakedView.getFaceNormal(), bakedView.getNormalFace());
-        int headerBits = EncodingFormat.lightFace(this.data[this.baseIndex + HEADER_BITS], bakedView.getLightFace());
-        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(headerBits, bakedView.getFlags());
+        NormI8.unpack(bakedView.sodium$getFaceNormal(), this.faceNormal);
+        this.data[this.baseIndex + HEADER_FACE_NORMAL] = EncodingFormat.normalFace(bakedView.sodium$getFaceNormal(), bakedView.sodium$getNormalFace());
+        int headerBits = EncodingFormat.lightFace(this.data[this.baseIndex + HEADER_BITS], bakedView.sodium$getLightFace());
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(headerBits, bakedView.sodium$getFlags());
         this.isGeometryInvalid = false;
 
         SodiumQuadAtlas atlas = SodiumQuadAtlas.of(quad.materialInfo().sprite().atlasLocation());
@@ -322,7 +322,7 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
 
     public MutableQuadViewImpl translate(float x, float y, float z) {
         for (int i = 0; i < 4; i++) {
-            this.setPos(i, this.getX(i) + x, this.getY(i) + y, this.getZ(i) + z);
+            this.setPos(i, this.sodium$getX(i) + x, this.sodium$getY(i) + y, this.sodium$getZ(i) + z);
         }
 
         return this;

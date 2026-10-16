@@ -78,7 +78,7 @@ public class TextureHelper {
             applyModifier(quad, UVLOCKERS[quad.getNominalFace().get3DDataValue()]);
         } else if ((BAKE_NORMALIZED & bakeFlags) == 0) { // flag is NOT set, UVs are assumed to not be normalized yet as is the default, normalize through dividing by 16
             // Scales from 0-16 to 0-1
-            applyModifier(quad, (q, i) -> q.setUV(i, q.getTexU(i) * NORMALIZER, q.getTexV(i) * NORMALIZER));
+            applyModifier(quad, (q, i) -> q.setUV(i, q.sodium$getTexU(i) * NORMALIZER, q.sodium$getTexV(i) * NORMALIZER));
         }
 
         final int rotation = bakeFlags & 3;
@@ -91,12 +91,12 @@ public class TextureHelper {
 
         if ((BAKE_FLIP_U & bakeFlags) != 0) {
             // Inverts U coordinates.  Assumes normalized (0-1) values.
-            applyModifier(quad, (q, i) -> q.setUV(i, 1 - q.getTexU(i), q.getTexV(i)));
+            applyModifier(quad, (q, i) -> q.setUV(i, 1 - q.sodium$getTexU(i), q.sodium$getTexV(i)));
         }
 
         if ((BAKE_FLIP_V & bakeFlags) != 0) {
             // Inverts V coordinates.  Assumes normalized (0-1) values.
-            applyModifier(quad, (q, i) -> q.setUV(i, q.getTexU(i), 1 - q.getTexV(i)));
+            applyModifier(quad, (q, i) -> q.setUV(i, q.sodium$getTexU(i), 1 - q.sodium$getTexV(i)));
         }
 
         interpolate(quad, sprite);
@@ -113,7 +113,7 @@ public class TextureHelper {
         final float vSpan = sprite.getV1() - vMin;
 
         for (int i = 0; i < 4; i++) {
-            q.setUV(i, uMin + q.getTexU(i) * uSpan, vMin + q.getTexV(i) * vSpan);
+            q.setUV(i, uMin + q.sodium$getTexU(i) * uSpan, vMin + q.sodium$getTexV(i) * vSpan);
         }
     }
 
@@ -130,19 +130,19 @@ public class TextureHelper {
 
     private static final VertexModifier[] ROTATIONS = new VertexModifier[] {
             null,
-            (q, i) -> q.setUV(i, q.getTexV(i), 1 - q.getTexU(i)), //90
-            (q, i) -> q.setUV(i, 1 - q.getTexU(i), 1 - q.getTexV(i)), //180
-            (q, i) -> q.setUV(i, 1 - q.getTexV(i), q.getTexU(i)) // 270
+            (q, i) -> q.setUV(i, q.sodium$getTexV(i), 1 - q.sodium$getTexU(i)), //90
+            (q, i) -> q.setUV(i, 1 - q.sodium$getTexU(i), 1 - q.sodium$getTexV(i)), //180
+            (q, i) -> q.setUV(i, 1 - q.sodium$getTexV(i), q.sodium$getTexU(i)) // 270
     };
 
     private static final VertexModifier[] UVLOCKERS = new VertexModifier[6];
 
     static {
-        UVLOCKERS[Direction.EAST.get3DDataValue()] = (q, i) -> q.setUV(i, 1 - q.getZ(i), 1 - q.getY(i));
-        UVLOCKERS[Direction.WEST.get3DDataValue()] = (q, i) -> q.setUV(i, q.getZ(i), 1 - q.getY(i));
-        UVLOCKERS[Direction.NORTH.get3DDataValue()] = (q, i) -> q.setUV(i, 1 - q.getX(i), 1 - q.getY(i));
-        UVLOCKERS[Direction.SOUTH.get3DDataValue()] = (q, i) -> q.setUV(i, q.getX(i), 1 - q.getY(i));
-        UVLOCKERS[Direction.DOWN.get3DDataValue()] = (q, i) -> q.setUV(i, q.getX(i), 1 - q.getZ(i));
-        UVLOCKERS[Direction.UP.get3DDataValue()] = (q, i) -> q.setUV(i, q.getX(i), q.getZ(i));
+        UVLOCKERS[Direction.EAST.get3DDataValue()] = (q, i) -> q.setUV(i, 1 - q.sodium$getZ(i), 1 - q.sodium$getY(i));
+        UVLOCKERS[Direction.WEST.get3DDataValue()] = (q, i) -> q.setUV(i, q.sodium$getZ(i), 1 - q.sodium$getY(i));
+        UVLOCKERS[Direction.NORTH.get3DDataValue()] = (q, i) -> q.setUV(i, 1 - q.sodium$getX(i), 1 - q.sodium$getY(i));
+        UVLOCKERS[Direction.SOUTH.get3DDataValue()] = (q, i) -> q.setUV(i, q.sodium$getX(i), 1 - q.sodium$getY(i));
+        UVLOCKERS[Direction.DOWN.get3DDataValue()] = (q, i) -> q.setUV(i, q.sodium$getX(i), 1 - q.sodium$getZ(i));
+        UVLOCKERS[Direction.UP.get3DDataValue()] = (q, i) -> q.setUV(i, q.sodium$getX(i), q.sodium$getZ(i));
     }
 }

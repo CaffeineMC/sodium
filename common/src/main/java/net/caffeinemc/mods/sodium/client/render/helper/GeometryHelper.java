@@ -54,9 +54,9 @@ public abstract class GeometryHelper {
      * <p>Derived from the quad face normal and expects convex quads with all points co-planar.
      */
     public static Direction lightFace(ModelQuadView quad) {
-        final float normalX = NormI8.unpackX(quad.getFaceNormal());
-        final float normalY = NormI8.unpackY(quad.getFaceNormal());
-        final float normalZ = NormI8.unpackZ(quad.getFaceNormal());
+        final float normalX = NormI8.unpackX(quad.sodium$getFaceNormal());
+        final float normalY = NormI8.unpackY(quad.sodium$getFaceNormal());
+        final float normalZ = NormI8.unpackZ(quad.sodium$getFaceNormal());
         return switch (GeometryHelper.longestAxis(normalX, normalY, normalZ)) {
             case X -> normalX > 0 ? Direction.EAST : Direction.WEST;
             case Y -> normalY > 0 ? Direction.UP : Direction.DOWN;

@@ -74,7 +74,7 @@ public class ExtendedBlockModelFeatureRenderer extends RenderTypeFeatureRenderer
 
 			if (submit.mesh() != null) {
 				this.submit = submit;
-				submit.mesh().outputTo(((ExtendedMutableQuadViewImpl) emitter).getWrapper());
+				submit.mesh().outputTo(((ExtendedMutableQuadViewImpl) emitter).sodium$getWrapper());
 			}
 		}
 
@@ -121,18 +121,18 @@ public class ExtendedBlockModelFeatureRenderer extends RenderTypeFeatureRenderer
 		}
 
 		if (quad.emissive()) {
-            ((ExtendedMutableQuadViewImpl) quad).getWrapper().lightmap(LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT);
+            ((ExtendedMutableQuadViewImpl) quad).sodium$getWrapper().lightmap(LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT, LightCoordsUtil.FULL_BRIGHT);
 		} else {
-            ((ExtendedMutableQuadViewImpl) quad).getWrapper().minLightmap(this.submit.lightCoords());
+            ((ExtendedMutableQuadViewImpl) quad).sodium$getWrapper().minLightmap(this.submit.lightCoords());
 		}
 
 		int[] tintLayers = this.submit.tintLayers();
 		int baseTintColor = this.submit.tintColor();
 
-		int tintIndex = quad.getTintIndex();
+		int tintIndex = quad.sodium$getTintIndex();
 		boolean useTintLayer = tintIndex != -1 && tintIndex < tintLayers.length;
-        ((ExtendedMutableQuadViewImpl) quad).getWrapper().multiplyColor(useTintLayer ? ARGB.multiply(baseTintColor, tintLayers[tintIndex]) : baseTintColor);
-        ((ExtendedMutableQuadViewImpl) quad).getWrapper().buffer(this.submit.overlayCoords(), this.submit.pose(), buffer);
+        ((ExtendedMutableQuadViewImpl) quad).sodium$getWrapper().multiplyColor(useTintLayer ? ARGB.multiply(baseTintColor, tintLayers[tintIndex]) : baseTintColor);
+        ((ExtendedMutableQuadViewImpl) quad).sodium$getWrapper().buffer(this.submit.overlayCoords(), this.submit.pose(), buffer);
 	}
 
 	private class BufferCache {

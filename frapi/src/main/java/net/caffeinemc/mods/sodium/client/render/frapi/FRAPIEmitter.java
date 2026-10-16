@@ -16,6 +16,6 @@ import java.util.function.Predicate;
 public class FRAPIEmitter implements PlatformModelEmitter {
     @Override
     public void emitModel(BlockStateModel model, Predicate<Direction> cullTest, MutableQuadViewImpl quad, RandomSource random, BlockAndTintGetter blockView, BlockPos pos, BlockState state, Bufferer defaultBuffer) {
-        ((FabricBlockStateModel) model).emitQuads(((ExtendedMutableQuadViewImpl) quad).getWrapper(), blockView, pos, state, random, cullTest);
+        ((FabricBlockStateModel) model).emitQuads(((ExtendedMutableQuadViewImpl) quad).sodium$getWrapper(), blockView, pos, state, random, cullTest);
     }
 }

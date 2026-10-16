@@ -52,7 +52,7 @@ public class MeshViewImpl implements MeshView {
         QuadViewWrapper cursor;
 
         if (pool.isEmpty()) {
-            cursor = ((ExtendedQuadViewImpl) new QuadViewImpl()).getWrapper();
+            cursor = ((ExtendedQuadViewImpl) new QuadViewImpl()).sodium$getWrapper();
         } else {
             cursor = pool.pop();
         }

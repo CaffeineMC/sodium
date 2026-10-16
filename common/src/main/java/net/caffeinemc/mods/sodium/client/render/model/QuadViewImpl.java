@@ -58,7 +58,7 @@ public class QuadViewImpl implements ModelQuadView {
      */
     public void load() {
         this.isGeometryInvalid = false;
-        this.nominalFace = this.getLightFace();
+        this.nominalFace = this.sodium$getLightFace();
         NormI8.unpack(this.packedFaceNormal(), this.faceNormal);
     }
 
@@ -220,17 +220,17 @@ public class QuadViewImpl implements ModelQuadView {
     }
 
     @Override
-    public float getX(int idx) {
+    public float sodium$getX(int idx) {
         return Float.intBitsToFloat(this.data[this.baseIndex + idx * VERTEX_STRIDE + VERTEX_X]);
     }
 
     @Override
-    public float getY(int idx) {
+    public float sodium$getY(int idx) {
         return Float.intBitsToFloat(this.data[this.baseIndex + idx * VERTEX_STRIDE + VERTEX_Y]);
     }
 
     @Override
-    public float getZ(int idx) {
+    public float sodium$getZ(int idx) {
         return Float.intBitsToFloat(this.data[this.baseIndex + idx * VERTEX_STRIDE + VERTEX_Z]);
     }
 
@@ -239,58 +239,58 @@ public class QuadViewImpl implements ModelQuadView {
     }
 
     @Override
-    public int getColor(int idx) {
+    public int sodium$getColor(int idx) {
         return this.baseColor(idx);
     }
 
     @Override
-    public float getTexU(int idx) {
+    public float sodium$getTexU(int idx) {
         return Float.intBitsToFloat(this.data[this.baseIndex + idx * VERTEX_STRIDE + VERTEX_U]);
     }
 
     @Override
-    public float getTexV(int idx) {
+    public float sodium$getTexV(int idx) {
         return Float.intBitsToFloat(this.data[this.baseIndex + idx * VERTEX_STRIDE + VERTEX_V]);
     }
 
     @Override
-    public int getVertexNormal(int idx) {
+    public int sodium$getVertexNormal(int idx) {
         return this.data[this.normalIndex(idx)];
     }
 
     @Override
-    public int getFaceNormal() {
+    public int sodium$getFaceNormal() {
         return this.packedFaceNormal();
     }
 
     @Override
-    public int getLight(int idx) {
+    public int sodium$getLight(int idx) {
         return this.data[this.baseIndex + idx * VERTEX_STRIDE + VERTEX_LIGHTMAP];
     }
 
     @Override
-    public int getTintIndex() {
+    public int sodium$getTintIndex() {
         return this.data[this.baseIndex + HEADER_TINT_INDEX];
     }
 
     @Override
-    public TextureAtlasSprite getSprite() {
+    public TextureAtlasSprite sodium$getSprite() {
         throw new UnsupportedOperationException("Not available for QuadViewImpl.");
     }
 
     @Override
-    public Direction getLightFace() {
+    public Direction sodium$getLightFace() {
         this.computeGeometry();
         return EncodingFormat.lightFace(this.data[this.baseIndex + HEADER_BITS]);
     }
 
     @Override
-    public int getMaxLightQuad(int idx) {
-        return this.getLight(idx);
+    public int sodium$getMaxLightQuad(int idx) {
+        return this.sodium$getLight(idx);
     }
 
     @Override
-    public int getFlags() {
+    public int sodium$getFlags() {
         return this.geometryFlags();
     }
 

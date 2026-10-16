@@ -3,13 +3,13 @@ package net.caffeinemc.mods.sodium.client.model.quad;
 import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 
 public interface BakedQuadView extends ModelQuadView {
-    ModelQuadFacing getNormalFace();
+    ModelQuadFacing sodium$getNormalFace();
 
-    int getFaceNormal();
+    int sodium$getFaceNormal();
 
-    boolean hasShade();
+    boolean sodium$hasShade();
 
-    boolean hasAO();
+    boolean sodium$hasAO();
 
-    int getLightEmission();
+    int sodium$getLightEmission();
 }

@@ -13,7 +13,7 @@ public class VertexConsumerUtils {
      * @return a {@link VertexBufferWriter}, or null if the consumer does not support this
      */
     public static @Nullable VertexBufferWriter convertOrLog(VertexConsumer consumer) {
-        VertexBufferWriter writer = VertexBufferWriter.tryOf(consumer);
+        VertexBufferWriter writer = VertexBufferWriter.sodium$tryOf(consumer);
 
         if (writer == null) {
             VertexConsumerTracker.logBadConsumer(consumer);

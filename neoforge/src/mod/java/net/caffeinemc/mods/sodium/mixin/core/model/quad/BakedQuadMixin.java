@@ -63,100 +63,100 @@ public abstract class BakedQuadMixin implements BakedQuadView {
                       BakedNormals bakedNormals,
                       BakedColors bakedColors,
                       CallbackInfo ci) {
-        this.sodium$normal = this.calculateNormal();
+        this.sodium$normal = this.sodium$calculateNormal();
         this.sodium$normalFace = ModelQuadFacing.fromPackedNormal(this.sodium$normal);
 
         this.sodium$flags = ModelQuadFlags.getQuadFlags(this, direction);
     }
 
     @Override
-    public float getX(int idx) {
+    public float sodium$getX(int idx) {
         return this.position(idx).x();
     }
 
     @Override
-    public float getY(int idx) {
+    public float sodium$getY(int idx) {
         return this.position(idx).y();
     }
 
     @Override
-    public float getZ(int idx) {
+    public float sodium$getZ(int idx) {
         return this.position(idx).z();
     }
 
     @Override
-    public int getColor(int idx) {
+    public int sodium$getColor(int idx) {
         return this.bakedColors.color(idx); // default is -1 for now
     }
 
     @Override
-    public int getVertexNormal(int idx) {
+    public int sodium$getVertexNormal(int idx) {
         //this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.NORMAL_INDEX];
         return this.bakedNormals == BakedNormals.UNSPECIFIED ? -1 : this.bakedNormals.normal(idx);
     }
 
     @Override
-    public int getLight(int idx) {
+    public int sodium$getLight(int idx) {
         return 0;//this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.LIGHT_INDEX];
     }
 
     @Override
-    public TextureAtlasSprite getSprite() {
+    public TextureAtlasSprite sodium$getSprite() {
         return this.materialInfo.sprite();
     }
 
     @Override
-    public float getTexU(int idx) {
+    public float sodium$getTexU(int idx) {
         return UVPair.unpackU(this.packedUV(idx));
     }
 
     @Override
-    public float getTexV(int idx) {
+    public float sodium$getTexV(int idx) {
         return UVPair.unpackV(this.packedUV(idx));
     }
 
     @Override
-    public int getFlags() {
+    public int sodium$getFlags() {
         return this.sodium$flags;
     }
 
     @Override
-    public int getTintIndex() {
+    public int sodium$getTintIndex() {
         return this.materialInfo.tintIndex();
     }
 
     @Override
-    public ModelQuadFacing getNormalFace() {
+    public ModelQuadFacing sodium$getNormalFace() {
         return this.sodium$normalFace;
     }
 
     @Override
-    public int getFaceNormal() {
+    public int sodium$getFaceNormal() {
         return this.sodium$normal;
     }
 
     @Override
-    public Direction getLightFace() {
+    public Direction sodium$getLightFace() {
         return this.direction;
     }
 
     @Override
-    public int getMaxLightQuad(int idx) {
-        return LightCoordsUtil.lightCoordsWithEmission(this.getLight(idx), this.materialInfo.lightEmission());
+    public int sodium$getMaxLightQuad(int idx) {
+        return LightCoordsUtil.lightCoordsWithEmission(this.sodium$getLight(idx), this.materialInfo.lightEmission());
     }
 
     @Override
-    public int getLightEmission() {
+    public int sodium$getLightEmission() {
         return this.materialInfo.lightEmission();
     }
 
     @Override
-    public boolean hasShade() {
+    public boolean sodium$hasShade() {
         return true;
     }
 
     @Override
-    public boolean hasAO() {
+    public boolean sodium$hasAO() {
         return this.materialInfo.ambientOcclusion();
     }
 }
