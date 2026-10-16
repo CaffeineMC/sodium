@@ -109,7 +109,7 @@ public class SingleOwnerBufferArena extends BufferArena {
         this.arenaBuffer = dstBufferObj;
 
         // set the capacity using the size of the buffer since it may be larger than the expected capacity due to buffer reuse
-        this.capacity = this.arenaBuffer.size() / this.stride;
+        this.capacity = (this.arenaBuffer.size() / this.stride) & ~3L; // align to 4
     }
 
     private void finalizeCompactedSegments(long tail, List<BufferSegment> usedSegments) {
