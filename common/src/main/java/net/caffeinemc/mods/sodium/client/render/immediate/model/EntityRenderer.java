@@ -31,7 +31,7 @@ public class EntityRenderer {
             final var vertexCount = emitQuads(vertexBuffer, cuboid, overlay, light);
 
             if (vertexCount > 0) {
-                writer.push(stack, vertexBuffer, vertexCount, EntityVertex.FORMAT);
+                writer.sodium$push(stack, vertexBuffer, vertexCount, EntityVertex.FORMAT);
             }
         }
     }

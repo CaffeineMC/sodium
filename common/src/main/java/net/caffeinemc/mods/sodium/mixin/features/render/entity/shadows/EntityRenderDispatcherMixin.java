@@ -2,9 +2,11 @@ package net.caffeinemc.mods.sodium.mixin.features.render.entity.shadows;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
+import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
+import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.EntityVertex;
+import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -16,8 +18,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.caffeinemc.mods.sodium.api.util.ColorABGR;
-import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -118,7 +118,7 @@ public class EntityRenderDispatcherMixin {
             writeShadowVertex(ptr, matPosition, maxX, minY, minZ, u2, v1, color, normal);
             ptr += EntityVertex.STRIDE;
 
-            writer.push(stack, buffer, 4, EntityVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 4, EntityVertex.FORMAT);
         }
     }
 

@@ -2,13 +2,13 @@ package net.caffeinemc.mods.sodium.mixin.features.render.gui.outlines;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
+import net.caffeinemc.mods.sodium.api.util.ColorABGR;
+import net.caffeinemc.mods.sodium.api.util.NormI8;
+import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.LineVertex;
+import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
 import net.caffeinemc.mods.sodium.client.render.vertex.buffer.BufferBuilderExtension;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
-import net.caffeinemc.mods.sodium.api.util.NormI8;
-import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import org.joml.Math;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -122,7 +122,7 @@ public class LevelRendererMixin {
                 ptr += LineVertex.STRIDE;
             }
 
-            writer.push(stack, buffer, 2, LineVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 2, LineVertex.FORMAT);
         }
     }
 
@@ -132,7 +132,7 @@ public class LevelRendererMixin {
             long buffer = stack.nmalloc(LineVertex.STRIDE);
             LineVertex.put(buffer, x, y, z, color, normal);
 
-            writer.push(stack, buffer, 1, LineVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 1, LineVertex.FORMAT);
         }
     }
 

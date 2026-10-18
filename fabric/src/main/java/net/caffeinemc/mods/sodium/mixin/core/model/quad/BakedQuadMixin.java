@@ -51,32 +51,32 @@ public abstract class BakedQuadMixin implements BakedQuadView {
     }
 
     @Override
-    public float getX(int idx) {
+    public float sodium$getX(int idx) {
         return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX]);
     }
 
     @Override
-    public float getY(int idx) {
+    public float sodium$getY(int idx) {
         return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX + 1]);
     }
 
     @Override
-    public float getZ(int idx) {
+    public float sodium$getZ(int idx) {
         return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX + 2]);
     }
 
     @Override
-    public int getColor(int idx) {
+    public int sodium$getColor(int idx) {
         return this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.COLOR_INDEX];
     }
 
     @Override
-    public int getVertexNormal(int idx) {
+    public int sodium$getVertexNormal(int idx) {
         return this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.NORMAL_INDEX];
     }
 
     @Override
-    public int getLight(int idx) {
+    public int sodium$getLight(int idx) {
         return this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.LIGHT_INDEX];
     }
 
@@ -84,48 +84,48 @@ public abstract class BakedQuadMixin implements BakedQuadView {
     public abstract TextureAtlasSprite getSprite();
 
     @Override
-    public float getTexU(int idx) {
+    public float sodium$getTexU(int idx) {
         return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.TEXTURE_INDEX]);
     }
 
     @Override
-    public float getTexV(int idx) {
+    public float sodium$getTexV(int idx) {
         return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.TEXTURE_INDEX + 1]);
     }
 
     @Override
-    public int getFlags() {
+    public int sodium$getFlags() {
         return this.flags;
     }
 
     @Override
-    public int getColorIndex() {
+    public int sodium$getColorIndex() {
         return this.tintIndex;
     }
 
     @Override
-    public ModelQuadFacing getNormalFace() {
+    public ModelQuadFacing sodium$getNormalFace() {
         return this.normalFace;
     }
 
     @Override
-    public int getFaceNormal() {
+    public int sodium$getFaceNormal() {
         return this.normal;
     }
 
     @Override
-    public Direction getLightFace() {
+    public Direction sodium$getLightFace() {
         return this.direction;
     }
 
     @Override
     @Unique(silent = true) // The target class has a function with the same name in a remapped environment
-    public boolean hasShade() {
+    public boolean sodium$hasShade() {
         return this.shade;
     }
 
     @Override
-    public boolean hasAO() {
+    public boolean sodium$hasAO() {
         return true;
     }
 }

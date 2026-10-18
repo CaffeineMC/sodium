@@ -8,8 +8,8 @@ import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.ColorAttribute;
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.TextureAttribute;
-import net.minecraft.core.Direction;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.minecraft.core.Direction;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -51,22 +51,22 @@ public class SheetedDecalTextureGeneratorMixin implements VertexBufferWriter {
     }
 
     @Override
-    public boolean canUseIntrinsics() {
+    public boolean sodium$canUseIntrinsics() {
         return this.canUseIntrinsics;
     }
 
     @Override
-    public boolean canUseIntrinsics(VertexFormat format) {
+    public boolean sodium$canUseIntrinsics(VertexFormat format) {
         return this.canUseIntrinsics && VertexBufferWriter.tryOf(this.delegate, format) != null;
     }
 
     @Override
-    public void push(MemoryStack stack, long ptr, int count, VertexFormat format) {
+    public void sodium$push(MemoryStack stack, long ptr, int count, VertexFormat format) {
         transform(ptr, count, format,
                 this.normalInversePose, this.cameraInversePose, this.textureScale);
 
         VertexBufferWriter.of(this.delegate)
-                .push(stack, ptr, count, format);
+                .sodium$push(stack, ptr, count, format);
     }
 
     /**

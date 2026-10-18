@@ -47,9 +47,9 @@ public class ModelQuadFlags {
         float maxZ = -32.0F;
 
         for (int i = 0; i < 4; ++i) {
-            float x = quad.getX(i);
-            float y = quad.getY(i);
-            float z = quad.getZ(i);
+            float x = quad.sodium$getX(i);
+            float y = quad.sodium$getY(i);
+            float z = quad.sodium$getZ(i);
 
             minX = Math.min(minX, x);
             minY = Math.min(minY, y);

@@ -239,11 +239,11 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
         this.colorIndex(quad.getTintIndex());
 
         // TODO: Is this the same as hasShade?
-        if (!((BakedQuadView) quad).hasShade()) {
+        if (!((BakedQuadView) quad).sodium$hasShade()) {
             material = RenderMaterialImpl.setDisableDiffuse((RenderMaterialImpl) material, true);
         }
 
-        if (material.ambientOcclusion().orElse(true) && !((BakedQuadView) quad).hasAO()) {
+        if (material.ambientOcclusion().orElse(true) && !((BakedQuadView) quad).sodium$hasAO()) {
             material = RenderMaterialImpl.setAmbientOcclusion((RenderMaterialImpl) material, TriState.FALSE);
         }
 
@@ -252,11 +252,11 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements QuadEm
 
         // Copy geometry cached inside the quad
         BakedQuadView bakedView = (BakedQuadView) quad;
-        NormI8.unpack(bakedView.getFaceNormal(), this.faceNormal);
-        this.data[this.baseIndex + HEADER_FACE_NORMAL] = bakedView.getFaceNormal();
-        int headerBits = EncodingFormat.lightFace(this.data[this.baseIndex + HEADER_BITS], bakedView.getLightFace());
-        headerBits = EncodingFormat.normalFace(headerBits, bakedView.getNormalFace());
-        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(headerBits, bakedView.getFlags());
+        NormI8.unpack(bakedView.sodium$getFaceNormal(), this.faceNormal);
+        this.data[this.baseIndex + HEADER_FACE_NORMAL] = bakedView.sodium$getFaceNormal();
+        int headerBits = EncodingFormat.lightFace(this.data[this.baseIndex + HEADER_BITS], bakedView.sodium$getLightFace());
+        headerBits = EncodingFormat.normalFace(headerBits, bakedView.sodium$getNormalFace());
+        this.data[this.baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(headerBits, bakedView.sodium$getFlags());
         this.isGeometryInvalid = false;
 
         this.cachedSprite(quad.getSprite());

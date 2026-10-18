@@ -12,7 +12,7 @@ public interface BufferBuilderExtension extends VertexBufferWriter {
     VertexFormat sodium$getVertexFormat();
 
     @Override
-    default boolean canUseIntrinsics(VertexFormat format) {
+    default boolean sodium$canUseIntrinsics(VertexFormat format) {
         return this.sodium$getVertexFormat() == format;
     }
 }
