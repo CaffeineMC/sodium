@@ -87,14 +87,14 @@ public class ItemRendererMixin {
 
             int color = 0xFFFFFFFF;
 
-            if (quad.hasColor()) {
-                color = ColorARGB.toABGR((this.itemColors.getColor(itemStack, quad.getColorIndex())));
+            if (quad.sodium$hasColor()) {
+                color = ColorARGB.toABGR((this.itemColors.getColor(itemStack, quad.sodium$getColorIndex())));
             }
 
             BakedModelEncoder.writeQuadVertices(writer, matrices, quad, color, light, overlay, BakedModelEncoder.shouldMultiplyAlpha());
 
-            if (quad.getSprite() != null) {
-                SpriteUtil.INSTANCE.markSpriteActive(quad.getSprite());
+            if (quad.sodium$getSprite() != null) {
+                SpriteUtil.INSTANCE.markSpriteActive(quad.sodium$getSprite());
             }
         }
     }

@@ -122,7 +122,7 @@ public class LevelRendererMixin {
                 ptr += LineVertex.STRIDE;
             }
 
-            writer.push(stack, buffer, 2, LineVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 2, LineVertex.FORMAT);
         }
     }
 
@@ -132,7 +132,7 @@ public class LevelRendererMixin {
             long buffer = stack.nmalloc(LineVertex.STRIDE);
             LineVertex.put(buffer, x, y, z, color, normal);
 
-            writer.push(stack, buffer, 1, LineVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 1, LineVertex.FORMAT);
         }
     }
 

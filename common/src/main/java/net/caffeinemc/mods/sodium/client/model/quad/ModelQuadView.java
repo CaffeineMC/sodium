@@ -12,88 +12,88 @@ public interface ModelQuadView {
     /**
      * @return The x-position of the vertex at index {@param idx}
      */
-    float getX(int idx);
+    float sodium$getX(int idx);
 
     /**
      * @return The y-position of the vertex at index {@param idx}
      */
-    float getY(int idx);
+    float sodium$getY(int idx);
 
     /**
      * @return The z-position of the vertex at index {@param idx}
      */
-    float getZ(int idx);
+    float sodium$getZ(int idx);
 
     /**
      * @return The integer-encoded color of the vertex at index {@param idx}
      */
-    int getColor(int idx);
+    int sodium$getColor(int idx);
 
     /**
      * @return The texture x-coordinate for the vertex at index {@param idx}
      */
-    float getTexU(int idx);
+    float sodium$getTexU(int idx);
 
     /**
      * @return The texture y-coordinate for the vertex at index {@param idx}
      */
-    float getTexV(int idx);
+    float sodium$getTexV(int idx);
 
     /**
      * @return The packed normal set for the vertex at index {@param idx}.
      */
-    int getVertexNormal(int idx);
+    int sodium$getVertexNormal(int idx);
 
     /**
      * @return The computed normal.
      */
-    int getFaceNormal();
+    int sodium$getFaceNormal();
 
     /**
      * @return The packed light set for the vertex at index {@param idx}.
      */
-    int getLight(int idx);
+    int sodium$getLight(int idx);
 
     /**
      * @return The integer bit flags containing the {@link ModelQuadFlags} for this quad
      */
-    int getFlags();
+    int sodium$getFlags();
 
     /**
      * @return The color index of this quad.
      */
-    int getColorIndex();
+    int sodium$getColorIndex();
 
     /**
      * @return The sprite texture used by this quad, or null if none is attached
      */
-    TextureAtlasSprite getSprite();
+    TextureAtlasSprite sodium$getSprite();
     
     /**
      * @return The face used by this quad for lighting effects
      */
-    Direction getLightFace();
+    Direction sodium$getLightFace();
 
-    default boolean hasColor() {
-        return this.getColorIndex() != -1;
+    default boolean sodium$hasColor() {
+        return this.sodium$getColorIndex() != -1;
     }
 
-    default int calculateNormal() {
-        final float x0 = this.getX(0);
-        final float y0 = this.getY(0);
-        final float z0 = this.getZ(0);
+    default int sodium$calculateNormal() {
+        final float x0 = this.sodium$getX(0);
+        final float y0 = this.sodium$getY(0);
+        final float z0 = this.sodium$getZ(0);
 
-        final float x1 = this.getX(1);
-        final float y1 = this.getY(1);
-        final float z1 = this.getZ(1);
+        final float x1 = this.sodium$getX(1);
+        final float y1 = this.sodium$getY(1);
+        final float z1 = this.sodium$getZ(1);
 
-        final float x2 = this.getX(2);
-        final float y2 = this.getY(2);
-        final float z2 = this.getZ(2);
+        final float x2 = this.sodium$getX(2);
+        final float y2 = this.sodium$getY(2);
+        final float z2 = this.sodium$getZ(2);
 
-        final float x3 = this.getX(3);
-        final float y3 = this.getY(3);
-        final float z3 = this.getZ(3);
+        final float x3 = this.sodium$getX(3);
+        final float y3 = this.sodium$getY(3);
+        final float z3 = this.sodium$getZ(3);
 
         final float dx0 = x2 - x0;
         final float dy0 = y2 - y0;
@@ -122,9 +122,9 @@ public interface ModelQuadView {
      * @param i The vertex index.
      * @return the per-vertex normal if it is set, otherwise the face normal.
      */
-    default int getAccurateNormal(int i) {
-        int normal = this.getVertexNormal(i);
+    default int sodium$getAccurateNormal(int i) {
+        int normal = this.sodium$getVertexNormal(i);
 
-        return normal == 0 ? this.getFaceNormal() : normal;
+        return normal == 0 ? this.sodium$getFaceNormal() : normal;
     }
 }

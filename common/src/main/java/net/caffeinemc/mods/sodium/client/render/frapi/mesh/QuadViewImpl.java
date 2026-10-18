@@ -283,67 +283,67 @@ public class QuadViewImpl implements QuadView, ModelQuadView {
     // ModelQuadView method implementations below
 
     @Override
-    public float getX(int idx) {
+    public float sodium$getX(int idx) {
         return this.x(idx);
     }
 
     @Override
-    public float getY(int idx) {
+    public float sodium$getY(int idx) {
         return this.y(idx);
     }
 
     @Override
-    public float getZ(int idx) {
+    public float sodium$getZ(int idx) {
         return this.z(idx);
     }
 
     @Override
-    public int getColor(int idx) {
+    public int sodium$getColor(int idx) {
         return this.color(idx);
     }
 
     @Override
-    public float getTexU(int idx) {
+    public float sodium$getTexU(int idx) {
         return this.u(idx);
     }
 
     @Override
-    public float getTexV(int idx) {
+    public float sodium$getTexV(int idx) {
         return this.v(idx);
     }
 
     @Override
-    public int getVertexNormal(int idx) {
+    public int sodium$getVertexNormal(int idx) {
         return this.data[this.normalIndex(idx)];
     }
 
     @Override
-    public int getFaceNormal() {
+    public int sodium$getFaceNormal() {
         return this.packedFaceNormal();
     }
 
     @Override
-    public int getLight(int idx) {
+    public int sodium$getLight(int idx) {
         return this.lightmap(idx);
     }
 
     @Override
-    public int getColorIndex() {
+    public int sodium$getColorIndex() {
         return this.material().disableColorIndex() ? -1 : this.colorIndex();
     }
 
     @Override
-    public TextureAtlasSprite getSprite() {
+    public TextureAtlasSprite sodium$getSprite() {
         throw new UnsupportedOperationException("Not available for QuadViewImpl.");
     }
 
     @Override
-    public Direction getLightFace() {
+    public Direction sodium$getLightFace() {
         return this.lightFace();
     }
 
     @Override
-    public int getFlags() {
+    public int sodium$getFlags() {
         return this.geometryFlags();
     }
 }

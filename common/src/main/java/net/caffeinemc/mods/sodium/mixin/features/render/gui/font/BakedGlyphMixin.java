@@ -86,7 +86,7 @@ public class BakedGlyphMixin {
             write(ptr, matrix, x2 + w1, h1, 0.0F, color, this.u1, this.v0, light);
             ptr += GlyphVertex.STRIDE;
 
-            writer.push(stack, buffer, 4, GlyphVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 4, GlyphVertex.FORMAT);
         }
     }
 

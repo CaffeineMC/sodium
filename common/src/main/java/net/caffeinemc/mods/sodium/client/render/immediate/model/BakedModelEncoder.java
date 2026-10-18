@@ -34,31 +34,31 @@ public class BakedModelEncoder {
 
             for (int i = 0; i < 4; i++) {
                 // The position vector
-                float x = quad.getX(i);
-                float y = quad.getY(i);
-                float z = quad.getZ(i);
+                float x = quad.sodium$getX(i);
+                float y = quad.sodium$getY(i);
+                float z = quad.sodium$getZ(i);
 
-                int newLight = mergeLighting(quad.getLight(i), light);
+                int newLight = mergeLighting(quad.sodium$getLight(i), light);
 
                 int newColor = color;
 
                 if (colorize) {
-                    newColor = ColorMixer.mulComponentWise(newColor, quad.getColor(i));
+                    newColor = ColorMixer.mulComponentWise(newColor, quad.sodium$getColor(i));
                 }
 
                 // The packed transformed normal vector
-                int normal = MatrixHelper.transformNormal(matNormal, matrices.trustedNormals, quad.getAccurateNormal(i));
+                int normal = MatrixHelper.transformNormal(matNormal, matrices.trustedNormals, quad.sodium$getAccurateNormal(i));
 
                 // The transformed position vector
                 float xt = MatrixHelper.transformPositionX(matPosition, x, y, z);
                 float yt = MatrixHelper.transformPositionY(matPosition, x, y, z);
                 float zt = MatrixHelper.transformPositionZ(matPosition, x, y, z);
 
-                EntityVertex.write(ptr, xt, yt, zt, newColor, quad.getTexU(i), quad.getTexV(i), overlay, newLight, normal);
+                EntityVertex.write(ptr, xt, yt, zt, newColor, quad.sodium$getTexU(i), quad.sodium$getTexV(i), overlay, newLight, normal);
                 ptr += EntityVertex.STRIDE;
             }
 
-            writer.push(stack, buffer, 4, EntityVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 4, EntityVertex.FORMAT);
         }
     }
 
@@ -72,9 +72,9 @@ public class BakedModelEncoder {
 
             for (int i = 0; i < 4; i++) {
                 // The position vector
-                float x = quad.getX(i);
-                float y = quad.getY(i);
-                float z = quad.getZ(i);
+                float x = quad.sodium$getX(i);
+                float y = quad.sodium$getY(i);
+                float z = quad.sodium$getZ(i);
 
                 // The transformed position vector
                 float xt = MatrixHelper.transformPositionX(matPosition, x, y, z);
@@ -86,12 +86,12 @@ public class BakedModelEncoder {
                 float fB;
                 float fA;
 
-                var normal = MatrixHelper.transformNormal(matNormal, matrices.trustedNormals, quad.getAccurateNormal(i));
+                var normal = MatrixHelper.transformNormal(matNormal, matrices.trustedNormals, quad.sodium$getAccurateNormal(i));
 
                 float brightness = brightnessTable[i];
 
                 if (colorize) {
-                    int color = quad.getColor(i);
+                    int color = quad.sodium$getColor(i);
 
                     float oR = ColorU8.byteToNormalizedFloat(ColorABGR.unpackRed(color));
                     float oG = ColorU8.byteToNormalizedFloat(ColorABGR.unpackGreen(color));
@@ -116,11 +116,11 @@ public class BakedModelEncoder {
 
                 int color = ColorABGR.pack(fR, fG, fB, fA);
 
-                EntityVertex.write(ptr, xt, yt, zt, color, quad.getTexU(i), quad.getTexV(i), overlay, light[i], normal);
+                EntityVertex.write(ptr, xt, yt, zt, color, quad.sodium$getTexU(i), quad.sodium$getTexV(i), overlay, light[i], normal);
                 ptr += EntityVertex.STRIDE;
             }
 
-            writer.push(stack, buffer, 4, EntityVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 4, EntityVertex.FORMAT);
         }
     }
 

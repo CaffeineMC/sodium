@@ -33,19 +33,19 @@ public class VertexMultiConsumerMixin {
         }
 
         @Override
-        public boolean canUseIntrinsics() {
+        public boolean sodium$canUseIntrinsics() {
             return this.canUseIntrinsics;
         }
 
         @Override
-        public boolean canUseIntrinsics(VertexFormat format) {
+        public boolean sodium$canUseIntrinsics(VertexFormat format) {
             return this.canUseIntrinsics &&
                     VertexBufferWriter.tryOf(this.first, format) != null &&
                     VertexBufferWriter.tryOf(this.second, format) != null;
         }
 
         @Override
-        public void push(MemoryStack stack, long ptr, int count, VertexFormat format) {
+        public void sodium$push(MemoryStack stack, long ptr, int count, VertexFormat format) {
             VertexBufferWriter.copyInto(VertexBufferWriter.of(this.first), stack, ptr, count, format);
             VertexBufferWriter.copyInto(VertexBufferWriter.of(this.second), stack, ptr, count, format);
         }
@@ -77,12 +77,12 @@ public class VertexMultiConsumerMixin {
         }
 
         @Override
-        public boolean canUseIntrinsics() {
+        public boolean sodium$canUseIntrinsics() {
             return this.canUseIntrinsics;
         }
 
         @Override
-        public boolean canUseIntrinsics(VertexFormat format) {
+        public boolean sodium$canUseIntrinsics(VertexFormat format) {
             if (!this.canUseIntrinsics) {
                 return false;
             }
@@ -97,7 +97,7 @@ public class VertexMultiConsumerMixin {
         }
 
         @Override
-        public void push(MemoryStack stack, long ptr, int count, VertexFormat format) {
+        public void sodium$push(MemoryStack stack, long ptr, int count, VertexFormat format) {
             for (var delegate : this.delegates) {
                 VertexBufferWriter.copyInto(VertexBufferWriter.of(delegate), stack, ptr, count, format);
             }

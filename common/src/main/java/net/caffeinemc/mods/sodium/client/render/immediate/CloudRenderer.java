@@ -346,7 +346,7 @@ public class CloudRenderer {
                 ptr = writeVertex(ptr, x1, 0.0f, z0, color);
             }
 
-            writer.push(stack, vertexBuffer, 4, ColorVertex.FORMAT);
+            writer.sodium$push(stack, vertexBuffer, 4, ColorVertex.FORMAT);
         }
     }
 
@@ -429,7 +429,7 @@ public class CloudRenderer {
                 }
             }
 
-            writer.push(stack, vertexBuffer, vertexCount, ColorVertex.FORMAT);
+            writer.sodium$push(stack, vertexBuffer, vertexCount, ColorVertex.FORMAT);
         }
     }
 
@@ -496,7 +496,7 @@ public class CloudRenderer {
                 ptr = writeVertex(ptr, x1, y0, z1, vertexColor);
             }
 
-            writer.push(stack, vertexBuffer, 6 * 4, ColorVertex.FORMAT);
+            writer.sodium$push(stack, vertexBuffer, 6 * 4, ColorVertex.FORMAT);
         }
     }
 

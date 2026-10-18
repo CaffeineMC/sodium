@@ -54,7 +54,7 @@ public abstract class BufferBuilderMixin implements VertexBufferWriter, BufferBu
     }
 
     @Override
-    public void push(MemoryStack stack, long src, int count, VertexFormat format) {
+    public void sodium$push(MemoryStack stack, long src, int count, VertexFormat format) {
         var length = count * this.vertexSize;
 
         // The buffer may change in the even, so we need to make sure that the

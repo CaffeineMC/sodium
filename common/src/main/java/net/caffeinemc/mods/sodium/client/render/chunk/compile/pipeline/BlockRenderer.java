@@ -208,7 +208,7 @@ public class BlockRenderer extends AbstractBlockRenderContext {
         // collect all translucent quads into the translucency sorting system if enabled,
         // and discard the quad if it's invalid (i.e. not visible)
         if (pass.isTranslucent() && this.collector != null &&
-                this.collector.appendQuad(vertices, normalFace, quad.getFaceNormal())) {
+                this.collector.appendQuad(vertices, normalFace, quad.sodium$getFaceNormal())) {
             return;
         }
 

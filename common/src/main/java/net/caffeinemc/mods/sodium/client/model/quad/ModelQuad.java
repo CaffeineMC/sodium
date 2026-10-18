@@ -84,67 +84,67 @@ public class ModelQuad implements ModelQuadViewMutable {
     }
 
     @Override
-    public int getColorIndex() {
+    public int sodium$getColorIndex() {
         return this.colorIdx;
     }
 
     @Override
-    public float getX(int idx) {
+    public float sodium$getX(int idx) {
         return Float.intBitsToFloat(this.data[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX]);
     }
 
     @Override
-    public float getY(int idx) {
+    public float sodium$getY(int idx) {
         return Float.intBitsToFloat(this.data[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX + 1]);
     }
 
     @Override
-    public float getZ(int idx) {
+    public float sodium$getZ(int idx) {
         return Float.intBitsToFloat(this.data[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX + 2]);
     }
 
     @Override
-    public int getColor(int idx) {
+    public int sodium$getColor(int idx) {
         return this.data[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.COLOR_INDEX];
     }
 
     @Override
-    public float getTexU(int idx) {
+    public float sodium$getTexU(int idx) {
         return Float.intBitsToFloat(this.data[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.TEXTURE_INDEX]);
     }
 
     @Override
-    public float getTexV(int idx) {
+    public float sodium$getTexV(int idx) {
         return Float.intBitsToFloat(this.data[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.TEXTURE_INDEX + 1]);
     }
 
     @Override
-    public int getVertexNormal(int idx) {
+    public int sodium$getVertexNormal(int idx) {
         return this.data[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.NORMAL_INDEX];
     }
 
     @Override
-    public int getFaceNormal() {
+    public int sodium$getFaceNormal() {
         return this.faceNormal;
     }
 
     @Override
-    public int getLight(int idx) {
+    public int sodium$getLight(int idx) {
         return this.data[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.LIGHT_INDEX];
     }
 
     @Override
-    public int getFlags() {
+    public int sodium$getFlags() {
         return this.flags;
     }
 
     @Override
-    public TextureAtlasSprite getSprite() {
+    public TextureAtlasSprite sodium$getSprite() {
         return this.sprite;
     }
 
     @Override
-    public Direction getLightFace() {
+    public Direction sodium$getLightFace() {
         return this.direction;
     }
 }

@@ -65,7 +65,7 @@ public class MessageBox {
             final long hWndOwner;
 
             if (window != null) {
-                hWndOwner = window.getWin32Handle();
+                hWndOwner = window.sodium$getWin32Handle();
             } else {
                 hWndOwner = MemoryUtil.NULL;
             }

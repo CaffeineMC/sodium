@@ -34,7 +34,7 @@ public class WindowMixin implements NativeWindowHandle {
     }
 
     @Override
-    public long getWin32Handle() {
+    public long sodium$getWin32Handle() {
         return GLFWNativeWin32.glfwGetWin32Window(this.window);
     }
 }

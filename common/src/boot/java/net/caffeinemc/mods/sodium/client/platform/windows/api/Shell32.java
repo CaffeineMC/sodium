@@ -27,7 +27,7 @@ public class Shell32 {
             stack.nUTF16(url, true);
             var lpFile = stack.getPointerAddress();
 
-            nShellExecuteW(window != null ? window.getWin32Handle() : NULL,
+            nShellExecuteW(window != null ? window.sodium$getWin32Handle() : NULL,
                     lpOperation,
                     lpFile,
                     NULL,

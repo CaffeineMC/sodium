@@ -31,11 +31,11 @@ import java.util.List;
 @Mixin(ModelBlockRenderer.class)
 public class ModelBlockRendererMixin {
     @Unique
-    private final RandomSource random = new SingleThreadedRandomSource(42L);
+    private final RandomSource sodium$random = new SingleThreadedRandomSource(42L);
 
     @Unique
     @SuppressWarnings("ForLoopReplaceableByForEach")
-    private static void renderQuads(PoseStack.Pose matrices, VertexBufferWriter writer, int defaultColor, List<BakedQuad> quads, int light, int overlay) {
+    private static void sodium$renderQuads(PoseStack.Pose matrices, VertexBufferWriter writer, int defaultColor, List<BakedQuad> quads, int light, int overlay) {
         for (int i = 0; i < quads.size(); i++) {
             BakedQuad bakedQuad = quads.get(i);
 
@@ -45,12 +45,12 @@ public class ModelBlockRendererMixin {
 
             BakedQuadView quad = (BakedQuadView) bakedQuad;
 
-            int color = quad.hasColor() ? defaultColor : 0xFFFFFFFF;
+            int color = quad.sodium$hasColor() ? defaultColor : 0xFFFFFFFF;
 
             BakedModelEncoder.writeQuadVertices(writer, matrices, quad, color, light, overlay, false);
 
-            if (quad.getSprite() != null) {
-                SpriteUtil.INSTANCE.markSpriteActive(quad.getSprite());
+            if (quad.sodium$getSprite() != null) {
+                SpriteUtil.INSTANCE.markSpriteActive(quad.sodium$getSprite());
             }
         }
     }
@@ -68,7 +68,7 @@ public class ModelBlockRendererMixin {
 
         ci.cancel();
 
-        RandomSource random = this.random;
+        RandomSource random = this.sodium$random;
 
         // Clamp color ranges
         red = Mth.clamp(red, 0.0F, 1.0F);
@@ -82,7 +82,7 @@ public class ModelBlockRendererMixin {
             List<BakedQuad> quads = bakedModel.getQuads(blockState, direction, random, modelData, renderType);
 
             if (!quads.isEmpty()) {
-                renderQuads(entry, writer, defaultColor, quads, light, overlay);
+                sodium$renderQuads(entry, writer, defaultColor, quads, light, overlay);
             }
         }
 
@@ -90,7 +90,7 @@ public class ModelBlockRendererMixin {
         List<BakedQuad> quads = bakedModel.getQuads(blockState, null, random, modelData, renderType);
 
         if (!quads.isEmpty()) {
-            renderQuads(entry, writer, defaultColor, quads, light, overlay);
+            sodium$renderQuads(entry, writer, defaultColor, quads, light, overlay);
         }
     }
 }
