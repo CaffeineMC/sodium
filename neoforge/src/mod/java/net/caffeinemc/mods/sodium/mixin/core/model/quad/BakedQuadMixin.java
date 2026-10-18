@@ -37,105 +37,105 @@ public abstract class BakedQuadMixin implements BakedQuadView {
     public abstract boolean hasAmbientOcclusion();
 
     @Unique
-    private int flags;
+    private int sodium$flags;
 
     @Unique
-    private int normal = -1;
+    private int sodium$normal = -1;
 
     @Unique
-    private ModelQuadFacing normalFace = null;
+    private ModelQuadFacing sodium$normalFace = null;
 
     @Inject(method = {
             "<init>([IILnet/minecraft/core/Direction;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;ZZ)V"
     }, at = @At("RETURN"))
     private void init(int[] is, int i, Direction face, TextureAtlasSprite arg2, boolean bl, boolean hasAmbientOcclusion, CallbackInfo ci) {
-        this.flags = ModelQuadFlags.getQuadFlags(this, face);
+        this.sodium$flags = ModelQuadFlags.getQuadFlags(this, face);
     }
 
     @Override
-    public float getX(int idx) {
+    public float sodium$getX(int idx) {
         return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX]);
     }
 
     @Override
-    public float getY(int idx) {
+    public float sodium$getY(int idx) {
         return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX + 1]);
     }
 
     @Override
-    public float getZ(int idx) {
+    public float sodium$getZ(int idx) {
         return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.POSITION_INDEX + 2]);
     }
 
     @Override
-    public int getColor(int idx) {
+    public int sodium$getColor(int idx) {
         return this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.COLOR_INDEX];
     }
 
     @Override
-    public int getVertexNormal(int idx) {
+    public int sodium$getVertexNormal(int idx) {
         return this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.NORMAL_INDEX];
     }
 
     @Override
-    public int getLight(int idx) {
+    public int sodium$getLight(int idx) {
         return this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.LIGHT_INDEX];
     }
 
     @Shadow
-    public abstract TextureAtlasSprite getSprite();
+    public abstract TextureAtlasSprite sodium$getSprite();
 
     @Override
-    public float getTexU(int idx) {
+    public float sodium$getTexU(int idx) {
         return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.TEXTURE_INDEX]);
     }
 
     @Override
-    public float getTexV(int idx) {
+    public float sodium$getTexV(int idx) {
         return Float.intBitsToFloat(this.vertices[ModelQuadUtil.vertexOffset(idx) + ModelQuadUtil.TEXTURE_INDEX + 1]);
     }
 
     @Override
-    public int getFlags() {
-        return this.flags;
+    public int sodium$getFlags() {
+        return this.sodium$flags;
     }
 
     @Override
-    public int getColorIndex() {
+    public int sodium$getColorIndex() {
         return this.tintIndex;
     }
 
     @Override
-    public ModelQuadFacing getNormalFace() {
-        if (this.normalFace == null) {
-            this.normalFace = ModelQuadFacing.fromPackedNormal(this.getFaceNormal());
+    public ModelQuadFacing sodium$getNormalFace() {
+        if (this.sodium$normalFace == null) {
+            this.sodium$normalFace = ModelQuadFacing.fromPackedNormal(this.sodium$getFaceNormal());
         }
 
-        return this.normalFace;
+        return this.sodium$normalFace;
     }
 
     @Override
-    public int getFaceNormal() {
-        if (this.normal == -1) {
-            this.normal = this.calculateNormal();
+    public int sodium$getFaceNormal() {
+        if (this.sodium$normal == -1) {
+            this.sodium$normal = this.sodium$calculateNormal();
         }
 
-        return this.normal;
+        return this.sodium$normal;
     }
 
     @Override
-    public Direction getLightFace() {
+    public Direction sodium$getLightFace() {
         return this.direction;
     }
 
     @Override
     @Unique(silent = true) // The target class has a function with the same name in a remapped environment
-    public boolean hasShade() {
+    public boolean sodium$hasShade() {
         return this.shade;
     }
 
     @Override
-    public boolean hasAO() {
+    public boolean sodium$hasAO() {
         return this.hasAmbientOcclusion();
     }
 }

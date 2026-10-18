@@ -77,7 +77,7 @@ public class FabricBlockAccess implements PlatformBlockAccess {
 
     @Override
     public float getNormalVectorShade(ModelQuadView quad, BlockAndTintGetter level, boolean shade) {
-        return this.normalShade(level, NormI8.unpackX(quad.getFaceNormal()), NormI8.unpackY(quad.getFaceNormal()), NormI8.unpackZ(quad.getFaceNormal()), shade);
+        return this.normalShade(level, NormI8.unpackX(quad.sodium$getFaceNormal()), NormI8.unpackY(quad.sodium$getFaceNormal()), NormI8.unpackZ(quad.sodium$getFaceNormal()), shade);
     }
 
     @Override

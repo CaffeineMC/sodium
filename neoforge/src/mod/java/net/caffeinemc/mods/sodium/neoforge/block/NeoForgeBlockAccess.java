@@ -41,7 +41,7 @@ public class NeoForgeBlockAccess implements PlatformBlockAccess {
 
     @Override
     public float getNormalVectorShade(ModelQuadView quad, BlockAndTintGetter level, boolean shade) {
-        return level.getShade(NormI8.unpackX(quad.getFaceNormal()), NormI8.unpackY(quad.getFaceNormal()), NormI8.unpackZ(quad.getFaceNormal()), shade);
+        return level.getShade(NormI8.unpackX(quad.sodium$getFaceNormal()), NormI8.unpackY(quad.sodium$getFaceNormal()), NormI8.unpackZ(quad.sodium$getFaceNormal()), shade);
     }
 
     @Override

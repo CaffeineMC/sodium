@@ -43,12 +43,12 @@ public class ModelBlockRendererMixin {
 
             BakedQuadView quad = (BakedQuadView) bakedQuad;
 
-            int color = quad.hasColor() ? defaultColor : 0xFFFFFFFF;
+            int color = quad.sodium$hasColor() ? defaultColor : 0xFFFFFFFF;
 
             BakedModelEncoder.writeQuadVertices(writer, matrices, quad, color, light, overlay, false);
 
-            if (quad.getSprite() != null) {
-                SpriteUtil.INSTANCE.markSpriteActive(quad.getSprite());
+            if (quad.sodium$getSprite() != null) {
+                SpriteUtil.INSTANCE.markSpriteActive(quad.sodium$getSprite());
             }
         }
     }

@@ -33,22 +33,22 @@ public abstract class EntityOutlineGeneratorMixin implements VertexBufferWriter 
     }
 
     @Override
-    public boolean canUseIntrinsics() {
+    public boolean sodium$canUseIntrinsics() {
         return this.canUseIntrinsics;
     }
 
     @Override
-    public boolean canUseIntrinsics(VertexFormat format) {
+    public boolean sodium$canUseIntrinsics(VertexFormat format) {
         return this.canUseIntrinsics && VertexBufferWriter.tryOf(this.delegate, format) != null;
     }
 
     @Override
-    public void push(MemoryStack stack, long ptr, int count, VertexFormat format) {
+    public void sodium$push(MemoryStack stack, long ptr, int count, VertexFormat format) {
         transform(ptr, count, format,
                 this.color);
 
         VertexBufferWriter.of(this.delegate)
-                .push(stack, ptr, count, format);
+                .sodium$push(stack, ptr, count, format);
     }
 
     /**

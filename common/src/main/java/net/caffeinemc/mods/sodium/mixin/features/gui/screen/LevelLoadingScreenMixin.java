@@ -135,7 +135,7 @@ public class LevelLoadingScreenMixin {
             ColorVertex.put(ptr, matrix, x1, y1, 0, color);
             ptr += ColorVertex.STRIDE;
 
-            writer.push(stack, buffer, 4, ColorVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 4, ColorVertex.FORMAT);
         }
     }
 }

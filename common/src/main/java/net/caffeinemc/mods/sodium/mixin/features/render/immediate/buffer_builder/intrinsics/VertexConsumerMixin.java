@@ -39,8 +39,8 @@ public interface VertexConsumerMixin {
             int color = ColorABGR.pack(red, green, blue, alpha);
             BakedModelEncoder.writeQuadVertices(writer, pose, quad, color, packedLight, packedOverlay, false);
 
-            if (quad.getSprite() != null) {
-                SpriteUtil.INSTANCE.markSpriteActive(quad.getSprite());
+            if (quad.sodium$getSprite() != null) {
+                SpriteUtil.INSTANCE.markSpriteActive(quad.sodium$getSprite());
             }
         } else {
             original.call(pose, bakedQuad, red, green, blue, alpha, packedLight, packedOverlay);
@@ -70,8 +70,8 @@ public interface VertexConsumerMixin {
 
             BakedModelEncoder.writeQuadVertices(writer, pose, quad, red, green, blue, alpha, brightness, readAlpha, lightmap, packedOverlay);
 
-            if (quad.getSprite() != null) {
-                SpriteUtil.INSTANCE.markSpriteActive(quad.getSprite());
+            if (quad.sodium$getSprite() != null) {
+                SpriteUtil.INSTANCE.markSpriteActive(quad.sodium$getSprite());
             }
         } else {
             original.call(pose, bakedQuad, brightness, red, green, blue, alpha, lightmap, packedOverlay, readAlpha);

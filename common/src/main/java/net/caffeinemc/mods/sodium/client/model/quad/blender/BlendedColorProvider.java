@@ -25,9 +25,9 @@ public abstract class BlendedColorProvider<T> implements ColorProvider<T> {
     private int getVertexColor(LevelSlice slice, BlockPos pos, BlockPos.MutableBlockPos scratchPos, ModelQuadView quad, T state, int vertexIndex) {
         // The vertex position
         // We add a half-texel offset since we are sampling points within a color texture
-        final float x = quad.getX(vertexIndex) - 0.5f;
-        final float y = quad.getY(vertexIndex) - 0.5f;
-        final float z = quad.getZ(vertexIndex) - 0.5f;
+        final float x = quad.sodium$getX(vertexIndex) - 0.5f;
+        final float y = quad.sodium$getY(vertexIndex) - 0.5f;
+        final float z = quad.sodium$getZ(vertexIndex) - 0.5f;
 
         // Integer component of vertex position
         final int intX = Mth.floor(x);

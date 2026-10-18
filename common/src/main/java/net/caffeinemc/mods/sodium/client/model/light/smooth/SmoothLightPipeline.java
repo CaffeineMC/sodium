@@ -69,7 +69,7 @@ public class SmoothLightPipeline implements LightPipeline {
     public void calculate(ModelQuadView quad, BlockPos pos, QuadLightData out, Direction cullFace, Direction lightFace, boolean shade, boolean enhanced) {
         this.updateCachedData(pos.asLong());
 
-        int flags = quad.getFlags();
+        int flags = quad.sodium$getFlags();
 
         final AoNeighborInfo neighborInfo = AoNeighborInfo.get(lightFace);
 
@@ -112,9 +112,9 @@ public class SmoothLightPipeline implements LightPipeline {
     private void applyAlignedPartialFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out, boolean shade) {
         for (int i = 0; i < 4; i++) {
             // Clamp the vertex positions to the block's boundaries to prevent weird errors in lighting
-            float cx = clamp(quad.getX(i));
-            float cy = clamp(quad.getY(i));
-            float cz = clamp(quad.getZ(i));
+            float cx = clamp(quad.sodium$getX(i));
+            float cy = clamp(quad.sodium$getY(i));
+            float cz = clamp(quad.sodium$getZ(i));
 
             float[] weights = this.weights;
             neighborInfo.calculateCornerWeights(cx, cy, cz, weights);
@@ -134,9 +134,9 @@ public class SmoothLightPipeline implements LightPipeline {
     private void applyParallelFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out, boolean shade) {
         for (int i = 0; i < 4; i++) {
             // Clamp the vertex positions to the block's boundaries to prevent weird errors in lighting
-            float cx = clamp(quad.getX(i));
-            float cy = clamp(quad.getY(i));
-            float cz = clamp(quad.getZ(i));
+            float cx = clamp(quad.sodium$getX(i));
+            float cy = clamp(quad.sodium$getY(i));
+            float cz = clamp(quad.sodium$getZ(i));
 
             float[] weights = this.weights;
             neighborInfo.calculateCornerWeights(cx, cy, cz, weights);
@@ -163,9 +163,9 @@ public class SmoothLightPipeline implements LightPipeline {
     private void applyNonParallelFace(AoNeighborInfo neighborInfo, ModelQuadView quad, BlockPos pos, Direction dir, QuadLightData out, boolean shade) {
         for (int i = 0; i < 4; i++) {
             // Clamp the vertex positions to the block's boundaries to prevent weird errors in lighting
-            float cx = clamp(quad.getX(i));
-            float cy = clamp(quad.getY(i));
-            float cz = clamp(quad.getZ(i));
+            float cx = clamp(quad.sodium$getX(i));
+            float cy = clamp(quad.sodium$getY(i));
+            float cz = clamp(quad.sodium$getZ(i));
 
             float[] weights = this.weights;
             neighborInfo.calculateCornerWeights(cx, cy, cz, weights);
@@ -229,7 +229,7 @@ public class SmoothLightPipeline implements LightPipeline {
     private final AoFaceData tmpFace = new AoFaceData();
 
     private AoFaceData gatherInsetFace(ModelQuadView quad, BlockPos blockPos, int vertexIndex, Direction lightFace, boolean shade) {
-        final float w1 = AoNeighborInfo.get(lightFace).getDepth(quad.getX(vertexIndex), quad.getY(vertexIndex), quad.getZ(vertexIndex));
+        final float w1 = AoNeighborInfo.get(lightFace).getDepth(quad.sodium$getX(vertexIndex), quad.sodium$getY(vertexIndex), quad.sodium$getZ(vertexIndex));
 
         if (Mth.equal(w1, 0)) {
             return this.getCachedFaceData(blockPos, lightFace, true, shade);
@@ -253,7 +253,7 @@ public class SmoothLightPipeline implements LightPipeline {
 
         for (int i = 0; i < 4; i++) {
             // TODO: Avoid this if the accurate normal is the face normal
-            Vector3f normal = NormI8.unpack(quad.getAccurateNormal(i), this.vertexNormal);
+            Vector3f normal = NormI8.unpack(quad.sodium$getAccurateNormal(i), this.vertexNormal);
             float ao = 0, sky = 0, block = 0, maxAo = 0;
             float maxSky = 0, maxBlock = 0;
 
@@ -262,7 +262,7 @@ public class SmoothLightPipeline implements LightPipeline {
             if (!Mth.equal(0f, x)) {
                 final Direction face = x > 0 ? Direction.EAST : Direction.WEST;
                 final AoFaceData fd = this.gatherInsetFace(quad, blockPos, i, face, shade);
-                AoNeighborInfo.get(face).calculateCornerWeights(quad.getX(i), quad.getY(i), quad.getZ(i), w);
+                AoNeighborInfo.get(face).calculateCornerWeights(quad.sodium$getX(i), quad.sodium$getY(i), quad.sodium$getZ(i), w);
                 final float n = x * x;
                 final float a = fd.getBlendedShade(w) * this.getAmbientBrightness(face, shade);
                 final float s = fd.getBlendedSkyLight(w);
@@ -280,7 +280,7 @@ public class SmoothLightPipeline implements LightPipeline {
             if (!Mth.equal(0f, y)) {
                 final Direction face = y > 0 ? Direction.UP : Direction.DOWN;
                 final AoFaceData fd = this.gatherInsetFace(quad, blockPos, i, face, shade);
-                AoNeighborInfo.get(face).calculateCornerWeights(quad.getX(i), quad.getY(i), quad.getZ(i), w);
+                AoNeighborInfo.get(face).calculateCornerWeights(quad.sodium$getX(i), quad.sodium$getY(i), quad.sodium$getZ(i), w);
                 final float n = y * y;
                 final float a = fd.getBlendedShade(w) * this.getAmbientBrightness(face, shade);
                 final float s = fd.getBlendedSkyLight(w);
@@ -298,7 +298,7 @@ public class SmoothLightPipeline implements LightPipeline {
             if (!Mth.equal(0f, z)) {
                 final Direction face = z > 0 ? Direction.SOUTH : Direction.NORTH;
                 final AoFaceData fd = this.gatherInsetFace(quad, blockPos, i, face, shade);
-                AoNeighborInfo.get(face).calculateCornerWeights(quad.getX(i), quad.getY(i), quad.getZ(i), w);
+                AoNeighborInfo.get(face).calculateCornerWeights(quad.sodium$getX(i), quad.sodium$getY(i), quad.sodium$getZ(i), w);
                 final float n = z * z;
                 final float a = fd.getBlendedShade(w) * this.getAmbientBrightness(face, shade);
                 final float s = fd.getBlendedSkyLight(w);

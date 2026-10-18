@@ -29,21 +29,21 @@ import java.util.function.Predicate;
 
 @Mixin(MultiPartBakedModel.class)
 public class MultiPartBakedModelMixin {
-    @Unique
-    private final Map<BlockState, BakedModel[]> stateCacheFast = new Reference2ReferenceOpenHashMap<>();
-    @Unique
-    private final StampedLock lock = new StampedLock();
-
     @Shadow
     @Final
     private List<Pair<Predicate<BlockState>, BakedModel>> selectors;
+    
+    @Unique
+    private final Map<BlockState, BakedModel[]> sodium$stateCacheFast = new Reference2ReferenceOpenHashMap<>();
+    @Unique
+    private final StampedLock sodium$lock = new StampedLock();
 
     @Unique
-    private boolean canSkipRenderTypeCheck;
+    private boolean sodium$canSkipRenderTypeCheck;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void storeClassInfo(List<Pair<Predicate<BlockState>, BakedModel>> list, CallbackInfo ci) {
-        this.canSkipRenderTypeCheck = this.selectors.stream().allMatch(model -> (model.getRight() instanceof SimpleBakedModel simpleModel && ((SimpleBakedModelAccessor) simpleModel).getBlockRenderTypes() == null));
+        this.sodium$canSkipRenderTypeCheck = this.selectors.stream().allMatch(model -> (model.getRight() instanceof SimpleBakedModel simpleModel && ((SimpleBakedModelAccessor) simpleModel).getBlockRenderTypes() == null));
     }
 
     /**
@@ -58,15 +58,15 @@ public class MultiPartBakedModelMixin {
 
         BakedModel[] models;
 
-        long readStamp = this.lock.readLock();
+        long readStamp = this.sodium$lock.readLock();
         try {
-            models = this.stateCacheFast.get(state);
+            models = this.sodium$stateCacheFast.get(state);
         } finally {
-            this.lock.unlockRead(readStamp);
+            this.sodium$lock.unlockRead(readStamp);
         }
 
         if (models == null) {
-            long writeStamp = this.lock.writeLock();
+            long writeStamp = this.sodium$lock.writeLock();
             try {
                 List<BakedModel> modelList = new ArrayList<>(this.selectors.size());
 
@@ -77,9 +77,9 @@ public class MultiPartBakedModelMixin {
                 }
 
                 models = modelList.toArray(BakedModel[]::new);
-                this.stateCacheFast.put(state, models);
+                this.sodium$stateCacheFast.put(state, models);
             } finally {
-                this.lock.unlockWrite(writeStamp);
+                this.sodium$lock.unlockWrite(writeStamp);
             }
         }
 
@@ -89,7 +89,7 @@ public class MultiPartBakedModelMixin {
         for (BakedModel model : models) {
             random.setSeed(seed);
 
-            if (this.canSkipRenderTypeCheck || renderType == null || model.getRenderTypes(state, random, modelData).contains(renderType)) {
+            if (this.sodium$canSkipRenderTypeCheck || renderType == null || model.getRenderTypes(state, random, modelData).contains(renderType)) {
                 quads.addAll(model.getQuads(state, direction, random, MultipartModelData.resolve(modelData, model), renderType));
             }
         }
@@ -105,21 +105,21 @@ public class MultiPartBakedModelMixin {
     public ChunkRenderTypeSet getRenderTypes(@NotNull BlockState state, @NotNull RandomSource random, @NotNull ModelData data) {
         long seed = random.nextLong();
 
-        if (this.canSkipRenderTypeCheck) {
+        if (this.sodium$canSkipRenderTypeCheck) {
             return ItemBlockRenderTypes.getRenderLayers(state);
         }
 
         BakedModel[] models;
 
-        long readStamp = this.lock.readLock();
+        long readStamp = this.sodium$lock.readLock();
         try {
-            models = this.stateCacheFast.get(state);
+            models = this.sodium$stateCacheFast.get(state);
         } finally {
-            this.lock.unlockRead(readStamp);
+            this.sodium$lock.unlockRead(readStamp);
         }
 
         if (models == null) {
-            long writeStamp = this.lock.writeLock();
+            long writeStamp = this.sodium$lock.writeLock();
             try {
                 List<BakedModel> modelList = new ArrayList<>(this.selectors.size());
 
@@ -130,9 +130,9 @@ public class MultiPartBakedModelMixin {
                 }
 
                 models = modelList.toArray(BakedModel[]::new);
-                this.stateCacheFast.put(state, models);
+                this.sodium$stateCacheFast.put(state, models);
             } finally {
-                this.lock.unlockWrite(writeStamp);
+                this.sodium$lock.unlockWrite(writeStamp);
             }
         }
 

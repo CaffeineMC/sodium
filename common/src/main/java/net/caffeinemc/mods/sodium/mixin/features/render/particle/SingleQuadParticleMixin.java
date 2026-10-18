@@ -154,7 +154,7 @@ public abstract class SingleQuadParticleMixin extends Particle {
             ParticleVertex.put(ptr, left.x - up.x + x, left.y - up.y + y, left.z - up.z + z, minU, maxV, color, light);
             ptr += ParticleVertex.STRIDE;
 
-            writer.push(stack, buffer, 4, ParticleVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 4, ParticleVertex.FORMAT);
         }
     }
 }

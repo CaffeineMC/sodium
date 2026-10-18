@@ -60,7 +60,7 @@ public class QuadEncoder {
                 ptr += EntityVertex.STRIDE;
             }
 
-            writer.push(stack, buffer, 4, EntityVertex.FORMAT);
+            writer.sodium$push(stack, buffer, 4, EntityVertex.FORMAT);
         }
     }
 
