@@ -45,7 +45,7 @@ void main() {
 
     // Transform the chunk-local vertex position into world model space
     vec3 translation = u_RegionOffset + _get_draw_translation(_draw_id);
-    vec3 position = _vert_position + translation;
+    vec3 position = (_vert_position + translation) - u_CameraOffset;
 
 #ifdef USE_FOG
     v_FragDistance = getFragDistance(position);
