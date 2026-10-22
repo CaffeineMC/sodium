@@ -43,8 +43,8 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         this.sharedIndexBuffer = new SharedQuadIndexBuffer(SharedQuadIndexBuffer.IndexFormat.INTEGER);
     }
 
-    protected static float getCameraTranslation(int chunkBlockPos, int cameraBlockPos, float cameraPos) {
-        return (chunkBlockPos - cameraBlockPos) - cameraPos;
+    protected static float getCameraTranslation(int chunkBlockPos, int cameraBlockPos) {
+        return chunkBlockPos - cameraBlockPos;
     }
 
     private final boolean[] shouldDraw = new boolean[DefaultTerrainRenderPasses.ALL.length];
@@ -162,9 +162,9 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
 
             pass.setVertexBuffer(0, resources.getGeometryBuffer().slice());
 
-            float x = getCameraTranslation(region.getOriginX(), camera.intX, camera.fracX);
-            float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
-            float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
+            float x = getCameraTranslation(region.getOriginX(), camera.intX);
+            float y = getCameraTranslation(region.getOriginY(), camera.intY);
+            float z = getCameraTranslation(region.getOriginZ(), camera.intZ);
 
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 ByteBuffer memory = stack.malloc(PUSH_CONSTANT_RANGE);
