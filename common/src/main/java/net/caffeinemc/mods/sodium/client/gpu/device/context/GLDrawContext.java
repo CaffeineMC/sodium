@@ -28,9 +28,9 @@ public class GLDrawContext extends DrawContext {
 
     @Override
     public void updateData(RenderRegion region, CameraTransform camera) {
-        float x = getCameraTranslation(region.getOriginX(), camera.intX, camera.fracX);
-        float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
-        float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
+        float x = getCameraTranslation(region.getOriginX(), camera.intX);
+        float y = getCameraTranslation(region.getOriginY(), camera.intY);
+        float z = getCameraTranslation(region.getOriginZ(), camera.intZ);
 
         GL46C.glUniform3f(this.regionUniform, x, y, z);
         GL46C.glUniform1i(this.timeUniform, Math.toIntExact(System.currentTimeMillis() - region.getCreationTime()));

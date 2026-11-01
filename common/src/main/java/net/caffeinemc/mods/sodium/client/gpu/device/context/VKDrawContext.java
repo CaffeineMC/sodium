@@ -17,9 +17,9 @@ public abstract class VKDrawContext extends DrawContext {
 
     @Override
     public void updateData(RenderRegion region, CameraTransform camera) {
-        float x = getCameraTranslation(region.getOriginX(), camera.intX, camera.fracX);
-        float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
-        float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
+        float x = getCameraTranslation(region.getOriginX(), camera.intX);
+        float y = getCameraTranslation(region.getOriginY(), camera.intY);
+        float z = getCameraTranslation(region.getOriginZ(), camera.intZ);
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
             long memory = stack.nmalloc(PUSH_CONSTANT_RANGE);

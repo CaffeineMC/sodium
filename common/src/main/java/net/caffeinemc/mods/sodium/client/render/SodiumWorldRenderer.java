@@ -296,10 +296,11 @@ public class SodiumWorldRenderer {
     }
 
     public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters, GpuSampler terrainSampler) {
-        this.uniformBufferManager.update(matrices, fogParameters);
+        CameraTransform cameraTransform = new CameraTransform(x, y, z);
+        this.uniformBufferManager.update(matrices, fogParameters, cameraTransform);
 
         this.renderSectionManager.getChunkRenderer().render(matrices, this.renderSectionManager.getRenderLists(), pass,
-                new CameraTransform(x, y, z), fogParameters, this.useTranslucencySorting,
+                cameraTransform, fogParameters, this.useTranslucencySorting,
                 terrainSampler, this.uniformBufferManager.getUniformBuffer(), this.uniformBufferManager.getSectionTimeInfo());
     }
 

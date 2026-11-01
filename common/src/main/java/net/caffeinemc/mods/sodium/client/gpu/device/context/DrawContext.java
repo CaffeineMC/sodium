@@ -23,8 +23,8 @@ public abstract class DrawContext {
         throw new IllegalStateException("Unknown backend");
     }
 
-    protected static float getCameraTranslation(int chunkBlockPos, int cameraBlockPos, float cameraPos) {
-        return (chunkBlockPos - cameraBlockPos) - cameraPos;
+    protected static float getCameraTranslation(int chunkBlockPos, int cameraBlockPos) {
+        return chunkBlockPos - cameraBlockPos;
     }
 
     public RenderPass getPass() {
