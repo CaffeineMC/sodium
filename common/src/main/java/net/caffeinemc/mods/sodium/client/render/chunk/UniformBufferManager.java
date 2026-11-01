@@ -8,6 +8,7 @@ import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gpu.GPULimits;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl.CompactChunkVertex;
+import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.mixin.core.render.texture.TextureAtlasAccessor;
 import net.minecraft.client.Minecraft;
@@ -97,7 +98,7 @@ public class UniformBufferManager {
         this.uniformData = null;
     }
 
-    public void update(ChunkRenderMatrices matrices, FogParameters fogParameters) {
+    public void update(ChunkRenderMatrices matrices, FogParameters fogParameters, CameraTransform cameraTransform) {
         if (this.hasUpdatedThisFrame) {
             return;
         }
@@ -114,6 +115,7 @@ public class UniformBufferManager {
                 new Matrix4f(matrices.projection()),
                 new Matrix4f(matrices.modelView()),
                 fogParameters.red(), fogParameters.green(), fogParameters.blue(), fogParameters.alpha(),
+                cameraTransform.fracX, cameraTransform.fracY, cameraTransform.fracZ,
                 fogParameters.environmentalStart(), fogParameters.environmentalEnd(),
                 fogParameters.renderStart(), fogParameters.renderEnd(),
                 1.0f / textureAtlas.sodium$getWidth(), 1.0f / textureAtlas.sodium$getHeight(),
@@ -190,6 +192,9 @@ public class UniformBufferManager {
             float fogGreen,
             float fogBlue,
             float fogAlpha,
+            float cameraOffsetX,
+            float cameraOffsetY,
+            float cameraOffsetZ,
             float environmentalFogStart,
             float environmentalFogEnd,
             float renderFogStart,
@@ -207,6 +212,7 @@ public class UniformBufferManager {
                     .putMat4f(this.projection)
                     .putMat4f(this.modelView)
                     .putVec4(this.fogRed, this.fogGreen, this.fogBlue, this.fogAlpha)
+                    .putVec3(this.cameraOffsetX, this.cameraOffsetY, this.cameraOffsetZ)
                     .putVec2(this.environmentalFogStart, this.environmentalFogEnd)
                     .putVec2(this.renderFogStart, this.renderFogEnd)
                     .putVec2(this.textureAtlasWidthInverse, this.textureAtlasHeightInverse)

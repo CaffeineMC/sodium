@@ -35,9 +35,6 @@ public class CameraTransform {
     }
 
     private static float fractional(double value) {
-        float fullPrecision = (float) (value - integral(value));
-        float modifier = Math.copySign(PRECISION_MODIFIER, fullPrecision);
-
-        return  (fullPrecision + modifier) - modifier;
+        return (float) (value - integral(value));
     }
 }

@@ -3,6 +3,7 @@ layout(std140) uniform u_Globals {
     mat4 u_ModelViewMatrix;
 
     vec4 u_FogColor;
+    vec3 u_CameraOffset;
     vec2 u_EnvironmentFog;
     vec2 u_RenderFog;
 
