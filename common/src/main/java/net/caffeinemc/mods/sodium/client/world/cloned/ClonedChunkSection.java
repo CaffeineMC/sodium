@@ -163,7 +163,13 @@ public class ClonedChunkSection {
                                            "https://link.caffeinemc.net/help/sodium/mod-issue/entity-culling/gh-2985", t);
             } else {
                 throw new RuntimeException("Failed to iterate block entities! This is *very likely* the fault of " +
-                                           "another misbehaving mod, not Sodium. Please check your mods list.", t);
+                                       "another mod modifying the chunk's block entity map concurrently or after it has been freed. " +
+                                       "This is NOT a bug of Sodium and cannot be fixed by Sodium. " +
+                                       "To identify the culprit, use the CMESuckMyDuck mod: " +
+                                       "put CMESuckMyDuck-<version>.jar in your mods folder, and add -Dcme_suck_my_duck.file_max_entries=20000 " +
+                                       "-javaagent:mods/CMESuckMyDuck-<version>.jar=net/minecraft/world/level/chunk/ChunkAccess;blockEntities;Map;nonstatic " +
+                                       "to your JVM arguments, then relaunch and wait for the crash. " +
+                                       "CMESuckMyDuck.log will show which thread and which mod modified the container.", t);
             }
         }
     }
