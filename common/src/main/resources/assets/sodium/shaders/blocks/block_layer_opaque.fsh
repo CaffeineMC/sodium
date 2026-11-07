@@ -7,8 +7,11 @@
 
 layout(location = 0) in vec4 v_Color; // The interpolated vertex color
 layout(location = 1) in vec2 v_TexCoord; // The interpolated block texture coordinates
+
+#ifdef USE_FOG
 layout(location = 2) in vec2 v_FragDistance; // The fragment's distance from the camera (cylindrical and spherical)
-layout(location = 3) in float fadeFactor;
+layout(location = 3) in float v_fadeFactor;
+#endif
 
 uniform sampler2D u_BlockTex; // The block texture
 
@@ -27,7 +30,7 @@ vec4 calculateFinalColor(vec4 color) {
     #ifdef OIT_ALPHA_ONLY
     float factor = 1.0;
     #else
-    float factor = fadeFactor;
+    float factor = v_fadeFactor;
     #endif
 
     return _linearFog(color, v_FragDistance, fogColor, u_EnvironmentFog, u_RenderFog, factor);
