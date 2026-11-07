@@ -6,8 +6,11 @@
 
 in vec4 v_Color; // The interpolated vertex color
 in vec2 v_TexCoord; // The interpolated block texture coordinates
+
+#ifdef USE_FOG
 in vec2 v_FragDistance; // The fragment's distance from the camera (cylindrical and spherical)
-in float fadeFactor;
+in float v_fadeFactor;
+#endif
 
 flat in uint v_Material;
 
@@ -88,5 +91,5 @@ void main() {
     }
 #endif
 
-    fragColor = _linearFog(color, v_FragDistance, u_FogColor, u_EnvironmentFog, u_RenderFog, fadeFactor);
+    fragColor = _linearFog(color, v_FragDistance, u_FogColor, u_EnvironmentFog, u_RenderFog, v_fadeFactor);
 }

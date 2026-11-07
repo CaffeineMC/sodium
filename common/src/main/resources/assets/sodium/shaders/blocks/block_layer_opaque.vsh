@@ -11,7 +11,7 @@ flat out uint v_Material;
 
 #ifdef USE_FOG
 out vec2 v_FragDistance;
-out float fadeFactor;
+out float v_fadeFactor;
 #endif
 uniform sampler2D u_LightTex; // The light map texture sampler
 
@@ -45,7 +45,7 @@ void main() {
     int fadeTime = u_CurrentTime - chunkFade;
     float elapsed = float(fadeTime);
     float fade = clamp(float(u_CurrentTime - chunkFade) * u_FadePeriodInv, 0.0, 1.0);
-    fadeFactor = (chunkFade < 0) ? 1.0 : fade;
+    v_fadeFactor = (chunkFade < 0) ? 1.0 : fade;
 #endif
 
     // Transform the vertex position into model-view-projection space
