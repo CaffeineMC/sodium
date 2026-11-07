@@ -14,3 +14,6 @@ Sodium [SodiumVersion]() implements a number of bug fixes and minor improvements
 - Source vanilla option defaults and ranges directly from vanilla options ([#3947](https://github.com/CaffeineMC/sodium/pull/3947))
 - Allow rendering buffer debug outside F3 Debug Screen ([#3943](https://github.com/CaffeineMC/sodium/pull/3943))
 - Make VideoSettingsScreen trigger onClose in keyPressed to fix interaction with Iris, for example ([#3938](https://github.com/CaffeineMC/sodium/pull/3938))
+- Fix mixin members not being prefixed with sodium$ ([#3952](https://github.com/CaffeineMC/sodium/pull/3952))
+- Fix incorrect null value for unspecified vertex normals on NeoForge BakedQuads ([#3962](https://github.com/CaffeineMC/sodium/pull/3962))
+- Fix disappeared block breaking animation ([#3958](https://github.com/CaffeineMC/sodium/pull/3958))
