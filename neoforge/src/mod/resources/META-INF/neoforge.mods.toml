@@ -38,3 +38,36 @@ type = "required"
 versionRange = "[26.1.2.10-beta,)"
 ordering = "NONE"
 side = "BOTH"
+
+[[dependencies.sodium]]
+modId = "embeddium"
+type = "incompatible"
+reason = "Sodium and Embeddium cannot be used together. Please remove Embeddium."
+versionRange = "[0.0.1,)"
+ordering = "NONE"
+side = "CLIENT"
+
+# To also make "1.2.3+build" broken even if it's considered newer than "1.2.3" we use exclusive bound on the version following the broken one
+[[dependencies.sodium]]
+modId = "iris"
+type = "incompatible"
+reason = "This version of Iris is incompatible with this version of Sodium. Please update Iris."
+versionRange = "(,1.11.8)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.sodium]]
+modId = "fusion"
+type = "incompatible"
+reason = "This version of Fusion is incompatible with this version of Sodium. Please update Fusion to 1.3.16a or newer."
+versionRange = "(,1.3.16+a)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.sodium]]
+modId = "betterblockentities"
+type = "incompatible"
+reason = "This version of Better Block Entities is incompatible with this version of Sodium. Please update Better Block Entities."
+versionRange = "(,1.4.1)"
+ordering = "NONE"
+side = "CLIENT"
