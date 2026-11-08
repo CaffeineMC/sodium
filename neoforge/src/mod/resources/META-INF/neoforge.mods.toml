@@ -71,3 +71,11 @@ reason = "This version of Better Block Entities is incompatible with this versio
 versionRange = "(,1.4.1)"
 ordering = "NONE"
 side = "CLIENT"
+
+[[dependencies.sodium]]
+modId = "moreculling"
+type = "incompatible"
+reason = "This version of More Culling is incompatible with this version of Sodium. Please update More Culling."
+versionRange = "(,1.9.2)"
+ordering = "NONE"
+side = "CLIENT"
