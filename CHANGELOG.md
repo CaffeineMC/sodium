@@ -17,3 +17,4 @@ Sodium [SodiumVersion]() implements a number of bug fixes and minor improvements
 - Fix mixin members not being prefixed with sodium$ ([#3952](https://github.com/CaffeineMC/sodium/pull/3952))
 - Fix incorrect null value for unspecified vertex normals on NeoForge BakedQuads ([#3962](https://github.com/CaffeineMC/sodium/pull/3962))
 - Fix disappeared block breaking animation ([#3958](https://github.com/CaffeineMC/sodium/pull/3958))
+- Added compatibility metadata for Fabric and NeoForge builds to prevent usage in broken configurations
