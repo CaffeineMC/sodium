@@ -439,10 +439,10 @@ public class OcclusionCuller {
 
             // vanilla's "cylindrical fog" algorithm
             // max(length(distance.xz), abs(distance.y))
-            if (testDistance(xzThreshold, yThreshold, this.searchDistanceRegular)) {
+            if (isWithinCylinderDistance(xzThreshold, yThreshold, this.searchDistanceRegular)) {
                 queue.enqueue(section);
 
-                if (!(testDistance(xzThreshold, yThreshold, this.searchDistanceLocal) && isWithinFrustum(this.viewport, section))) {
+                if (!(isWithinCylinderDistance(xzThreshold, yThreshold, this.searchDistanceLocal) && isWithinFrustum(this.viewport, section))) {
                     section.blockLocalIncoming();
                     hasLocalPath = false;
                 }
@@ -461,7 +461,7 @@ public class OcclusionCuller {
         }
     }
 
-    private static boolean testDistance(float xzThreshold, float yThreshold, float maxDistance) {
+    private static boolean isWithinCylinderDistance(float xzThreshold, float yThreshold, float maxDistance) {
         return (xzThreshold < (maxDistance * maxDistance)) && (yThreshold < maxDistance);
     }
 
