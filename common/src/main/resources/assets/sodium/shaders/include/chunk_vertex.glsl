@@ -17,7 +17,6 @@ uint _draw_id;
 // The material bits for the primitive
 uint _material_params;
 
-#ifdef USE_VERTEX_COMPRESSION
 const uint POSITION_BITS        = 20u;
 const uint POSITION_MAX_COORD   = 1u << POSITION_BITS;
 const uint POSITION_MAX_VALUE   = POSITION_MAX_COORD - 1u;
@@ -60,7 +59,3 @@ void _vert_init() {
     _material_params = a_LightAndData[2];
     _draw_id = a_LightAndData[3];
 }
-
-#else
-#error "Vertex compression must be enabled"
-#endif

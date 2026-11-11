@@ -13,8 +13,6 @@ public record ChunkShaderOptions(ChunkFogMode fog, TerrainRenderPass pass, Chunk
             constants.add("USE_FRAGMENT_DISCARD");
         }
 
-        constants.add("USE_VERTEX_COMPRESSION"); // TODO: allow compact vertex format to be disabled
-
         return constants.build();
     }
 }

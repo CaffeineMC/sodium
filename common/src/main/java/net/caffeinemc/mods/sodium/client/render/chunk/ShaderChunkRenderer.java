@@ -83,8 +83,6 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
             builder.add("USE_FRAGMENT_DISCARD");
         }
 
-        builder.add("USE_VERTEX_COMPRESSION"); // TODO: allow compact vertex format to be disabled
-
         return builder.build();
     }
 
