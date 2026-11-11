@@ -1,8 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
 import com.mojang.renderpearl.api.GpuFormat;
-import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
-import com.mojang.renderpearl.api.pipeline.UniformType;
+import com.mojang.renderpearl.api.pipeline.*;
 import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -12,15 +11,12 @@ import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.minecraft.client.renderer.oit.OitPipelineSet;
 import net.minecraft.client.renderer.oit.OitStage;
 import net.minecraft.resources.Identifier;
-
-import java.util.*;
-
-import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
-import com.mojang.renderpearl.api.pipeline.BlendFunction;
-import com.mojang.renderpearl.api.pipeline.ColorTargetState;
-import com.mojang.renderpearl.api.pipeline.DepthStencilState;
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import org.jspecify.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 
 public abstract class ShaderChunkRenderer implements ChunkRenderer {
@@ -129,7 +125,6 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
     private static List<String> createShaderConstants(TerrainRenderPass pass) {
         List<String> defines = new ArrayList<>();
 
-        defines.add("USE_VERTEX_COMPRESSION"); // TODO: allow compact vertex format to be disabled
         defines.add("USE_FOG");
 
         return defines;
