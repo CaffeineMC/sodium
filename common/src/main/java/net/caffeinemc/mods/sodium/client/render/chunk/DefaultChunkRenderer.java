@@ -51,7 +51,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                        FogParameters parameters,
                        boolean indexedRenderingEnabled,
                        GpuSampler terrainSampler, GpuBufferSlice uniformData, GpuBuffer sectionTimeInfo) {
-        super.begin(renderPass, parameters, terrainSampler);
+        super.begin(renderPass);
 
         final boolean useBlockFaceCulling = SodiumClientMod.options().performance.useBlockFaceCulling;
         final boolean useIndexedTessellation = renderPass.isTranslucent() && indexedRenderingEnabled;

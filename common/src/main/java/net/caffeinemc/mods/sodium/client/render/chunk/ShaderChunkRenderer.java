@@ -4,12 +4,10 @@ import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.pipeline.*;
 import com.mojang.blaze3d.shaders.UniformType;
-import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
-import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
@@ -39,14 +37,14 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         RenderPipeline program = programs.get(pass);
 
         if (program == null) {
-            programs.put(pass, program = this.createShader("blocks/block_layer_opaque", pass));
+            programs.put(pass, program = this.createShader(pass));
         }
 
         return program;
     }
 
-    private RenderPipeline createShader(String path, TerrainRenderPass pass) {
-        List<String> constants = createShaderConstants(pass);
+    private RenderPipeline createShader(TerrainRenderPass pass) {
+        List<String> constants = createShaderConstants();
 
         var builder = RenderPipeline.builder()
                 .withBindGroupLayout(BIND_GROUP)
@@ -77,7 +75,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         return builder.build();
     }
 
-    private static List<String> createShaderConstants(TerrainRenderPass pass) {
+    private static List<String> createShaderConstants() {
         List<String> defines = new ArrayList<>();
 
         defines.add("USE_FOG");
@@ -85,7 +83,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         return defines;
     }
 
-    protected void begin(TerrainRenderPass pass, FogParameters parameters, GpuSampler terrainSampler) {
+    protected void begin(TerrainRenderPass pass) {
         this.activeProgram = this.compileProgram(pass);
     }
 
