@@ -1,10 +1,10 @@
 package net.caffeinemc.mods.sodium.client.render.chunk;
 
-import com.mojang.renderpearl.api.pipeline.IndexType;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.commands.RenderPass;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.renderpearl.api.pipeline.IndexType;
 import com.mojang.renderpearl.api.textures.FilterMode;
 import com.mojang.renderpearl.api.textures.GpuSampler;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
@@ -94,10 +94,10 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                     this.sharedIndexBuffer.ensureCapacity(batch.getMaxElementCount());
                 }
 
-                batch.prepare(drawContext);
+                batch.prepare(this.drawContext);
             }
 
-            shouldDraw[i] = hasDrawBatches;
+            this.shouldDraw[i] = hasDrawBatches;
         }
     }
 
@@ -115,9 +115,9 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                        boolean indexedRenderingEnabled, RenderPass pass,
                        GpuSampler terrainSampler, GpuBufferSlice uniformData, GpuBuffer sectionTimeInfo,
                        @Nullable OitStage stage) {
-        if (!shouldDraw[DefaultTerrainRenderPasses.getPassIndex(renderPass)]) return;
+        if (!this.shouldDraw[DefaultTerrainRenderPasses.getPassIndex(renderPass)]) return;
 
-        super.begin(renderPass, parameters, terrainSampler, stage);
+        super.begin(renderPass, stage);
 
         final boolean useIndexedTessellation = renderPass.isTranslucent() && indexedRenderingEnabled;
 

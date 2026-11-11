@@ -2,12 +2,11 @@ package net.caffeinemc.mods.sodium.client.render.chunk;
 
 import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.pipeline.*;
-import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
-import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.minecraft.client.renderer.oit.OitPipelineSet;
 import net.minecraft.client.renderer.oit.OitStage;
 import net.minecraft.resources.Identifier;
@@ -45,7 +44,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
             RenderPipeline program = programs.get(pass);
 
             if (program == null) {
-                programs.put(pass, program = this.createShader("blocks/block_layer_opaque", pass));
+                programs.put(pass, program = this.createShader(pass));
             }
 
             return program;
@@ -53,15 +52,15 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
             OitPipelineSet program = oitPrograms.get(pass);
 
             if (program == null) {
-                oitPrograms.put(pass, program = this.createOITShader("blocks/block_layer_opaque", pass, stage));
+                oitPrograms.put(pass, program = this.createOITShader(pass));
             }
 
             return program.getPipeline(stage);
         }
     }
 
-    private RenderPipeline createShader(String path, TerrainRenderPass pass) {
-        List<String> constants = createShaderConstants(pass);
+    private RenderPipeline createShader(TerrainRenderPass pass) {
+        List<String> constants = createShaderConstants();
 
         var builder = RenderPipeline.builder()
                 .withBindGroupLayout(BIND_GROUP)
@@ -94,8 +93,8 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         return builder.build();
     }
 
-    private OitPipelineSet createOITShader(String path, TerrainRenderPass pass, OitStage stage) {
-        List<String> constants = createShaderConstants(pass);
+    private OitPipelineSet createOITShader(TerrainRenderPass pass) {
+        List<String> constants = createShaderConstants();
 
         var builder = RenderPipeline.builder()
                 .withBindGroupLayout(BIND_GROUP)
@@ -122,7 +121,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
                 "sodium_terrain", builder).withAccumulateModifier(i -> i.withBindGroupLayout(LIGHT_GROUP)).build();
     }
 
-    private static List<String> createShaderConstants(TerrainRenderPass pass) {
+    private static List<String> createShaderConstants() {
         List<String> defines = new ArrayList<>();
 
         defines.add("USE_FOG");
@@ -130,7 +129,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         return defines;
     }
 
-    protected void begin(TerrainRenderPass pass, FogParameters parameters, GpuSampler terrainSampler, @Nullable OitStage stage) {
+    protected void begin(TerrainRenderPass pass, @Nullable OitStage stage) {
         this.activeProgram = this.compileProgram(pass, stage);
     }
 
