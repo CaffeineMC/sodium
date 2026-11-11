@@ -80,7 +80,6 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
     private static List<String> createShaderConstants(TerrainRenderPass pass) {
         List<String> defines = new ArrayList<>();
 
-        defines.add("USE_VERTEX_COMPRESSION"); // TODO: allow compact vertex format to be disabled
         defines.add("USE_FOG");
 
         return defines;
