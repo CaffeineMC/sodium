@@ -17,11 +17,11 @@ public abstract class AbstractTraversableBiForest<T extends TraversableTree> ext
     }
 
     @Override
-    public void traverse(CoordinateSectionVisitor visitor, Viewport viewport, float distanceLimit) {
+    public void traverse(CoordinateSectionVisitor visitor, Viewport viewport, float distanceLimit, boolean isSphericalDistance) {
         // no sorting is necessary because we assume the camera will never be closer to the secondary tree than the main tree
-        this.mainTree.traverse(visitor, viewport, distanceLimit, this.buildDistance);
+        this.mainTree.traverse(visitor, viewport, distanceLimit, this.buildDistance, isSphericalDistance);
         if (this.secondaryTree != null) {
-            this.secondaryTree.traverse(visitor, viewport, distanceLimit, this.buildDistance);
+            this.secondaryTree.traverse(visitor, viewport, distanceLimit, this.buildDistance, isSphericalDistance);
         }
     }
 }

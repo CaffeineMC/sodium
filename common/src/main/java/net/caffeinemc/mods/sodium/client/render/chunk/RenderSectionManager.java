@@ -309,7 +309,8 @@ public class RenderSectionManager {
         }
 
         var visibleCollector = new VisibleChunkCollector(this.regions, this.frame);
-        bestTree.traverse(visibleCollector, viewport, this.getSearchDistance(fogParameters));
+        var useSphericalRenderFog = SodiumClientMod.options().performance.useSphericalRenderFog;
+        bestTree.traverse(visibleCollector, viewport, this.getSearchDistance(fogParameters), useSphericalRenderFog);
         this.renderLists = visibleCollector.createRenderLists(viewport);
 
         this.renderTree = bestTree;
@@ -317,10 +318,11 @@ public class RenderSectionManager {
 
     private void renderOutOfGraph(Viewport viewport, FogParameters fogParameters) {
         var searchDistance = this.getSearchDistance(fogParameters);
+        var useSphericalRenderFog = SodiumClientMod.options().performance.useSphericalRenderFog;
         var visitor = new FallbackVisibleChunkCollector(viewport, searchDistance, this.frame, this.renderSections, this.regions, this.level);
 
         this.renderableSectionTree.prepareForTraversal();
-        this.renderableSectionTree.traverse(visitor, viewport, searchDistance);
+        this.renderableSectionTree.traverse(visitor, viewport, searchDistance, useSphericalRenderFog);
 
         this.renderLists = visitor.createRenderLists(viewport);
         this.taskLists = visitor.getPendingTaskLists();

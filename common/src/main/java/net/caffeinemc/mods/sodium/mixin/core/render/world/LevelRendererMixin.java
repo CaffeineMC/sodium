@@ -3,10 +3,7 @@ package net.caffeinemc.mods.sodium.mixin.core.render.world;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
-import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.textures.FilterMode;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
@@ -22,12 +19,10 @@ import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
 import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.client.resources.model.sprite.AtlasManager;
@@ -44,14 +39,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.EnumMap;
-import java.util.List;
-
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin implements LevelRendererExtension {
-    @Unique
-    private static EnumMap<ChunkSectionLayer,Int2ObjectOpenHashMap<List<RenderPass.Draw<GpuBufferSlice[]>>>> STATIC_MAP;
-
     @Shadow
     @Final
     private RenderBuffers renderBuffers;
@@ -110,7 +99,6 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
                       int width,
                       int height,
                       CallbackInfo ci) {
-        STATIC_MAP = new EnumMap<>(ChunkSectionLayer.class);
         this.renderer = new SodiumWorldRenderer(Minecraft.getInstance());
         this.multiDrawIndirectAvailable = false;
     }
@@ -126,6 +114,11 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
 
     @Inject(method = "resetLevelRenderData", at = @At("RETURN"))
     private void onTerrainUpdateScheduled(CallbackInfo ci) {
+        this.renderer.scheduleTerrainUpdate();
+    }
+
+    @Inject(method = "clearVisibleSections", at = @At("RETURN"))
+    private void onClearVisibleSections(CallbackInfo ci) {
         this.renderer.scheduleTerrainUpdate();
     }
 
@@ -147,7 +140,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         this.renderer.updateFogColor(fogColor);
 
         this.renderer.prepareChunkRendering(this.matrices, pos.x, pos.y, pos.z);
-        return new SodiumChunkSection(renderer, matrices, pos.x, pos.y, pos.z);
+        return new SodiumChunkSection(this.renderer, this.matrices, pos.x, pos.y, pos.z);
     }
 
     /**

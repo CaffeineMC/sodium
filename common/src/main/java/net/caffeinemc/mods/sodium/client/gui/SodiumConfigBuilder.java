@@ -495,6 +495,16 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setFlags(OptionFlag.REQUIRES_RENDERER_UPDATE)
                 )
                 .addOption(
+                        builder.createBooleanOption(Identifier.parse("sodium:performance.use_spherical_render_fog"))
+                                .setStorageHandler(this.sodiumStorage)
+                                .setName(Component.translatable("sodium.options.use_spherical_render_fog.name"))
+                                .setTooltip(Component.translatable("sodium.options.use_spherical_render_fog.tooltip"))
+                                .setDefaultValue(DEFAULTS.performance.useSphericalRenderFog)
+                                .setBinding(value -> this.sodiumOpts.performance.useSphericalRenderFog = value, () -> this.sodiumOpts.performance.useSphericalRenderFog)
+                                .setImpact(OptionImpact.MEDIUM)
+                                .setFlags(OptionFlag.REQUIRES_RENDERER_UPDATE)
+                )
+                .addOption(
                         builder.createBooleanOption(Identifier.parse("sodium:performance.use_entity_culling"))
                                 .setStorageHandler(this.sodiumStorage)
                                 .setName(Component.translatable("sodium.options.use_entity_culling.name"))

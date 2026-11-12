@@ -7,7 +7,7 @@ import net.minecraft.world.level.Level;
 public interface TraversableForest<T extends TraversableTree> extends Forest<T> {
     void prepareForTraversal();
 
-    void traverse(CoordinateSectionVisitor visitor, Viewport viewport, float distanceLimit);
+    void traverse(CoordinateSectionVisitor visitor, Viewport viewport, float distanceLimit, boolean isSphericalDistance);
 
     default boolean addPatch(int x, int y, int z) {
         return this.add(x, y, z, TraversableTree::addPatch);

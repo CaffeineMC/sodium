@@ -46,6 +46,8 @@
   "sodium.options.use_block_face_culling.tooltip": "If enabled, only the faces of blocks which are facing the camera will be submitted for rendering. This can eliminate a large number of block faces very early in the rendering process, which greatly improves rendering performance. Some resource packs may have issues with this option, so try disabling it if you're seeing holes in blocks.",
   "sodium.options.use_fog_occlusion.name": "Use Fog Occlusion",
   "sodium.options.use_fog_occlusion.tooltip": "If enabled, chunks which are determined to be fully hidden by fog effects will not be rendered, helping to improve performance. The improvement can be more dramatic when fog effects are heavier (such as while underwater), but it may cause undesirable visual artifacts between the sky and fog in some scenarios.",
+  "sodium.options.use_spherical_render_fog.name": "Use Spherical Render Fog",
+  "sodium.options.use_spherical_render_fog.tooltip": "If enabled, the render distance fog will be calculated as a sphere around the player, rather than a cylinder. This can improve performance by reducing the number of chunks which need to be rendered, but it will change the appearance of the edge of the world.",
   "sodium.options.use_entity_culling.name": "Use Entity Culling",
   "sodium.options.use_entity_culling.tooltip": "If enabled, entities which are within the camera viewport, but not inside of a visible chunk, will be skipped during rendering. This optimization uses the visibility data which already exists for chunk rendering and does not add overhead.",
   "sodium.options.animate_only_visible_textures.name": "Animate Only Visible Textures",

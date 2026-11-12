@@ -25,5 +25,9 @@ vec4 _linearFog(vec4 fragColor, vec2 fragDistance, vec4 fogColor, vec2 environme
 }
 
 vec2 getFragDistance(vec3 position) {
+#ifdef USE_SPHERICAL_FOG
+    return vec2(length(position), length(position));
+#else
     return vec2(max(length(position.xz), abs(position.y)), length(position));
+#endif
 }

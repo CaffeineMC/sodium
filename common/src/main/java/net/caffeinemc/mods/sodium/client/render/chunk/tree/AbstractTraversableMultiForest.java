@@ -19,7 +19,7 @@ public abstract class AbstractTraversableMultiForest<T extends TraversableTree> 
     }
 
     @Override
-    public void traverse(CoordinateSectionVisitor visitor, Viewport viewport, float distanceLimit) {
+    public void traverse(CoordinateSectionVisitor visitor, Viewport viewport, float distanceLimit, boolean isSphericalDistance) {
         var cameraPos = viewport.getChunkCoord();
         var cameraSectionX = cameraPos.getX();
         var cameraSectionY = cameraPos.getY();
@@ -46,7 +46,7 @@ public abstract class AbstractTraversableMultiForest<T extends TraversableTree> 
             }
             var tree = this.trees[item & 0xFFFF];
             if (tree != null) {
-                tree.traverse(visitor, viewport, distanceLimit, this.buildDistance);
+                tree.traverse(visitor, viewport, distanceLimit, this.buildDistance, isSphericalDistance);
             }
         }
     }

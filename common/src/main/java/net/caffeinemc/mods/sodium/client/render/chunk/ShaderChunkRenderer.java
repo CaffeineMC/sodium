@@ -21,6 +21,8 @@ import java.util.Optional;
 public abstract class ShaderChunkRenderer implements ChunkRenderer {
     private static final Map<TerrainRenderPass, RenderPipeline> programs = new Object2ObjectOpenHashMap<>();
     private static final Map<TerrainRenderPass, OitPipelineSet> oitPrograms = new Object2ObjectOpenHashMap<>();
+    private static ShaderCompilationParameters lastCompilationParameters = null;
+
     public static final BindGroupLayout BIND_GROUP = BindGroupLayout.builder()
             .withUniform("u_BlockTex", UniformType.COMBINED_IMAGE_SAMPLER)
             .withUniform("u_Globals", UniformType.UNIFORM_BUFFER)
@@ -39,12 +41,21 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         this.vertexFormat = vertexType.getVertexFormat();
     }
 
-    protected RenderPipeline compileProgram(TerrainRenderPass pass, @Nullable OitStage stage) {
+    protected record ShaderCompilationParameters(boolean useSphericalFog) {
+    }
+
+    protected RenderPipeline compileProgram(TerrainRenderPass pass, @Nullable OitStage stage, ShaderCompilationParameters parameters) {
+        if (!parameters.equals(lastCompilationParameters)) {
+            programs.clear();
+            oitPrograms.clear();
+            lastCompilationParameters = parameters;
+        }
+
         if (stage == null) {
             RenderPipeline program = programs.get(pass);
 
             if (program == null) {
-                programs.put(pass, program = this.createShader(pass));
+                programs.put(pass, program = this.createShader(pass, parameters));
             }
 
             return program;
@@ -52,15 +63,15 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
             OitPipelineSet program = oitPrograms.get(pass);
 
             if (program == null) {
-                oitPrograms.put(pass, program = this.createOITShader(pass));
+                oitPrograms.put(pass, program = this.createOITShader(pass, parameters));
             }
 
             return program.getPipeline(stage);
         }
     }
 
-    private RenderPipeline createShader(TerrainRenderPass pass) {
-        List<String> constants = createShaderConstants();
+    private RenderPipeline createShader(TerrainRenderPass pass, ShaderCompilationParameters parameters) {
+        List<String> constants = createShaderConstants(parameters);
 
         var builder = RenderPipeline.builder()
                 .withBindGroupLayout(BIND_GROUP)
@@ -93,8 +104,8 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         return builder.build();
     }
 
-    private OitPipelineSet createOITShader(TerrainRenderPass pass) {
-        List<String> constants = createShaderConstants();
+    private OitPipelineSet createOITShader(TerrainRenderPass pass, ShaderCompilationParameters parameters) {
+        List<String> constants = createShaderConstants(parameters);
 
         var builder = RenderPipeline.builder()
                 .withBindGroupLayout(BIND_GROUP)
@@ -121,19 +132,23 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
                 "sodium_terrain", builder).withAccumulateModifier(i -> i.withBindGroupLayout(LIGHT_GROUP)).build();
     }
 
-    private static List<String> createShaderConstants() {
+    private static List<String> createShaderConstants(ShaderCompilationParameters parameters) {
         List<String> defines = new ArrayList<>();
 
         defines.add("USE_FOG");
+        if (parameters.useSphericalFog()) {
+            defines.add("USE_SPHERICAL_FOG");
+        }
 
         return defines;
     }
 
     protected void begin(TerrainRenderPass pass, @Nullable OitStage stage) {
-        this.activeProgram = this.compileProgram(pass, stage);
+        ShaderCompilationParameters parameters = new ShaderCompilationParameters(SodiumClientMod.options().performance.useSphericalRenderFog);
+        this.activeProgram = this.compileProgram(pass, stage, parameters);
     }
 
-    protected void end(TerrainRenderPass pass) {
+    protected void end() {
         this.activeProgram = null;
     }
 

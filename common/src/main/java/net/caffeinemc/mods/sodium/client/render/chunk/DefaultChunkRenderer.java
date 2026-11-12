@@ -183,7 +183,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
 
         this.drawContext.endDraw();
 
-        super.end(renderPass);
+        super.end();
     }
 
     @Override
