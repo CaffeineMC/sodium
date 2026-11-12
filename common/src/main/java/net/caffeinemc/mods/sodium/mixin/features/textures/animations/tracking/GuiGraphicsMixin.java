@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.mixin.features.textures.animations.tracking;
 
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
