@@ -96,7 +96,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
 
         // Avoid binding Sodium's shader when no vanilla draw call will run to refresh the GL program cache.
         if (!hasDrawBatches) {
-            super.end(renderPass);
+            super.end();
             return;
         }
 
@@ -154,7 +154,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
 
         this.drawContext.endDraw();
 
-        super.end(renderPass);
+        super.end();
     }
 
     @Override

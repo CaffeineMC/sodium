@@ -6,6 +6,7 @@ import com.mojang.blaze3d.pipeline.*;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.minecraft.resources.Identifier;
@@ -17,6 +18,8 @@ import java.util.Optional;
 
 public abstract class ShaderChunkRenderer implements ChunkRenderer {
     private static final Map<TerrainRenderPass, RenderPipeline> programs = new Object2ObjectOpenHashMap<>();
+    private static ShaderCompilationParameters lastCompilationParameters = null;
+
     public static final BindGroupLayout BIND_GROUP = BindGroupLayout.builder()
             .withSampler("u_LightTex")
             .withSampler("u_BlockTex")
@@ -33,18 +36,26 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         this.vertexFormat = vertexType.getVertexFormat();
     }
 
-    protected RenderPipeline compileProgram(TerrainRenderPass pass) {
+    protected record ShaderCompilationParameters(boolean useSphericalFog) {
+    }
+
+    protected RenderPipeline compileProgram(TerrainRenderPass pass, ShaderCompilationParameters parameters) {
+        if (!parameters.equals(lastCompilationParameters)) {
+            programs.clear();
+            lastCompilationParameters = parameters;
+        }
+
         RenderPipeline program = programs.get(pass);
 
         if (program == null) {
-            programs.put(pass, program = this.createShader(pass));
+            programs.put(pass, program = this.createShader(pass, parameters));
         }
 
         return program;
     }
 
-    private RenderPipeline createShader(TerrainRenderPass pass) {
-        List<String> constants = createShaderConstants();
+    private RenderPipeline createShader(TerrainRenderPass pass, ShaderCompilationParameters parameters) {
+        List<String> constants = createShaderConstants(parameters);
 
         var builder = RenderPipeline.builder()
                 .withBindGroupLayout(BIND_GROUP)
@@ -75,19 +86,23 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         return builder.build();
     }
 
-    private static List<String> createShaderConstants() {
+    private static List<String> createShaderConstants(ShaderCompilationParameters parameters) {
         List<String> defines = new ArrayList<>();
 
         defines.add("USE_FOG");
+        if (parameters.useSphericalFog()) {
+            defines.add("USE_SPHERICAL_FOG");
+        }
 
         return defines;
     }
 
     protected void begin(TerrainRenderPass pass) {
-        this.activeProgram = this.compileProgram(pass);
+        ShaderCompilationParameters parameters = new ShaderCompilationParameters(SodiumClientMod.options().performance.useSphericalRenderFog);
+        this.activeProgram = this.compileProgram(pass, parameters);
     }
 
-    protected void end(TerrainRenderPass pass) {
+    protected void end() {
         this.activeProgram = null;
     }
 
