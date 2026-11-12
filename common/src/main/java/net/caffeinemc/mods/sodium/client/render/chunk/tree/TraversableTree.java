@@ -20,6 +20,7 @@ public class TraversableTree extends Tree {
     private CoordinateSectionVisitor visitor;
     protected Viewport viewport;
     private float distanceLimit;
+    private boolean isSphericalDistance;
 
     public TraversableTree(int offsetX, int offsetY, int offsetZ) {
         super(offsetX, offsetY, offsetZ);
@@ -84,10 +85,11 @@ public class TraversableTree extends Tree {
         return (this.tree[reducedBitIndex] & (1L << (bitIndex & 0b111111))) != 0 ? PRESENT : NOT_PRESENT;
     }
 
-    public void traverse(CoordinateSectionVisitor visitor, Viewport viewport, float distanceLimit, float buildDistance) {
+    public void traverse(CoordinateSectionVisitor visitor, Viewport viewport, float distanceLimit, float buildDistance, boolean isSphericalDistance) {
         this.visitor = visitor;
         this.viewport = viewport;
         this.distanceLimit = distanceLimit;
+        this.isSphericalDistance = isSphericalDistance;
 
         // + 1 to offset section position to compensate for shifted global offset
         // adjust camera block position to account for fractional part of camera position
@@ -97,7 +99,8 @@ public class TraversableTree extends Tree {
         this.cameraOffsetZ = sectionPos.getZ() - this.offsetZ + 1;
 
         // everything is already inside the distance limit if the build distance is smaller
-        var initialInside = this.distanceLimit >= buildDistance ? INSIDE_DISTANCE : 0;
+        // if we're using spherical distance, we can't assume the cylinder of the built tree is inside the sphere of the spherical fog
+        var initialInside = distanceLimit >= buildDistance && !isSphericalDistance ? INSIDE_DISTANCE : 0;
         this.traverse(this.getChildOrderModulator(0, 0, 0, 1 << 5), 0, 5, initialInside);
 
         this.visitor = null;
@@ -229,14 +232,14 @@ public class TraversableTree extends Tree {
             float dz = nearestToZero(worldZ, worldZ + childFullDim) - transform.fracZ;
 
             // check if closest point inside the cylinder
-            visible = cylindricalDistanceTest(dx, dy, dz, this.distanceLimit);
+            visible = this.isWithinDistance(dx, dy, dz, this.distanceLimit);
             if (visible) {
                 // if the farthest point is also visible, the node is fully inside
                 dx = farthestFromZero(worldX, worldX + childFullDim) - transform.fracX;
                 dy = farthestFromZero(worldY, worldY + childFullDim) - transform.fracY;
                 dz = farthestFromZero(worldZ, worldZ + childFullDim) - transform.fracZ;
 
-                if (cylindricalDistanceTest(dx, dy, dz, this.distanceLimit)) {
+                if (this.isWithinDistance(dx, dy, dz, this.distanceLimit)) {
                     inside |= INSIDE_DISTANCE;
                 }
             }
@@ -275,17 +278,22 @@ public class TraversableTree extends Tree {
             float dy = nearestToZero(y - 1, y + 17) - transform.fracY;
             float dz = nearestToZero(z - 1, z + 17) - transform.fracZ;
 
-            return cylindricalDistanceTest(dx, dy, dz, this.distanceLimit);
+            return isWithinDistance(dx, dy, dz, this.distanceLimit);
         }
 
         return true;
     }
 
-    static boolean cylindricalDistanceTest(float dx, float dy, float dz, float distanceLimit) {
-        // vanilla's "cylindrical fog" algorithm
-        // max(length(distance.xz), abs(distance.y))
-        return (((dx * dx) + (dz * dz)) < (distanceLimit * distanceLimit)) &&
-                (Math.abs(dy) < distanceLimit);
+    boolean isWithinDistance(float dx, float dy, float dz, float distanceLimit) {
+        if (this.isSphericalDistance) {
+            // spherical distance
+            return ((dx * dx) + (dy * dy) + (dz * dz)) < (distanceLimit * distanceLimit);
+        } else {
+            // vanilla's "cylindrical fog" algorithm
+            // max(length(distance.xz), abs(distance.y))
+            return (((dx * dx) + (dz * dz)) < (distanceLimit * distanceLimit)) &&
+                    (Math.abs(dy) < distanceLimit);
+        }
     }
 
     @SuppressWarnings("ManualMinMaxCalculation") // we know what we are doing.

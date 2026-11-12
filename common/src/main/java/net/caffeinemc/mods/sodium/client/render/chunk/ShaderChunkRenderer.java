@@ -9,6 +9,7 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuSampler;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gl.attribute.GlVertexFormat;
 import net.caffeinemc.mods.sodium.client.gl.buffer.GlTexelBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
@@ -83,6 +84,10 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
             builder.add("USE_FRAGMENT_DISCARD");
         }
 
+        if (options.useSphericalFog()) {
+            builder.add("USE_SPHERICAL_FOG");
+        }
+
         return builder.build();
     }
 
@@ -94,7 +99,8 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         ((GlCommandEncoderAccessor) ((CommandEncoderAccessor) RenderSystem.getDevice().createCommandEncoder()).sodium$getBackend()).sodium$applyPipelineState(pass.getPipeline());
         ((GlCommandEncoderAccessor) ((CommandEncoderAccessor) RenderSystem.getDevice().createCommandEncoder()).sodium$getBackend()).sodium$setLastProgram(null);
 
-        ChunkShaderOptions options = new ChunkShaderOptions(ChunkFogMode.SMOOTH, pass, this.vertexType);
+        ChunkShaderOptions options = new ChunkShaderOptions(ChunkFogMode.SMOOTH, pass, this.vertexType,
+                SodiumClientMod.options().performance.useSphericalRenderFog);
 
         this.activeProgram = this.compileProgram(options);
         this.activeProgram.bind();

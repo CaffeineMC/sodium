@@ -52,7 +52,7 @@ public class RemovableMultiForest implements RemovableForest<RemovableTree> {
     }
 
     @Override
-    public void traverse(CoordinateSectionVisitor visitor, Viewport viewport, float distanceLimit) {
+    public void traverse(CoordinateSectionVisitor visitor, Viewport viewport, float distanceLimit, boolean isSphericalDistance) {
         var transform = viewport.getTransform();
         var cameraSectionX = transform.intX >> 4;
         var cameraSectionY = transform.intY >> 4;
@@ -70,8 +70,8 @@ public class RemovableMultiForest implements RemovableForest<RemovableTree> {
 
         // traverse in sorted front-to-back order for correct render order
         for (var tree : this.treeSortList) {
-            // disable distance test in traversal because we don't use it here
-            tree.traverse(visitor, viewport, 0, 0);
+            // the forest was not built pre-filtered with a build distance limit, so the build distance is infinity
+            tree.traverse(visitor, viewport, distanceLimit, Float.MAX_VALUE, isSphericalDistance);
         }
     }
 

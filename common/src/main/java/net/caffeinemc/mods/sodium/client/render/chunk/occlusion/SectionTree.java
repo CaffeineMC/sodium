@@ -111,7 +111,7 @@ public class SectionTree extends AbstractSectionVisitor {
                 this.isWithinFrustum(viewport, section);
     }
 
-    public void traverse(VisibleChunkCollector visitor, Viewport viewport, float distanceLimit) {
-        this.tree.traverse(visitor, viewport, distanceLimit);
+    public void traverse(VisibleChunkCollector visitor, Viewport viewport, float distanceLimit, boolean isSphericalDistance) {
+        this.tree.traverse(visitor, viewport, distanceLimit, isSphericalDistance);
     }
 }
