@@ -100,7 +100,7 @@
         {
             "from": [ 0, 2, 8 ],
             "to": [ 16, 18, 8 ],
-            "shade": false,
+            "shade_direction_override": "up",
             "faces": {
                 "north": { "uv": [ 0, 0, 16, 16 ], "texture": "#leaf" },
                 "south": { "uv": [ 16, 0, 0, 16 ], "texture": "#leaf" }

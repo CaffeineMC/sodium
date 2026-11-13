@@ -9,7 +9,7 @@
             "name": "pitcher_plant_bottom",
             "from": [ 8, -5, 0 ],
             "to": [ 8, 11, 16 ],
-            "shade": false,
+            "shade_direction_override": "up",
             "rotation": { "angle": 45, "axis": "y", "origin": [ 8, 3, 8 ] },
             "faces": {
                 "east": { "uv": [ 0, 0, 16, 16 ], "texture": "#bottom" },
@@ -20,7 +20,7 @@
             "name": "pitcher_plant_bottom",
             "from": [ 0, -5, 8 ],
             "to": [ 16, 11, 8 ],
-            "shade": false,
+            "shade_direction_override": "up",
             "rotation": { "angle": 45, "axis": "y", "origin": [ 8, 3, 8 ] },
             "faces": {
                 "north": { "uv": [ 0, 0, 16, 16 ], "texture": "#bottom" },

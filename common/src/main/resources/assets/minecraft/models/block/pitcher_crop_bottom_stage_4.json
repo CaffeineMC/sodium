@@ -12,7 +12,7 @@
             "name": "pitcher_crop_bottom_stage_4",
             "from": [ 8, 0, 0 ],
             "to": [ 8, 16, 16 ],
-            "shade": false,
+            "shade_direction_override": "up",
             "rotation": { "angle": 45, "axis": "y", "origin": [ 8, 0, 8 ] },
             "faces": {
                 "east": { "uv": [ 0, 0, 16, 16 ], "texture": "#stage_4_bottom" },
@@ -23,7 +23,7 @@
             "name": "pitcher_crop_bottom_stage_4",
             "from": [ 0, 0, 8 ],
             "to": [ 16, 16, 8 ],
-            "shade": false,
+            "shade_direction_override": "up",
             "rotation": { "angle": 45, "axis": "y", "origin": [ 8, 0, 8 ] },
             "faces": {
                 "north": { "uv": [ 0, 0, 16, 16 ], "texture": "#stage_4_bottom" },
