@@ -125,6 +125,11 @@ public abstract class BufferArena implements AllocatorBase {
     public void registerOwner(RegionAllocatorHandle regionAllocatorHandle) {
     }
 
+    protected void close() {
+        this.arenaBuffer.close();
+        this.closeDebugMap();
+    }
+
     BufferSegment alloc(long size, RegionAllocatorHandle owner, int ownerIndex) {
         this.checkAssertions();
 
@@ -435,15 +440,27 @@ public abstract class BufferArena implements AllocatorBase {
     }
 
     private final Identifier textureId = Identifier.parse("sodium:buffer_debug_" + System.identityHashCode(this));
-    public final DynamicTexture texture = new DynamicTexture(this.textureId::toString, 200, 200, true);
+    public DynamicTexture texture = null;
 
-    {
-        this.texture.getPixels().setPixelABGR(0, 0, 0xFFFFFFFF);
-        this.texture.upload();
-        Minecraft.getInstance().getTextureManager().register(this.textureId, this.texture);
+    private void ensureDebugMap() {
+        if (this.texture == null) {
+            this.texture = new DynamicTexture(this.textureId::toString, 200, 200, true);
+            this.texture.getPixels().setPixelABGR(0, 0, 0xFFFFFFFF);
+            this.texture.upload();
+            Minecraft.getInstance().getTextureManager().register(this.textureId, this.texture);
+        }
+    }
+
+    private void closeDebugMap() {
+        if (this.texture != null) {
+            Minecraft.getInstance().getTextureManager().release(this.textureId);
+            this.texture = null;
+        }
     }
 
     public void renderDebugMap(GuiGraphicsExtractor graphics, int x, int y, int drawWidth, int drawHeight) {
+        this.ensureDebugMap();
+
         var image = this.texture.getPixels();
         int width = image.getWidth();
         int height = image.getHeight();

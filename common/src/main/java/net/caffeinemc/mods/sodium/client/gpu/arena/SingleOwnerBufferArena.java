@@ -13,7 +13,7 @@ public class SingleOwnerBufferArena extends BufferArena {
 
     @Override
     public void deleteSingleOwner(RegionAllocatorHandle owner) {
-        this.arenaBuffer.close();
+        this.close();
     }
 
     @Override
