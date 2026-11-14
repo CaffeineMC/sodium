@@ -35,13 +35,21 @@ public class SharedBufferArena extends DefragmentingBufferArena implements Sized
         this.removeOwner(owner);
     }
 
-    public void deleteShared() {
-        this.arenaBuffer.close();
+    @Override
+    protected void close() {
+        super.close();
+        this.clearCompactionPair();
+    }
 
+    private void clearCompactionPair() {
         if (this.compactionPair != null) {
             this.compactionPair.compactionPair = null;
             this.compactionPair = null;
         }
+    }
+
+    public void deleteShared() {
+        this.close();
     }
 
     public long getUsed() {
@@ -73,9 +81,8 @@ public class SharedBufferArena extends DefragmentingBufferArena implements Sized
 
     public void setEmptying(boolean emptying) {
         this.isEmptying = emptying;
-        if (!emptying && this.compactionPair != null) {
-            this.compactionPair.compactionPair = null;
-            this.compactionPair = null;
+        if (!emptying) {
+            this.clearCompactionPair();
         }
     }
 
