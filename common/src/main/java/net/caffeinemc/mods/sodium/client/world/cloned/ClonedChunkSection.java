@@ -56,11 +56,7 @@ public class ClonedChunkSection {
 
         if (section != null) {
             if (!section.hasOnlyAir()) {
-                if (!level.isDebug()) {
-                    blockData = PalettedContainerROExtension.clone(section.getStates());
-                } else {
-                    blockData = constructDebugWorldContainer(pos);
-                }
+                blockData = PalettedContainerROExtension.clone(section.getStates());
                 blockEntityMap = tryCopyBlockEntities(chunk, pos);
                 if (blockEntityMap != null && PlatformBlockAccess.getInstance().platformHasBlockData()) {
                     blockEntityRenderDataMap = copyBlockEntityRenderData(level, blockEntityMap);
@@ -78,37 +74,6 @@ public class ClonedChunkSection {
         this.blockEntityRenderDataMap = blockEntityRenderDataMap;
 
         this.lightDataArrays = copyLightData(level, pos);
-    }
-
-    /**
-     * Construct a fake PalettedContainer whose contents match those of the debug world. This is needed to
-     * match vanilla's odd approach of short-circuiting getBlockState calls inside its render region class.
-     */
-    @NonNull
-    private static PalettedContainer<BlockState> constructDebugWorldContainer(SectionPos pos) {
-        // Fast path for sections which are guaranteed to be empty
-        if (pos.getY() != 3 && pos.getY() != 4)
-            return DEFAULT_STATE_CONTAINER;
-
-        // We use swapUnsafe in the loops to avoid acquiring/releasing the lock on each iteration
-        var container = new PalettedContainer<>(Blocks.AIR.defaultBlockState(), Strategy.createForBlockStates(Block.BLOCK_STATE_REGISTRY));
-        if (pos.getY() == 3) {
-            // Set the blocks at relative Y 12 (world Y 60) to barriers
-            BlockState barrier = Blocks.BARRIER.defaultBlockState();
-            for (int z = 0; z < 16; z++) {
-                for (int x = 0; x < 16; x++) {
-                    container.getAndSetUnchecked(x, 12, z, barrier);
-                }
-            }
-        } else if (pos.getY() == 4) {
-            // Set the blocks at relative Y 6 (world Y 70) to the appropriate state from the generator
-            for (int z = 0; z < 16; z++) {
-                for (int x = 0; x < 16; x++) {
-                    container.getAndSetUnchecked(x, 6, z, DebugLevelSource.getBlockStateFor(SectionPos.sectionToBlockCoord(pos.getX(), x), SectionPos.sectionToBlockCoord(pos.getZ(), z)));
-                }
-            }
-        }
-        return container;
     }
 
     @NonNull

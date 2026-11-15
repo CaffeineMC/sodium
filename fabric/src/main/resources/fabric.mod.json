@@ -68,11 +68,10 @@
   "accessWidener" : "sodium-fabric.accesswidener",
   "mixins" : [
     "sodium-common.mixins.json",
-    "sodium-frapi.mixins.json",
     "sodium-fabric.mixins.json"
   ],
   "depends" : {
-    "minecraft": "26.3.x",
+    "minecraft": "26.4.x",
     "fabricloader" : ">=0.16.0",
     "fabric-block-getter-api-v2" : "*",
     "fabric-rendering-fluids-v1" : ">=2.0.0",

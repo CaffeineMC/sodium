@@ -2,11 +2,14 @@ package net.caffeinemc.mods.sodium.mixin.features.gui.hooks.debug;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
+import net.caffeinemc.mods.sodium.client.util.DebugScreenOverlayExtension;
 import net.caffeinemc.mods.sodium.client.util.FrameTimeStatistics;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.DebugScreenOverlay;
+import net.minecraft.client.gui.components.debug.DebugEntryFps;
+import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.LevelChunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,17 +18,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-@Mixin(DebugScreenOverlay.class)
-public class DebugScreenOverlayInsertMixin {
+@Mixin(DebugEntryFps.class)
+public class DebugEntryFpsMixin {
     @Inject(
-            method = "extractRenderState",
-            at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;extractLines(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Ljava/util/List;ZI)V",
-                    ordinal = 0)
+            method = "display",
+            at = @At(value = "RETURN")
     )
-    private void sodium$insertFpsPercentiles(GuiGraphicsExtractor graphics,
-                                             CallbackInfo ci,
-                                             @Local(ordinal = 0) List<String> leftLines) {
+    private void sodium$insertFpsPercentiles(DebugScreenDisplayer displayer, Level serverOrClientLevel, LevelChunk clientChunk, LevelChunk serverChunk, CallbackInfo ci) {
         Minecraft minecraft = Minecraft.getInstance();
         if (!minecraft.debugEntries.isCurrentlyEnabled(SodiumClientMod.SODIUM_FPS_PERCENTILES)) {
             return;
@@ -33,17 +32,6 @@ public class DebugScreenOverlayInsertMixin {
         var results = FrameTimeStatistics.INSTANCE.get();
         if (results == null || results.isEmpty()) {
             return;
-        }
-
-        // splice the percentile fps display into the debug lines to make sure it's right under the fps string.
-        // without this, it may be put somewhere else on the screen.
-        int insertAt = 0;
-        for (int i = 0; i < leftLines.size(); i++) {
-            String line = leftLines.get(i);
-            if (line != null && line.contains(" fps T:")) {
-                insertAt = i + 1;
-                break;
-            }
         }
 
         var sb = new StringBuilder();
@@ -60,7 +48,7 @@ public class DebugScreenOverlayInsertMixin {
 
         sb.append(ChatFormatting.GRAY).append(" fps");
 
-        leftLines.add(insertAt, sb.toString());
+        ((DebugScreenOverlayExtension) displayer).sodium$addPriorityLineLeft(sb.toString());
     }
 
     @Unique

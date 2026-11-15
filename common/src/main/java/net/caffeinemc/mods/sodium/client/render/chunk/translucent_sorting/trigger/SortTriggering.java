@@ -5,12 +5,13 @@ import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortType;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.*;
+import net.minecraft.client.gui.components.debug.DebugFact;
 import net.minecraft.core.SectionPos;
 import org.joml.Vector3dc;
 import org.joml.Vector3fc;
 
-import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * This class is a central point in translucency sorting. It counts the number
@@ -217,30 +218,30 @@ public class SortTriggering {
         }
     }
 
-    public void addDebugStrings(List<String> list, SortBehavior sortBehavior, boolean verbose) {
+    public void addDebugStrings(BiConsumer<String, Consumer<DebugFact>> addFact, SortBehavior sortBehavior, boolean verbose) {
         var splittingMode = SodiumClientMod.options().performance.quadSplittingMode;
 
         if (verbose) {
-            list.add("TS (%s,%s) NL=%02d TrN=%02d TrS=G%03d/D%03d".formatted(
+            /*addFact.add("TS (%s,%s) NL=%02d TrN=%02d TrS=G%03d/D%03d".formatted(
                     sortBehavior.getShortName(),
                     splittingMode.getShortName(),
                     this.gfni.getUniqueNormalCount(),
                     this.triggeredNormalCount,
                     this.gfniTriggerCount,
                     this.directTriggerCount));
-            list.add("N=%05d SNR=%05d STA=%05d DYN=%05d (DIR=%02d)".formatted(
+            addFact.add("N=%05d SNR=%05d STA=%05d DYN=%05d (DIR=%02d)".formatted(
                     this.sortTypeCounters[SortType.NONE.ordinal()],
                     this.sortTypeCounters[SortType.STATIC_NORMAL_RELATIVE.ordinal()],
                     this.sortTypeCounters[SortType.STATIC_TOPO.ordinal()],
                     this.sortTypeCounters[SortType.DYNAMIC.ordinal()],
-                    this.direct.getDirectTriggerCount()));
+                    this.direct.getDirectTriggerCount()));*/
         } else {
-            list.add("TS (%s,%s) St=%d Dy=%d".formatted(
+            addFact.accept("Sorting", fact -> fact.value("%s (%s) St=%d Dy=%d".formatted(
                     sortBehavior.getShortName(),
                     splittingMode.getShortName(),
                     this.sortTypeCounters[SortType.STATIC_NORMAL_RELATIVE.ordinal()] + this.sortTypeCounters[SortType.STATIC_TOPO.ordinal()],
                     this.sortTypeCounters[SortType.DYNAMIC.ordinal()]
-            ));
+            )));
         }
     }
 }

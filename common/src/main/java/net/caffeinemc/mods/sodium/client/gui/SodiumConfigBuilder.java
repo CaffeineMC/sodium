@@ -20,10 +20,7 @@ import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatt
 import net.caffeinemc.mods.sodium.client.render.chunk.DeferMode;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.QuadSplittingMode;
 import net.minecraft.client.*;
-import net.minecraft.client.renderer.texture.MipmapStrategy;
-import net.minecraft.client.renderer.texture.ReloadableTexture;
-import net.minecraft.client.renderer.texture.TextureContents;
-import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.texture.*;
 import net.minecraft.client.resources.metadata.texture.TextureMetadataSection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -80,19 +77,11 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
     }
 
     public static void registerIcon(TextureManager textureManager) {
-        textureManager.registerAndLoad(SODIUM_ICON, new SodiumLogo());
-    }
-
-    static class SodiumLogo extends ReloadableTexture {
-        public SodiumLogo() {
-            super(SODIUM_ICON);
-        }
-
-        @Override
-        public TextureContents loadContents(ResourceManager resourceManager) throws IOException {
-            try (InputStream inputStream = SodiumConfigBuilder.class.getResourceAsStream("/config-icon.png")) {
-                return new TextureContents(NativeImage.read(inputStream), new TextureMetadataSection(false, false, MipmapStrategy.AUTO, 0.1f));
-            }
+        try (InputStream inputStream = SodiumConfigBuilder.class.getResourceAsStream("/config-icon.png")) {
+            var x = new TextureContents(NativeImage.read(inputStream), new TextureMetadataSection(false, false, MipmapStrategy.AUTO, 0.1f));
+            textureManager.registerProvider(SODIUM_ICON, new ExternalTextureProvider(TextureResources.from2dImage(() -> "Sodium icon", x.image())));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

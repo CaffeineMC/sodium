@@ -24,12 +24,12 @@ public abstract class StatefulControlElement extends ControlElement {
     public abstract StatefulOption<?> getOption();
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        this.hovered = this.isMouseOver(mouseX, mouseY);
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
+        this.hovered = this.isMouseOver(graphics.mouseX(), graphics.mouseY());
 
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        super.extractRenderState(graphics);
 
-        this.resetButton.extractRenderState(graphics, mouseX, mouseY, delta);
+        this.resetButton.extractRenderState(graphics);
     }
 
     @Override

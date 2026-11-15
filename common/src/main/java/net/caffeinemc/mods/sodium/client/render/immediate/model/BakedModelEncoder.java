@@ -43,7 +43,7 @@ public class BakedModelEncoder {
 
                 //  NeoForge patches the default VertexConsumer.putBakedQuad to do ARGB.multiply(instance.getColor(vertex), quad.bakedColors().color(vertex)), but Sodium short-circuits that path via BufferBuilderMixin, so the multiplication is lost. Blocks that encode their tint only in element.color(...) (XyCraft ores) lose all color, and blocks combining a BlockTintSource with a baked color get only one factor applied.
                 //  The platform flag is needed because Fabric's default implementation does not perform this multiplication.
-                int color = instance.getColor(i);
+                int color = instance.getColor();
                 if (USE_COLOR_MULTIPLICATION) {
                     color = ColorMixer.mulComponentWise(color, quad.sodium$getColor(i));
                 }

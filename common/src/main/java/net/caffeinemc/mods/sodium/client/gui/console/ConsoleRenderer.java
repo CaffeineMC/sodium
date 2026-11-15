@@ -85,8 +85,8 @@ public class ConsoleRenderer {
             }
         }
 
-        var mouseX = minecraft.mouseHandler.xpos() / minecraft.getWindow().getGuiScale();
-        var mouseY = minecraft.mouseHandler.ypos() / minecraft.getWindow().getGuiScale();
+        var mouseX = minecraft.mouseHandler.getScaledXPos(minecraft.getWindow());
+        var mouseY = minecraft.mouseHandler.getScaledYPos(minecraft.getWindow());
 
         boolean hovered = false;
 
@@ -162,7 +162,7 @@ public class ConsoleRenderer {
     }
 
     private static double getAnimationProgress(double currentTime, double startTime, double endTime) {
-        return Mth.clamp(Mth.inverseLerp(currentTime, startTime, endTime), 0.0D, 1.0D);
+        return Math.clamp(Mth.inverseLerp(currentTime, startTime, endTime), 0.0D, 1.0D);
     }
 
     private static int weightAlpha(double scale) {

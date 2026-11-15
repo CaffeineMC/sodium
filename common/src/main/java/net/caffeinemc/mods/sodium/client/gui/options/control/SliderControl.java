@@ -60,7 +60,7 @@ public class SliderControl implements Control {
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        public void extractRenderState(GuiGraphicsExtractor graphics) {
             int sliderX = this.getSliderX();
             int sliderY = this.getSliderY();
             int sliderWidth = Layout.SLIDER_WIDTH;
@@ -78,7 +78,7 @@ public class SliderControl implements Control {
             int labelWidth = this.font.width(label);
 
             // render the label first and then the slider to prevent the highlight rect from darkening the slider
-            super.extractRenderState(graphics, mouseX, mouseY, delta);
+            super.extractRenderState(graphics);
 
             if (this.option.shouldHideControl() || this.isResetOverlayActive()) {
                 return;
@@ -105,7 +105,7 @@ public class SliderControl implements Control {
                 this.drawString(graphics, label, sliderX + sliderWidth - labelWidth, sliderY + (sliderHeight / 2) + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);
             }
 
-            if (this.isMouseOverSlider(mouseX, mouseY)) {
+            if (this.isMouseOverSlider(graphics.mouseX(), graphics.mouseY())) {
                 graphics.requestCursor(this.sliderHeld ? CursorTypes.RESIZE_EW : CursorTypes.POINTING_HAND);
             }
         }
@@ -131,7 +131,7 @@ public class SliderControl implements Control {
             var range = this.option.getSteppedValidator();
             int min = range.min();
             int max = range.max();
-            return Mth.clamp((double) (value - min) / (max - min), 0.0d, 1.0d);
+            return Math.clamp((double) (value - min) / (max - min), 0.0d, 1.0d);
         }
 
         private int getValueForThumbPosition() {
@@ -186,7 +186,7 @@ public class SliderControl implements Control {
         }
 
         private void setValueFromMouse(double d) {
-            this.setValue(Mth.clamp((d - (double) this.getSliderX()) / (double) Layout.SLIDER_WIDTH, 0.0D, 1.0D));
+            this.setValue(Math.clamp((d - (double) this.getSliderX()) / (double) Layout.SLIDER_WIDTH, 0.0D, 1.0D));
         }
 
         public void setValue(double newThumbPosition) {

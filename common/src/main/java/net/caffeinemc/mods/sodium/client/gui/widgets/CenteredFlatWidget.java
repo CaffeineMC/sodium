@@ -38,12 +38,12 @@ public abstract class CenteredFlatWidget extends AbstractWidget {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
         if (!this.visible) {
             return;
         }
 
-        this.hovered = this.isMouseOver(mouseX, mouseY);
+        this.hovered = this.isMouseOver(graphics.mouseX(), graphics.mouseY());
 
         int backgroundColor = this.hovered ? this.theme.bgHighlight : (this.selected ? this.theme.bgDefault : this.theme.bgInactive);
         int textColor = this.selected || !this.isSelectable ? this.theme.themeLighter : (this.hovered ? this.theme.theme : this.theme.themeDarker);

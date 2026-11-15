@@ -50,8 +50,8 @@ public class TickBoxControl implements Control {
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-            super.extractRenderState(graphics, mouseX, mouseY, delta);
+        public void extractRenderState(GuiGraphicsExtractor graphics) {
+            super.extractRenderState(graphics);
 
             if (this.option.shouldHideControl() || this.isResetOverlayActive()) {
                 return;

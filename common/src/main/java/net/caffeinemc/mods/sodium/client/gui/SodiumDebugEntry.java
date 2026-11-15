@@ -3,6 +3,8 @@ package net.caffeinemc.mods.sodium.client.gui;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.components.debug.DebugColumn;
+import net.minecraft.client.gui.components.debug.DebugGroup;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
 import net.minecraft.resources.Identifier;
@@ -11,7 +13,7 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import org.jspecify.annotations.Nullable;
 
 public class SodiumDebugEntry implements DebugScreenEntry {
-    private static final Identifier DEBUG_GROUP = Identifier.fromNamespaceAndPath("sodium", "debug_group");
+    private static final DebugGroup DEBUG_GROUP = DebugGroup.Builder.titled("Sodium").withPreferredColumn(DebugColumn.Side.RIGHT).build();
     private final boolean verbose;
 
     public SodiumDebugEntry(boolean verbose) {
@@ -35,12 +37,12 @@ public class SodiumDebugEntry implements DebugScreenEntry {
 
     @Override
     public void display(DebugScreenDisplayer debugScreenDisplayer, @Nullable Level level, @Nullable LevelChunk levelChunk, @Nullable LevelChunk levelChunk2) {
-        debugScreenDisplayer.addToGroup(DEBUG_GROUP, "%sSodium Renderer (%s)".formatted(getVersionColor(), SodiumClientMod.getVersion()));
+        debugScreenDisplayer.addFactToGroup(DEBUG_GROUP, "Version", fact -> fact.formattedValue("%s%s", getVersionColor(), SodiumClientMod.getVersion()));
 
         var renderer = SodiumWorldRenderer.instanceNullable();
 
         if (renderer != null) {
-            debugScreenDisplayer.addToGroup(DEBUG_GROUP, renderer.getDebugStrings(this.verbose));
+            renderer.getDebugStrings(this.verbose, (x, i) -> debugScreenDisplayer.addFactToGroup(DEBUG_GROUP, x, i));
         }
     }
 }

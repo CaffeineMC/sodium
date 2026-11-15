@@ -203,9 +203,9 @@ public class OptionListWidget extends AbstractOptionList {
     }
 
     @Override
-    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
         graphics.enableScissor(this.getX(), this.getY(), this.getLimitX(), this.getLimitY());
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        super.extractRenderState(graphics);
         graphics.disableScissor();
     }
 
@@ -252,14 +252,14 @@ public class OptionListWidget extends AbstractOptionList {
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-            this.hovered = this.isMouseOver(mouseX, mouseY);
+        public void extractRenderState(GuiGraphicsExtractor graphics) {
+            this.hovered = this.isMouseOver(graphics.mouseX(), graphics.mouseY());
 
             this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.backgroundColor);
             this.drawString(graphics, this.truncateLabelToFit(this.title, Layout.OPTION_TEXT_SIDE_PADDING * 2), this.getX() + Layout.OPTION_PAGE_MARGIN, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, this.textColor);
 
             if (this.resetButton != null) {
-                this.resetButton.extractRenderState(graphics, mouseX, mouseY, delta);
+                this.resetButton.extractRenderState(graphics);
             }
         }
 
@@ -298,8 +298,8 @@ public class OptionListWidget extends AbstractOptionList {
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-            this.hovered = this.isMouseOver(mouseX, mouseY);
+        public void extractRenderState(GuiGraphicsExtractor graphics) {
+            this.hovered = this.isMouseOver(graphics.mouseX(), graphics.mouseY());
 
             this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.backgroundColor);
 
@@ -312,7 +312,7 @@ public class OptionListWidget extends AbstractOptionList {
             this.drawString(graphics, this.truncateLabelToFit(this.title, textOffset), this.getX() + textOffset, textY, this.textColor);
 
             if (this.resetButton != null) {
-                this.resetButton.extractRenderState(graphics, mouseX, mouseY, delta);
+                this.resetButton.extractRenderState(graphics);
             }
         }
     }
@@ -361,8 +361,8 @@ public class OptionListWidget extends AbstractOptionList {
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-            super.extractRenderState(graphics, mouseX, mouseY, delta);
+        public void extractRenderState(GuiGraphicsExtractor graphics) {
+            super.extractRenderState(graphics);
 
             Component buttonText = ExternalButtonControl.formatExternalButtonText(true, this.theme);
 

@@ -30,7 +30,7 @@ public class TerrainRenderPass {
     }
 
     public RenderPipeline getPipeline() {
-        return this.renderType.pipeline(false);
+        return this.renderType.pipeline(false, false, false, null);
     }
 
     public RenderTarget getTarget() {
@@ -38,6 +38,6 @@ public class TerrainRenderPass {
     }
 
     public GpuTextureView getAtlas() {
-        return Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView();
+        return Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).textureView();
     }
 }

@@ -88,10 +88,10 @@ public class PageListWidget extends AbstractScrollable {
     }
 
     @Override
-    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
         renderBackgroundGradient(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY());
         graphics.enableScissor(this.getX(), this.getY(), this.getLimitX(), this.getLimitY());
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        super.extractRenderState(graphics);
         graphics.disableScissor();
     }
 
@@ -153,8 +153,8 @@ public class PageListWidget extends AbstractScrollable {
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-            super.extractRenderState(graphics, mouseX, mouseY, delta);
+        public void extractRenderState(GuiGraphicsExtractor graphics) {
+            super.extractRenderState(graphics);
 
             if (this.isHovered()) {
                 graphics.requestCursor(CursorTypes.POINTING_HAND);

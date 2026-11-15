@@ -29,6 +29,7 @@ import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.caffeinemc.mods.sodium.client.world.cloned.ChunkRenderContext;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
+import net.minecraft.CrashReportUtil;
 import net.minecraft.ReportedException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
@@ -280,11 +281,13 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
 
         if (pos != null) {
             BlockState state = null;
+            boolean skip = false;
             try {
                 state = slice.getBlockState(pos);
             } catch (Exception ignored) {
+                skip = true;
             }
-            CrashReportCategory.populateBlockDetails(crashReportSection, slice, pos, state);
+            if (!skip) CrashReportUtil.populateBlockDetails(crashReportSection, slice, pos, state);
         }
 
         crashReportSection.setDetail("Chunk section", this.section);

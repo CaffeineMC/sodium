@@ -3,6 +3,7 @@ package net.caffeinemc.mods.sodium.mixin.features.gui.hooks.debug;
 import net.caffeinemc.mods.sodium.client.util.MathUtil;
 import net.caffeinemc.mods.sodium.client.util.NativeBuffer;
 import net.minecraft.client.gui.components.debug.DebugEntryMemory;
+import net.minecraft.client.gui.components.debug.DebugGroups;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
@@ -19,15 +20,6 @@ import java.lang.management.ManagementFactory;
 
 @Mixin(DebugEntryMemory.class)
 public class DebugEntryMemoryMixin {
-    @Shadow
-    @Final
-    private static Identifier GROUP;
-
-    @Unique
-    private static String getNativeMemoryString() {
-        return "Off-Heap: +" + MathUtil.toMib(getNativeMemoryUsage()) + "MB";
-    }
-
     @Unique
     private static long getNativeMemoryUsage() {
         return ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage().getUsed() + NativeBuffer.getTotalAllocated();
@@ -39,6 +31,6 @@ public class DebugEntryMemoryMixin {
                                    LevelChunk clientChunk,
                                    LevelChunk serverChunk,
                                    CallbackInfo ci) {
-        displayer.addToGroup(GROUP, getNativeMemoryString());
+        displayer.addFactToGroup(DebugGroups.MEMORY, "Off-Heap", fact -> fact.value(MathUtil.toMib(getNativeMemoryUsage()) + "MB"));
     }
 }

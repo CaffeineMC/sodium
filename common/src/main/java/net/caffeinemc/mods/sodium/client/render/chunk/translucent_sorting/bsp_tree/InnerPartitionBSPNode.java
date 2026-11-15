@@ -893,7 +893,7 @@ abstract class InnerPartitionBSPNode extends BSPNode {
     static private BSPNode handleIntersecting(BSPWorkspace workspace, IntArrayList indexes, int depth, BSPNode oldNode) {
         Int2IntOpenHashMap intersectionCounts = null;
         IntOpenHashSet primaryIntersectorIndexes = null;
-        int primaryIntersectorThreshold = Mth.clamp(indexes.size() / 2, 2, 4);
+        int primaryIntersectorThreshold = Math.clamp(indexes.size() / 2, 2, 4);
 
         int i = -1;
         int j = 0;

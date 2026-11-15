@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.renderpearl.api.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.GpuSampler;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
@@ -66,6 +67,8 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     @Shadow
     @Final
     private boolean multiDrawIndirectAvailable;
+    @Shadow
+    private @Nullable GpuSampler chunkLayerSampler;
     @Unique
     private SodiumWorldRenderer renderer;
 
@@ -75,6 +78,11 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     @Override
     public SodiumWorldRenderer sodium$getWorldRenderer() {
         return this.renderer;
+    }
+
+    @Override
+    public GpuSampler sodium$getTerrainSampler() {
+        return this.chunkLayerSampler;
     }
 
     @Redirect(
@@ -128,7 +136,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     }
 
     @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;prepareChunkRenders(Lorg/joml/Matrix4fc;Z)Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;"))
-    private ChunkSectionsToRender getRenderState(LevelRenderer instance, Matrix4fc modelViewMatrix, boolean b, Operation<ChunkSectionsToRender> original, @Local Vector4f fogColor) {
+    private ChunkSectionsToRender getRenderState(LevelRenderer instance, Matrix4fc modelViewMatrix, boolean b, Operation<ChunkSectionsToRender> original) {
         var projectionMatrix = ((GameRendererStorage) Minecraft.getInstance().gameRenderer)
                 .sodium$getProjectionMatrix();
 
@@ -137,7 +145,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
 
         // update the fog color here with the actual fog color being used to render the sky, since the fog color that
         // SodiumWorldRenderer still has stored from FogRendererMixin is outdated.
-        this.renderer.updateFogColor(fogColor);
+        this.renderer.updateFogColor(this.levelRenderState.cameraRenderState.fogData.color);
 
         this.renderer.prepareChunkRendering(this.matrices, pos.x, pos.y, pos.z);
         return new SodiumChunkSection(this.renderer, this.matrices, pos.x, pos.y, pos.z);

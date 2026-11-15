@@ -9,6 +9,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilder
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.util.DevUtil;
 import net.minecraft.util.Mth;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -110,7 +111,7 @@ public class ChunkBuilder {
      * thread.
      */
     private static int getOptimalThreadCount() {
-        return Mth.clamp(Math.max(getMaxThreadCount() / 3, getMaxThreadCount() - 6), 1, 10);
+        return Math.clamp(Math.max(getMaxThreadCount() / 3, getMaxThreadCount() - 6), 1, 10);
     }
 
     private static int getThreadCount() {
@@ -186,7 +187,7 @@ public class ChunkBuilder {
 
                 ChunkBuilder.this.busyThreadCount.getAndIncrement();
 
-                Zone zone = TracyClient.beginZone(this.name, SharedConstants.IS_RUNNING_IN_IDE);
+                Zone zone = TracyClient.beginZone(this.name, DevUtil.IS_RUNNING_IN_IDE);
 
                 try {
                     job.execute(this.context);

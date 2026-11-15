@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.client.util;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.pipeline.IndexType;
@@ -11,7 +12,6 @@ import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
-import net.minecraft.client.renderer.oit.OitRenderPassProvider;
 import net.minecraft.client.renderer.oit.OitStage;
 import org.jspecify.annotations.Nullable;
 
@@ -21,7 +21,7 @@ public class SodiumChunkSection extends ChunkSectionsToRender {
     private final double x, y, z;
 
     public SodiumChunkSection(SodiumWorldRenderer renderer, ChunkRenderMatrices matrices, double x, double y, double z) {
-        super(null, 0);
+        super(RenderSystem.getGlobalSettingsUniform().slice() /* the game... never actually checks this. so i'm using a dummy buffer */, 0);
 
         this.renderer = renderer;
         this.matrices = matrices;
@@ -31,19 +31,13 @@ public class SodiumChunkSection extends ChunkSectionsToRender {
     }
 
     @Override
-    protected void render(ChunkSectionLayer layer, RenderPass renderPass, @Nullable GpuBuffer defaultIndexBuffer, @Nullable IndexType defaultIndexType, @Nullable RenderPipeline renderPipelineOverride, @Nullable RenderPipeline renderPipelineOverrideMultidraw) {
-        throw new IllegalStateException("Not possible?");
-    }
-
-    @Override
-    public void renderGroup(ChunkSectionLayerGroup group, RenderPass renderPass, GpuSampler sampler, GpuTextureView atlas, boolean renderWireframeTerrain) {
-        this.renderer.drawChunkLayer(renderPass, group, this.matrices, this.x, this.y, this.z, sampler, null);
-    }
-
-    @Override
-    public void renderOit(GpuSampler sampler, OitStage stage, OitRenderPassProvider.Parameters params, GpuTextureView atlas, GpuTextureView lightmap) {
-        try (RenderPass renderPass = OitRenderPassProvider.createRenderPass(stage, () -> "Terrain (Sodium)", params)) {
-            this.renderer.drawChunkLayer(renderPass, ChunkSectionLayerGroup.TRANSLUCENT, this.matrices, this.x, this.y, this.z, sampler, stage);
+    protected void render(ChunkSectionLayer layer, RenderPass renderPass, @Nullable GpuBuffer defaultIndexBuffer,
+                          @Nullable IndexType defaultIndexType, boolean improvedFog, boolean wireframe,
+                          @Nullable OitStage oitStage) {
+        if (layer == ChunkSectionLayer.SOLID) {
+            this.renderer.drawChunkLayer(renderPass, ChunkSectionLayerGroup.OPAQUE, this.matrices, this.x, this.y, this.z, null);
+        } else if (layer == ChunkSectionLayer.TRANSLUCENT) {
+            this.renderer.drawChunkLayer(renderPass, ChunkSectionLayerGroup.TRANSLUCENT, this.matrices, this.x, this.y, this.z, oitStage);
         }
     }
 }

@@ -1,24 +1,25 @@
 package net.caffeinemc.mods.sodium.mixin.core.render.frustum;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
-import net.minecraft.world.effect.MobEffects;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Camera.class)
 public class CameraMixin {
     /**
      * This fixes a bug causing nausea to not affect culling.
+     *
+     * @return
      */
-    @Inject(method = "createProjectionMatrixForCulling", at = @At("RETURN"), cancellable = true)
-    private void editMatrix(CallbackInfoReturnable<Matrix4f> cir) {
-        var x = cir.getReturnValue();
+    @WrapOperation(method = "createCullFrustum", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;perspective(FFFFZ)Lorg/joml/Matrix4f;"))
+    private Matrix4f editMatrix(Matrix4f instance, float fovy, float aspect, float zNear, float zFar, boolean zZeroToOne, Operation<Matrix4f> original) {
+        var x = original.call(instance, fovy, aspect, zNear, zFar, zZeroToOne);
 
         var gameRenderer = Minecraft.getInstance().gameRenderer;
         var gameRendererAccessor = ((GameRendererAccessor) Minecraft.getInstance().gameRenderer);
@@ -38,7 +39,7 @@ public class CameraMixin {
             x.scale(1.0F / skew, 1.0F, 1.0F);
             x.rotate(-angle, axis);
         }
-        cir.setReturnValue(x);
 
+        return x;
     }
 }

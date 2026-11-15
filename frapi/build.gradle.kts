@@ -57,7 +57,7 @@ dependencies {
     addEmbeddedFabricModule("fabric-api-base")
     addEmbeddedFabricModule("fabric-block-getter-api-v2")
     addEmbeddedFabricModule("fabric-rendering-v1")
-    addEmbeddedFabricModule("fabric-renderer-api-v1")
+    if (BuildConfig.SUPPORT_FRAPI) addEmbeddedFabricModule("fabric-renderer-api-v1")
 }
 
 fun exportSourceSetJava(name: String, sourceSet: SourceSet) {

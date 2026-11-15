@@ -57,9 +57,9 @@ public class ChunkRenderList {
         // when the camera moves from outside the region to inside the region (when seen on all axes independently).
         // This type of cache invalidation stems from different facings of sections being rendered if the camera is aligned with them on an axis.
         // For sorting only the position clamped to inside the region is used.
-        int relativeCameraSectionX = Mth.clamp(cameraPos.getX() - this.region.getChunkX(), -1, RenderRegion.REGION_WIDTH);
-        int relativeCameraSectionY = Mth.clamp(cameraPos.getY() - this.region.getChunkY(), -1, RenderRegion.REGION_HEIGHT);
-        int relativeCameraSectionZ = Mth.clamp(cameraPos.getZ() - this.region.getChunkZ(), -1, RenderRegion.REGION_LENGTH);
+        int relativeCameraSectionX = Math.clamp(cameraPos.getX() - this.region.getChunkX(), -1, RenderRegion.REGION_WIDTH);
+        int relativeCameraSectionY = Math.clamp(cameraPos.getY() - this.region.getChunkY(), -1, RenderRegion.REGION_HEIGHT);
+        int relativeCameraSectionZ = Math.clamp(cameraPos.getZ() - this.region.getChunkZ(), -1, RenderRegion.REGION_LENGTH);
 
         // invalidate batch cache if the render list changed
         if (this.prevSectionsWithGeometryCount != this.sectionsWithGeometryCount ||
