@@ -7,11 +7,11 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.oit.OitStage;
+import net.minecraft.client.renderer.pipeline.RenderPipelines;
 import net.minecraft.resources.Identifier;
-
-import java.util.*;
-
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
 import com.mojang.renderpearl.api.pipeline.BlendFunction;
 import com.mojang.renderpearl.api.pipeline.ColorTargetState;
@@ -26,8 +26,7 @@ import java.util.Optional;
 
 
 public abstract class ShaderChunkRenderer implements ChunkRenderer {
-    private static final Map<TerrainRenderPass, RenderPipeline> programs = new Object2ObjectOpenHashMap<>();
-    private static ShaderCompilationParameters lastCompilationParameters = null;
+    private static final Map<ShaderCompilationParameters, RenderPipeline> programs = new Object2ObjectOpenHashMap<>();
 
     public static final BindGroupLayout BIND_GROUP = BindGroupLayout.builder()
             .withUniform("u_BlockTex", UniformType.COMBINED_IMAGE_SAMPLER)
@@ -47,56 +46,65 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         this.vertexFormat = vertexType.getVertexFormat();
     }
 
-    protected record ShaderCompilationParameters(boolean useSphericalFog) {
+    protected record ShaderCompilationParameters(TerrainRenderPass pass, OitStage stage, boolean improvedFog, boolean useSphericalFog) {
     }
 
     protected RenderPipeline compileProgram(TerrainRenderPass pass, @Nullable OitStage stage, ShaderCompilationParameters parameters) {
-        if (!parameters.equals(lastCompilationParameters)) {
-            programs.clear();
-            lastCompilationParameters = parameters;
+        RenderPipeline program = programs.get(parameters);
+
+        if (program == null) {
+            programs.put(parameters, program = this.createShader(parameters));
         }
 
-        if (stage == null) {
-            RenderPipeline program = programs.get(pass);
-
-            if (program == null) {
-                programs.put(pass, program = this.createShader(pass, parameters));
-            }
-
-            return program;
-        } else {
-            throw new IllegalStateException("later");
-        }
+        return program;
     }
 
-    private RenderPipeline createShader(TerrainRenderPass pass, ShaderCompilationParameters parameters) {
+    private RenderPipeline createShader(ShaderCompilationParameters parameters) {
         List<String> constants = createShaderConstants(parameters);
 
-        var builder = RenderPipeline.builder()
+        RenderPipeline.Snippet snippet = null;
+
+        if (parameters.stage == OitStage.ACCUMULATE) {
+            snippet = RenderPipelines.OIT_ACCUMULATE_SNIPPET;
+        } else if (parameters.stage == OitStage.TRANSMITTANCE) {
+            snippet = RenderPipelines.OIT_TRANSMITTANCE_SNIPPET;
+        } else if (parameters.stage == OitStage.DEPTH_BOUNDS) {
+            snippet = RenderPipelines.OIT_DEPTH_BOUNDS_SNIPPET;
+        }
+
+        var builder = RenderPipeline.builder(snippet == null ? new RenderPipeline.Snippet[0] : new RenderPipeline.Snippet[] { snippet })
                 .withBindGroupLayout(BIND_GROUP)
                 .withBindGroupLayout(LIGHT_GROUP)
                 .withPushConstantSize(DefaultChunkRenderer.PUSH_CONSTANT_RANGE)
-                .withLocation(Identifier.fromNamespaceAndPath("sodium", pass.getPipeline().getLocation().getPath()))
+                .withLocation(Identifier.fromNamespaceAndPath("sodium", parameters.pass.getPipeline().getLocation().getPath()))
                 .withCull(true)
                 .withVertexShader(Identifier.fromNamespaceAndPath("sodium", "blocks/block_layer_opaque"))
                 .withFragmentShader(Identifier.fromNamespaceAndPath("sodium", "blocks/block_layer_opaque"))
-                .withDepthStencilState(DepthStencilState.DEFAULT)
+
                 .withPrimitiveTopology(PrimitiveTopology.QUADS)
                 .withVertexBinding(0, this.vertexFormat);
 
-        if (pass.isTranslucent()) {
-            builder.withColorTargetState(new ColorTargetState(Optional.of(BlendFunction.TRANSLUCENT), 0xFFFFFFFF));
-        } else {
-            builder.withColorTargetState(ColorTargetState.DEFAULT);
+        if (parameters.improvedFog && (parameters.stage == null || parameters.stage == OitStage.ACCUMULATE)) {
+            builder.withBindGroupLayout(BindGroupLayouts.SKY_CLOUDS_SAMPLER).withShaderDefine("IMPROVED_FOG");
+        }
+
+        if (parameters.stage == null) {
+            if (parameters.pass.isTranslucent()) {
+                builder.withColorTargetState(new ColorTargetState(Optional.of(BlendFunction.TRANSLUCENT), 0xFFFFFFFF)).withDepthStencilState(DepthStencilState.DEFAULT);
+            } else {
+                builder.withColorTargetState(ColorTargetState.DEFAULT).withDepthStencilState(DepthStencilState.DEFAULT);
+            }
         }
 
         for (String s : constants) {
             builder.withShaderDefine(s);
         }
 
-        if (pass.isTranslucent()) {
+        if (parameters.pass.isTranslucent()) {
+            builder.withBindGroupLayout(BindGroupLayouts.WATER_MASK_SAMPLER);
+            builder.withShaderDefine("CHECK_WATER_MASK");
             builder.withShaderDefine("ALPHA_CUTOUT", 0.01f);
-        } else if (pass.supportsFragmentDiscard()) {
+        } else if (parameters.pass.supportsFragmentDiscard()) {
             builder.withShaderDefine("ALPHA_CUTOUT", 0.5f);
         }
 
@@ -115,7 +123,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
     }
 
     protected void begin(TerrainRenderPass pass, @Nullable OitStage stage) {
-        ShaderCompilationParameters parameters = new ShaderCompilationParameters(SodiumClientMod.options().performance.useSphericalRenderFog);
+        ShaderCompilationParameters parameters = new ShaderCompilationParameters(pass, stage, Minecraft.getInstance().gameRenderer.useImprovedTransparency(), SodiumClientMod.options().performance.useSphericalRenderFog);
         this.activeProgram = this.compileProgram(pass, stage, parameters);
     }
 
