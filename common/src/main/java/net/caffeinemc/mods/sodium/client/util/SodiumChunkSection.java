@@ -32,12 +32,12 @@ public class SodiumChunkSection extends ChunkSectionsToRender {
 
     @Override
     protected void render(ChunkSectionLayer layer, RenderPass renderPass, @Nullable GpuBuffer defaultIndexBuffer,
-                          @Nullable IndexType defaultIndexType, boolean improvedFog, boolean wireframe,
-                          @Nullable OitStage oitStage) {
+                          @Nullable IndexType defaultIndexType, boolean improvedFog, boolean cloudsInFog,
+                          boolean wireframe, @Nullable OitStage oitStage, boolean hasWaterMask) {
         if (layer == ChunkSectionLayer.SOLID) {
-            this.renderer.drawChunkLayer(renderPass, ChunkSectionLayerGroup.OPAQUE, this.matrices, this.x, this.y, this.z, null);
+            this.renderer.drawChunkLayer(renderPass, ChunkSectionLayerGroup.OPAQUE, this.matrices, this.x, this.y, this.z, null, hasWaterMask);
         } else if (layer == ChunkSectionLayer.TRANSLUCENT) {
-            this.renderer.drawChunkLayer(renderPass, ChunkSectionLayerGroup.TRANSLUCENT, this.matrices, this.x, this.y, this.z, oitStage);
+            this.renderer.drawChunkLayer(renderPass, ChunkSectionLayerGroup.TRANSLUCENT, this.matrices, this.x, this.y, this.z, oitStage, hasWaterMask);
         }
     }
 }

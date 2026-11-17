@@ -282,6 +282,11 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
 
         qualityPage.addOptionGroup(builder.createOptionGroup()
                 .addOption(
+                        vanilla.createBooleanOption(Identifier.parse("sodium:quality.improved_fog"), this.vanillaOpts.improvedFog())
+                                .setImpact(OptionImpact.LOW)
+                                .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
+                )
+                .addOption(
                         vanilla.createBooleanOption(Identifier.parse("sodium:quality.graphics"), this.vanillaOpts.improvedTransparency())
                                 .setImpact(OptionImpact.HIGH)
                                 .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
@@ -461,6 +466,11 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                                 .setFlags(OptionFlag.REQUIRES_RENDERER_UPDATE)
                 )
         );
+
+        performancePage.addOptionGroup(builder.createOptionGroup()
+                .addOption(vanilla.createBooleanOption(Identifier.parse("sodium:performance.dxgi_surface"), this.vanillaOpts.preferDXGIPresent())
+                        .setImpact(OptionImpact.VARIES)
+                        .setFlags(OptionFlag.REQUIRES_GAME_RESTART)));
 
         performancePage.addOptionGroup(builder.createOptionGroup()
                 .addOption(

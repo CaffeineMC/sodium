@@ -62,7 +62,11 @@ public class SodiumTerrainPipelines {
                 .withVertexBinding(0, parameters.vertexType().getVertexFormat());
 
         if (parameters.improvedFog() && (parameters.stage() == null || parameters.stage() == OitStage.ACCUMULATE)) {
-            builder.withBindGroupLayout(BindGroupLayouts.SKY_CLOUDS_SAMPLER).withShaderDefine("IMPROVED_FOG");
+            builder.withBindGroupLayout(BindGroupLayouts.SKY_SAMPLER).withShaderDefine("IMPROVED_FOG");
+
+            if (parameters.cloudsInFog()) {
+                builder.withBindGroupLayout(BindGroupLayouts.CLOUDS_SAMPLER).withShaderDefine("CLOUDS_IN_FOG");
+            }
         }
 
         if (parameters.stage() == null) {
@@ -78,8 +82,10 @@ public class SodiumTerrainPipelines {
         }
 
         if (parameters.pass().isTranslucent()) {
-            builder.withBindGroupLayout(BindGroupLayouts.WATER_MASK_SAMPLER);
-            builder.withShaderDefine("CHECK_WATER_MASK");
+            if (parameters.useWaterMask()) {
+                builder.withBindGroupLayout(BindGroupLayouts.WATER_MASK_SAMPLER);
+                builder.withShaderDefine("CHECK_WATER_MASK");
+            }
             builder.withShaderDefine("ALPHA_CUTOUT", 0.01f);
         } else if (parameters.pass().supportsFragmentDiscard()) {
             builder.withShaderDefine("ALPHA_CUTOUT", 0.5f);

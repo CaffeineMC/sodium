@@ -288,22 +288,22 @@ public class SodiumWorldRenderer {
     /**
      * Performs a render pass for the given {@link RenderType} and draws all visible chunks for it.
      */
-    public void drawChunkLayer(RenderPass pass, ChunkSectionLayerGroup group, ChunkRenderMatrices matrices, double x, double y, double z, @Nullable OitStage stage) {
+    public void drawChunkLayer(RenderPass pass, ChunkSectionLayerGroup group, ChunkRenderMatrices matrices, double x, double y, double z, @Nullable OitStage stage, boolean useWaterMask) {
         if (group == ChunkSectionLayerGroup.OPAQUE) {
-            this.renderLayer(matrices, DefaultTerrainRenderPasses.SOLID, x, y, z, this.lastFogParameters, pass, stage);
-            this.renderLayer(matrices, DefaultTerrainRenderPasses.CUTOUT, x, y, z, this.lastFogParameters, pass, stage);
+            this.renderLayer(matrices, DefaultTerrainRenderPasses.SOLID, x, y, z, this.lastFogParameters, pass, stage, useWaterMask);
+            this.renderLayer(matrices, DefaultTerrainRenderPasses.CUTOUT, x, y, z, this.lastFogParameters, pass, stage, useWaterMask);
         } else if (group == ChunkSectionLayerGroup.TRANSLUCENT) {
-            this.renderLayer(matrices, DefaultTerrainRenderPasses.TRANSLUCENT, x, y, z, this.lastFogParameters, pass, stage);
+            this.renderLayer(matrices, DefaultTerrainRenderPasses.TRANSLUCENT, x, y, z, this.lastFogParameters, pass, stage, useWaterMask);
         }
     }
 
-    public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters, RenderPass renderPass, @Nullable OitStage stage) {
+    public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters, RenderPass renderPass, @Nullable OitStage stage, boolean useWaterMask) {
         CameraTransform cameraTransform = new CameraTransform(x, y, z);
         this.uniformBufferManager.update(matrices, fogParameters, cameraTransform);
 
         this.renderSectionManager.getChunkRenderer().render(matrices, this.renderSectionManager.getRenderLists(), pass,
                 cameraTransform, fogParameters, this.useTranslucencySorting, renderPass,
-                this.uniformBufferManager.getUniformBuffer(), this.uniformBufferManager.getSectionTimeInfo(), stage);
+                this.uniformBufferManager.getUniformBuffer(), this.uniformBufferManager.getSectionTimeInfo(), stage, useWaterMask);
     }
 
     public void reload() {

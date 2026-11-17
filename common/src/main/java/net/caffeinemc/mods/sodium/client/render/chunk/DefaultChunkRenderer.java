@@ -116,10 +116,10 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                        FogParameters parameters,
                        boolean indexedRenderingEnabled, RenderPass pass,
                        GpuBufferSlice uniformData, GpuBuffer sectionTimeInfo,
-                       @Nullable OitStage stage) {
+                       @Nullable OitStage stage, boolean hasWaterMask) {
         if (!this.shouldDraw[DefaultTerrainRenderPasses.getPassIndex(renderPass)]) return;
 
-        super.begin(renderPass, stage);
+        super.begin(renderPass, stage, hasWaterMask);
 
         final boolean useIndexedTessellation = renderPass.isTranslucent() && indexedRenderingEnabled;
 

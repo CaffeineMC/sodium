@@ -22,8 +22,8 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         this.vertexFormat = vertexType.getVertexFormat();
     }
 
-    protected void begin(TerrainRenderPass pass, @Nullable OitStage stage) {
-        ShaderCompilationParameters parameters = new ShaderCompilationParameters(pass, stage, Minecraft.getInstance().gameRenderer.useImprovedTransparency(), SodiumClientMod.options().performance.useSphericalRenderFog, this.vertexType);
+    protected void begin(TerrainRenderPass pass, @Nullable OitStage stage, boolean hasWaterMask) {
+        ShaderCompilationParameters parameters = new ShaderCompilationParameters(pass, stage, Minecraft.getInstance().options.improvedFog().get(), Minecraft.getInstance().gameRenderer.useImprovedTransparency(), hasWaterMask, SodiumClientMod.options().performance.useSphericalRenderFog, this.vertexType);
         this.activeProgram = SodiumTerrainPipelines.compileProgram(parameters);
     }
 

@@ -30,7 +30,7 @@ public class TerrainRenderPass {
     }
 
     public RenderPipeline getPipeline() {
-        return this.renderType.pipeline(false, false, false, null);
+        return this.renderType.pipeline(false, false, false, false,null, false);
     }
 
     public RenderTarget getTarget() {
