@@ -179,24 +179,29 @@ public class RenderSectionManager {
     }
 
     public void prepareRenderTrees(Camera camera, Viewport viewport, FogParameters fogParameters, boolean spectator) {
-        // cancel task if not in progress
-        if (this.pendingTask != null && this.pendingTask.cancelIfNotStarted()) {
+        // consume the results of completed tasks
+        this.consumeCullTaskResults(false);
+
+        // discard unusable present frustum-tested trees
+        if (this.cameraChanged) {
+            this.cullResults.remove(CullType.LOCAL);
+        }
+
+        // if the camera has changed or the graph is dirty, we need to compute a new tree for the current camera.
+        // We also need to start computing a new local tree if there is none and none is currently being computed.
+        boolean needsTask = this.cameraChanged || this.needsGraphUpdate ||
+                this.pendingTask == null && !this.cullResults.containsKey(CullType.LOCAL);
+
+        // cancel pending but not started tasks since they'd be outdated
+        if (needsTask && this.pendingTask != null && this.pendingTask.cancelIfNotStarted()) {
             this.pendingTask = null;
 
             // end the safe read phase on task cancellation
             this.renderSections.endSafeReadPhase();
         }
 
-        // consume the results of completed tasks
-        this.consumeCullTaskResults(false);
-
-        // discard unusable present and pending frustum-tested trees
-        if (this.cameraChanged) {
-            this.cullResults.remove(CullType.LOCAL);
-        }
-
         // if the origin exists in the graph, schedule new async culling task
-        if (!this.isOutOfGraph(viewport.getChunkCoord()) && (this.cameraChanged || this.needsGraphUpdate)) {
+        if (needsTask && !this.isOutOfGraph(viewport.getChunkCoord())) {
             this.scheduleAsyncWork(camera, viewport, fogParameters, spectator);
         }
     }
