@@ -50,6 +50,7 @@
     "core.world.map.ClientLevelMixin",
     "core.world.map.ClientPacketListenerMixin",
     "features.gui.hooks.console.GameRendererMixin",
+    "features.gui.hooks.compatibility.ProblemIndicatorMixin",
     "features.gui.hooks.debug.DebugEntryMemoryMixin",
     "features.gui.hooks.debug.DebugScreenEntriesAccessor",
     "features.gui.hooks.debug.DebugScreenEntryListMixin",
