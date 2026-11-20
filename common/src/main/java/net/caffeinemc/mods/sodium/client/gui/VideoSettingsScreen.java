@@ -18,13 +18,14 @@ import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiPipeline;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.pipeline.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.Identifier;
@@ -325,13 +326,17 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
     }
 
     @Override
-    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        this.updateControls(mouseX, mouseY);
-
-        super.extractRenderState(graphics, this.prompt != null ? -1 : mouseX, this.prompt != null ? -1 : mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
+        this.updateControls(graphics.mouseX(), graphics.mouseY());
 
         if (this.prompt != null) {
-            this.prompt.extractRenderState(graphics, mouseX, mouseY, delta);
+            graphics.extractWithoutMouse(() -> super.extractRenderState(graphics));
+        } else {
+            super.extractRenderState(graphics);
+        }
+
+        if (this.prompt != null) {
+            this.prompt.extractRenderState(graphics);
         } else {
             this.tooltip.render(graphics);
         }
@@ -542,15 +547,15 @@ public class VideoSettingsScreen extends Screen implements ScreenPromptable, Scr
         int iconSize = height - margin * 2;
 
         var texture = Minecraft.getInstance().getTextureManager().getTexture(icon);
-        int w = texture.getTexture().getWidth(0);
-        int h = texture.getTexture().getHeight(0);
+        int w = texture.textureView().getWidth(0);
+        int h = texture.textureView().getHeight(0);
 
         x = x + margin;
         y = y + height / 2 - iconSize / 2;
         if (iconMonochrome) {
-            graphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0, 0, iconSize, iconSize, w, h, w, h, color);
+            graphics.blit(GuiPipeline.TEXTURED, icon, x, y, 0, 0, iconSize, iconSize, w, h, w, h, color);
         } else {
-            graphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0, 0, iconSize, iconSize, w, h, w, h);
+            graphics.blit(GuiPipeline.TEXTURED, icon, x, y, 0, 0, iconSize, iconSize, w, h, w, h);
         }
 
         return margin * 2 + iconSize;

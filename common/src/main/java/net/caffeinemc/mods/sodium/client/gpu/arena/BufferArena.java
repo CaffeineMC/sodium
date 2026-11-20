@@ -1,14 +1,22 @@
 package net.caffeinemc.mods.sodium.client.gpu.arena;
 
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.renderpearl.api.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.client.gpu.arena.staging.StagingBuffer;
 import net.caffeinemc.mods.sodium.client.util.MathUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.gui.GuiPipeline;
+import net.minecraft.client.renderer.pipeline.RenderPipelines;
+import net.minecraft.client.renderer.texture.ExternalTextureProvider;
+import net.minecraft.client.renderer.texture.TextureResources;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 
@@ -440,20 +448,28 @@ public abstract class BufferArena implements AllocatorBase {
     }
 
     private final Identifier textureId = Identifier.parse("sodium:buffer_debug_" + System.identityHashCode(this));
-    public DynamicTexture texture = null;
+    private NativeImage texture;
+    private GpuTexture gpuImage;
+    private GpuTextureView gpuImageView;
 
     private void ensureDebugMap() {
         if (this.texture == null) {
-            this.texture = new DynamicTexture(this.textureId::toString, 200, 200, true);
-            this.texture.getPixels().setPixelABGR(0, 0, 0xFFFFFFFF);
-            this.texture.upload();
-            Minecraft.getInstance().getTextureManager().register(this.textureId, this.texture);
+            this.texture  = new NativeImage(NativeImage.Format.RGBA, 200, 200, true);
+            this.texture.setPixelABGR(0, 0, 0xFFFFFFFF);
+            this.gpuImage = RenderSystem.getDevice().createTexture("Sodium GPU arena debug texture",
+                    GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_TEXTURE_BINDING, GpuFormat.RGBA8_UNORM, 200, 200, 1, 1);
+            this.gpuImageView = RenderSystem.getDevice().createTextureView(gpuImage);
+            this.texture.writeToGpuTexture(RenderSystem.getDevice().createCommandEncoder(), this.gpuImage);
+            Minecraft.getInstance().getTextureManager().registerProvider(this.textureId, new ExternalTextureProvider(new TextureResources(this.gpuImage, this.gpuImageView, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST))));
         }
     }
 
     private void closeDebugMap() {
         if (this.texture != null) {
             Minecraft.getInstance().getTextureManager().release(this.textureId);
+            this.gpuImageView.close();
+            this.gpuImage.close();
+            this.texture.close();
             this.texture = null;
         }
     }
@@ -461,7 +477,7 @@ public abstract class BufferArena implements AllocatorBase {
     public void renderDebugMap(GuiGraphicsExtractor graphics, int x, int y, int drawWidth, int drawHeight) {
         this.ensureDebugMap();
 
-        var image = this.texture.getPixels();
+        var image = this.texture;
         int width = image.getWidth();
         int height = image.getHeight();
 
@@ -510,9 +526,9 @@ public abstract class BufferArena implements AllocatorBase {
             seg = seg.getNext();
         }
 
-        this.texture.upload();
+        this.texture.writeToGpuTexture(RenderSystem.getDevice().createCommandEncoder(), this.gpuImage);
 
-        graphics.blit(RenderPipelines.GUI_TEXTURED, this.textureId, x, y, 0, 0, drawWidth, drawHeight, 1, 1, 1, 1);
+        graphics.blit(GuiPipeline.TEXTURED, this.textureId, x, y, 0, 0, drawWidth, drawHeight, 1, 1, 1, 1);
 
         int usageOffset = 3;
         graphics.text(Minecraft.getInstance().font, String.format("%d MiB", MathUtil.toMib(this.getDeviceUsedMemory())), x + usageOffset, y + drawHeight - 30, 0xFFFFFFFF);

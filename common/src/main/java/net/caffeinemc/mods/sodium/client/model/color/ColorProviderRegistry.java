@@ -47,7 +47,7 @@ public class ColorProviderRegistry {
                 Blocks.WATER, Blocks.BUBBLE_COLUMN);
 
         this.registerFluids(FluidRendererFactory.getInstance().getWaterColorProvider(),
-                Fluids.WATER, Fluids.FLOWING_WATER);
+                Fluids.WATER);
     }
 
     private void registerBlocks(ColorProvider<BlockState> provider, Block... blocks) {

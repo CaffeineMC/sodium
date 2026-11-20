@@ -1,9 +1,11 @@
 package net.caffeinemc.mods.sodium.fabric.render;
 
+import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProviderRegistry;
 import net.caffeinemc.mods.sodium.client.model.light.LightPipelineProvider;
 import net.caffeinemc.mods.sodium.client.model.quad.blender.BlendedColorProvider;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.DefaultFluidRenderer;
@@ -11,17 +13,22 @@ import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.FluidRend
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.render.helper.ColorHelper;
 import net.caffeinemc.mods.sodium.client.services.FluidRendererFactory;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRendering;
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderingRegistry;
+import net.fabricmc.fabric.impl.client.rendering.fluid.FluidRenderingImpl;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockTintSource;
+import net.minecraft.client.model.geom.builders.UVPair;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.client.renderer.block.FluidStateModelSet;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.block.state.BlockState;
@@ -82,7 +89,25 @@ public class FluidRendererImpl extends FluidRenderer {
         this.defaultContext.setUp(this.colorProviderRegistry, this.defaultRenderer, level, blockState, fluidState, blockPos, offset, collector, meshBuilder, material, handler, hasModOverride, this.fluidStates);
 
         try {
-            FluidRendering.render(this.fluidRenderer, handler, level, blockPos, i -> meshBuilder.asFallbackVertexConsumer(DefaultMaterials.forChunkLayer(i), collector), blockState, fluidState, this.defaultContext);
+            FluidRendering.render(this.fluidRenderer, handler, level, blockPos, new net.minecraft.client.renderer.block.FluidRenderer.Output() {
+                @Override
+                public void put(ChunkSectionLayer layer, float x, float y, float z, BakedQuad quad, int tintColor,
+                                int brightnesses, int lightCoords) {
+                    var consumer = meshBuilder.asFallbackVertexConsumer(DefaultMaterials.forChunkLayer(layer), collector);
+                    var normal = quad.direction().getUnitVec3f();
+
+                    for (int i = 0; i < 4; i++) {
+                        var pos = quad.position(i);
+                        var uv = quad.packedUV(i);
+                        float brightness = ((brightnesses) & 0xFF) / 255.0f;
+                        consumer.addVertex(x + pos.x(), y + pos.y(), z + pos.z())
+                                .setColor(ColorARGB.mulRGB(tintColor, brightness))
+                                .setUv(UVPair.unpackU(uv), UVPair.unpackV(uv))
+                                .setLight(lightCoords)
+                                .setNormal(normal.x(), normal.y(), normal.z());
+                    }
+                }
+            }, blockState, fluidState, this.defaultContext);
         } finally {
             this.defaultContext.clear();
         }

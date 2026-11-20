@@ -75,8 +75,8 @@ public class ExternalButtonControl implements Control {
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-            super.extractRenderState(graphics, mouseX, mouseY, delta);
+        public void extractRenderState(GuiGraphicsExtractor graphics) {
+            super.extractRenderState(graphics);
 
             Component buttonText = formatExternalButtonText(this.option.isEnabled(), this.theme);
 

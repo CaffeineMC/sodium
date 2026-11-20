@@ -5,6 +5,7 @@ import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.pipeline.IndexType;
+import com.mojang.renderpearl.api.textures.AddressMode;
 import com.mojang.renderpearl.api.textures.FilterMode;
 import com.mojang.renderpearl.api.textures.GpuSampler;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
@@ -23,6 +24,7 @@ import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.util.BitwiseMath;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.client.util.UInt32;
+import net.caffeinemc.mods.sodium.client.world.LevelRendererExtension;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.oit.OitStage;
 import org.jspecify.annotations.Nullable;
@@ -113,17 +115,17 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
                        CameraTransform camera,
                        FogParameters parameters,
                        boolean indexedRenderingEnabled, RenderPass pass,
-                       GpuSampler terrainSampler, GpuBufferSlice uniformData, GpuBuffer sectionTimeInfo,
-                       @Nullable OitStage stage) {
+                       GpuBufferSlice uniformData, GpuBuffer sectionTimeInfo,
+                       @Nullable OitStage stage, boolean hasWaterMask) {
         if (!this.shouldDraw[DefaultTerrainRenderPasses.getPassIndex(renderPass)]) return;
 
-        super.begin(renderPass, stage);
+        super.begin(renderPass, stage, hasWaterMask);
 
         final boolean useIndexedTessellation = renderPass.isTranslucent() && indexedRenderingEnabled;
 
         var iterator = renderLists.iterator(renderPass.isTranslucent());
 
-        pass.setPipeline(RenderSystem.getCompiledPipeline(this.activeProgram));
+        pass.setPipeline(RenderSystem.getCompiledPipeline(this.activeProgram, pass.activeSubpass()));
         this.drawContext.setContext(pass, this.activeProgram);
 
         if (!useIndexedTessellation && this.sharedIndexBuffer.getBufferObject() != null) {
@@ -133,7 +135,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
         pass.setUniform("u_Globals", uniformData);
         pass.setUniform("u_SectionTimeInfo", sectionTimeInfo);
         pass.setUniform("u_LightTex", Minecraft.getInstance().gameRenderer.lightmap(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
-        pass.setUniform("u_BlockTex", renderPass.getAtlas(), terrainSampler);
+        pass.setUniform("u_BlockTex", renderPass.getAtlas(), ((LevelRendererExtension) Minecraft.getInstance().levelRenderer).sodium$getTerrainSampler());
 
         while (iterator.hasNext()) {
             ChunkRenderList renderList = iterator.next();

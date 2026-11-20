@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gpu.device.context;
 
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import net.caffeinemc.mods.sodium.client.gpu.device.backend.DrawBackend;
 

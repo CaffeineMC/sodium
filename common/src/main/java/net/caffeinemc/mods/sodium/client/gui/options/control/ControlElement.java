@@ -32,7 +32,7 @@ public abstract class ControlElement extends AbstractWidget {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
         String name = this.getOption().getName().getString();
 
         // add the star suffix before truncation to prevent it from overlapping with the label text
@@ -53,7 +53,7 @@ public abstract class ControlElement extends AbstractWidget {
             label = String.valueOf(ChatFormatting.GRAY) + ChatFormatting.STRIKETHROUGH + name;
         }
 
-        this.hovered = this.isMouseOver(mouseX, mouseY);
+        this.hovered = this.isMouseOver(graphics.mouseX(), graphics.mouseY());
 
         this.drawRect(graphics, this.getX(), this.getY(), this.getLimitX(), this.getLimitY(), this.hovered ? Colors.BACKGROUND_HOVER : Colors.BACKGROUND_LIGHT);
         this.drawString(graphics, label, this.getX() + Layout.OPTION_TEXT_SIDE_PADDING, this.getCenterY() + Layout.REGULAR_TEXT_BASELINE_OFFSET, Colors.FOREGROUND);

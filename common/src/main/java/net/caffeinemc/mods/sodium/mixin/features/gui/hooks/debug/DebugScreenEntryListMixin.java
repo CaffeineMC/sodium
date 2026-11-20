@@ -2,11 +2,9 @@ package net.caffeinemc.mods.sodium.mixin.features.gui.hooks.debug;
 
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
-import net.minecraft.client.gui.components.debug.DebugScreenEntries;
-import net.minecraft.client.gui.components.debug.DebugScreenEntryList;
-import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
-import net.minecraft.client.gui.components.debug.DebugScreenProfile;
+import net.minecraft.client.gui.components.debug.*;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -21,7 +19,7 @@ import java.util.Map;
 public class DebugScreenEntryListMixin {
     @Final
     @Shadow
-    private Map<Identifier, DebugScreenEntryStatus> allStatuses;
+    private Map<ResourceKey<DebugScreenEntry>, DebugScreenEntryStatus> allStatuses;
 
     @Unique
     private void setFullDebugStatuses() {
@@ -51,7 +49,7 @@ public class DebugScreenEntryListMixin {
 
     @Inject(method = "rebuildCurrentList", at = @At("HEAD"))
     private void injectSodiumSettings(CallbackInfo ci) {
-        Identifier setting;
+        ResourceKey<DebugScreenEntry> setting;
 
         if (PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
             setting = SodiumClientMod.SODIUM_DEBUG_ENTRY_FULL;

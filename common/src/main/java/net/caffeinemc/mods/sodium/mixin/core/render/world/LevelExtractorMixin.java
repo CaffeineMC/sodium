@@ -9,6 +9,7 @@ import net.caffeinemc.mods.sodium.client.world.LevelRendererExtension;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.debug.DebugFact;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.extract.LevelExtractor;
@@ -23,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @Mixin(LevelExtractor.class)
@@ -80,9 +82,9 @@ public class LevelExtractorMixin {
      */
     @VisibleForDebug
     @Overwrite
-    public String sectionStatistics() {
+    public void sectionStatistics(final BiConsumer<String, Consumer<DebugFact>> addFact) {
         this.checkRenderer();
-        return this.renderer.getChunksDebugString();
+        this.renderer.getChunksDebugString(addFact);
     }
 
     /**

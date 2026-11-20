@@ -99,6 +99,6 @@ public class FabricBlockAccess implements PlatformBlockAccess {
 
     @Override
     public boolean shouldOccludeFluid(Direction adjDirection, BlockState adjBlockState, FluidState fluid) {
-        return adjBlockState.getFluidState().getType().isSame(fluid.getType());
+        return adjBlockState.getFluidState().getType().equals(fluid.getType());
     }
 }

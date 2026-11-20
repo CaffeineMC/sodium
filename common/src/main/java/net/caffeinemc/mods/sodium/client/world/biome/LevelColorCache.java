@@ -51,9 +51,9 @@ public class LevelColorCache {
 
     public int getColor(ColorResolver resolver, int blockX, int blockY, int blockZ) {
         // Clamp inputs
-        blockX = Mth.clamp(blockX, this.minBlockX, this.maxBlockX) - this.minBlockX;
-        blockY = Mth.clamp(blockY, this.minBlockY, this.maxBlockY) - this.minBlockY;
-        blockZ = Mth.clamp(blockZ, this.minBlockZ, this.maxBlockZ) - this.minBlockZ;
+        blockX = Math.clamp(blockX, this.minBlockX, this.maxBlockX) - this.minBlockX;
+        blockY = Math.clamp(blockY, this.minBlockY, this.maxBlockY) - this.minBlockY;
+        blockZ = Math.clamp(blockZ, this.minBlockZ, this.maxBlockZ) - this.minBlockZ;
 
         if (!this.slices.containsKey(resolver)) {
             this.initializeSlices(resolver);

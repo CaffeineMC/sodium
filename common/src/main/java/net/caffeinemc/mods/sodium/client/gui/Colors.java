@@ -34,8 +34,8 @@ public class Colors {
 
     public static int adjust(int color, float factor) {
         float[] hsv = ColorARGB.toHSV(color);
-        var s = Mth.clamp(hsv[1] * (1 - Math.abs(factor)), 0, 1);
-        var b = Mth.clamp(hsv[2] * (1 + factor), 0, 1);
+        var s = Math.clamp(hsv[1] * (1 - Math.abs(factor)), 0, 1);
+        var b = Math.clamp(hsv[2] * (1 + factor), 0, 1);
         return ColorARGB.transferAlpha(ColorARGB.fromHSV(hsv[0], s, b), color);
     }
 

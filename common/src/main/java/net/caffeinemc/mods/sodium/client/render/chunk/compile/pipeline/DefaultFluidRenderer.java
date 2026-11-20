@@ -118,7 +118,7 @@ public class DefaultFluidRenderer {
 
         // don't render anything if the other block is the same fluid
         // NOTE: this check is already included in the default implementation of the above shouldOccludeFluid
-        if (otherState.getFluidState().getType().isSame(fluid.getType())) {
+        if (otherState.getFluidState().getType().equals(fluid.getType())) {
             return false;
         }
 
@@ -315,10 +315,10 @@ public class DefaultFluidRenderer {
         BlockState blockState = world.getBlockState(blockPos);
         FluidState fluidState = blockState.getFluidState();
 
-        if (fluid.isSame(fluidState.getType())) {
+        if (fluid.equals(fluidState.getType())) {
             FluidState fluidStateUp = world.getFluidState(this.scratchPos.setWithOffset(blockPos, Direction.UP));
 
-            if (fluid.isSame(fluidStateUp.getType())) {
+            if (fluid.equals(fluidStateUp.getType())) {
                 return 1.0f;
             } else {
                 return fluidState.getOwnHeight();
@@ -647,10 +647,10 @@ public class DefaultFluidRenderer {
             var blockStateBelow = level.getBlockState(below);
             if (!PlatformBlockAccess.getInstance().shouldShowFluidOverlay(blockStateBelow, level, this.scratchPos, fluidState)) {
                 // additionally check the fluid state of the blocks below to prevent rendering the down face if there's no side fluid faces
-                var northIsFluid = level.getFluidState(this.scratchPos.setWithOffset(below, Direction.NORTH)).getType().isSame(fluid);
-                var southIsFluid = level.getFluidState(this.scratchPos.setWithOffset(below, Direction.SOUTH)).getType().isSame(fluid);
-                var westIsFluid = level.getFluidState(this.scratchPos.setWithOffset(below, Direction.WEST)).getType().isSame(fluid);
-                var eastIsFluid = level.getFluidState(this.scratchPos.setWithOffset(below, Direction.EAST)).getType().isSame(fluid);
+                var northIsFluid = level.getFluidState(this.scratchPos.setWithOffset(below, Direction.NORTH)).getType().equals(fluid);
+                var southIsFluid = level.getFluidState(this.scratchPos.setWithOffset(below, Direction.SOUTH)).getType().equals(fluid);
+                var westIsFluid = level.getFluidState(this.scratchPos.setWithOffset(below, Direction.WEST)).getType().equals(fluid);
+                var eastIsFluid = level.getFluidState(this.scratchPos.setWithOffset(below, Direction.EAST)).getType().equals(fluid);
                 if (northIsFluid || southIsFluid || westIsFluid || eastIsFluid) {
                     this.writeQuad(meshBuilder, collector, material, offset, quad, ModelQuadFacing.POS_Y, true);
                 }

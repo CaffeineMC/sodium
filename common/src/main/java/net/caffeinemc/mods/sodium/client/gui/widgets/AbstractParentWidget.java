@@ -41,9 +41,9 @@ public abstract class AbstractParentWidget extends AbstractWidget implements Con
     }
 
     @Override
-    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
         for (Renderable element : this.renderableChildren) {
-            element.extractRenderState(graphics, mouseX, mouseY, delta);
+            element.extractRenderState(graphics);
         }
     }
 

@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl;
 
 import com.mojang.renderpearl.api.GpuFormat;
-import com.mojang.renderpearl.api.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
@@ -106,8 +106,8 @@ public class CompactChunkVertex implements ChunkVertexType {
     }
 
     private static int encodeLight(int light) {
-        int sky = Mth.clamp(((light >>> 16) & 0xFF) + 8, 8, 248);
-        int block = Mth.clamp(((light >>>  0) & 0xFF) + 8, 8, 248);
+        int sky = Math.clamp(((light >>> 16) & 0xFF) + 8, 8, 248);
+        int block = Math.clamp(((light >>>  0) & 0xFF) + 8, 8, 248);
 
         return (block << 0) | (sky << 8);
     }

@@ -167,13 +167,13 @@ public class SearchWidget extends AbstractParentWidget {
     }
 
     @Override
-    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
         graphics.fill(this.getX(), this.getY(), this.getX() + this.lastRebuildWidth, this.getLimitY(), Colors.BACKGROUND_DEFAULT);
 
-        this.searchBox.extractRenderState(graphics, mouseX, mouseY, delta);
-        this.clearButton.extractRenderState(graphics, mouseX, mouseY, delta);
+        this.searchBox.extractRenderState(graphics);
+        this.clearButton.extractRenderState(graphics);
 
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        super.extractRenderState(graphics);
     }
 
     @Override

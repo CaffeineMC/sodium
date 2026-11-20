@@ -1,7 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render;
 
 import com.mojang.renderpearl.api.commands.RenderPass;
-import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
@@ -26,6 +25,7 @@ import net.caffeinemc.mods.sodium.mixin.core.render.world.EntityRendererAccessor
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.debug.DebugFact;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -39,7 +39,6 @@ import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.BlockDestructionProgress;
-import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
@@ -55,6 +54,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.SortedSet;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -276,7 +276,7 @@ public class SodiumWorldRenderer {
 
         profiler.pop();
 
-        Entity.setViewScale(Mth.clamp((double) this.client.options.getEffectiveRenderDistance() / 8.0D, 1.0D, 2.5D) * this.client.options.entityDistanceScaling().get());
+        Entity.setViewScale(Math.clamp((double) this.client.options.getEffectiveRenderDistance() / 8.0D, 1.0D, 2.5D) * this.client.options.entityDistanceScaling().get());
     }
 
     private void processChunkEvents() {
@@ -288,22 +288,22 @@ public class SodiumWorldRenderer {
     /**
      * Performs a render pass for the given {@link RenderType} and draws all visible chunks for it.
      */
-    public void drawChunkLayer(RenderPass pass, ChunkSectionLayerGroup group, ChunkRenderMatrices matrices, double x, double y, double z, GpuSampler terrainSampler, @Nullable OitStage stage) {
+    public void drawChunkLayer(RenderPass pass, ChunkSectionLayerGroup group, ChunkRenderMatrices matrices, double x, double y, double z, @Nullable OitStage stage, boolean useWaterMask) {
         if (group == ChunkSectionLayerGroup.OPAQUE) {
-            this.renderLayer(matrices, DefaultTerrainRenderPasses.SOLID, x, y, z, this.lastFogParameters, terrainSampler, pass, stage);
-            this.renderLayer(matrices, DefaultTerrainRenderPasses.CUTOUT, x, y, z, this.lastFogParameters, terrainSampler, pass, stage);
+            this.renderLayer(matrices, DefaultTerrainRenderPasses.SOLID, x, y, z, this.lastFogParameters, pass, stage, useWaterMask);
+            this.renderLayer(matrices, DefaultTerrainRenderPasses.CUTOUT, x, y, z, this.lastFogParameters, pass, stage, useWaterMask);
         } else if (group == ChunkSectionLayerGroup.TRANSLUCENT) {
-            this.renderLayer(matrices, DefaultTerrainRenderPasses.TRANSLUCENT, x, y, z, this.lastFogParameters, terrainSampler, pass, stage);
+            this.renderLayer(matrices, DefaultTerrainRenderPasses.TRANSLUCENT, x, y, z, this.lastFogParameters, pass, stage, useWaterMask);
         }
     }
 
-    public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters, GpuSampler terrainSampler, RenderPass renderPass, @Nullable OitStage stage) {
+    public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z, FogParameters fogParameters, RenderPass renderPass, @Nullable OitStage stage, boolean useWaterMask) {
         CameraTransform cameraTransform = new CameraTransform(x, y, z);
         this.uniformBufferManager.update(matrices, fogParameters, cameraTransform);
 
         this.renderSectionManager.getChunkRenderer().render(matrices, this.renderSectionManager.getRenderLists(), pass,
                 cameraTransform, fogParameters, this.useTranslucencySorting, renderPass,
-                terrainSampler, this.uniformBufferManager.getUniformBuffer(), this.uniformBufferManager.getSectionTimeInfo(), stage);
+                this.uniformBufferManager.getUniformBuffer(), this.uniformBufferManager.getSectionTimeInfo(), stage, useWaterMask);
     }
 
     public void reload() {
@@ -482,13 +482,12 @@ public class SodiumWorldRenderer {
         return this.renderSectionManager.isBoxVisible(x1, y1, z1, x2, y2, z2);
     }
 
-    @Nullable
-    public String getChunksDebugString() {
+    public void getChunksDebugString(BiConsumer<String, Consumer<DebugFact>> addFact) {
         if (this.renderSectionManager == null) {
-            return null;
+            return;
         }
 
-        return this.renderSectionManager.getChunksDebugString();
+        this.renderSectionManager.getChunksDebugString(addFact);
     }
 
     /**
@@ -518,8 +517,8 @@ public class SodiumWorldRenderer {
         this.renderSectionManager.scheduleRebuild(x, y, z, playerChanged);
     }
 
-    public Collection<String> getDebugStrings(boolean verbose) {
-        return this.renderSectionManager == null ? Collections.emptyList() : this.renderSectionManager.getDebugStrings(verbose);
+    public void getDebugStrings(boolean verbose, BiConsumer<String, Consumer<DebugFact>> addFact) {
+        if (this.renderSectionManager != null) this.renderSectionManager.getDebugStrings(verbose, addFact);
     }
 
     public boolean isSectionReady(int x, int y, int z) {

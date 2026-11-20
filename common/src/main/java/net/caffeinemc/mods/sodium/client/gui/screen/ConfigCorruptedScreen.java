@@ -52,8 +52,8 @@ public class ConfigCorruptedScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
+        super.extractRenderState(graphics);
 
         graphics.text(this.font, Component.literal("Sodium Renderer"), 32, 32, Colors.FOREGROUND);
         graphics.text(this.font, Component.translatable("sodium.console.corrupt_config.message.title"), 32, 48, 0xFFFF0000);

@@ -61,7 +61,7 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
         this.actionButton = new FlatButtonWidget(new Dim2i(actionX, buttonY, ACTION_BUTTON_WIDTH, Layout.BUTTON_SHORT), this.action.label, this::runAction, true, false, PROMPT_THEME);
     }
 
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
         var parentDimensions = this.parent.getDimensions();
 
         graphics.fill(0, 0, graphics.guiWidth(), graphics.guiHeight(), 0x70090909);
@@ -92,7 +92,7 @@ public class ScreenPrompt implements GuiEventListener, Renderable {
         }
 
         for (var button : this.getWidgets()) {
-            button.extractRenderState(graphics, mouseX, mouseY, delta);
+            button.extractRenderState(graphics);
         }
     }
 

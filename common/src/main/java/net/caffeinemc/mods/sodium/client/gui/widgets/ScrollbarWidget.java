@@ -82,11 +82,11 @@ public class ScrollbarWidget extends AbstractWidget {
     }
 
     @Override
-    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
         if (!this.canScroll()) {
             return;
         }
-        boolean isMouseOver = this.isMouseOver(mouseX, mouseY);
+        boolean isMouseOver = this.isMouseOver(graphics.mouseX(), graphics.mouseY());
         if (isMouseOver) {
             this.lastScrollTime = Math.max(this.lastScrollTime, System.currentTimeMillis() - 500);
         }

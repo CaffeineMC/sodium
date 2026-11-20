@@ -30,12 +30,12 @@ public interface ChunkRenderer {
      * @param parameters              The current fog state
      * @param indexedRenderingEnabled Whether indexed rendering is enabled
      * @param pass                    The block render pass to execute
-     * @param terrainSampler          The sampler to use for the atlas
      * @param uniformData             The buffer slice containing the uniform data for this frame
      * @param sectionTimeInfo         The storage buffer containing fade timings
      * @param stage                   The OIT stage to render to, or null if it's not relevant
+     * @param hasWaterMask            Whether there is an entity drawing a water mask this frame
      */
-    void render(ChunkRenderMatrices matrices, ChunkRenderListIterable renderLists, TerrainRenderPass terrainRenderPass, CameraTransform camera, FogParameters parameters, boolean indexedRenderingEnabled, RenderPass pass, GpuSampler terrainSampler, GpuBufferSlice uniformData, GpuBuffer sectionTimeInfo, @Nullable OitStage stage);
+    void render(ChunkRenderMatrices matrices, ChunkRenderListIterable renderLists, TerrainRenderPass terrainRenderPass, CameraTransform camera, FogParameters parameters, boolean indexedRenderingEnabled, RenderPass pass, GpuBufferSlice uniformData, GpuBuffer sectionTimeInfo, @Nullable OitStage stage, boolean hasWaterMask);
 
     /**
      * Rotates the data for a new frame.

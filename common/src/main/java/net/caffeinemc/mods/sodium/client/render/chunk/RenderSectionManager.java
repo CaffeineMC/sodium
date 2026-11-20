@@ -39,6 +39,7 @@ import net.caffeinemc.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.debug.DebugFact;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.SectionPos;
@@ -57,6 +58,8 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class RenderSectionManager {
     private static final float NEARBY_REBUILD_DISTANCE = Mth.square(16.0f);
@@ -167,7 +170,7 @@ public class RenderSectionManager {
         } else {
             this.averageFrameDuration = MathUtil.exponentialMovingAverage(this.averageFrameDuration, this.lastFrameDuration, FRAME_DURATION_UPDATE_RATIO);
         }
-        this.averageFrameDuration = Mth.clamp(this.averageFrameDuration, 1_000_100, 100_000_000);
+        this.averageFrameDuration = Math.clamp(this.averageFrameDuration, 1_000_100, 100_000_000);
     }
 
     public void prepareRender() {
@@ -1062,9 +1065,7 @@ public class RenderSectionManager {
         return this.renderSections.getConsistent(SectionPos.asLong(x, y, z));
     }
 
-    public Collection<String> getDebugStrings(boolean verbose) {
-        List<String> list = new ArrayList<>();
-
+    public void getDebugStrings(boolean verbose, BiConsumer<String, Consumer<DebugFact>> addFact) {
         int count = 0;
 
         long geometryDeviceUsed = 0;
@@ -1101,54 +1102,45 @@ public class RenderSectionManager {
         indexDeviceAllocated += aggregator.getIndexDeviceAllocatedMemory();
         count += aggregator.getBufferCount();
 
-        if (verbose) {
-            list.add(String.format("Pools: Geometry %d/%d MiB, Index %d/%d MiB, Misc %d MiB, %d buffers",
-                    MathUtil.toMib(geometryDeviceUsed), MathUtil.toMib(geometryDeviceAllocated),
-                    MathUtil.toMib(indexDeviceUsed), MathUtil.toMib(indexDeviceAllocated),
-                    aggregator.getMiscAllocatedMemory(), count));
-            list.add(String.format("Transfer Queue: %s", this.regions.getStagingBuffer().toString()));
-        } else {
-            list.add(String.format("G:%d/%d I:%d/%d MiB TQ: %s #%d",
-                    MathUtil.toMib(geometryDeviceUsed), MathUtil.toMib(geometryDeviceAllocated),
-                    MathUtil.toMib(indexDeviceUsed), MathUtil.toMib(indexDeviceAllocated),
-                    this.regions.getStagingBuffer().toString(), count));
-        }
+        var s = String.format("Geometry %d/%d MiB, Index %d/%d MiB, Misc %d MiB",
+                MathUtil.toMib(geometryDeviceUsed), MathUtil.toMib(geometryDeviceAllocated),
+                MathUtil.toMib(indexDeviceUsed), MathUtil.toMib(indexDeviceAllocated),
+                aggregator.getMiscAllocatedMemory());
+        addFact.accept("Pools", fact -> fact.value(s));
+        int finalCount = count;
+        addFact.accept("Pool Count", fact -> fact.value(finalCount));
 
         if (verbose) {
-            list.add(String.format("Chunk Builder: Schd=%02d | Busy=%02d (%04d%%) | Total=%02d",
+            addFact.accept("Transfer Queue", fact -> fact.value(this.regions.getStagingBuffer().toString()));
+
+            addFact.accept("Chunk Builder", i -> i.value(String.format("Schd=%02d | Busy=%02d (%04d%%) | Total=%02d",
                     this.builder.getScheduledJobCount(), this.builder.getBusyThreadCount(), (int) (this.builder.getBusyFraction(this.lastFrameDuration) * 100), this.builder.getTotalThreadCount())
-            );
-        } else {
-            list.add(String.format("B: S%02d/B%02d/T%02d",
-                    this.builder.getScheduledJobCount(), this.builder.getBusyThreadCount(), this.builder.getTotalThreadCount())
-            );
-        }
+            ));
 
-        if (verbose) {
-            list.add(String.format("Tasks: N0=%03d | N1=%03d | Def=%03d, Recv=%03d",
+            addFact.accept("Tasks", fact -> fact.value(String.format("N0=%03d | N1=%03d | Def=%03d, Recv=%03d",
                     this.thisFrameBlockingTasks, this.nextFrameBlockingTasks, this.deferredTasks, this.buildResults.size())
-            );
+            ));
         }
 
         if (verbose && PlatformRuntimeInformation.getInstance().isDevelopmentEnvironment()) {
             var meshTaskParameters = this.jobDurationEstimator.toString(ChunkBuilderMeshingTask.class);
             var sortTaskParameters = this.jobDurationEstimator.toString(ChunkBuilderSortingTask.class);
             var uploadDurationParameters = this.jobUploadDurationEstimator.toString(null);
-            list.add(String.format("Duration: Mesh %s, Sort %s, Upload %s", meshTaskParameters, sortTaskParameters, uploadDurationParameters));
+            //list.add(String.format("Duration: Mesh %s, Sort %s, Upload %s", meshTaskParameters, sortTaskParameters, uploadDurationParameters));
 
             var sizeEstimates = new ReferenceArrayList<String>();
             for (var type : MeshResultSize.SectionCategory.values()) {
                 sizeEstimates.add(String.format("%s=%s", type, this.meshTaskSizeEstimator.toString(type)));
             }
-            list.add(String.format("Size: %s", String.join(", ", sizeEstimates)));
+           // list.add(String.format("Size: %s", String.join(", ", sizeEstimates)));
         }
 
         if (this.sortBehavior != SortBehavior.OFF) {
-            this.sortTriggering.addDebugStrings(list, this.sortBehavior, verbose);
+            this.sortTriggering.addDebugStrings(addFact, this.sortBehavior, verbose);
         } else {
-            list.add("TS OFF");
+            addFact.accept("Sorting", fact -> fact.value("off"));
         }
-
+/*
         var cullState = this.pendingTask == null ? "Idle" : this.pendingTask.isDone() ? "Done" : "Running";
         var cullDuration = this.averageCullDurationNanos == -1 ? "?" : String.format("%.1fms", this.averageCullDurationNanos / 1_000_000.0);
         if (verbose) {
@@ -1157,17 +1149,18 @@ public class RenderSectionManager {
             list.add(String.format("Async Culling: %s (avg %s)", cullState, cullDuration));
         }
 
-        return list;
+        return list;*/
     }
 
-    public String getChunksDebugString() {
+    public void getChunksDebugString(BiConsumer<String, Consumer<DebugFact>> addFact) {
         // C: visible/total D: distance
-        return String.format(
-                "C: %d/%d (%s) D: %d",
-                this.getVisibleChunkCount(),
-                this.getTotalSections(),
-                this.getCullTypeName(),
-                this.renderDistance);
+        addFact.accept("Chunk Sections", fact -> fact.value(this.getVisibleChunkCount()).text(" / ").value(this.getTotalSections()));
+        if (!Minecraft.getInstance().smartCull) {
+            addFact.accept("Culling", fact -> fact.value("off"));
+        }
+
+        addFact.accept("View Distance", fact -> fact.value(this.renderDistance));
+        addFact.accept("Cull Type", fact -> fact.value(this.getCullTypeName()));
     }
 
     private String getCullTypeName() {

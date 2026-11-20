@@ -13,28 +13,74 @@ layout(location = 2) in vec2 v_FragDistance; // The fragment's distance from the
 layout(location = 3) in float v_fadeFactor;
 #endif
 
+#ifdef IMPROVED_FOG
+uniform sampler2D SkySampler;
+#endif
+
+#ifdef CLOUDS_IN_FOG
+uniform sampler2D CloudsSampler;
+uniform sampler2D CloudsDepthSampler;
+#endif
+
+#ifdef CHECK_WATER_MASK
+uniform sampler2D WaterMaskSampler;
+#endif
+
+const float ENVIRONMENTAL_BACKGROUND_BLEND_START = 0.9;
+
+#ifdef IMPROVED_FOG
+vec3 sampleBackgroundColor(ivec2 pixelCoords) {
+    vec3 skyColor = texelFetch(SkySampler, pixelCoords, 0).rgb;
+    #ifdef CLOUDS_IN_FOG
+    vec4 cloudColor = texelFetch(CloudsSampler, pixelCoords, 0);
+    float cloudDepth = texelFetch(CloudsDepthSampler, pixelCoords, 0).r;
+    float cloudsBehind = step(cloudDepth, gl_FragCoord.z);
+    return mix(skyColor, cloudColor.rgb / (cloudColor.a > 0.0 ? cloudColor.a : 1.0), cloudColor.a * cloudsBehind);
+    #else
+    return skyColor;
+    #endif
+}
+#endif
+
 uniform sampler2D u_BlockTex; // The block texture
 
 #ifndef OIT_ALPHA_ONLY
 layout(location = 0) out vec4 fragColor; // The output fragment for the color framebuffer
 #endif
 
+#ifndef OIT_ALPHA_ONLY
 vec4 calculateFinalColor(vec4 color) {
+    float environmentalValue = linear_fog_value(v_FragDistance.y, u_EnvironmentFog.x, u_EnvironmentFog.y);
+    float renderDistanceValue = linear_fog_value(v_FragDistance.x, u_RenderFog.x, u_RenderFog.y);
+
+    float environmentalBackgroundValue = smoothstep(ENVIRONMENTAL_BACKGROUND_BLEND_START, 1.0, environmentalValue);
+
+    float fogValue = max(environmentalValue, renderDistanceValue);
+
+    float backgroundFogValue = max(environmentalBackgroundValue, renderDistanceValue);
+
+    if (backgroundFogValue > 0.0 || v_fadeFactor < 1.0) {
+        #ifdef IMPROVED_FOG
+        vec3 backgroundColor = sampleBackgroundColor(ivec2(gl_FragCoord.xy));
+        vec3 targetColor = mix(u_FogColor.rgb, backgroundColor, backgroundFogValue);
+        #else
+        vec3 backgroundColor = u_FogColor.rgb;
+        vec3 targetColor = backgroundColor;
+        #endif
+        vec3 foggedColor = mix(color.rgb, targetColor, fogValue);
+        vec3 foggedFadedColor = mix(backgroundColor, foggedColor, v_fadeFactor);
+        color = vec4(foggedFadedColor, color.a);
+    } else {
+        color.rgb = mix(color.rgb, u_FogColor.rgb, fogValue);
+    }
     #ifdef OIT_ACCUMULATE
-        color = sampleColorForAccumulation(color);
-        vec4 fogColor = vec4(u_FogColor.rgb * color.a, u_FogColor.a);
-    #else
-        vec4 fogColor = u_FogColor;
+    color = sampleColorForAccumulation(color);
     #endif
 
-    #ifdef OIT_ALPHA_ONLY
-    float factor = 1.0;
-    #else
-    float factor = v_fadeFactor;
-    #endif
-
-    return _linearFog(color, v_FragDistance, fogColor, u_EnvironmentFog, u_RenderFog, factor);
+    return color;
 }
+#endif
+
 vec4 sampleNearest(sampler2D source, vec2 uv, vec2 pixelSize, vec2 du, vec2 dv, vec2 texelScreenSize) {
     // Convert our UV back up to texel coordinates and find out how far over we are from the center of each pixel
     vec2 uvTexelCoords = uv / pixelSize;
@@ -107,6 +153,13 @@ void main() {
         discard;
     }
 #endif
+
+    #ifdef CHECK_WATER_MASK
+    float waterMaskDepth = texelFetch(WaterMaskSampler, ivec2(gl_FragCoord.xy), 0).r;
+    if (gl_FragCoord.z <= waterMaskDepth) {
+        discard;
+    }
+    #endif
 
     #ifdef OIT_ALPHA_ONLY
     executeAlphaOnlyPhase(gl_FragCoord.z, color.a);

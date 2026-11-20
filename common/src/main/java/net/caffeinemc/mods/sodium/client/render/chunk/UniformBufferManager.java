@@ -10,7 +10,6 @@ import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl.CompactChunkVertex;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
-import net.caffeinemc.mods.sodium.mixin.core.render.texture.TextureAtlasAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.TextureFilteringMethod;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -107,7 +106,7 @@ public class UniformBufferManager {
         double subTexelPrecision = (1 << GPULimits.getSubTexelPrecisionBits());
         double subTexelOffset = 1.0f / CompactChunkVertex.TEXTURE_MAX_VALUE;
 
-        var textureAtlas = (TextureAtlasAccessor) Minecraft.getInstance()
+        var textureAtlas = Minecraft.getInstance()
                 .getTextureManager()
                 .getTexture(TextureAtlas.LOCATION_BLOCKS);
 
@@ -118,9 +117,9 @@ public class UniformBufferManager {
                 cameraTransform.fracX, cameraTransform.fracY, cameraTransform.fracZ,
                 fogParameters.environmentalStart(), fogParameters.environmentalEnd(),
                 fogParameters.renderStart(), fogParameters.renderEnd(),
-                1.0f / textureAtlas.sodium$getWidth(), 1.0f / textureAtlas.sodium$getHeight(),
-                (float) (subTexelOffset - (((1.0D / textureAtlas.sodium$getWidth()) / subTexelPrecision))),
-                (float) (subTexelOffset - (((1.0D / textureAtlas.sodium$getHeight()) / subTexelPrecision))),
+                1.0f / textureAtlas.textureView().getWidth(0), 1.0f / textureAtlas.textureView().getHeight(0),
+                (float) (subTexelOffset - (((1.0D / textureAtlas.textureView().getWidth(0)) / subTexelPrecision))),
+                (float) (subTexelOffset - (((1.0D / textureAtlas.textureView().getHeight(0)) / subTexelPrecision))),
                 (float) (1.0 / (Minecraft.getInstance().options.chunkSectionFadeInTime().get() * 1000.0)),
                 Minecraft.getInstance().options.textureFiltering().get() == TextureFilteringMethod.RGSS ? 1 : 0
         ));
