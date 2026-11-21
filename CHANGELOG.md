@@ -4,7 +4,7 @@
 Everything above the line is ignored and not included in the changelog. Everything below will be in the
 changelog on GitHub, Modrinth and CurseForge.
 ----------
-Sodium [SodiumVersion]() implements a number of bug fixes and minor improvements.
+Sodium [SodiumVersion]() adds the option to use spherical render distance and appropriate fog. Additionally, we've implemented a number of bug fixes and minor improvements. The release now includes constraints for NeoForge to prevent launching in broken configurations. Vanilla graphics options are now automatically imported from Vanilla to ensure that default values are up to date by construction. Some refactoring to improve compatibility has also caused breakage with some other mods, which we hope can be resolved soon or has already been resolved during beta testing.
 
 - Show macOS fullscreen menu visibility option on the Sodium options screen
 - Fix Fluid Culling For Non-Full Blocks With Unusual Shapes ([#3916](https://github.com/CaffeineMC/sodium/pull/3916))
@@ -19,3 +19,6 @@ Sodium [SodiumVersion]() implements a number of bug fixes and minor improvements
 - Fix disappeared block breaking animation ([#3958](https://github.com/CaffeineMC/sodium/pull/3958))
 - Added compatibility metadata for Fabric and NeoForge builds to prevent usage in broken configurations
 - Implement option for spherical render distance fog
+- Fix shading on models with flat quads
+- Fix leaking buffer arena debug image by properly closing it on arena close
+- Fix potential failure to schedule async culling task when the camera movement stops before a task is started
