@@ -87,3 +87,11 @@ reason = "This version of \"Better Fps - Render Distance\" is incompatible with 
 versionRange = "(,6.3)"
 ordering = "NONE"
 side = "CLIENT"
+
+[[dependencies.sodium]]
+modId = "polytone"
+type = "incompatible"
+reason = "This version of Polytone is incompatible with this version of Sodium. Please update Polytone."
+versionRange = "(,26.3-6.8.8)"
+ordering = "NONE"
+side = "CLIENT"
