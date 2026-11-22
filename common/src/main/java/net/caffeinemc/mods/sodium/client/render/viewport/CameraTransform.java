@@ -1,12 +1,6 @@
 package net.caffeinemc.mods.sodium.client.render.viewport;
 
-import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
-
 public class CameraTransform {
-    // We want to reduce the precision of the deltas to avoid seams along chunk/region boundaries. This is done by
-    // ensuring the camera position would be the same if we did cameraPos + 0 - 0 as if we did cameraPos + 128 - 128.
-    private static final float PRECISION_MODIFIER = RenderRegion.REGION_WIDTH * 16; // 16 blocks per section
-
     // The integer component of the translation vector
     public final int intX, intY, intZ;
 
