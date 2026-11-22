@@ -89,7 +89,6 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
     private static List<String> createShaderConstants(ShaderCompilationParameters parameters) {
         List<String> defines = new ArrayList<>();
 
-        defines.add("USE_FOG");
         if (parameters.useSphericalFog()) {
             defines.add("USE_SPHERICAL_FOG");
         }
