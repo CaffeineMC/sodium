@@ -7,11 +7,8 @@
 
 layout(location = 0) out vec4 v_Color;
 layout(location = 1) out vec2 v_TexCoord;
-
-#ifdef USE_FOG
 layout(location = 2) out vec2 v_FragDistance;
 layout(location = 3) out float v_fadeFactor;
-#endif
 
 uniform isamplerBuffer u_SectionTimeInfo;
 
@@ -47,16 +44,12 @@ void main() {
     vec3 translation = u_RegionOffset + _get_draw_translation(_draw_id);
     vec3 position = (_vert_position + translation) - u_CameraOffset;
 
-#ifdef USE_FOG
     v_FragDistance = getFragDistance(position);
 
     int chunkId = int(_draw_id);
     int chunkFade = texelFetch(u_SectionTimeInfo, int((u_RegionID * 256u) + uint(chunkId))).r;
-    int fadeTime = u_CurrentTime - chunkFade;
-    float elapsed = float(fadeTime);
     float fade = clamp(float(u_CurrentTime - chunkFade) * u_FadePeriodInv, 0.0, 1.0);
     v_fadeFactor = (chunkFade < 0) ? 1.0 : fade;
-#endif
 
     // Transform the vertex position into model-view-projection space
     gl_Position = u_ProjectionMatrix * u_ModelViewMatrix * vec4(position, 1.0);
