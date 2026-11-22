@@ -15,6 +15,7 @@
   },
   "client": [
     "core.GlDeviceMixin",
+    "core.GlFallbackAllocatorMixin",
     "core.GlRenderPassAccessor",
     "core.GpuDeviceAccessor",
     "core.MinecraftMixin",
