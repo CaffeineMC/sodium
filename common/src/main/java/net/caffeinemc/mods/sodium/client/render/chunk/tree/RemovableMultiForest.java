@@ -70,8 +70,8 @@ public class RemovableMultiForest implements RemovableForest {
 
         // traverse in sorted front-to-back order for correct render order
         for (var tree : this.treeSortList) {
-            // disable distance test in traversal because we don't use it here
-            tree.traverse(visitor, viewport, 0, 0);
+            // the forest was not built pre-filtered with a build distance limit, so the build distance is infinity
+            tree.traverse(visitor, viewport, distanceLimit, Float.MAX_VALUE);
         }
     }
 
