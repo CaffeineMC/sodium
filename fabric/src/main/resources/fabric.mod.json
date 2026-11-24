@@ -109,7 +109,8 @@
     "enchanteds_sodium_options" : "<1.0.1",
     "betterblockentities": "<=1.4.0",
     "fusion": "<=1.3.16",
-    "polytone": "<=26.3-6.8.6"
+    "polytone": "<=26.3-6.8.6",
+    "jsmacros": "<2.2.2"
   },
   "provides" : [
     "indium"
