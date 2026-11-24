@@ -86,7 +86,7 @@
     "optimalaim": "<2.0.0",
     "sodium-blendingregistry" : "*",
     "ocrenderfix_sodium" : "*",
-    "betterfpsdist" : "<=1.21-4.5",
+    "betterfpsdist" : "<=26.2-6.2",
     "bobby" : "<5.2.4",
     "chunksfadein" : "<2.0.2-1.21.2",
     "cull-less-leaves" : "<=1.3.0",
@@ -94,7 +94,7 @@
     "custom_hud" : "<3.4.2",
     "farsight" : "<=1.21-4.3",
     "iceberg" : "<1.2.7",
-    "iris" : "<=1.11.3",
+    "iris" : "<=1.11.4",
     "movingelevators" : "<=1.4.7",
     "notenoughcrashes" : "<4.4.8",
     "noxesium" : "<2.3.3",
@@ -107,8 +107,9 @@
     "simply-no-shading": "<7.6.2",
     "betterend" : "<=21.0.11",
     "enchanteds_sodium_options" : "<1.0.1",
-    "betterblockentities": "<1.3.5",
-    "fullscreenfix": "<=2.4.1"
+    "betterblockentities": "<=1.3.9",
+    "fullscreenfix": "<=2.4.1",
+    "fusion": "<=1.3.16"
   },
   "provides" : [
     "indium"
