@@ -4,20 +4,17 @@
 Everything above the line is ignored and not included in the changelog. Everything below will be in the
 changelog on GitHub, Modrinth, and CurseForge.
 ----------
-Sodium [SodiumVersion]() includes a new terrain buffer allocation system designed to reduce the number of buffers that get allocated and resized as chunks are loaded and unloaded. Other changes include improvements to our item meshing, optimizations for item rendering, and numerous bug fixes. This release also adds support for FRAPI on NeoForge.
+Sodium [SodiumVersion]() adds the option to use spherical render distance and appropriate fog. Additionally, we've implemented a number of bug fixes and minor improvements. The release includes constraints for NeoForge to prevent launching in broken configurations. Vanilla graphics options are now automatically imported from Vanilla to ensure that default values are up to date by construction. Some refactoring to improve compatibility has also caused breakage with some other mods, which we hope can be resolved soon or has already been resolved during beta testing.
 
-Thank you to all the contributors who added to this release!
-
-- Prevent misalignment in item models by removing UV_SHRINK where necessary ([#3831](https://github.com/CaffeineMC/sodium/pull/3831))
-- Offset overlay layers of optimized item models to prevent z-fighting
-- Optimize the dried ghast model ([#3815](https://github.com/CaffeineMC/sodium/pull/3815))
-- Implementation of an Incrementally Defragmenting Auto-Sizing Multi-Arena Allocator ([#3634](https://github.com/CaffeineMC/sodium/pull/3634))
-- Support FRAPI on NeoForge ([#3818](https://github.com/CaffeineMC/sodium/pull/3818))
-- Fix buffer overflow in Kernel32.getModuleFileName
-- Use the correct atomic operations on NativeBuffer.ALLOCATED
-- Use clearenv() to delete environment variables
-- Cleanup code around checking the IME status on Windows
-- Handle resizing the section time buffer to fix [#3809](https://github.com/CaffeineMC/sodium/issues/3809)
-- Implement override/overlay priority in the graphics options Config API ([#3866](https://github.com/CaffeineMC/sodium/pull/3866))
-- Optimize pitcher plant models ([#3881](https://github.com/CaffeineMC/sodium/pull/3881))
-- Improve mod compatibility by correctly handling vertexIndex state
+- Fix Fluid Culling For Non-Full Blocks With Unusual Shapes ([#3916](https://github.com/CaffeineMC/sodium/pull/3916))
+- Re-enable "Fullscreen Resolution" control on Linux ([#3843](https://github.com/CaffeineMC/sodium/pull/3843))
+- Source vanilla option defaults and ranges directly from vanilla options ([#3947](https://github.com/CaffeineMC/sodium/pull/3947))
+- Allow rendering buffer debug outside F3 Debug Screen ([#3943](https://github.com/CaffeineMC/sodium/pull/3943))
+- Make VideoSettingsScreen trigger onClose in keyPressed to fix interaction with Iris, for example ([#3938](https://github.com/CaffeineMC/sodium/pull/3938))
+- Fix mixin members not being prefixed with sodium$ ([#3952](https://github.com/CaffeineMC/sodium/pull/3952))
+  Note that this change may break some third-party mods. Please wait for them to update.
+- Fix incorrect null value for unspecified vertex normals on NeoForge BakedQuads ([#3962](https://github.com/CaffeineMC/sodium/pull/3962))
+- Newly added compatibility metadata in NeoForge builds to prevent usage in broken configurations
+- Implement option for spherical render distance fog
+- Fix leaking buffer arena debug image by properly closing it on arena close
+- Fix potential failure to schedule async culling task when the camera movement stops before a task is started

@@ -68,7 +68,7 @@ side = "CLIENT"
 modId = "betterblockentities"
 type = "incompatible"
 reason = "This version of Better Block Entities is incompatible with this version of Sodium. Please update Better Block Entities."
-versionRange = "(,1.3.10)"
+versionRange = "(,1.3.8)"
 ordering = "NONE"
 side = "CLIENT"
 
