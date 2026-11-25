@@ -26,6 +26,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.Util;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
@@ -255,11 +256,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
         var platformGroup = builder.createOptionGroup().addOption(
                 vanilla.createEnumOption(Identifier.fromNamespaceAndPath("sodium", "general.graphics_api"), PreferredGraphicsApi.class, this.vanillaOpts.preferredGraphicsBackend())
                         .setTooltip(i -> {
-                            if (i == PreferredGraphicsApi.VULKAN) {
-                                return Component.translatable("options.graphicsApi.tooltip.vulkan");
-                            } else {
-                                return Component.translatable("options.graphicsApi.tooltip");
-                            }
+                            return Component.translatable("options.graphicsApi.tooltip");
                         })
                         .setElementNameProvider(EnumOptionBuilder.nameProviderFrom(
                                 Component.translatable("options.graphicsApi.default"),
@@ -467,10 +464,12 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
                 )
         );
 
-        performancePage.addOptionGroup(builder.createOptionGroup()
-                .addOption(vanilla.createBooleanOption(Identifier.parse("sodium:performance.dxgi_surface"), this.vanillaOpts.preferDXGIPresent())
-                        .setImpact(OptionImpact.VARIES)
-                        .setFlags(OptionFlag.REQUIRES_GAME_RESTART)));
+        if (Util.getPlatform() == Util.OS.WINDOWS) {
+            performancePage.addOptionGroup(builder.createOptionGroup()
+                    .addOption(vanilla.createBooleanOption(Identifier.parse("sodium:performance.dxgi_surface"), this.vanillaOpts.preferDXGIPresent())
+                            .setImpact(OptionImpact.VARIES)
+                            .setFlags(OptionFlag.REQUIRES_GAME_RESTART)));
+        }
 
         performancePage.addOptionGroup(builder.createOptionGroup()
                 .addOption(

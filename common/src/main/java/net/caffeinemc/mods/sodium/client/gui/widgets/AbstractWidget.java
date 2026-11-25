@@ -12,6 +12,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.narration.NarrationTrigger;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -58,7 +59,7 @@ public abstract class AbstractWidget implements Renderable, GuiEventListener, Na
 
     protected void playClickSound() {
         Minecraft.getInstance().getSoundManager()
-                .play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F));
+                .play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK));
     }
 
     @Override
@@ -76,7 +77,7 @@ public abstract class AbstractWidget implements Renderable, GuiEventListener, Na
     }
 
     @Override
-    public NarratableEntry.@NonNull NarrationPriority narrationPriority() {
+    public NarrationPriority narrationPriority(NarrationTrigger narrationTrigger) {
         if (this.focused) {
             return NarratableEntry.NarrationPriority.FOCUSED;
         }

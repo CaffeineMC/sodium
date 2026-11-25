@@ -4,6 +4,7 @@ import net.caffeinemc.mods.sodium.api.config.option.Range;
 import net.caffeinemc.mods.sodium.mixin.core.gui.OptionInstanceAccessor;
 import net.caffeinemc.mods.sodium.mixin.core.gui.TooltipAccessor;
 import net.minecraft.client.OptionInstance;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 
@@ -61,7 +62,7 @@ public class VanillaOption<T> {
     private @Nullable Component getTooltip(T value) {
         // get tooltip from the option through accessors if there is one
         var tooltip = this.accessor.sodium$getTooltip().apply(value);
-        return tooltip == null ? null : ((TooltipAccessor) tooltip).sodium$getMessage();
+        return tooltip == null ? null : CommonComponents.joinLines(((TooltipAccessor) tooltip).sodium$getMessage());
     }
 
     public Component getElementName(T value) {

@@ -72,7 +72,7 @@ dependencies {
     // Fabric API modules
     addEmbeddedFabricModule("fabric-api-base")
     addEmbeddedFabricModule("fabric-block-getter-api-v2")
-    addEmbeddedFabricModule("fabric-rendering-v1")
+    compileOnly(fabricApi.module("fabric-rendering-v1", BuildConfig.FABRIC_API_VERSION))
 
     if (BuildConfig.SUPPORT_FRAPI) {
         addEmbeddedFabricModule("fabric-renderer-api-v1")
@@ -80,8 +80,8 @@ dependencies {
 
     addEmbeddedFabricModule("fabric-lifecycle-events-v1")
     addEmbeddedFabricModule("fabric-rendering-fluids-v1")
-    addEmbeddedFabricModule("fabric-resource-loader-v0")
-    addEmbeddedFabricModule("fabric-resource-loader-v1")
+    //addEmbeddedFabricModule("fabric-resource-loader-v0")
+    //addEmbeddedFabricModule("fabric-resource-loader-v1")
     addEmbeddedFabricModule("fabric-transitive-access-wideners-v1")
 }
 

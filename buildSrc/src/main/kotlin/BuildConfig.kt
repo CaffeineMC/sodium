@@ -1,10 +1,10 @@
 import org.gradle.api.Project
 
 object BuildConfig {
-    val MINECRAFT_VERSION: String = "26.4-snapshot-9"
+    val MINECRAFT_VERSION: String = "26.4-pre-1"
     val NEOFORGE_VERSION: String = "26.3.0.65-beta"
     val FABRIC_LOADER_VERSION: String = "0.20.1"
-    val FABRIC_API_VERSION: String = "0.166.2+26.4"
+    val FABRIC_API_VERSION: String = "0.167.1+26.4"
     val SUPPORT_FRAPI : Boolean = false
 
     // https://semver.org/
