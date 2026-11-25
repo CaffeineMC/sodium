@@ -83,7 +83,12 @@ public abstract class BakedQuadMixin implements BakedQuadView {
     }
 
     @Shadow
-    public abstract TextureAtlasSprite sodium$getSprite();
+    public abstract TextureAtlasSprite getSprite();
+
+    @Override
+    public TextureAtlasSprite sodium$getSprite() {
+        return this.getSprite();
+    }
 
     @Override
     public float sodium$getTexU(int idx) {
