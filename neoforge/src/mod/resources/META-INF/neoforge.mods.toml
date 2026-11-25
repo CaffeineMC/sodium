@@ -33,7 +33,7 @@ side = "CLIENT"
 [[dependencies.sodium]]
 modId = "neoforge"
 type = "required"
-versionRange = "[21.1.82,)"
+versionRange = "[21.1.262,)"
 ordering = "NONE"
 side = "CLIENT"
 
