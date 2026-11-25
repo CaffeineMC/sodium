@@ -4,10 +4,13 @@
 Everything above the line is ignored and not included in the changelog. Everything below will be in the
 changelog on GitHub, Modrinth and CurseForge.
 ----------
-Sodium [SodiumVersion]() fixes potential minor bugs and improves the crash log message to avoid misattribution of unrelated errors when NeoForge continues loading despite severe errors.
+Sodium [SodiumVersion]() improves mod compatibility, re-enables the fullscreen resolution option on Linux, and fixes several bugs.
 
-- Clarify crash log error message when crashing due to missing mod config, which basically only happens when neoforge loads the game despite it having encountered a severe error.
-- Fix buffer overflow in Kernel32.getModuleFileName
-- Use the correct atomic operations on NativeBuffer.ALLOCATED
-- Use clearenv() to delete environment variable
-- Implement override/overlay priority in the graphics options Config API ([#3866](https://github.com/CaffeineMC/sodium/pull/3866))
+- Optimize pitcher plant models ([#3881](https://github.com/CaffeineMC/sodium/pull/3881))
+- Improve mod compatibility by correctly handling vertexIndex state
+- Fix command line not being restored after NeoForge early window init ([#3803](https://github.com/CaffeineMC/sodium/pull/3803))
+- Fix mixin members not being prefixed with sodium$ ([#3955](https://github.com/CaffeineMC/sodium/pull/3955))
+  Note that this change may break some third-party mods. Please wait for them to update.
+- Make VideoSettingsScreen trigger onClose in keyPressed to fix interaction with Iris, for example ([#3938](https://github.com/CaffeineMC/sodium/pull/3938))
+- Fix render distance logic when the camera is outside the loaded chunks
+- Re-enable "Fullscreen Resolution" control on Linux ([#3843](https://github.com/CaffeineMC/sodium/pull/3843))
